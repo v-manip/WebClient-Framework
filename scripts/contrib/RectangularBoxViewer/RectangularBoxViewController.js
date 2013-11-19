@@ -1,0 +1,1 @@
+define(["backbone","app","communicator","./RectangularBoxView"],function(a,b,c,d){"use strict";var e=a.Marionette.Controller.extend({initialize:function(){this.rbvView=void 0},show:function(){"undefined"==typeof this.rbvView&&(this.rbvView=new d({x3did:"#x3dom",hideid:"#hidden"})),this.region.show(this.rbvView)}});return e});

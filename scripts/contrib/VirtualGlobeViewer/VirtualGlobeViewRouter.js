@@ -1,0 +1,1 @@
+define(["backbone.marionette","app","./VirtualGlobeViewController"],function(){"use strict";var a=function(a){this.globe_controller=a};return _.extend(a.prototype,{show:function(){this.globe_controller.show()}}),a});
