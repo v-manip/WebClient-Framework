@@ -69,6 +69,7 @@ Program.prototype.createFromSource = function(vertexSource, fragmentSource)
     var fragmentShader = this.createShader(gl.FRAGMENT_SHADER, fragmentSource);
     if (vertexShader == null || fragmentShader == null)
     {
+    	console.log('Shader compile error');
 		return false;
     }
 	

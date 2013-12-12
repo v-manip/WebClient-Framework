@@ -48,7 +48,9 @@ var Globe = function(options)
 	this.preRenderers = [];
 	this.nbCreatedLayers = 0;
 	
-	this.renderContext.renderer = this;
+	this.tileManager.addPostRenderer( this.vectorRendererManager );
+	
+	this.renderContext.addRenderer(this);
 	this.renderContext.requestFrame();
 }
 

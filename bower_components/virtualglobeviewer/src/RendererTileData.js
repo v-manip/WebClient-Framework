@@ -24,11 +24,72 @@ define( function() {
 /** @constructor
 	RendererTileData constructor
 	Contains a list of renderables for the tiles
+	
+	A renderable contains the following attributes/methods :
+		Attributes :
+			bucket : the renderable bucket
+			initChild (opt) : create a child at "init" time (children are created but not yet loaded)
+			generateChild (opt) : generate a child at "generate" time (children are loaded)
+			dispose : discard any gl data
+			add : add a geometry to the renderable
+			remove: remove a geometry from the renderable
  */
-var RendererTileData = function()
+var RendererTileData = function(manager)
 {
+	this.manager = manager;
 	this.renderables = [];
-	this.frameNumber = -1;
+}
+
+/**************************************************************************************************************/
+
+/**
+ * Initialize a child tile
+ */
+RendererTileData.prototype.initChild = function(childTile,i,j)
+{
+	var childData;
+	for ( var n = 0; n < this.renderables.length; n++ ) 
+	{
+		if ( this.renderables[n].initChild )
+		{		
+			var r = this.renderables[n].initChild(i,j,childTile);
+			if (r)
+			{
+				if (!childData)
+					childData = childTile.extension.renderer = new RendererTileData(this.manager);
+				childData.renderables.push( r );
+			}
+		}
+	}
+}
+
+/**************************************************************************************************************/
+
+/**
+ * Traverse the renderer data
+ */
+RendererTileData.prototype.traverse = function(tile,isLeaf)
+{
+	for ( var i = 0; i < this.renderables.length; i++ ) 
+	{
+		var renderable = this.renderables[i];
+		var bucket = renderable.bucket;
+		if ( bucket.layer._visible && bucket.layer._opacity > 0 )
+		{
+			if ( renderable.traverse )
+			{
+				renderable.traverse( this.manager, tile, isLeaf  );
+			}
+			else
+			{
+				if ( renderable.hasChildren 
+					&& !isLeaf )
+					continue;
+				
+				this.manager.renderables.push( renderable );
+			}
+		}
+	}
 }
 
 /**************************************************************************************************************/

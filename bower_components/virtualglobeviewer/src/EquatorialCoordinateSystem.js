@@ -17,7 +17,7 @@
  * along with GlobWeb. If not, see <http://www.gnu.org/licenses/>.
  ***************************************/
 
-define( ['./CoordinateSystem', './Numeric', './AstroCoordTransform'], function(CoordinateSystem, Numeric, AstroCoordTransform) {
+define( ['./CoordinateSystem', './Numeric', './AstroCoordTransform', './glMatrix'], function(CoordinateSystem, Numeric, AstroCoordTransform) {
 
 /**************************************************************************************************************/
 
@@ -133,7 +133,7 @@ CoordinateSystem.fromDegreesToDMS = function(degree)
 {
 	function stringSign(val)
 	{
-		return (val>=0 ? "": "-");
+		return (val>=0 ? "+": "-");
 	}
 	
 	var absLat = Math.abs(degree);
@@ -145,6 +145,8 @@ CoordinateSystem.fromDegreesToDMS = function(degree)
 	return stringSign(degree) + deg + String.fromCharCode(176) +" "+ min +"' "+ Numeric.roundNumber(sec, 2)+"\"";
 	
 }
+
+/**************************************************************************************************************/
 
 /**
  *	Function converting degrees to HMS("hours minuts seconds")
@@ -165,19 +167,18 @@ CoordinateSystem.fromDegreesToHMS = function(degree)
 	return hours+"h "+min+"m "+ Numeric.roundNumber(sec, 2) +"s";
 }
 
+/**************************************************************************************************************/
+
 /**
- *	Convert to default coordinate system
+ *	Conversion between coordinate systems("EQ" or "GAL")
  *
  *	@param {Float[]} geo Geographic coordinates
- *	@param type Type of coordinate system to convert :
- *		<ul>
- *			<li>"EQ" : Equatorial</li>
- *			<li>"GAL" : Galactic</li>
- *		</ul>
+ *	@param from Type of source coordinate system
+ *	@param to Type of destination coordinate system
  */
-CoordinateSystem.convertToDefault = function(geo, type) {
-	var convertType;
-	switch ( type+"2"+CoordinateSystem.type ) {
+CoordinateSystem.convert = function(geo, from, to)
+{
+	switch ( from+"2"+to ) {
 		case "GAL2EQ" :
 			convertType = AstroCoordTransform.Type.GAL2EQ;
 			break;
@@ -188,35 +189,55 @@ CoordinateSystem.convertToDefault = function(geo, type) {
 			console.error("Not implemented");
 			return null;
 	}
-
+	
 	return AstroCoordTransform.transformInDeg( geo, convertType );
 }
+
+/**************************************************************************************************************/
 
 /**
- *	Convert from default coordinate system
- *
- *	@param {Float[]} geo Geographic coordinates
- *	@param type Type of coordinate system to convert :
- *		<ul>
- *			<li>"EQ" : Equatorial</li>
- *			<li>"GAL" : Galactic</li>
- *		</ul>
+ *	Transfrom 3D vector from galactic coordinate system to equatorial
  */
-CoordinateSystem.convertFromDefault = function(geo, type) {
-	var convertType;
-	switch ( CoordinateSystem.type+"2"+type ) {
-		case "GAL2EQ" :
-			convertType = AstroCoordTransform.Type.GAL2EQ;
-			break;
-		case "EQ2GAL" :
-			convertType = AstroCoordTransform.Type.EQ2GAL;
-			break;
-		default:
-			console.error("Not implemented");
-			return null;
-	}
-
-	return AstroCoordTransform.transformInDeg( geo, convertType );
+CoordinateSystem.transformVec = function( vec )
+{
+	var res = [];
+	mat4.multiplyVec3( transformMatrix, vec, res );
+	return res;
 }
+
+/**************************************************************************************************************/
+
+// Compute transformation matrix from GAL to EQ in 3D coordinates
+var transformMatrix = [];
+
+var galNorth = CoordinateSystem.convert([0,90], 'GAL', 'EQ');
+var gal3DNorth = CoordinateSystem.fromGeoTo3D(galNorth);
+
+var galCenter = CoordinateSystem.convert([0, 0], 'GAL', 'EQ');
+var gal3DCenter = CoordinateSystem.fromGeoTo3D(galCenter);
+
+var galEast = CoordinateSystem.convert([90, 0], 'GAL', 'EQ');
+var gal3DEast = CoordinateSystem.fromGeoTo3D(galEast);
+
+transformMatrix[0] = gal3DCenter[0];
+transformMatrix[1] = gal3DCenter[1];
+transformMatrix[2] = gal3DCenter[2];
+transformMatrix[3] = 0.;
+transformMatrix[4] = gal3DEast[0];
+transformMatrix[5] = gal3DEast[1];
+transformMatrix[6] = gal3DEast[2];
+transformMatrix[7] = 0.;
+transformMatrix[8] = gal3DNorth[0];
+transformMatrix[9] = gal3DNorth[1];
+transformMatrix[10] = gal3DNorth[2];
+transformMatrix[11] = 0.;
+transformMatrix[12] = 0.;
+transformMatrix[13] = 0.;
+transformMatrix[14] = 0.;
+transformMatrix[15] = 1.;
+mat4.create(transformMatrix);
+mat4.inverse(transformMatrix);
+
+return CoordinateSystem;
 
 });

@@ -17,7 +17,7 @@
  * along with GlobWeb. If not, see <http://www.gnu.org/licenses/>.
  ***************************************/
 
-define(['./Tile', './HEALPixBase', './GeoBound', './CoordinateSystem', './Numeric', './AstroCoordTransform'], 
+define(['./Tile', './HEALPixBase', './GeoBound', './EquatorialCoordinateSystem', './Numeric', './AstroCoordTransform'], 
 	function(Tile, HEALPixBase, GeoBound, CoordinateSystem, Numeric, AstroCoordTransform) {
 
 /**************************************************************************************************************/
@@ -62,8 +62,6 @@ HEALPixTiling.prototype.generateLevelZeroTiles = function( config, tilePool )
 		var tile = new HEALPixTile(this.order, i, face);
 		tile.config = config;
 		level0Tiles.push( tile );
-		tile.generate(tilePool);
-		tile.state = Tile.State.NONE;
 	}
 
 	return level0Tiles;
@@ -76,58 +74,14 @@ HEALPixTiling.prototype.generateLevelZeroTiles = function( config, tilePool )
  */
 HEALPixTiling.prototype.lonlat2LevelZeroIndex = function(lon,lat)
 {	
-	// var i = Math.floor( (lon + 180) * this.level0NumTilesX / 360 );
- 	// var j = Math.floor( (lat + 90) * this.level0NumTilesY / 180 );
-	// return j * this.level0NumTilesX + i;
-	return 0;
-
-}
-
-/**************************************************************************************************************/
-
-/**
- *	Get range set of tile indices that overlap with geometry
- */
-HEALPixTiling.prototype.getTileRange = function(geometry, level)
-{
-	var rings = [];
-	if ( geometry['type'] == 'MultiPolygon' )
+	if ( this.coordSystem != "EQ" )
 	{
-		for ( var i=0; i<geometry['coordinates'].length; i++ )
-		{
-			rings.push( geometry['coordinates'][i][0] );
-		}
-	}
-	else
-	{
-		rings.push( geometry['coordinates'][0] );
+		var geo = CoordinateSystem.convert( [lon, lat], 'EQ', this.coordSystem );
+		lon = geo[0];
+		lat = geo[1];
 	}
 
-	var range = [];
-	for ( var r=0; r<rings.length; r++ )
-	{
-		var coords = rings[r];
-		var numPoints = coords.length;
-		for ( var i = 0; i < numPoints; i++ ) 
-		{
-
-			var lon = coords[i][0];
-			var lat = coords[i][1];
-			if ( this.coordSystem != CoordinateSystem.type )
-			{
-				var geo = CoordinateSystem.convertFromDefault( [lon, lat], this.coordSystem );
-				lon = geo[0];
-				lat = geo[1];
-			}
-
-			var tileIndex = HEALPixBase.lonLat2pix( this.order + level, lon, lat );
-			if ( range.indexOf(tileIndex) == -1 )
-			{
-				range.push(tileIndex);
-			}
-		}
-	}
-	return range;
+	return HEALPixBase.lonLat2pix( this.order, lon, lat );
 }
 
 /**************************************************************************************************************/
@@ -137,9 +91,9 @@ HEALPixTiling.prototype.getTileRange = function(geometry, level)
  */
 HEALPixTiling.prototype.findInsideTile = function(lon, lat, tiles)
 {
-	if ( this.coordSystem != CoordinateSystem.type )
+	if ( this.coordSystem != "EQ" )
 	{
-		var geo = CoordinateSystem.convertFromDefault( [lon, lat], this.coordSystem );
+		var geo = CoordinateSystem.convert( [lon, lat], 'EQ', this.coordSystem );
 		lon = geo[0];
 		lat = geo[1];
 	}
@@ -177,9 +131,9 @@ var HEALPixTile = function( order, pix, face )
 	this.face = face;
 
 	// Compute texture transform
-	var width = 1728/64;
+/*	var width = 1728/64;
 	var height = 1856/64;
-	this.texTransform = [64/1728, 64/1856, ((this.pixelIndex % width))/width, ((Math.floor(this.pixelIndex/width))/height)];
+	this.texTransform = [64/1728, 64/1856, ((this.pixelIndex % width))/width, ((Math.floor(this.pixelIndex/width))/height)];*/
 
 	this.geoBound = null;
 }
@@ -280,7 +234,6 @@ HEALPixTile.prototype.generateVertices = function()
 	var step = 1./(size - 1);
 	
 	// xyf calculation
-	//var xyf = new healpixBase.Xyf(this.pixelIndex, this.order);
 	var pix=this.pixelIndex&(this.nside*this.nside-1);
 	var ix = HEALPixBase.compress_bits(pix);
 	var iy = HEALPixBase.compress_bits(pix>>>1);
@@ -290,11 +243,11 @@ HEALPixTile.prototype.generateVertices = function()
 		for(var v = 0; v < size; v++){
 
 
-			if ( this.config.coordSystem != CoordinateSystem.type )
+			if ( this.config.coordSystem != 'EQ' )
 			{
 				var vertice = HEALPixBase.fxyf((ix+u*step)/this.nside, (iy+v*step)/this.nside, this.face);
 				var geo = CoordinateSystem.from3DToGeo( vertice );
-				var eq = CoordinateSystem.convertToDefault(geo, this.config.coordSystem);
+				var eq = CoordinateSystem.convert(geo, this.config.coordSystem, 'EQ');
 				worldSpaceVertices[u*size + v] = CoordinateSystem.fromGeoTo3D( eq );
 			}
 			else

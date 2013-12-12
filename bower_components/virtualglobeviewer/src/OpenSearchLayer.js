@@ -17,8 +17,8 @@
  * along with GlobWeb. If not, see <http://www.gnu.org/licenses/>.
  ***************************************/
 
- define(['./FeatureStyle','./VectorRendererManager','./Utils','./BaseLayer','./RendererTileData', './CoordinateSystem'],
-	function(FeatureStyle,VectorRendererManager,Utils,BaseLayer,RendererTileData, CoordinateSystem) {
+ define(['./FeatureStyle','./VectorRendererManager','./Utils','./BaseLayer','./RendererTileData', './CoordinateSystem', './Tile'],
+	function(FeatureStyle,VectorRendererManager,Utils,BaseLayer,RendererTileData, CoordinateSystem, Tile) {
 
 /**************************************************************************************************************/
 
@@ -42,6 +42,7 @@ var OpenSearchLayer = function(options){
 	this.maxRequests = options.maxRequests || 2;
 	this.requestProperties = "";
 	this.invertY = options.invertY || false;
+	this.coordSystemRequired = options.hasOwnProperty('coordSystemRequired') ? options.coordSystemRequired : true;
 
 	// Set style
 	if ( options && options['style'] )
@@ -62,6 +63,7 @@ var OpenSearchLayer = function(options){
 
 	// Maximum two requests for now
 	this.freeRequests = [];
+	this.tilesToLoad = [];
 	
 	// Build the request objects
 	for ( var i =0; i < this.maxRequests; i++ )
@@ -69,12 +71,6 @@ var OpenSearchLayer = function(options){
 		var xhr = new XMLHttpRequest();
 		this.freeRequests.push( xhr );
 	}
-	
-	// For rendering
-	this.pointBucket = null;
-	this.polygonBucket = null;
-	this.polygonRenderer = null;
-	this.pointRenderer = null;
 }
 
 /**************************************************************************************************************/
@@ -91,9 +87,7 @@ Utils.inherits( BaseLayer, OpenSearchLayer );
 OpenSearchLayer.prototype._attach = function( g )
 {
 	BaseLayer.prototype._attach.call( this, g );
-
 	this.extId += this.id;
-	
 	g.tileManager.addPostRenderer(this);
 }
 
@@ -104,35 +98,8 @@ OpenSearchLayer.prototype._attach = function( g )
  */
 OpenSearchLayer.prototype._detach = function()
 {
-	this.globe.tileManager.removePostRenderer(this);
-	this.pointRenderer = null;
-	this.pointBucket = null;
-
-	this.polygonRenderer = null;
-	this.polygonBucket = null;
-	
+	this.globe.tileManager.removePostRenderer(this);	
 	BaseLayer.prototype._detach.call(this);
-}
-
-/**************************************************************************************************************/
-
-/**
- *	Update children state as inherited from parent
- */
-OpenSearchLayer.prototype.updateChildrenState = function(tile)
-{
-	if ( tile.children )
-	{
-		for (var i = 0; i < 4; i++)
-		{
-			if ( tile.children[i].extension[this.extId] )
-			{
-				tile.children[i].extension[this.extId].state = OpenSearchLayer.TileState.INHERIT_PARENT;
-				tile.children[i].extension[this.extId].complete = true;
-			}
-			this.updateChildrenState(tile.children[i]);
-		}
-	}
 }
 
 /**************************************************************************************************************/
@@ -166,7 +133,6 @@ OpenSearchLayer.prototype.launchRequest = function(tile, url)
 	}
 	
 	var xhr = this.freeRequests.pop();
-	var prevCoordSystem = CoordinateSystem.type;
 	var self = this;
 	xhr.onreadystatechange = function(e)
 	{
@@ -174,38 +140,16 @@ OpenSearchLayer.prototype.launchRequest = function(tile, url)
 		{
 			if ( xhr.status == 200 )
 			{
-				// Don't handle features if coordinate system has been changed
-				// because tiles were regenerated
-				if ( CoordinateSystem.type != prevCoordSystem )
-				{
-					self.freeRequests.push(xhr);
-					return;
-				}
 
 				var response = JSON.parse(xhr.response);
 
 				tileData.complete = (response.totalResults == response.features.length);
 					
-				// Update children state
-				if ( tileData.complete )
-				{
-					self.updateChildrenState(tile);
-				}
-
 				self.updateFeatures(response.features);
 				
-				if ( response.features.length > 0 )
+				for ( var i=0; i < response.features.length; i++ )
 				{
-					for ( var i=0; i < response.features.length; i++ )
-					{
-						self.addFeature( response.features[i], tile );
-					}
-				}
-				else
-				{
-					// HACK to avoid multiple rendering of parent features
-					if ( tile.extension.pointSprite == undefined )
-						tile.extension.pointSprite  = new RendererTileData();
+					self.addFeature( response.features[i], tile );
 				}
 			}
 			else if ( xhr.status >= 400 )
@@ -243,7 +187,7 @@ OpenSearchLayer.prototype.setRequestProperties = function(properties)
 		{
 			var tile = featureData.tiles[i];
 			var feature = this.features[featureData.index];
-			this.removeFeatureFromRenderer( feature, tile );
+			this.globe.vectorRendererManager.removeGeometryFromTile(this,feature.geometry,tile);
 		}
 	}
 
@@ -310,52 +254,14 @@ OpenSearchLayer.prototype.addFeature = function( feature, tile )
 	feature.geometry.gid = feature.properties.identifier;
 
 	// Add to renderer
-	this.addFeatureToRenderer(feature, tile);
+	//this.addFeatureToRenderer(feature, tile);
+	
+	// MS: Feature could be added from ClusterOpenSearch which have features with different styles
+	var style = feature.properties.style ? feature.properties.style : this.style;
+
+	this.globe.vectorRendererManager.addGeometryToTile(this, feature.geometry, style, tile);
 }
 
-/**************************************************************************************************************/
-
-/**
- *	Add feature to renderer
- */
-OpenSearchLayer.prototype.addFeatureToRenderer = function( feature, tile )
-{
-	if ( feature.geometry['type'] == "Point" )
-	{
-		if (!this.pointRenderer) 
-		{
-			this.pointRenderer = this.globe.vectorRendererManager.getRenderer("PointSprite"); 
-			this.pointBucket = this.pointRenderer.getOrCreateBucket( this, this.style );
-		}
-		this.pointRenderer.addGeometryToTile( this.pointBucket, feature.geometry, tile );
-	} 
-	else if ( feature.geometry['type'] == "Polygon" )
-	{
-		if (!this.polygonRenderer) 
-		{
-			this.polygonRenderer = this.globe.vectorRendererManager.getRenderer("ConvexPolygon"); 
-			this.polygonBucket = this.polygonRenderer.getOrCreateBucket( this, this.style );
-		}
-		this.polygonRenderer.addGeometryToTile( this.polygonBucket, feature.geometry, tile );
-	}
-}
-
-/**************************************************************************************************************/
-
-/**
- *	Remove feature from renderer
- */
-OpenSearchLayer.prototype.removeFeatureFromRenderer = function( feature, tile )
-{
-	if ( feature.geometry['type'] == "Point" )
-	{
-		this.pointRenderer.removeGeometryFromTile( feature.geometry, tile );
-	} 
-	else if ( feature.geometry['type'] == "Polygon" )
-	{
-		this.polygonRenderer.removeGeometryFromTile( feature.geometry, tile );
-	}
-}
 
 /**************************************************************************************************************/
 
@@ -409,19 +315,11 @@ OpenSearchLayer.prototype.modifyFeatureStyle = function( feature, style )
 	var featureData = this.featuresSet[feature.properties.identifier];
 	if ( featureData )
 	{
-		var renderer;
-		if ( feature.geometry.type == "Point" ) {
-			renderer = this.pointRenderer;
-		}
-		else if ( feature.geometry.type == "Polygon" ) {
-			renderer = this.polygonRenderer;
-		}
-		
-		var newBucket = renderer.getOrCreateBucket(this,style);
 		for ( var i = 0; i < featureData.tiles.length; i++ )
 		{
-			renderer.removeGeometryFromTile(feature.geometry,featureData.tiles[i]);
-			renderer.addGeometryToTile(newBucket,feature.geometry,featureData.tiles[i]);
+			var tile = featureData.tiles[i];
+			this.globe.vectorRendererManager.removeGeometryFromTile(feature.geometry,tile);
+			this.globe.vectorRendererManager.addGeometryToTile(this,feature.geometry,style,tile);
 		}
 		
 	}
@@ -442,43 +340,69 @@ OpenSearchLayer.TileState = {
  */
 OpenSearchLayer.prototype.generate = function(tile) 
 {
-	// Create data for the layer
-	// Check that it has not been created before (it can happen with level 0 tile)
-	var osData = tile.extension[this.extId];
-	if ( !osData )
+	if ( tile.order == this.minOrder )
 	{
-		if ( tile.parent )
-		{	
-			var parentOSData = tile.parent.extension[this.extId];
-			osData = new OSData(this,tile);
-			osData.state = parentOSData.complete ? OpenSearchLayer.TileState.INHERIT_PARENT : OpenSearchLayer.TileState.NOT_LOADED;
-			osData.complete = parentOSData.complete;
-		}
-		else
-		{
-			osData = new OSData(this,tile);
-		}
-		
-		// Store in on the tile
-		tile.extension[this.extId] = osData;
+		tile.extension[this.extId] = new OSData(this,tile,null);
 	}
 	
 };
 
 /**************************************************************************************************************/
 
-
 /**
  *	OpenSearch renderable
  */
 
-var OSData = function(layer,tile)
+var OSData = function(layer,tile,p)
 {
 	this.layer = layer;
+	this.parent = p;
 	this.tile = tile;
 	this.featureIds = []; // exclusive parameter to remove from layer
 	this.state = OpenSearchLayer.TileState.NOT_LOADED;
 	this.complete = false;
+	this.childrenCreated = false;
+}
+
+/**************************************************************************************************************/
+
+/**
+ * Traverse 
+ */
+OSData.prototype.traverse = function( tile )
+{
+	if (!this.layer._visible)
+		return;
+		
+	if (tile.state != Tile.State.LOADED)
+		return;
+
+	// Check if the tile need to be loaded
+	if ( this.state == OpenSearchLayer.TileState.NOT_LOADED )
+	{
+		this.layer.tilesToLoad.push( this );
+	}
+	
+	// Create children if needed
+	if ( this.state == OpenSearchLayer.TileState.LOADED && !this.complete
+			&&  tile.state == Tile.State.LOADED && tile.children && !this.childrenCreated )
+	{
+		for ( var i = 0; i < 4; i++ )
+		{
+			if (!tile.children[i].extension[this.layer.extId])
+				tile.children[i].extension[this.layer.extId] = new OSData(this.layer,tile.children[i],this);
+		}
+		this.childrenCreated = true;
+	
+		
+		// HACK : set renderable to have children
+		var renderables = tile.extension.renderer ? tile.extension.renderer.renderables : [];
+		for ( var i=0; i<renderables.length; i++ )
+		{
+			if ( renderables[i].bucket.layer == this.layer )
+				renderables[i].hasChildren = true;
+		}
+	}
 }
 
 /**************************************************************************************************************/
@@ -487,12 +411,25 @@ var OSData = function(layer,tile)
  * 	Dispose renderable data from tile
  */
 OSData.prototype.dispose = function( renderContext, tilePool )
-{	
+{
+	if (this.parent && this.parent.childrenCreated)
+	{
+		this.parent.childrenCreated = false;
+		// HACK : set renderable to not have children!
+		var renderables = this.parent.tile.extension.renderer ? this.parent.tile.extension.renderer.renderables : [];
+		for ( var i=0; i<renderables.length; i++ )
+		{
+			if ( renderables[i].bucket.layer == this.layer )
+				renderables[i].hasChildren = false;
+		}
+	}
+	
 	for( var i = 0; i < this.featureIds.length; i++ )
 	{
 		this.layer.removeFeature( this.featureIds[i], this.tile );
 	}
 	this.tile = null;
+	this.parent = null;
 }
 
 /**************************************************************************************************************/
@@ -503,14 +440,12 @@ OSData.prototype.dispose = function( renderContext, tilePool )
 OpenSearchLayer.prototype.buildUrl = function( tile )
 {
 	var url = this.serviceUrl + "/search?order=" + tile.order + "&healpix=" + tile.pixelIndex;
-	if ( this.globe.tileManager.imageryProvider.tiling.coordSystem == "EQ" )
+	if ( this.coordSystemRequired )
 	{
+		// OpenSearchLayer always works in equatorial
 		url += "&coordSystem=EQUATORIAL";
 	}
-	else
-	{
-		url += "&coordSystem=GALACTIC";
-	}
+	url += "&media=json";
 	return url;
 }
 
@@ -519,7 +454,7 @@ OpenSearchLayer.prototype.buildUrl = function( tile )
 // Internal function to sort tiles
 function _sortTilesByDistance(t1,t2)
 {
-	return t1.distance - t2.distance;
+	return t1.tile.distance - t2.tile.distance;
 };
 
 /**
@@ -533,41 +468,20 @@ OpenSearchLayer.prototype.render = function( tiles )
 		return;
 	
 	// Sort tiles
-	tiles.sort( _sortTilesByDistance );
+	this.tilesToLoad.sort( _sortTilesByDistance );
 
 	// Load data for the tiles if needed
-	for ( var i = 0; i < tiles.length && this.freeRequests.length > 0; i++ )
+	for ( var i = 0; i < this.tilesToLoad.length && this.freeRequests.length > 0; i++ )
 	{
-		var tile = tiles[i];
-		if ( tile.order >= this.minOrder )
+		var tile = this.tilesToLoad[i].tile;
+		var url = this.buildUrl(tile);
+		if ( url )
 		{
-			var osData = tile.extension[this.extId];
-			if ( !osData || osData.state == OpenSearchLayer.TileState.NOT_LOADED ) 
-			{
-				// Check if the parent is loaded or not, in that case load the parent first
-				while ( tile.parent 
-					&& tile.parent.order >= this.minOrder 
-					&& tile.parent.extension[this.extId]
-					&& tile.parent.extension[this.extId].state == OpenSearchLayer.TileState.NOT_LOADED )
-				{
-					tile = tile.parent;
-				}
-				
-				if ( tile.extension[this.extId] && tile.extension[this.extId].state == OpenSearchLayer.TileState.NOT_LOADED )
-				{
-					// Skip loading parent
-					if ( tile.parent && tile.parent.extension[this.extId].state == OpenSearchLayer.TileState.LOADING )
-						continue;
-
-					var url = this.buildUrl(tile);
-					if ( url )
-					{
-						this.launchRequest(tile, url);
-					}
-				}
-			}
+			this.launchRequest(tile, url);
 		}
 	}
+	
+	this.tilesToLoad.length = 0;
 }
 
 /**************************************************************************************************************/
@@ -586,10 +500,10 @@ OpenSearchLayer.prototype.updateFeatures = function( features )
 			case "Point":
 
 				// Convert to default coordinate system if needed
-				if ( CoordinateSystem.type && CoordinateSystem.type != this.globe.tileManager.imageryProvider.tiling.coordSystem )
+				/*if ( "EQ" != this.globe.tileManager.imageryProvider.tiling.coordSystem )
 				{
-					currentFeature.geometry.coordinates = CoordinateSystem.convertToDefault(currentFeature.geometry.coordinates, this.globe.tileManager.imageryProvider.tiling.coordSystem);
-				}
+					currentFeature.geometry.coordinates = CoordinateSystem.convert(currentFeature.geometry.coordinates, this.globe.tileManager.imageryProvider.tiling.coordSystem, "EQ");
+				}*/
 
 				// Convert to geographic to simplify picking
 				if ( currentFeature.geometry.coordinates[0] > 180 )
@@ -600,10 +514,10 @@ OpenSearchLayer.prototype.updateFeatures = function( features )
 				for ( var j = 0; j < ring.length; j++ )
 				{
 					// Convert to default coordinate system if needed
-					if ( CoordinateSystem.type && CoordinateSystem.type != this.globe.tileManager.imageryProvider.tiling.coordSystem )
+					/*if ( "EQ" != this.globe.tileManager.imageryProvider.tiling.coordSystem )
 					{
-						ring[j] = CoordinateSystem.convertToDefault(ring[j], this.globe.tileManager.imageryProvider.tiling.coordSystem);
-					}
+						ring[j] = CoordinateSystem.convert(ring[j], this.globe.tileManager.imageryProvider.tiling.coordSystem, "EQ");
+					}*/
 
 					// Convert to geographic to simplify picking
 					if ( ring[j][0] > 180 )

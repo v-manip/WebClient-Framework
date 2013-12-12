@@ -1,0 +1,1 @@
+define(["backbone.marionette","app","./AnalyticsViewController"],function(a){"use strict";var b=a.Controller.extend({initialize:function(a){this.analyticsController=a},show:function(){this.analyticsController.show()}});return b});

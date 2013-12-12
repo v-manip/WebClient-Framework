@@ -58,6 +58,7 @@ var Tile = function()
 	
 	// Tile configuration given by tile manager : contains if the tile uses skirt, the tesselation, etc...
 	this.config = null;
+	this.imageSize = 256;
 }
 
 /**************************************************************************************************************/
@@ -139,6 +140,17 @@ Tile.prototype.initFromParent = function(parent,i,j)
 	
 	// Compute the bounding box
 	this.radius = this.bbox.getRadius();
+	
+	// Init extension
+	for ( var x in parent.extension ) 
+	{
+		var e = parent.extension[x];
+		if ( e.initChild )
+		{
+			e.initChild(this,i,j);
+		}
+	}
+
 }
 
 /**************************************************************************************************************/
@@ -154,7 +166,7 @@ Tile.prototype.needsToBeRefined = function(renderContext)
 	// Approximate the radius of one texel : the radius of the tile divided by the image size
 	// The radius is taken as the average of the bbox width and length, rather than the actual radius because at the pole, there is a large difference betwen width and length
 	// and the radius (ie maximum width/length) is too pessimistic
-	var radius = 0.25 * ( (this.bbox.max[0] - this.bbox.min[0]) + (this.bbox.max[1] - this.bbox.min[1]) )  / this.config.imageSize; 
+	var radius = 0.25 * ( (this.bbox.max[0] - this.bbox.min[0]) + (this.bbox.max[1] - this.bbox.min[1]) )  / this.imageSize; 
 	
 	// Transform the closest point from the eye in world coordinates
 	var mat = this.matrix;
@@ -257,7 +269,7 @@ Tile.prototype.dispose = function(renderContext,tilePool)
 	if ( this.state == Tile.State.LOADED  )
 	{
 		tilePool.disposeGLBuffer(this.vertexBuffer);
-		tilePool.disposeGLTexture(this.texture);
+		if (this.texture) tilePool.disposeGLTexture(this.texture);
 		
 		this.vertexBuffer = null;
 		this.texture = null;
@@ -276,11 +288,12 @@ Tile.prototype.deleteChildren = function(renderContext,tilePool)
 {
 	if ( this.children )
 	{
-		// Dispose children resources, and then delete its children
 		for (var i = 0; i < 4; i++)
 		{
-			this.children[i].dispose(renderContext,tilePool);
+			// Recursively delete its children
 			this.children[i].deleteChildren(renderContext,tilePool);
+			// Dispose its ressources (WebGL)
+			this.children[i].dispose(renderContext,tilePool);
 		}
 		
 		// Cleanup the tile
@@ -430,6 +443,7 @@ Tile.prototype.generate = function(tilePool,image,elevations)
 	if (image)
 	{
 		this.texture = tilePool.createGLTexture(image);
+		this.imageSize = this.config.imageSize;
 	}
 	
 	this.state = Tile.State.LOADED;
