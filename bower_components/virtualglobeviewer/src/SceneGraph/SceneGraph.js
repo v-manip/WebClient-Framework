@@ -36,6 +36,18 @@ SceneGraph.Node = function()
 	this.matrix = null;
 }
 
+SceneGraph.Node.prototype.dispose = function(renderContext) {
+	for (var idx = this.children.length - 1; idx >= 0; idx--) {
+		this.children[idx].dispose(renderContext);
+	};
+
+	for (var idx = this.geometries.length - 1; idx >= 0; idx--) {
+		this.geometries[idx].dispose(renderContext);
+	};
+
+	this.matrix = null;
+}
+
 BoundingBox.prototype.merge = function(bbox)
 {
 	if ( !bbox.min || !bbox.max )
