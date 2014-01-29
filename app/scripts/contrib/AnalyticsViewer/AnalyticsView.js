@@ -1,4 +1,4 @@
-define(['backbone.marionette',
+define(['core/BaseView',
 		'communicator',
 		'app',
 		'models/AnalyticsModel',
@@ -7,21 +7,21 @@ define(['backbone.marionette',
 		'analytics',
 		'nv'
 	],
-	function(Marionette, Communicator, App, AnalyticsModel, globals) {
+	function(BaseView, Communicator, App, AnalyticsModel, globals) {
 
-		var AnalyticsView = Marionette.View.extend({
+		var AnalyticsView = BaseView.extend({
 
 			model: new AnalyticsModel.AnalyticsModel(),
 			className: "analytics",
 
 			initialize: function(options) {
-				this.isClosed = true;
+				// Initialize parent upfront to have this.context() initialized:
+				BaseView.prototype.initialize.call(this, options);
+				this.enableEmptyView(false);
+
 				this.selection_list = [];
 				this.plotdata = [];
 				this.plot_type = 'scatter';
-				$(window).resize(function() {
-					this.onResize();
-				}.bind(this));
 			},
 
 			events: {
@@ -38,11 +38,11 @@ define(['backbone.marionette',
 				}
 			},
 
-			onShow: function() {
-				
-				//this.delegateEvents();
-				this.isClosed = false;
-				//this.triggerMethod('view:connect');
+        	didInsertElement: function() {
+				this.listenTo(Communicator.mediator, "map:layer:change", this.changeLayer);
+				this.listenTo(Communicator.mediator, "productCollection:sortUpdated", this.onSortProducts);
+				this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChanged);
+				this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
 
 				this.$el.append(
 					"<div class='d3canvas'></div>" +
@@ -55,11 +55,23 @@ define(['backbone.marionette',
 
 				this.render('scatter');
 				
-				return this;
+				return this;				
 			},
 
-			onResize: function() {
-			},
+	        didRemoveElement: function() {
+	            // NOTE: The 'listenTo' bindings are automatically unbound by marionette
+	        },
+
+	        showEmptyView: function() {
+	            // FIXXME: use marionette's templating mechanism for that!
+	            this.$el.html('<div class="empty-view">Please select an Area of Interest (AoI) in one of the map viewer!</div>');
+	        },
+
+	        hideEmptyView: function() {
+	            // CAUTION: simply removing the content of the view's div can have sideeffects. Be cautious not
+	            // to accidently remove previousle created elements!
+	            this.$el.html('');
+	        },
 
 			render: function(type) {
 
@@ -82,8 +94,6 @@ define(['backbone.marionette',
 						analytics.parallelsPlot(args);
 						break;
 				}
-
-				this.onResize();
 			},
 
 			changeLayer: function(options) {},

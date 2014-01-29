@@ -17,33 +17,14 @@ define([
 		initialize: function(opts) {
 			this.id = opts.id;
 			
-			this.analyticsView = new AnalyticsView({});
-
-			this.connectToView();
+			this.analyticsView = new AnalyticsView({
+				context: Communicator.mediator
+			});
 		},
 
 		getView: function(id) {
 			return this.analyticsView;
 		},
-
-		connectToView: function() {
-			this.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.analyticsView.changeLayer, this.analyticsView));
-			this.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.analyticsView.onSortProducts, this.analyticsView));
-			this.listenTo(Communicator.mediator, "selection:changed", _.bind(this.analyticsView.onSelectionChanged, this.analyticsView));
-			this.listenTo(Communicator.mediator, 'time:change', _.bind(this.analyticsView.onTimeChange, this.analyticsView));
-
-			this.listenTo(this.analyticsView, 'view:disconnect', function() {
-                this.stopListening();
-                console.log('splitview disconnect');
-            }.bind(this));
-
-            this.listenTo(this.analyticsView, 'view:connect', function() {
-                this.connectToView();
-                console.log('splitview connect');
-            }.bind(this));
-
-		},
-
 
 		isActive: function(){
 			return !this.analyticsView.isClosed;
