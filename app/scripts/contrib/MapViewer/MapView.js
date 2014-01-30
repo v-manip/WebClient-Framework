@@ -214,30 +214,6 @@ define(['backbone.marionette',
 				});
 			},
 
-			// FIXXME: properties like 'visibility' should not be changed in here. The MapView is not responsible for setting the
-			// attribute, that should be done by the Layers sidebar module/controller.
-			changeLayer: function(options) {
-				if (options.isBaseLayer){
-	                globals.baseLayers.forEach(function(model, index) {
-	                    model.set("visible", false);
-	                });
-	                globals.baseLayers.find(function(model) { return model.get('name') == options.name; }).set("visible", true);
-	                this.map.setBaseLayer(this.map.getLayersByName(options.name)[0]);
-                } else {
-                    var product = globals.products.find(function(model) { return model.get('name') == options.name; });
-                    if (product){
-                            product.set("visible", options.visible);
-                    }else{
-                            globals.overlays.find(function(model) { return model.get('name') == options.name; }).set("visible", options.visible);
-                    }
-
-                    var layers = this.map.getLayersByName(options.name);
-                    if (layers.length) {
-                    	layers[0].setVisibility(options.visible);
-                    }
-                }
-			},
-
 			onSortProducts: function(productLayers) {
 				globals.products.each(function(product) {
 					if (this.isModelCompatible(product)) {
@@ -253,6 +229,17 @@ define(['backbone.marionette',
                 var layer = this.map.getLayersByName(options.model.get("name"))[0];
                 if (layer){
                         layer.setOpacity(options.value);
+                }
+            },
+
+            changeLayer: function(options) {
+				if (options.isBaseLayer){
+	                this.map.setBaseLayer(this.map.getLayersByName(options.name)[0]);
+                } else {
+                    var layers = this.map.getLayersByName(options.name);
+                    if (layers.length) {
+                    	layers[0].setVisibility(options.visible);
+                    }
                 }
             },
 

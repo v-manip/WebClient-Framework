@@ -66,6 +66,8 @@ define([
          *  Layers are either baselayers, products or overlays.
          */
         _setLayersFromAppContext: function() {
+            this._initialLayers = {};
+
             globals.baseLayers.each(function(model) {
                 if (model.get('visible')) {
                     this._addInitialLayer(model, true);
@@ -75,6 +77,7 @@ define([
 
             globals.products.each(function(model) {
                 if (model.get('visible')) {
+                    console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
                     this._addInitialLayer(model, false);
                     console.log('[VirtualGlobeViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
                 }
@@ -87,6 +90,7 @@ define([
                 }
             }.bind(this));
 
+            console.log('initlayers: ', this._initialLayers);
             this._initLayers();
         },
 
