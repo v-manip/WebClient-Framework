@@ -240,7 +240,7 @@ define([
         // Remove the current overlay layers (setting this.overlayLayers.length = 0):
         this.removeAllOverlays();
 
-        _.each(sortedOverlayLayers, function(desc) {
+        _.each(sortedOverlayLayers.reverse(), function(desc) {
             console.log('sort: adding layer with ordinal: ' + desc.model.get('ordinal'));
             this.addLayer(desc.model, desc.isBaseLayer);
         }.bind(this));
