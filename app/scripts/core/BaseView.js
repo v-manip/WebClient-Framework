@@ -1,8 +1,9 @@
 define([
 	'backbone.marionette',
+	'globals',
 	'jquery',
 	'underscore'
-], function(Marionette, $, _) {
+], function(Marionette, globals, $, _) {
 
 	'use strict';
 
@@ -49,6 +50,42 @@ define([
 		},
 
 		/*
+		 * Connects the default VMANIP context events if a corresponding method property exists in the
+		 * extended object.
+		 */
+		_setupVMANIPContext: function() {
+			if (_.isFunction(this.onLayerChange)) {
+				this.listenTo(this.context(), 'map:layer:change', this._onLayerChangeBase);
+			}
+		},
+
+		/*
+		 * Internal function to check if the changed layer is supported by the view via the extended objects
+		 * 'supportsLayer' function. If no such function is defined _all_ layers are accepted by default and the
+		 * extended objects 'onLayerChange' method is called. If 'supportsLayer' is defined its returning boolean
+		 * value determines the execution of 'onLayerChange'.
+		 */
+		_onLayerChangeBase: function(options) {
+			if (!_.isFunction(this.supportsLayer)) {
+				return true;
+			}
+
+			var model = this.getModelForLayer(options.name, options.isBaseLayer);
+
+			if (!model) {				
+				console.log('[BaseView::_onLayerChangeBase] no model found for ' + options.name);
+				return;
+			}
+
+			if (!this.supportsLayer(model)) {
+				//console.log('[BaseView::_onLayerChangeBase] not a supported layer: ' + model.get('name'));
+				return;
+			} else {
+				this.onLayerChange(model, options.visible);
+			}
+		},
+
+		/*
 		 * Shows the content or the empty view, depending on the current setting and binds the view to the context
 		 * if necessary. Also manages the resize functionality. The child's 'didInsertElement' method is also
 		 * called, if defined.
@@ -56,6 +93,7 @@ define([
 		onShow: function() {
 			if (this.isClosed) {
 				if (_.isFunction(this.didInsertElement)) {
+					this._setupVMANIPContext();
 					this.didInsertElement();
 				}
 
@@ -128,6 +166,31 @@ define([
 		 */
 		getViewer: function() {
 			return this.viewer;
+		},
+
+		getModelForLayer: function(name, isBaseLayer) {
+			var layerModel = undefined;
+			if (isBaseLayer) {
+				layerModel = globals.baseLayers.find(function(model) {
+					return model.get('name') === name;
+				});
+			} else {
+				layerModel = globals.products.find(function(model) {
+					return model.get('name') === name;
+				});
+
+				if (!layerModel) {
+					layerModel = globals.overlays.find(function(model) {
+						return model.get('name') === name;
+					});
+				}
+			}
+
+			if (typeof layerModel === 'undefined') {
+				throw Error('[BaseView::getModelForLayer] Product ' + name + ' is unknown!');
+			}
+
+			return layerModel;
 		},
 	});
 

@@ -94,31 +94,6 @@ define([
             this._initLayers();
         },
 
-        _getLayerModel: function(options) {
-            var layerModel = undefined;
-            if (options.isBaseLayer) {
-                layerModel = globals.baseLayers.find(function(model) {
-                    return model.get('name') === options.name;
-                });
-            } else {
-                layerModel = globals.products.find(function(model) {
-                    return model.get('name') === options.name;
-                });
-
-                if (!layerModel) {
-                    layerModel = globals.overlays.find(function(model) {
-                        return model.get('name') === options.name;
-                    });
-                }
-            }
-
-            if (typeof layerModel === 'undefined') {
-                throw Error('Product ' + options.name + ' is unknown!');
-            }
-
-            return layerModel;
-        },
-
         _addAreaOfInterest: function(geojson) {
             this.getViewer().addAreaOfInterest(geojson);
         },
@@ -134,9 +109,10 @@ define([
         _removeAllOverlays: function() {
             this.getViewer().removeAllOverlays();
         },
-
+        
+        // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
         _onLayerChange: function(options) {
-            var model = this._getLayerModel(options); // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
+            var model = this.getModelForLayer(options.name, options.isBaseLayer);; 
 
             if (options.visible) {
                 this._addLayer(model, options.isBaseLayer);

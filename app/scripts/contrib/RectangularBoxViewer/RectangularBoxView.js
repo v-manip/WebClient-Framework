@@ -15,7 +15,7 @@ define([
 
 			this.isInitialized = false;
 
-			this.defaults = {
+			this.imageLayerModel = {
 				setTimeLog: false,
 				addLightToScene: true,
 				background: ["0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2",
@@ -52,13 +52,26 @@ define([
 			this.currentToI = null;
 		},
 
+		supportsLayer: function(model) {
+			return (model.get('view').protocol === 'WMS') ? true : false;
+		},
+
+		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
+		onLayerChange: function(model, isVisible) {
+			if (isVisible) {
+				this._updateScene(_.extend(this.imageLayerModel, this.options, {
+					wmsUrl: model.get('view').urls[0],
+					wmsLayer: model.get('view').id
+				}));
+				console.log('[RectangularBoxView::onLayerChange] selected ' + model.get('name'));
+			} else {
+				console.log('[RectangularBoxView::onLayerChange] deselected ' + model.get('name'));
+			}
+		},
+
 		didInsertElement: function() {
 			this.listenTo(this.context(), 'selection:changed', this._setAreaOfInterest);
 			this.listenTo(this.context(), 'time:change', this._onTimeChange);
-		},
-
-		didRemoveElement: function() {
-			// NOTE: The 'listenTo' bindings are automatically unbound by marionette
 		},
 
 		showEmptyView: function() {
@@ -87,7 +100,7 @@ define([
 				var bounds = area.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
-				this._updateScene(_.extend(this.defaults, this.options, {
+				this._updateScene(_.extend(this.imageLayerModel, this.options, {
 					aoi: this.currentAoI,
 					toi: toi
 				}));
@@ -100,7 +113,7 @@ define([
 
 			this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 
-			this._updateScene(_.extend(this.defaults, this.options, {
+			this._updateScene(_.extend(this.imageLayerModel, this.options, {
 				aoi: this.currentAoI,
 				toi: this.currentToI
 			}));
