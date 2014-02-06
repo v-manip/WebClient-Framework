@@ -149,7 +149,7 @@ define([
 			}
 		},
 
-		_updateSceneLKJLKJ: function(opts) {
+		_updateScenelkjlkjlkj: function(opts) {
 			this.enableEmptyView(false);
 			this.onShow();
 
@@ -174,7 +174,10 @@ define([
 			}
 			scene.setTimespan(this.currentToI);
 			scene.setBoundingBox(this.currentAoI[0], this.currentAoI[1], this.currentAoI[2], this.currentAoI[3]);
+
 			scene.setResolution(500, 500);
+			scene.setOffset(0, 0.2, 0);
+			scene.setScale(1, 3, 1);
 
 			scene.registerMIMETypeHandler('image/x-aaigrid', function(receivedData, responseData) {
 				var lines = receivedData.split('\n');
