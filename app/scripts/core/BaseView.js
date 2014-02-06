@@ -72,7 +72,7 @@ define([
 
 			var model = this.getModelForLayer(options.name, options.isBaseLayer);
 
-			if (!model) {				
+			if (!model) {
 				console.log('[BaseView::_onLayerChangeBase] no model found for ' + options.name);
 				return;
 			}
@@ -155,17 +155,86 @@ define([
 			this.isEmpty = flag;
 		},
 
-		/* Sets the viewer. If a viewer is set the 'cacheViewerInstance' property can be used to
+		/**
+		 * Sets the viewer. If a viewer is set the 'cacheViewerInstance' property can be used to
 		 * manage the lifecycle of the viewer.
 		 */
 		setViewer: function(viewer) {
 			this.viewer = viewer;
 		},
 
-		/* Returs the viewer, if any is set.
+		/**
+		 * Returs the viewer, if any is set.
 		 */
 		getViewer: function() {
 			return this.viewer;
+		},
+
+		/**
+		 * Returns the models of the currently selected layers. If a 'filter' function is given it will be applied to check
+		 * if the model is compatible with the given filter.
+		 */
+		getModelsForSelectedLayers: function(filter) {
+			var models = {};
+
+			globals.baseLayers.each(function(model) {
+				if (model.get('visible')) {
+					if (typeof filter !== 'undefined') {
+						if (filter(model)) {
+							models[model.get('name')] = {
+								model: model,
+								type: 'baselayer'
+							};
+							// console.log('[BaseView::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
+						}
+					} else {
+						models[model.get('name')] = {
+							model: model,
+							type: 'baselayer'
+						};
+					}
+				}
+			});
+
+			globals.products.each(function(model) {
+				if (model.get('visible')) {
+					if (typeof filter !== 'undefined') {
+						if (filter(model)) {
+							models[model.get('name')] = {
+								model: model,
+								type: 'product'
+							};
+							// console.log('[BaseView::setLayersFromAppContext] added product "' + model.get('name') + '"');
+						}
+					} else {
+						models[model.get('name')] = {
+							model: model,
+							type: 'product'
+						};
+					}
+				}
+			});
+
+			globals.overlays.each(function(model) {
+				if (model.get('visible')) {
+					if (typeof filter !== 'undefined') {
+						if (filter(model)) {
+							models[model.get('name')] = {
+								model: model,
+								type: 'overlay'
+							};
+							// console.log('[BaseView::setLayersFromAppContext] added overlay "' + model.get('name') + '"');
+						}
+					} else {
+						models[model.get('name')] = {
+							model: model,
+							type: 'overlay'
+						};
+					}
+				}
+			});
+
+			return models;
 		},
 
 		getModelForLayer: function(name, isBaseLayer) {

@@ -15,7 +15,7 @@ define([
 
 			this.isInitialized = false;
 
-			this.imageLayerModel = {
+			this.sceneDefaults = {
 				setTimeLog: false,
 				addLightToScene: true,
 				background: ["0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2",
@@ -28,28 +28,38 @@ define([
 					console.log("Height at clicked position: ", height)
 				},
 
-				resolution: [500, 500],
-
-				outputCRS: 'http://www.opengis.net/def/crs/EPSG/0/4326',
-				CRS: ['SRS', 'EPSG:4326'],
-
-				wmsUrl: 'http://tiles.maps.eox.at/wms?service=wms&version=',
-				// wmsLayer: 'bluemarble',
-				wmsLayer: 'terrain',
-				// wmsUrl: 'http://neso.cryoland.enveo.at/cryoland/ows',
-				// wmsLayer: 'daily_FSC_PanEuropean_Optical',
-				wmsVersion: '1.1.1',
-
-				wcsUrl: 'http://data.eox.at/elevation?',
-				wcsLayer: 'ACE2',
-				wcsVersion: '2.0.0',
-				wcsMimeType: 'image/x-aaigrid',
-				wcsDataType: 'text'
+				resolution: [500, 500]
 			};
 
 			// Set a default AoI as the timeline can be changed even if no AoI is selected in the WebClient:
 			this.currentAoI = [17.6726953125, 56.8705859375, 19.3865625, 58.12302734375];
 			this.currentToI = null;
+
+			// FIXXME: add to config.json and get it from there then!
+			this.demProvider = new EarthServerGenericClient.WCSProvider({
+				id: 'ACE2',
+				urls: ['http://data.eox.at/elevation?'],
+				crs: ['SRS', 'EPSG:4326'],
+				outputCRS: 'http://www.opengis.net/def/crs/EPSG/0/4326',
+				format: 'image/x-aaigrid',
+				datatype: 'text'
+			});
+
+			this.imageryProvider = [];
+
+			// Initially create the imagery provider based on the currently selected layers:
+			var items = this.getModelsForSelectedLayers(this.supportsLayer);
+			_.forEach(items, function(value, key) {
+				this.imageryProvider.push(new EarthServerGenericClient.WMSProvider({
+					id: value.model.get('view').id,
+					urls: value.model.get('view').urls,
+					crs: 'EPSG:4326',
+					format: value.model.get('view').format.replace('image/', ''),
+					transparent: 'true'
+				}));
+			}.bind(this));
+
+			this.options = opts;
 		},
 
 		supportsLayer: function(model) {
@@ -59,12 +69,30 @@ define([
 		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
 		onLayerChange: function(model, isVisible) {
 			if (isVisible) {
-				this._updateScene(_.extend(this.imageLayerModel, this.options, {
-					wmsUrl: model.get('view').urls[0],
-					wmsLayer: model.get('view').id
+				this.imageryProvider.push(new EarthServerGenericClient.WMSProvider({
+					id: model.get('view').id,
+					urls: model.get('view').urls,
+					crs: 'EPSG:4326',
+					format: model.get('view').format.replace('image/', ''),
+					transparent: 'true'
 				}));
+
+				if (this.currentAoI) {
+					this._updateScene(_.extend(this.sceneDefaults, this.options, {
+						wmsUrl: model.get('view').urls[0],
+						wmsLayer: model.get('view').id
+					}));
+				}
 				console.log('[RectangularBoxView::onLayerChange] selected ' + model.get('name'));
 			} else {
+				var item = _.find(this.imageryProvider, function(value, key) {
+					return (value.id === model.get('view').id);
+				})
+
+				if (item) {
+					var idx = _.indexOf(this.imageryProvider, item);
+					this.imageryProvider.splice(idx, 1);
+				}
 				console.log('[RectangularBoxView::onLayerChange] deselected ' + model.get('name'));
 			}
 		},
@@ -100,7 +128,7 @@ define([
 				var bounds = area.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
-				this._updateScene(_.extend(this.imageLayerModel, this.options, {
+				this._updateScene(_.extend(this.sceneDefaults, this.options, {
 					aoi: this.currentAoI,
 					toi: toi
 				}));
@@ -113,10 +141,99 @@ define([
 
 			this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 
-			this._updateScene(_.extend(this.imageLayerModel, this.options, {
-				aoi: this.currentAoI,
-				toi: this.currentToI
-			}));
+			if (this.currentAoI) {
+				this._updateScene(_.extend(this.sceneDefaults, this.options, {
+					aoi: this.currentAoI,
+					toi: this.currentToI
+				}));
+			}
+		},
+
+		_updateSceneLKJLKJ: function(opts) {
+			this.enableEmptyView(false);
+			this.onShow();
+
+			EarthServerGenericClient.MainScene.resetScene();
+			EarthServerGenericClient.MainScene.setTimeLog(opts.setTimeLog);
+			EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
+			EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
+
+			var scene = new EarthServerGenericClient.Model_DEMWithOverlays();
+			scene.setDEMProvider(this.demProvider);
+			for (var idx = 0; idx < this.imageryProvider.length; ++idx) {
+				scene.addImageryProvider(this.imageryProvider[idx]);
+			}
+			var toi = this.currentToI;
+			// In case no ToI was set during the lifecycle of this viewer we can access
+			// the time of interest from the global context:
+			if (!toi) {
+				var starttime = new Date(this.context().timeOfInterest.start);
+				var endtime = new Date(this.context().timeOfInterest.end);
+
+				toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
+			}
+			scene.setTimespan(this.currentToI);
+			scene.setBoundingBox(this.currentAoI[0], this.currentAoI[1], this.currentAoI[2], this.currentAoI[3]);
+			scene.setResolution(500, 500);
+
+			scene.registerMIMETypeHandler('image/x-aaigrid', function(receivedData, responseData) {
+				var lines = receivedData.split('\n');
+				var ncols = parseInt(lines[8].replace('ncols', ''));
+				var nrows = parseInt(lines[9].replace('nrows', ''));
+
+				var heightmap = [];
+				var maxValue = 0;
+				var minValue = 0;
+
+				for (var i = 0; i < nrows; ++i) {
+					var value_array = lines[i + 14].split(' ');
+
+					for (var idx = 1; idx < 500; /*value_array.length;*/ ++idx) {
+						var val = parseFloat(value_array[idx]);
+						if (maxValue < val) {
+							maxValue = value_array[idx];
+						}
+						if (minValue > val) {
+							minValue = value_array[idx];
+						}
+						if (typeof heightmap[idx - 1] === 'undefined') {
+							heightmap[idx - 1] = [];
+						}
+						heightmap[idx - 1].push(value_array[idx])
+					}
+				}
+
+				responseData.height = ncols - 1;
+				responseData.width = nrows - 1;
+
+				responseData.maxHMvalue = maxValue;
+				responseData.minHMvalue = minValue;
+				responseData.minXvalue = 0;
+				responseData.minZvalue = 0;
+				responseData.maxXvalue = ncols - 1;
+				responseData.maxZvalue = nrows - 1;
+
+				responseData.heightmap = heightmap;
+
+				return true;
+			});
+			EarthServerGenericClient.MainScene.addModel(scene);
+
+			// create the scene: Cube has 60% height compared to width and length
+			// EarthServerGenericClient.MainScene.createScene('x3dScene', 'theScene', 1, 0.6, 1);
+			// EarthServerGenericClient.MainScene.createScene('x3dScene', 'x3dScene', 1, 0.6, 1);
+			// FIXXME: this was the only combination that worked, investigate API!
+			EarthServerGenericClient.MainScene.createScene(opts.x3dscene_id, opts.x3dscene_id, 1, 0.8, 1);
+			EarthServerGenericClient.MainScene.createAxisLabels("Latitude", "Height", "Longitude");
+			// register a progressbar (you can register your own or just delete this lines)
+			var pb = new EarthServerGenericClient.createProgressBar("progressbar");
+			EarthServerGenericClient.MainScene.setProgressCallback(pb.updateValue);
+			// create the UI
+			EarthServerGenericClient.MainScene.createUI('x3domUI');
+			// starts loading and creating the models
+			// here the function starts as soon as the html page is fully loaded
+			// you can map this function to e.g. a button
+			EarthServerGenericClient.MainScene.createModels();
 		},
 
 		_updateScene: function(opts) {
@@ -143,8 +260,9 @@ define([
 			// scene.setCoverages('daily_FSC_PanEuropean_Optical', 'ACE2');
 			scene.setCoverages(opts.wmsLayer, opts.wcsLayer);
 			// scene.setAreaOfInterest(-11.25, 22.5, 0, 33.75);
-			scene.setAreaOfInterest(opts.aoi[0], opts.aoi[1], opts.aoi[2], opts.aoi[3]);
-			scene.setTimespan(opts.toi);
+			scene.setTimespan(this.currentToI);
+			scene.setBoundingBox(this.currentAoI[0], this.currentAoI[1], this.currentAoI[2], this.currentAoI[3]);
+			scene.setResolution(500, 500);
 			scene.setOutputCRS(opts.outputCRS);
 			scene.setResolution(opts.resolution[0], opts.resolution[1]);
 			// scene.setOffset(0, 0.2, 0);
