@@ -52,6 +52,10 @@ define([
 
         dumpLayerConfig: function() {
             this.globeView.dumpLayerConfig();
+        },
+
+        zoomTo: function(opts) {
+            this.globeView.zoomTo(opts);
         }
     });
 

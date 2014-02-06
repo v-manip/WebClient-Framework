@@ -37,26 +37,7 @@ define([
             var controller = new SliceViewController();
             this.instances[id] = controller;
 
-            // setupKeyboardShortcuts(controller);
-
             return controller;
-        };
-
-        var setupKeyboardShortcuts = function(controller) {
-            keypress.combo("a", function() {
-                var pos = controller.getStartPosition();
-                // FIXXME: not that nice...
-                controller.zoomTo({
-                    x: pos.center[0],
-                    y: pos.center[1],
-                    l: undefined
-                });
-            });
-
-            // REMOVE: only for debugging...
-            keypress.combo("d", function() {
-                controller.dumpLayerConfig();
-            });
         };
     });
 });
