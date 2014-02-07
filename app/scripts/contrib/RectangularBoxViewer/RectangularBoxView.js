@@ -149,7 +149,7 @@ define([
 			}
 		},
 
-		_updateScenelkjlkjlkj: function(opts) {
+		_updateScene: function(opts) {
 			this.enableEmptyView(false);
 			this.onShow();
 
@@ -158,7 +158,7 @@ define([
 			EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
 			EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
 
-			var scene = new EarthServerGenericClient.Model_DEMWithOverlays();
+			var scene = new VMANIP.RectangularBoxViewerModel();
 			scene.setDEMProvider(this.demProvider);
 			for (var idx = 0; idx < this.imageryProvider.length; ++idx) {
 				scene.addImageryProvider(this.imageryProvider[idx]);
@@ -239,7 +239,7 @@ define([
 			EarthServerGenericClient.MainScene.createModels();
 		},
 
-		_updateScene: function(opts) {
+		_updateSceneOld: function(opts) {
 			this.enableEmptyView(false);
 			this.onShow();
 
