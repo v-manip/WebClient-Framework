@@ -62,9 +62,39 @@
             </div>
         </div>
 
-            <script id="rbv-empty-view-template" type="text/html">
-              <i class="sprite sprite-scatter"></i> Please select an Area of Interest (AoI) in one of the MapViewer!
-            </script>
+        <ComposedShader DEF='ComposedShader' id="rbv-dem-shader-template">
+            <field name='tex' type='SFInt32' value='0'/>
+            <field name='transparency' type='SFInt32' value='0.2'/>
+
+            <ShaderPart type='VERTEX'>
+                attribute vec3 position;
+                uniform mat4 modelViewProjectionMatrix;
+
+                void main()
+                {
+                    gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);
+                }
+            </ShaderPart>
+            <ShaderPart type='FRAGMENT'>
+                #ifdef GL_ES
+                  precision highp float;
+                #endif
+
+                uniform sampler2D tex;
+                uniform float transparency;
+
+                void main()
+                {
+                    //vec4 texCol = texture2D(tex, fragTexCoord);
+                    //gl_FragColor = texCol * transparency;
+                    gl_FragColor = vec4(0,1,0,1);
+                }
+            </ShaderPart>
+        </ComposedShader>
+
+        <script id="rbv-empty-view-template" type="text/html">
+          <i class="sprite sprite-scatter"></i> Please select an Area of Interest (AoI) in one of the MapViewer!
+        </script>
 
         <div id="preload">
            <img src="images/glyphicons.png" width="1" height="1" alt="Preload image" />
