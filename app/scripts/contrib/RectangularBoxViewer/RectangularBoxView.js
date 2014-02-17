@@ -28,7 +28,9 @@ define([
 					console.log("Height at clicked position: ", height)
 				},
 
-				resolution: [500, 500]
+				resolution: [500, 500],
+
+				noDemValue: 0
 			};
 
 			// Set a default AoI as the timeline can be changed even if no AoI is selected in the WebClient:
@@ -36,7 +38,7 @@ define([
 			this.currentToI = null;
 
 			// FIXXME: add to config.json and get it from there then!
-			this.demRequest = new RBV.Request.WCS({
+			this.demProvider = new RBV.Provider.WCS({
 				id: 'ACE2',
 				urls: ['http://data.eox.at/elevation?'],
 				crs: ['SRS', 'EPSG:4326'],
@@ -45,12 +47,54 @@ define([
 				datatype: 'text'
 			});
 
-			this.imageryRequest = [];
+			this.demProvider.registerMimeTypeHandler('image/x-aaigrid', function(receivedData, responseData) {
+				var lines = receivedData.split('\n');
+				var ncols = parseInt(lines[8].replace('ncols', ''));
+				var nrows = parseInt(lines[9].replace('nrows', ''));
+
+				var heightmap = [];
+				var maxValue = 0;
+				var minValue = 0;
+
+				for (var i = 0; i < nrows; ++i) {
+					var value_array = lines[i + 14].split(' ');
+
+					for (var idx = 1; idx < 500; /*value_array.length;*/ ++idx) {
+						var val = parseFloat(value_array[idx]);
+						if (maxValue < val) {
+							maxValue = value_array[idx];
+						}
+						if (minValue > val) {
+							minValue = value_array[idx];
+						}
+						if (typeof heightmap[idx - 1] === 'undefined') {
+							heightmap[idx - 1] = [];
+						}
+						heightmap[idx - 1].push(value_array[idx])
+					}
+				}
+
+				responseData.height = ncols - 1;
+				responseData.width = nrows - 1;
+
+				responseData.maxHMvalue = maxValue;
+				responseData.minHMvalue = minValue;
+				responseData.minXvalue = 0;
+				responseData.minZvalue = 0;
+				responseData.maxXvalue = ncols - 1;
+				responseData.maxZvalue = nrows - 1;
+
+				responseData.heightmap = heightmap;
+
+				return true;
+			});
+
+			this.imageryProvider = [];
 
 			// Initially create the imagery provider based on the currently selected layers:
 			var items = this.getModelsForSelectedLayers(this.supportsLayer);
 			_.forEach(items, function(value, key) {
-				this.imageryRequest.push(new RBV.Request.WMS({
+				this.imageryProvider.push(new RBV.Provider.WMS({
 					id: value.model.get('view').id,
 					urls: value.model.get('view').urls,
 					crs: 'EPSG:4326',
@@ -69,7 +113,7 @@ define([
 		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
 		onLayerChange: function(model, isVisible) {
 			if (isVisible) {
-				this.imageryRequest.push(new RBV.Request.WMS({
+				this.imageryProvider.push(new RBV.Provider.WMS({
 					id: model.get('view').id,
 					urls: model.get('view').urls,
 					crs: 'EPSG:4326',
@@ -85,13 +129,13 @@ define([
 				}
 				console.log('[RectangularBoxView::onLayerChange] selected ' + model.get('name'));
 			} else {
-				var item = _.find(this.imageryRequest, function(value, key) {
+				var item = _.find(this.imageryProvider, function(value, key) {
 					return (value.id === model.get('view').id);
 				})
 
 				if (item) {
-					var idx = _.indexOf(this.imageryRequest, item);
-					this.imageryRequest.splice(idx, 1);
+					var idx = _.indexOf(this.imageryProvider, item);
+					this.imageryProvider.splice(idx, 1);
 				}
 				console.log('[RectangularBoxView::onLayerChange] deselected ' + model.get('name'));
 			}
@@ -153,16 +197,32 @@ define([
 			this.enableEmptyView(false);
 			this.onShow();
 
-			EarthServerGenericClient.MainScene.resetScene();
-			EarthServerGenericClient.MainScene.setTimeLog(opts.setTimeLog);
-			EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
-			EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
+			// EarthServerGenericClient.MainScene.resetScene();
+			// EarthServerGenericClient.MainScene.setTimeLog(opts.setTimeLog);
+			// EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
+			// EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
 
-			var scene = new RBV.Model_DemWithOverlays();
-			scene.setDEMRequest(this.demRequest);
-			for (var idx = 0; idx < this.imageryRequest.length; ++idx) {
-				scene.addImageryRequest(this.imageryRequest[idx]);
+			var scene = new RBV.Scene(this.sceneDefaults);
+			scene.addProvider('WCS', this.demProvider);
+			for (var idx = 0; idx < this.imageryProvider.length; ++idx) {
+				scene.addProvider('WMS', this.imageryProvider[idx]);
 			}
+			scene.setToI(this.toi());
+			scene.setAoI(this.currentAoI, 0, 100000);
+
+			//scene.setDemNoDataValue(0);
+			//scene.setOffset(0, 0.2, 0);
+			//scene.setScale(1, 3, 1);
+
+			var model = new RBV.Models.DemWithOverlays();
+			model.setDemProvider(this.demProvider);
+			model.setImageryProviders(this.imageryProvider);
+
+			scene.addModel(model, [this.demProvider]);
+			scene.show(this.options);
+		},
+
+		toi: function() {
 			var toi = this.currentToI;
 			// In case no ToI was set during the lifecycle of this viewer we can access
 			// the time of interest from the global context:
@@ -172,73 +232,9 @@ define([
 
 				toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 			}
-			scene.setTimespan(this.currentToI);
-			scene.setAreaOfInterest(this.currentAoI[0], this.currentAoI[1], this.currentAoI[2], this.currentAoI[3],0,100000);
 
-			scene.setResolution(this.sceneDefaults.resolution[0], this.sceneDefaults.resolution[1]);			
-			scene.setDemNoDataValue(0);
-			// scene.setOffset(0, 0.2, 0);
-			// scene.setScale(1, 3, 1);
-
-			scene.registerMIMETypeHandler('image/x-aaigrid', function(receivedData, responseData) {
-				var lines = receivedData.split('\n');
-				var ncols = parseInt(lines[8].replace('ncols', ''));
-				var nrows = parseInt(lines[9].replace('nrows', ''));
-
-				var heightmap = [];
-				var maxValue = 0;
-				var minValue = 0;
-
-				for (var i = 0; i < nrows; ++i) {
-					var value_array = lines[i + 14].split(' ');
-
-					for (var idx = 1; idx < 500; /*value_array.length;*/ ++idx) {
-						var val = parseFloat(value_array[idx]);
-						if (maxValue < val) {
-							maxValue = value_array[idx];
-						}
-						if (minValue > val) {
-							minValue = value_array[idx];
-						}
-						if (typeof heightmap[idx - 1] === 'undefined') {
-							heightmap[idx - 1] = [];
-						}
-						heightmap[idx - 1].push(value_array[idx])
-					}
-				}
-
-				responseData.height = ncols - 1;
-				responseData.width = nrows - 1;
-
-				responseData.maxHMvalue = maxValue;
-				responseData.minHMvalue = minValue;
-				responseData.minXvalue = 0;
-				responseData.minZvalue = 0;
-				responseData.maxXvalue = ncols - 1;
-				responseData.maxZvalue = nrows - 1;
-
-				responseData.heightmap = heightmap;
-
-				return true;
-			});
-			EarthServerGenericClient.MainScene.addModel(scene);
-
-			// create the scene: Cube has 60% height compared to width and length
-			// EarthServerGenericClient.MainScene.createScene('x3dScene', 'theScene', 1, 0.6, 1);
-			// EarthServerGenericClient.MainScene.createScene('x3dScene', 'x3dScene', 1, 0.6, 1);
-			// FIXXME: this was the only combination that worked, investigate API!
-			EarthServerGenericClient.MainScene.createScene(opts.x3dscene_id, opts.x3dscene_id, 1, 0.8, 1);
-			EarthServerGenericClient.MainScene.createAxisLabels("Latitude", "Height", "Longitude");
-			// register a progressbar (you can register your own or just delete this lines)
-			var pb = new EarthServerGenericClient.createProgressBar("progressbar");
-			EarthServerGenericClient.MainScene.setProgressCallback(pb.updateValue);
-			// create the UI
-			EarthServerGenericClient.MainScene.createUI('x3domUI');
-			// starts loading and creating the models
-			// here the function starts as soon as the html page is fully loaded
-			// you can map this function to e.g. a button
-			EarthServerGenericClient.MainScene.createModels();
-		},
+			return toi;
+		}
 
 		// _updateScene: function(opts) {
 		// 	this.enableEmptyView(false);
@@ -256,15 +252,15 @@ define([
 		// 	EarthServerGenericClient.MainScene.OnClickFunction = opts.onClickFunction;
 
 		// 	// Convert OGCRequest data to the EarthServerGenericClient format:
-		// 	var wcsUrl = this.demRequest.urls[0];
-		// 	var wmsUrl = this.imageryRequest[0].urls[0];
-		// 	var wmsLayer = this.imageryRequest[0].id;
-		// 	var wcsLayer = this.demRequest.id;
-		// 	var outputCRS = this.demRequest.outputCRS;
-		// 	var wmsVersion = this.imageryRequest[0].version;
-		// 	var wcsVersion = this.demRequest.version;
-		// 	var wcsMimeType = this.demRequest.format;
-		// 	var wcsDataType = this.demRequest.datatype;
+		// 	var wcsUrl = this.demProvider.urls[0];
+		// 	var wmsUrl = this.imageryProvider[0].urls[0];
+		// 	var wmsLayer = this.imageryProvider[0].id;
+		// 	var wcsLayer = this.demProvider.id;
+		// 	var outputCRS = this.demProvider.outputCRS;
+		// 	var wmsVersion = this.imageryProvider[0].version;
+		// 	var wcsVersion = this.demProvider.version;
+		// 	var wcsMimeType = this.demProvider.format;
+		// 	var wcsDataType = this.demProvider.datatype;
 
 		// 	var scene = new EarthServerGenericClient.Model_WMSDemWMS();
 		// 	scene.setURLs(wmsUrl, wcsUrl);
@@ -278,7 +274,7 @@ define([
 		// 	scene.setWCSVersion(wcsVersion);
 		// 	scene.setWCSMimeType(wcsMimeType);
 		// 	scene.setWCSDataType(wcsDataType);
-		// 	scene.setCoordinateReferenceSystem(this.demRequest.crs[0], this.demRequest.crs[1]);
+		// 	scene.setCoordinateReferenceSystem(this.demProvider.crs[0], this.demProvider.crs[1]);
 		// 	// This value will be considered as NODATA in the DEM. Vertices with that value will not be used and gaps are left.
 		// 	scene.setDemNoDataValue(0);
 		// 	// The user can set the height of the model manually to make sure multiple models have the same scaling.
