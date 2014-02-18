@@ -52,7 +52,7 @@ module.exports = function (grunt) {
                     '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
                     '<%= yeoman.app %>/scripts/config.json',
                     '<%= yeoman.app %>/templates/{,*/}*.hbs',
-                    '<%= yeoman.app %>/bower_components/rectangularboxviewer/js/EarthServerClient_DailyBuild.js'
+                    '<%= yeoman.app %>/scripts/vendor/rectangularboxviewer/*.js'
                 ]
             }
         },
@@ -360,7 +360,7 @@ module.exports = function (grunt) {
                         'bower_components/analyticsviewer/lib/scripts/analytics.min.js',
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/virtualglobeviewer/src/**',
-                        'bower_components/rectangularboxviewer/**',
+                        'scripts/vendor/rectangularboxviewer/*.js',
                         'data/**'
                     ]
                 },{
