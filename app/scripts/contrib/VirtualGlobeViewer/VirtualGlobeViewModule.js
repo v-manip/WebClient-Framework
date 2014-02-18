@@ -36,7 +36,7 @@ define([
             } else {
                 startPosition = {
                     center: [15, 47],
-                    distance: 0,
+                    distance: 2400000,
                     duration: 100,
                     tilt: 40
                 };
@@ -67,19 +67,9 @@ define([
         };
 
         var setupKeyboardShortcuts = function(controller) {
-            keypress.combo("a", function() {
-                var pos = controller.getStartPosition();
-                // FIXXME: not that nice...
-                controller.zoomTo({
-                    x: pos.center[0],
-                    y: pos.center[1],
-                    l: undefined
-                });
-            });
-
-            // REMOVE: only for debugging...
-            keypress.combo("d", function() {
-                controller.dumpLayerConfig();
+            var keypressListener = new keypress.Listener();
+            keypressListener.simple_combo("a", function() {
+                controller.zoomTo(controller.getStartPosition());
             });
         };
     });

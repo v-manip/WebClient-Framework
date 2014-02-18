@@ -6,10 +6,11 @@
 	root.define([
 		'backbone',
 		'communicator',
+		'globals',
 		'underscore'
 	],
 
-	function( Backbone, Communicator, UIElementTmpl ) {
+	function( Backbone, Communicator, globals, UIElementTmpl ) {
 
 		var LayerSelectionView = Backbone.Marionette.CollectionView.extend({
 
@@ -21,6 +22,7 @@
 			onShow: function(view){
 
 				this.listenTo(Communicator.mediator, "productCollection:updateSort", this.updateSort);
+				this.listenTo(Communicator.mediator, "map:layer:change", this.onLayerSelectionChange);
 
 				$( ".sortable" ).sortable({
 					revert: true,
@@ -47,7 +49,23 @@
 		        this.render();
 		        
 		        Communicator.mediator.trigger("productCollection:sortUpdated");
-		    }
+		    },
+
+			onLayerSelectionChange: function(options) {
+				if (options.isBaseLayer){
+	                globals.baseLayers.forEach(function(model, index) {
+	                    model.set("visible", false);
+	                });
+	                globals.baseLayers.find(function(model) { return model.get('name') == options.name; }).set("visible", true);
+                } else {
+                    var product = globals.products.find(function(model) { return model.get('name') == options.name; });
+                    if (product){
+                            product.set("visible", options.visible);
+                    }else{
+                            globals.overlays.find(function(model) { return model.get('name') == options.name; }).set("visible", options.visible);
+                    }
+                }
+			},
 		});
 		
 		return {'LayerSelectionView':LayerSelectionView};

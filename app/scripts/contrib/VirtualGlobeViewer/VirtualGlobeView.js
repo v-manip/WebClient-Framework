@@ -35,11 +35,11 @@ define([
             if (!this.getViewer()) {
                 this.setViewer(this._createGlobe());
                 this._setLayersFromAppContext();
-                this._zoomTo(this._startPosition);
+                this.zoomTo(this._startPosition);
             }
 
             this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
-            this.listenTo(Communicator.mediator, 'map:setUrl', this._zoomTo);
+            this.listenTo(Communicator.mediator, 'map:setUrl', this.zoomTo);
             this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
             this.listenTo(Communicator.mediator, 'map:layer:change', this._onLayerChange);
             this.listenTo(Communicator.mediator, 'time:change', this._onTimeChange);
@@ -66,6 +66,8 @@ define([
          *  Layers are either baselayers, products or overlays.
          */
         _setLayersFromAppContext: function() {
+            this._initialLayers = {};
+
             globals.baseLayers.each(function(model) {
                 if (model.get('visible')) {
                     this._addInitialLayer(model, true);
@@ -75,6 +77,7 @@ define([
 
             globals.products.each(function(model) {
                 if (model.get('visible')) {
+                    console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
                     this._addInitialLayer(model, false);
                     console.log('[VirtualGlobeViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
                 }
@@ -87,6 +90,7 @@ define([
                 }
             }.bind(this));
 
+            console.log('initlayers: ', this._initialLayers);
             this._initLayers();
         },
 
@@ -222,10 +226,10 @@ define([
                 duration: 100,
                 tilt: 45
             }
-            this._zoomTo(position);
+            this.zoomTo(position);
         },
 
-        _zoomTo: function(position) {
+        zoomTo: function(position) {
             this.getViewer().zoomTo(position);
         },
 
