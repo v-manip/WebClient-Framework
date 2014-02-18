@@ -72,7 +72,7 @@ define([
 			keypressListener.simple_combo("a", function() {
 				var pos = controller.getStartPosition();
 				controller.centerAndZoom(pos.x, pos.y, pos.l);
-			});
+			});*/
 		};
 
 		// FIXXME: the router/history concept has to be redesigned for the multiple view approach!

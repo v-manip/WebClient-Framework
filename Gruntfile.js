@@ -80,7 +80,7 @@ module.exports = function (grunt) {
                 changeOrigin: true,
                 xforward: false
             },{
-                context: '/wps',
+                context: '/browse/ows',
                 host: 'localhost',
                 port: 3080,
                 https: false,
@@ -359,9 +359,10 @@ module.exports = function (grunt) {
                         'bower_components/virtualglobeviewer/src/{,*/}*.js',
                         'bower_components/Keypress/keypress.js',
                         'bower_components/analyticsviewer/lib/scripts/analytics.min.js',
+                        'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
-                        'bower_components/rectangularboxviewer/js/EarthServerClient_DailyBuild.js',
+                        'bower_components/rectangularboxviewer/js/dist/*.js',
                         'data/**'
                     ]
                 },{
