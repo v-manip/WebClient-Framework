@@ -1,8 +1,6 @@
 define([
-	'xtk',
-	'xtk-gui',
 	'jquery'
-], function(X, dat, $) {
+], function($) {
 
 	'use strict';
 
