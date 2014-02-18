@@ -24,9 +24,8 @@
         <script src="bower_components/modernizr/modernizr.js"></script>
         <!-- endbuild -->
 
-        <script type="text/javascript" src="scripts/vendor/x3dom-full.debug.js"></script>
-        <script type="text/javascript" src="bower_components/rectangularboxviewer/dist/EarthServerClient_DailyBuild.js"></script>
-        <script type="text/javascript" src="bower_components/rectangularboxviewer/dist/RectangularBoxViewer.debug.js"></script>
+        <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer-deps.debug.js"></script>
+        <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer.debug.js"></script>
         <script type="text/javascript" src="bower_components/Keypress/keypress.js"></script>          
 
     </head>
@@ -62,36 +61,6 @@
                 <div id='x3domUI'></div>
             </div>
         </div>
-
-        <ComposedShader DEF='ComposedShader' id="rbv-dem-shader-template">
-            <field name='tex' type='SFInt32' value='0'/>
-            <field name='transparency' type='SFInt32' value='0.2'/>
-
-            <ShaderPart type='VERTEX'>
-                attribute vec3 position;
-                uniform mat4 modelViewProjectionMatrix;
-
-                void main()
-                {
-                    gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);
-                }
-            </ShaderPart>
-            <ShaderPart type='FRAGMENT'>
-                #ifdef GL_ES
-                  precision highp float;
-                #endif
-
-                uniform sampler2D tex;
-                uniform float transparency;
-
-                void main()
-                {
-                    //vec4 texCol = texture2D(tex, fragTexCoord);
-                    //gl_FragColor = texCol * transparency;
-                    gl_FragColor = vec4(0,1,0,1);
-                }
-            </ShaderPart>
-        </ComposedShader>
 
         <script id="rbv-empty-view-template" type="text/html">
           <i class="sprite sprite-scatter"></i> Please select an Area of Interest (AoI) in one of the MapViewer!
