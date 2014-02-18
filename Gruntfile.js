@@ -362,7 +362,7 @@ module.exports = function (grunt) {
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
-                        'bower_components/rectangularboxviewer/js/dist/*.js',
+                        'bower_components/rectangularboxviewer/dist/*.js',
                         'data/**'
                     ]
                 },{
