@@ -108,7 +108,8 @@ define(['backbone.marionette',
 
 			onTimeChange: function (time) {
 				this.selected_time = time;
-				this.sendRequest();
+				if(this.selection_list.length>0)
+					this.sendRequest();
 			},
 
 			sendRequest: function(){
