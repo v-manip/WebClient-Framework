@@ -94,13 +94,19 @@ define([
 			// Initially create the imagery provider based on the currently selected layers:
 			var items = this.getModelsForSelectedLayers(this.supportsLayer);
 			_.forEach(items, function(value, key) {
-				this.imageryProviders.push(new VMANIP.Layers.WMS({
+				var layer = new VMANIP.Layers.WMS({
 					id: value.model.get('view').id,
 					urls: value.model.get('view').urls,
 					crs: 'EPSG:4326',
 					format: value.model.get('view').format.replace('image/', ''),
 					transparent: 'true'
-				}));
+				});
+				this.imageryProviders.push(layer);
+
+				// // Connect to events relevant for the RBV:
+				// layer.on('change:opacity', function(model, value) {
+				// 	console.log('Layer: ' + model.get('id') + ' / opacity: ' + value);
+				// })
 			}.bind(this));
 
 			this.options = opts;
@@ -142,7 +148,18 @@ define([
 		},
 
 		_onUpdateOpacity: function(desc) {
-			console.log('model: ' + desc.model.get('view').id + ' / opacity: ' + desc.value);
+			var layer_id = desc.model.get('view').id;
+
+			// Find corresponding layer:
+			var changedLayer = _.find(this.imageryProviders, function(layer) {
+				return layer.get('id') === layer_id;
+			});
+
+			if (changedLayer) {
+				changedLayer.set('opacity', desc.value);
+			} else {
+				throw Error('[RectangularBoxView::_onUpdateOpacity] No layer found, which should not happen.');
+			}
 		},
 
 		didInsertElement: function() {
