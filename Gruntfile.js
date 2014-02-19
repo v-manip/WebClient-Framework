@@ -52,6 +52,7 @@ module.exports = function (grunt) {
                     '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
                     '<%= yeoman.app %>/scripts/config.json',
                     '<%= yeoman.app %>/templates/{,*/}*.hbs',
+                    '<%= yeoman.app %>/scripts/vendor/vmanip-core/*.js',
                     '<%= yeoman.app %>/scripts/vendor/rectangularboxviewer/*.js'
                 ]
             }

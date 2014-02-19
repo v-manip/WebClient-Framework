@@ -7,7 +7,7 @@ define([
 
 	'use strict';
 
-	var BoxView = X3DOMView.extend({
+	var RectangularBoxView = X3DOMView.extend({
 		initialize: function(opts) {
 			// Initialize parent upfront to have this.context() initialized:
 			X3DOMView.prototype.initialize.call(this, opts);
@@ -38,7 +38,7 @@ define([
 			this.currentToI = null;
 
 			// FIXXME: add to config.json and get it from there then!
-			this.demProvider = new RBV.Provider.WCS({
+			this.demProvider = new VMANIP.Layers.WCS({
 				id: 'ACE2',
 				urls: ['http://data.eox.at/elevation?'],
 				crs: ['SRS', 'EPSG:4326'],
@@ -94,7 +94,7 @@ define([
 			// Initially create the imagery provider based on the currently selected layers:
 			var items = this.getModelsForSelectedLayers(this.supportsLayer);
 			_.forEach(items, function(value, key) {
-				this.imageryProviders.push(new RBV.Provider.WMS({
+				this.imageryProviders.push(new VMANIP.Layers.WMS({
 					id: value.model.get('view').id,
 					urls: value.model.get('view').urls,
 					crs: 'EPSG:4326',
@@ -113,7 +113,7 @@ define([
 		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
 		onLayerChange: function(model, isVisible) {
 			if (isVisible) {
-				this.imageryProviders.push(new RBV.Provider.WMS({
+				this.imageryProviders.push(new VMANIP.Layers.WMS({
 					id: model.get('view').id,
 					urls: model.get('view').urls,
 					crs: 'EPSG:4326',
@@ -127,7 +127,7 @@ define([
 						wmsLayer: model.get('view').id
 					}));
 				}
-				console.log('[RectangularBoxView::onLayerChange] selected ' + model.get('name'));
+				console.log('[RectangularRectangularBoxView::onLayerChange] selected ' + model.get('name'));
 			} else {
 				var item = _.find(this.imageryProviders, function(value, key) {
 					return (value.id === model.get('view').id);
@@ -137,13 +137,18 @@ define([
 					var idx = _.indexOf(this.imageryProviders, item);
 					this.imageryProviders.splice(idx, 1);
 				}
-				console.log('[RectangularBoxView::onLayerChange] deselected ' + model.get('name'));
+				console.log('[RectangularRectangularBoxView::onLayerChange] deselected ' + model.get('name'));
 			}
+		},
+
+		_onUpdateOpacity: function(desc) {
+			console.log('model: ' + desc.model.get('view').id + ' / opacity: ' + desc.value);
 		},
 
 		didInsertElement: function() {
 			this.listenTo(this.context(), 'selection:changed', this._setAreaOfInterest);
 			this.listenTo(this.context(), 'time:change', this._onTimeChange);
+			this.listenTo(this.context(), 'productCollection:updateOpacity', this._onUpdateOpacity);
 		},
 
 		showEmptyView: function() {
@@ -243,6 +248,6 @@ define([
 		}
 	});
 
-	return BoxView;
+	return RectangularBoxView;
 
 }); // end module definition

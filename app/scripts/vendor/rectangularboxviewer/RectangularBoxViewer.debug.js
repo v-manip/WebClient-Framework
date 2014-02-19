@@ -65,8 +65,9 @@ RBV.Visualization = RBV.Visualization || {};
  */
 // root, data, index, noDataValue, noDemValue
 RBV.Visualization.LODTerrainWithOverlays = function(opts) {
-    this.materialNodes = []; //Stores the IDs of the materials to change the transparency.
-    this.data = opts.dem;
+    this.transparencyFNs = {};
+    this.data = opts.demResponse;
+    this.textureResponses = opts.textureResponses;
     this.index = opts.index;
     this.noData = opts.noDataValue;
     this.noDemValue = opts.noDemValue;
@@ -82,12 +83,6 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
      * @type {number}
      */
     var lodRange2 = 17000;
-
-    /**
-     * The canvas that holds the received image.
-     * @type {HTMLElement}
-     */
-    this.canvasTexture = this.createCanvas(this.data.texture, this.index, this.noDataValue, this.data.removeAlphaChannel);
 
     /**
      * Size of one chunk. Chunks at the borders can be smaller.
@@ -130,8 +125,29 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
         //Build all necessary information and values to create a chunk
         var info = this.createChunkInfo(this.index, chunkSize, chunkInfo, currentChunk, this.data.width, this.data.height);
         var hm = this.getHeightMap(info);
-        var appearance = this.getAppearancesM("TerrainApp_" + this.index, 3, this.index, this.canvasTexture,
-            this.data.transparency, this.data.specularColor, this.data.diffuseColor);
+
+        // Generate one texture for each 'imagery' ServerResponse:
+        var texture_descriptions = [];
+        for (var idx = 0; idx < this.textureResponses.length; idx++) {
+            var textureData = this.textureResponses[idx].texture;
+            var textureEl = this.createCanvas(textureData, this.index, this.noDataValue, false);
+
+            texture_descriptions.push({
+                id: this.textureResponses[idx].layerName,
+                textureEl: textureEl
+            });
+        };
+
+        var appearances = this.configureAppearances({
+            name: "TerrainApp_" + this.index,
+            lodCounts: 3,
+            modelIndex: this.index,
+            texture_descriptions: texture_descriptions,
+            transparency: this.data.transparency,
+            specularColor: this.data.specularColor,
+            diffuseColor: this.data.diffuseColor,
+            upright: false
+        });
 
         var transform = document.createElement('Transform');
         transform.setAttribute("translation", info.xpos + " 0 " + info.ypos);
@@ -142,9 +158,9 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
         lodNode.setAttribute("id", 'lod' + info.ID);
 
         if (this.noDataValue !== undefined || this.noDemValue != undefined) {
-            new GapGrid(lodNode, info, hm, appearance, this.noDemValue);
+            new GapGrid(lodNode, info, hm, appearances, this.noDemValue);
         } else {
-            new ElevationGrid(lodNode, info, hm, appearance);
+            new ElevationGrid(lodNode, info, hm, appearances);
         }
 
         transform.appendChild(lodNode);
@@ -175,94 +191,173 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
      * @param upright - Flag if the terrain is upright (underground data) and the texture stands upright in the cube.
      * @returns {Array} - Array of appearance nodes. If any error occurs, the function will return null.
      */
-    this.getAppearancesM = function(AppearanceName, AppearanceCount, modelIndex, canvasTexture, transparency, specular, diffuse, upright) {
-        var appearance = document.createElement('Appearance');
+    this.configureAppearances = function(opts) {
+        var appearanceN = document.createElement('Appearance');
 
-        if (transparency === 0) {
-            appearance.setAttribute('sortType', 'opaque');
+        if (opts.transparency === 0) {
+            appearanceN.setAttribute('sortType', 'opaque');
         } else {
-            appearance.setAttribute('sortType', 'transparent');
+            appearanceN.setAttribute('sortType', 'transparent');
         }
 
-        var texture = document.createElement('Texture');
-        texture.setAttribute('hideChildren', 'true');
-        texture.setAttribute("repeatS", 'true');
-        texture.setAttribute("repeatT", 'true');
-        texture.setAttribute("scale", "false");
-        texture.appendChild(canvasTexture);
-
-        var imageTransform = document.createElement('TextureTransform');
-        imageTransform.setAttribute("scale", "1,-1");
-        if (upright) {
-            imageTransform.setAttribute("rotation", "-1.57");
-        }
-
-        var material = document.createElement('material');
-        material.setAttribute("specularColor", specular);
-        material.setAttribute("diffuseColor", diffuse);
-        // material.setAttribute("diffuseColor", '0 0 1');
-        material.setAttribute('transparency', '0.5');
-        // material.setAttribute('transparency', transparency);
-        material.setAttribute('ID', AppearanceName + "_mat");
-        //Save this material ID to change transparency during runtime
-        this.materialNodes.push(AppearanceName + "_mat");
-
-        appearance.appendChild(material);
-        appearance.appendChild(imageTransform);
-        appearance.appendChild(texture);
+        var materialN = document.createElement('material');
+        materialN.setAttribute("specularColor", opts.specularColor);
+        materialN.setAttribute("diffuseColor", opts.diffuseColor);
+        materialN.setAttribute('transparency', opts.transparency);
+        materialN.setAttribute('ID', opts.name + "_mat");
+        appearanceN.appendChild(materialN);
 
         // var myshader = document.getElementById('myshader');
         // // var shader = myshader.cloneNode(false);
         // var shader = $('#myshader').clone().attr('id', AppearanceName + "_mat");
-        // appearance.appendChild(shader.get()[0]);
+        // appearanceN.appendChild(shader.get()[0]);
         // console.log('shader: ', shader.get()[0]);
 
-        var transparencyFieldID = AppearanceName + "_mat_transparency";
-        var cShader = document.createElement("composedShader");
-        var field1 = document.createElement("field");
-        field1.setAttribute("name", "diffuseColor");
-        field1.setAttribute("type", "SFVec3f");
-        field1.setAttribute("value", "1 0 1");
-        cShader.appendChild(field1);
-        var field2 = document.createElement("field");
-        field2.setAttribute("id", transparencyFieldID);
-        field2.setAttribute("name", "transparency");
-        field2.setAttribute("type", "SFFloat");
-        field2.setAttribute("value", "1");
-        cShader.appendChild(field2);
+        // <MultiTexture>
+        // <ImageTexture url='texture/earth.jpg' />
+        // <ComposedCubeMapTexture repeatS="false" repeatT="false">
+        //     <ImageTexture containerField="back" url="texture/generic/BK.png" />
+        //     <ImageTexture containerField="bottom" url="texture/generic/DN.png" />
+        //     <ImageTexture containerField="front" url="texture/generic/FR.png" />
+        //     <ImageTexture containerField="left" url="texture/generic/LF.png" />
+        //     <ImageTexture containerField="right" url="texture/generic/RT.png" />
+        //     <ImageTexture containerField="top" url="texture/generic/UP.png" />
+        // </ComposedCubeMapTexture>
+        // <ImageTexture url='texture/normalMap.png' />
+        // </MultiTexture>
+        //
+        // <ComposedShader DEF='ComposedShader'>
+        //           <field name='tex' type='SFInt32' value='0'/>
+        //           <field name='cube' type='SFInt32' value='1'/>
+        //           <field name='bump' type='SFInt32' value='2'/> 
 
-        var fadeOut = function() {
-            var value = field2.getAttribute('value');
-            field2.setAttribute("value", String(value - 0.1));
-            setTimeout(fadeOut, 200);
+        //         <ShaderPart type='FRAGMENT'>
+        //                 #ifdef GL_ES
+        //                   precision highp float;
+        //                 #endif
+
+        //                 uniform sampler2D tex;
+        //                 uniform samplerCube cube;
+        //                 uniform sampler2D bump;
+        //                 ...
+        //         </ShaderPart>
+        //         ...
+        // </ConposedShader>
+
+        var multiTextureN = document.createElement('MultiTexture')
+        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
+            var desc = opts.texture_descriptions[idx];
+
+            var textureN = document.createElement('Texture');
+            textureN.setAttribute('hideChildren', 'true');
+            textureN.setAttribute("repeatS", 'true');
+            textureN.setAttribute("repeatT", 'true');
+            textureN.setAttribute("scale", "false");
+            textureN.appendChild(desc.textureEl);
+
+            var textureTransformN = document.createElement('TextureTransform');
+            textureTransformN.setAttribute("scale", "1,-1");
+            if (opts.upright) {
+                textureTransformN.setAttribute("rotation", "-1.57");
+            }
+            multiTextureN.appendChild(textureTransformN);
+
+            multiTextureN.appendChild(textureN);
+        }
+
+        appearanceN.appendChild(multiTextureN);
+
+        var cShaderN = document.createElement("ComposedShader");
+        var diffuseColorFN = document.createElement("field");
+        diffuseColorFN.setAttribute("name", "diffuseColor");
+        diffuseColorFN.setAttribute("type", "SFVec3f");
+        diffuseColorFN.setAttribute("value", "1 0 1");
+        cShaderN.appendChild(diffuseColorFN);
+
+        var tex_idx = 0;
+        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
+            var desc = opts.texture_descriptions[idx];
+
+            var transparencyFN = document.createElement("field");
+            transparencyFN.setAttribute("id", opts.name + '_transparency_for_' + desc.id);
+            transparencyFN.setAttribute("name", "transparency_" + desc.id);
+            transparencyFN.setAttribute("type", "SFFloat");
+            transparencyFN.setAttribute("value", "1");
+            cShaderN.appendChild(transparencyFN);
+
+            this.transparencyFNs[opts.name + '_transparency_for_' + desc.id] = transparencyFN;
+
+            // // Testing only:
+            // var fadeOut = function() {
+            //     var value = transparencyFN.getAttribute('value');
+            //     transparencyFN.setAttribute("value", String(value - 0.1));
+            //     setTimeout(fadeOut, 200);
+            // };
+            // setTimeout(fadeOut, 5000);
+
+            var textureIdFN = document.createElement("field");
+            textureIdFN.setAttribute("id", opts.name + '_texture_for_' + desc.id);
+            textureIdFN.setAttribute("name", "tex_" + desc.id);
+            textureIdFN.setAttribute("type", "SFFloat");
+            textureIdFN.setAttribute("value", tex_idx++);
+            cShaderN.appendChild(textureIdFN);
         };
-        setTimeout(fadeOut, 5000);
 
         var vertexCode = "attribute vec3 position; \n";
         vertexCode += "uniform mat4 modelViewProjectionMatrix; \n";
+        vertexCode += "attribute vec2 texcoord; \n";
+        vertexCode += "varying vec2 fragTexCoord; \n";
         vertexCode += "void main() { \n";
+        vertexCode += "fragTexCoord = vec2(texcoord.x, 1.0 - texcoord.y);\n";
         vertexCode += "gl_Position = modelViewProjectionMatrix * vec4(position, 1.0); }\n";
         var shaderPartVertex = document.createElement("shaderPart");
         shaderPartVertex.setAttribute("type", "VERTEX");
         shaderPartVertex.innerHTML = vertexCode;
-        cShader.appendChild(shaderPartVertex);
+        cShaderN.appendChild(shaderPartVertex);
 
         var fragmentCode = "#ifdef GL_ES \n";
         fragmentCode += "precision highp float; \n";
         fragmentCode += "#endif \n";
         fragmentCode += "uniform vec3 diffuseColor; \n";
-        fragmentCode += "uniform float transparency; \n";
+        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
+            var desc = opts.texture_descriptions[idx];
+
+            fragmentCode += "uniform float transparency_" + desc.id + "; \n";
+            fragmentCode += "uniform sampler2D tex_" + desc.id + "; \n";
+        }
+        fragmentCode += "varying vec2 fragTexCoord; \n";
         fragmentCode += "void main() { \n";
-        fragmentCode += "gl_FragColor = vec4(diffuseColor, transparency); } \n";
+        fragmentCode += "vec4 mixedColor = vec4(0,0,0,1); \n";
+        // fragmentCode += "vec3 c = vec3(1,0,0); \n";
+        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
+            var desc = opts.texture_descriptions[idx];
+            // fragmentCode += "gl_FragColor = texture2D(tex_" + desc.id + ", fragTexCoord); \n";
+            fragmentCode += "vec4 color" + idx + " = texture2D(tex_" + desc.id + ", fragTexCoord); \n";
+            if (idx == 0) {
+                fragmentCode += "mixedColor = color0; \n";
+            } else {
+                var line = "mixedColor = mix(mixedColor, color" + idx + ", 0.5);\n";
+                // var line = "mixedColor = mix(color0, color1, 0.5);\n";
+                //console.log('idx: ' + idx + " / " + line);
+                fragmentCode += line;
+                //fragmentCode += "vec4 color" + idx + " = mix(color" + (idx-1) + ", color" + idx + ", 0.5)\n";
+            }
+        }
+        // fragmentCode += "gl_FragColor = mix(color0, color1, 0.5); \n";
+        fragmentCode += "gl_FragColor = mixedColor; \n";
+        // fragmentCode += "gl_FragColor = vec4(0,1,1,1); \n";
+        // fragmentCode += "gl_FragColor = color1; \n";
+        fragmentCode += "} \n";
+        //fragmentCode += "gl_FragColor = vec4(diffuseColor, transparency_" + opts.texture_descriptions[0].id + "); } \n";
 
         var shaderPartFragment = document.createElement("shaderPart");
         shaderPartFragment.setAttribute("type", "FRAGMENT");
         shaderPartFragment.innerHTML = fragmentCode;
-        cShader.appendChild(shaderPartFragment);
+        cShaderN.appendChild(shaderPartFragment);
 
-        appearance.appendChild(cShader);
+        appearanceN.appendChild(cShaderN);
 
-        return [appearance];
+        return [appearanceN];
     };
 
     /**
@@ -314,6 +409,10 @@ RBV.Models.DemWithOverlays.prototype.setDemProvider = function(provider) {
  */
 RBV.Models.DemWithOverlays.prototype.addImageryProvider = function(provider) {
     this.imageryProviders.push(provider);
+
+    // this.listenTo(provider, 'opacity:change', function(model, value) {
+    //     console.log('Provider "' + model.id + '" changed opacity to "' + value + '"');
+    // });
 };
 
 /**
@@ -352,9 +451,17 @@ RBV.Models.DemWithOverlays.prototype.createModel = function(root, cubeSizeX, cub
     this.root = root;
     this.createPlaceHolder();
 
+    // Convert the original Backbone.Model layers to 'plain-old-data' javascript objects:
+    var podImageryProviders = [];
+    _.each(this.imageryProviders, function(layer, idx) {
+        podImageryProviders.push(layer.toJSON());
+    });
+
+    var podDemProvider = this.demRequest.toJSON();
+    
     EarthServerGenericClient.getDEMWithOverlays(this, {
-        dem: this.demRequest,
-        imagery: this.imageryProviders,
+        dem: podDemProvider,
+        imagery: podImageryProviders,
         bbox: bbox,
         timespan: this.timespan,
         resX: this.XResolution,
@@ -362,37 +469,35 @@ RBV.Models.DemWithOverlays.prototype.createModel = function(root, cubeSizeX, cub
     });
 };
 
-RBV.Models.DemWithOverlays.prototype.receiveData = function(dataArray) {
-    if (this.checkReceivedData(dataArray)) {
+RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
+    if (this.checkReceivedData(serverResponses)) {
         this.removePlaceHolder();
 
-        // Determine the ServerResponse with the DEM data:
+        // Distinguish between 'imagery' and 'dem' ServerResponses in the serverResponses
         // FIXXME: This is clumsy...
-        var data = null;
+        var demResponse = null;
+        var textureResponses = [];
         var lastidx = -1;
-        for (var idx = 0; idx < dataArray.length; ++idx) {
-            if (dataArray[idx].heightmap) {
-                data = dataArray[idx];
-                lastidx = idx;
-                break;
+        for (var idx = 0; idx < serverResponses.length; ++idx) {
+            var response = serverResponses[idx];
+            if (response.heightmap) {
+                demResponse = response;
+            } else {
+                textureResponses.push(response);
             }
         }
 
-        var idx = -1;
-        (lastidx === 0) ? idx = 1 : idx = 0;
-        data.textureUrl = dataArray[idx].textureUrl;
-        data.texture = dataArray[idx].texture;
-
-        var YResolution = this.YResolution || (parseFloat(data.maxHMvalue) - parseFloat(data.minHMvalue));
-        var transform = this.createTransform(data.width, YResolution, data.height, parseFloat(data.minHMvalue), data.minXvalue, data.minZvalue);
+        var YResolution = this.YResolution || (parseFloat(demResponse.maxHMvalue) - parseFloat(demResponse.minHMvalue));
+        var transform = this.createTransform(demResponse.width, YResolution, demResponse.height, parseFloat(demResponse.minHMvalue), demResponse.minXvalue, demResponse.minZvalue);
         this.root.appendChild(transform);
 
-        //Create Terrain out of the received data
+        //Create Terrain out of the received demResponse
         EarthServerGenericClient.MainScene.timeLogStart("Create Terrain " + this.name);
-        // transform, data, this.index, this.noData, this.demNoData);
+        // transform, demResponse, this.index, this.noData, this.demNoData);
         this.terrain = new RBV.Visualization.LODTerrainWithOverlays({
             root: transform,
-            dem: data,
+            demResponse: demResponse,
+            textureResponses: textureResponses,
             index: this.index,
             noDataValue: this.noData,
             demNoDataValue: this.demNoData
@@ -415,9 +520,9 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(dataArray) {
 /**
  * Validates the received data from the server request.
  */
-RBV.Models.DemWithOverlays.prototype.checkReceivedData = function(dataArray) {
-    for (var idx = 0; idx < dataArray.length; ++idx) {
-        var data = dataArray[idx];
+RBV.Models.DemWithOverlays.prototype.checkReceivedData = function(serverResponses) {
+    for (var idx = 0; idx < serverResponses.length; ++idx) {
+        var data = serverResponses[idx];
         this.receivedDataCount++;
         this.reportProgress();
 
@@ -464,75 +569,6 @@ RBV.Models.DemWithOverlays.prototype.checkReceivedData = function(dataArray) {
 RBV.Models.DemWithOverlays.prototype.setSpecificElement = function(element) {
     EarthServerGenericClient.appendElevationSlider(element, this.index);
 };
-RBV.Provider = RBV.Provider || {};
-
-/**
- * @class OGCProvider: An abstract object managing a request to a OGC service provider.
- */
-RBV.Provider.OGCProvider = function(opts) {}
-
-RBV.Provider.OGCProvider.prototype.init = function(opts) {
-	// FIXXME: error handling!
-	this.protocol = opts.protocol;
-	this.id = opts.id;
-	this.urls = opts.urls;
-	this.style = opts.style || 'default';
-	this.crs = opts.crs;
-	this.format = opts.format;
-	this.version = opts.version;
-
-	this.mimeTypeHandlers = {};
-}
-
-RBV.Provider.OGCProvider.prototype.toString = function() {
-	return '[' + this.protocol + '] id: ' + this.id;
-};
-
-/**
- * Registers a handler for a specific format for preprocessing data received
- * by a data request. An eventual registered handler with the same mimetype
- * will be overwritten.
- *
- * @param mimetype - MIME type name (i.e. 'image/x-aaigrid')
- * @returns {boolean} - TRUE if a handler for the given format was already registered,
- * FALSE if not
- */
-RBV.Provider.OGCProvider.prototype.registerMimeTypeHandler = function(mimetype, handler) {
-	var wasRegistered = false;
-	if (this.mimeTypeHandlers[mimetype]) {
-		wasRegistered = true;
-	}
-	this.mimeTypeHandlers[mimetype] = handler;
-
-	return wasRegistered;
-};
-
-RBV.Provider.OGCProvider.prototype.getMimeTypeHandlers = function() {
-	return this.mimeTypeHandlers;
-};
-
-/**
- * @class WMS: A WMS provider.
- */
-RBV.Provider.WMS = function(opts) {
-	opts.protocol = 'WMS';
-	opts.version = opts.version || '1.0.0';
-	RBV.Provider.OGCProvider.prototype.init.call(this, opts);
-}
-RBV.Provider.WMS.inheritsFrom(RBV.Provider.OGCProvider)
-
-/**
- * @class WCS: A WCS provider.
- */
-RBV.Provider.WCS = function(opts) {
-	opts.protocol = 'WCS';
-	opts.version = opts.version || '2.0.0';
-	RBV.Provider.OGCProvider.prototype.init.call(this, opts);
-
-	this.outputCRS = opts.outputCRS;
-	this.datatype = opts.datatype;
-}
-RBV.Provider.WCS.inheritsFrom(RBV.Provider.OGCProvider)
 /**
  * @class Runtime: Manages multiple EarthServerClient-based models. It's main responsibility
  * is to select a model to be shown.
