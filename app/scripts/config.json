@@ -84,7 +84,8 @@
               "http://demo.v-manip.eox.at/browse/ows"
           ],
           "style": "default",
-          "format": "image/png"
+          "format": "image/png",
+          "crs": "EPSG:4326"
         },
         "download": {
           "id": "SPOT4_View",
@@ -104,7 +105,8 @@
               "http://neso.cryoland.enveo.at/cryoland/ows"
           ],
           "style": "default",
-          "format": "image/png"
+          "format": "image/png",
+          "crs": "EPSG:4326"
         },
         "download": {
           "id": "daily_FSC_PanEuropean_Optical",
@@ -124,7 +126,8 @@
               "http://neso.cryoland.enveo.at/cryoland/ows"
           ],
           "style": "default",
-          "format": "image/png"
+          "format": "image/png",
+          "crs": "EPSG:4326"
         },
         "download": {
           "id": "daily_SWE_PanEuropean_Microwave",
@@ -144,7 +147,8 @@
               "http://earthserver.eox.at/open/ows"
           ],
           "style": "default",
-          "format": "image/png"
+          "format": "image/png",
+          "crs": "EPSG:4326"
         },
         "download": {
           "id": "SRTM_mosaic",
