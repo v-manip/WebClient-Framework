@@ -89,27 +89,6 @@ define([
 				return true;
 			});
 
-			this.imageryProviders = [];
-
-			// Initially create the imagery provider based on the currently selected layers:
-			var items = this.getModelsForSelectedLayers(this.supportsLayer);
-			_.forEach(items, function(value, key) {
-				var layer = new VMANIP.Layers.WMS({
-					id: value.model.get('view').id,
-					urls: value.model.get('view').urls,
-					crs: 'EPSG:4326',
-					format: value.model.get('view').format.replace('image/', ''),
-					transparent: 'true',
-					ordinal: value.model.get('ordinal')
-				});
-				this.imageryProviders.push(layer);
-
-				// // Connect to events relevant for the RBV:
-				// layer.on('change:opacity', function(model, value) {
-				// 	console.log('Layer: ' + model.get('id') + ' / opacity: ' + value);
-				// })
-			}.bind(this));
-
 			this.options = opts;
 		},
 
@@ -119,53 +98,37 @@ define([
 
 		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
 		onLayerChange: function(model, isVisible) {
+			// FIXXME: rethink when to apply changes and when not. Taking into account only the aoi may
+			// not be sufficient, not sure...
+			// FIXXME: for some reason the function is called with only a model set. Find out where the trigger is!
+			if (!this.currentAoI || !isVisible) {
+				return;
+			}
+
 			if (isVisible) {
-				this.imageryProviders.push(new VMANIP.Layers.WMS({
+				this.model_DemWithOverlays.addImageryProvider(new VMANIP.Layers.WMS({
 					id: model.get('view').id,
 					urls: model.get('view').urls,
-					crs: 'EPSG:4326',
+					crs: model.get('view').crs,
 					format: model.get('view').format.replace('image/', ''),
 					transparent: 'true'
 				}));
-
-				if (this.currentAoI) {
-					this._updateScene(_.extend(this.sceneDefaults, this.options, {
-						wmsUrl: model.get('view').urls[0],
-						wmsLayer: model.get('view').id
-					}));
-				}
-				console.log('[RectangularRectangularBoxView::onLayerChange] selected ' + model.get('name'));
+				// console.log('[RectangularBoxView::onLayerChange] Added ' + model.get('name'));
 			} else {
-				var item = _.find(this.imageryProviders, function(value, key) {
-					return (value.id === model.get('view').id);
-				})
-
-				if (item) {
-					var idx = _.indexOf(this.imageryProviders, item);
-					this.imageryProviders.splice(idx, 1);
-				}
-				console.log('[RectangularRectangularBoxView::onLayerChange] deselected ' + model.get('name'));
+				this.model_DemWithOverlays.removeImageryProviderById(model.get('view').id);
+				// console.log('[RectangularBoxView::onLayerChange] Removed ' + model.get('name'));
 			}
 		},
 
 		_onUpdateOpacity: function(desc) {
 			var layer_id = desc.model.get('view').id;
-
-			// Find corresponding layer:
-			var changedLayer = _.find(this.imageryProviders, function(layer) {
-				return layer.get('id') === layer_id;
-			});
-
-			if (changedLayer) {
-				changedLayer.set('opacity', desc.value);
-			} else {
-				throw Error('[RectangularBoxView::_onUpdateOpacity] No layer found, which should not happen.');
-			}
+			this.model_DemWithOverlays.setTransparencyFor(layer_id, desc.value);
 		},
 
 		didInsertElement: function() {
 			this.listenTo(this.context(), 'selection:changed', this._setAreaOfInterest);
 			this.listenTo(this.context(), 'time:change', this._onTimeChange);
+			this.listenTo(this.context(), 'map:layer:change', this.onLayerChange);
 			this.listenTo(this.context(), 'productCollection:updateOpacity', this._onUpdateOpacity);
 		},
 
@@ -176,7 +139,7 @@ define([
 
 		hideEmptyView: function() {
 			// CAUTION: simply removing the content of the view's div can have sideeffects. Be cautious not
-			// to accidently remove previousle created elements!
+			// to accidently remove previously created elements!
 			this.$el.html('');
 		},
 
@@ -237,17 +200,34 @@ define([
 				context: context
 			}));
 
-			var model = new RBV.Models.DemWithOverlays({
-				demProvider: this.demProvider,
-				imageryProvider: this.imageryProviders
+			if (!this.model_DemWithOverlays) {
+				this.model_DemWithOverlays = new RBV.Models.DemWithOverlays();
+				// Note: for the moment the DEM provider is static:
+				this.model_DemWithOverlays.setDemProvider(context.getProvider('dem', this.demProvider.id));
+			}
+
+			// Get the currently selected layers and setup the model accordingly:
+			var selectedLayers = [];
+
+			// Initially create the imagery provider based on the currently selected layers:
+			var items = this.getModelsForSelectedLayers(this.supportsLayer);
+			_.forEach(items, function(value, key) {
+				var layer = new VMANIP.Layers.WMS({
+					id: value.model.get('view').id,
+					urls: value.model.get('view').urls,
+					crs: 'EPSG:4326',
+					format: value.model.get('view').format.replace('image/', ''),
+					transparent: 'true',
+					ordinal: value.model.get('ordinal')
+				});
+				selectedLayers.push(layer);
 			});
 
-			model.setDemProvider(context.getProvider('dem', this.demProvider.id));
-			_.each(this.imageryProviders, function(item, idx) {
-				model.addImageryProvider(context.getProvider('imagery', item.id));
-			});
+			_.each(selectedLayers, function(layer, idx) {
+				this.model_DemWithOverlays.addImageryProvider(layer);
+			}.bind(this));
 
-			scene.addModel(model, [this.demProvider]);
+			scene.addModel(this.model_DemWithOverlays, [this.demProvider]);
 			scene.show(this.options);
 		},
 

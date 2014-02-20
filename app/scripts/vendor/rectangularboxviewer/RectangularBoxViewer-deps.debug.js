@@ -6140,20 +6140,6 @@ EarthServerGenericClient.requestWCPSImageWCPSDem = function(callback,imageURL,im
     EarthServerGenericClient.getWCPSDemCoverage(combine,responseData,demURL,demQuery);
 };
 
-/** 
- * Convenience function. Its only purpose is to provide a meaningful API for models. Technically
- * a Model could directly use 'startRequests'.
- */
-EarthServerGenericClient.getDEMWithOverlays = function(calling_module, opts) {
-    var requests = [];
-    requests.push(opts.dem);
-    for (var idx=0; idx<opts.imagery.length; ++idx) {
-        requests.push(opts.imagery[idx]);
-    }
-
-    EarthServerGenericClient.startRequests(calling_module, requests, opts);
-}
-
 /**
  * Carries out the requests from all OGCProviders stored in the parameter array.
  * @param opts.timespan
@@ -6161,7 +6147,7 @@ EarthServerGenericClient.getDEMWithOverlays = function(calling_module, opts) {
  * @param opts.resX
  * @param opts.resY
  */
-EarthServerGenericClient.startRequests = function(calling_module, providers, opts) {
+EarthServerGenericClient.sendRequests = function(calling_module, providers, opts) {
     var promise = new EarthServerGenericClient.combinedCallBack(calling_module, providers.length, true);
 
     for (var idx = 0; idx < providers.length; ++idx) {
@@ -6188,7 +6174,7 @@ EarthServerGenericClient.startRequests = function(calling_module, providers, opt
                 //   API-Suggestion:  ESGC.getCoverageWMS(promise, opts, true/false) -> true/false determines if one ServerResponseData
                 //   object is created internally for all requests, or if each response gets its own ServerResponseData object.
                 //   Future API-Suggestion: The functionality of generating and carrying out a request is the sole responsibility of the 
-                //   'OGCProvider' class. 'startRequests' should simply iterate over the providers and let them do their jobs, e.g.:
+                //   'OGCProvider' class. 'sendRequests' should simply iterate over the providers and let them do their jobs, e.g.:
                 //   provider.startRequest(promise, opts, true/false).
                 EarthServerGenericClient.getCoverageWMS(promise, responseData, WMSurl, WMScoverID, WMSCRS, WMSImageFormat, BoundingBox, WMSversion, ResX, ResZ, timespan, transparent);
                 break;
