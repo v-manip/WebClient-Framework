@@ -479,31 +479,32 @@ define('layers/layer-wms',[
 	'layers/layer-base'
 	], function(BaseLayer) {
 
-	var WCSLayer = BaseLayer.extend({
+	var WMSLayer = BaseLayer.extend({
 		defaults: _.extend({}, BaseLayer.prototype.defaults(), {
 			'protocol': 'WMS',
 			'style': 'default',
 			'crs': 'EPSG:4326',
 			'format': 'image/png',
-			'version': '1.0.0'
+			'version': '1.0.0',
+			'transparent': true
 		})
 	});
 
-	return WCSLayer;
+	return WMSLayer;
 	
 });
 define('layers/layer-wcs',[
 	'layers/layer-base'
 	], function(BaseLayer) {
 
-	var WMSLayer = BaseLayer.extend({
+	var WCSLayer = BaseLayer.extend({
 		defaults: _.extend({}, BaseLayer.prototype.defaults(), {
 			'protocol': 'WCS',
 			'version': '2.0.0'
 		})
 	});
 
-	return WMSLayer;
+	return WCSLayer;
 
 });
 define('vmanip',[

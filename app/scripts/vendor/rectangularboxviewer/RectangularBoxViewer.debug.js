@@ -315,7 +315,6 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
 
             var vertexCode = 'attribute vec3 position; \n';
             vertexCode += 'uniform mat4 modelViewProjectionMatrix; \n';
-            vertexCode += 'attribute vec2 texcoord; \n';
             vertexCode += 'varying vec2 fragTexCoord; \n';
             vertexCode += 'void main() { \n';
             vertexCode += 'fragTexCoord = vec2(texcoord.x, 1.0 - texcoord.y);\n';
@@ -328,39 +327,53 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
             var fragmentCode = '#ifdef GL_ES \n';
             fragmentCode += 'precision highp float; \n';
             fragmentCode += '#endif \n';
-            fragmentCode += 'uniform vec3 diffuseColor; \n';
+            fragmentCode += 'varying vec2 fragTexCoord; \n';
             for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
                 var desc = opts.texture_descriptions[idx];
                 fragmentCode += 'uniform float transparency_' + desc.id + '; \n';
                 fragmentCode += 'uniform sampler2D tex_' + desc.id + '; \n';
             }
-            fragmentCode += 'varying vec2 fragTexCoord; \n';
-            fragmentCode += 'float blend_alpha(float alpha_below, float alpha_above) {\n';
-            fragmentCode += 'return alpha_below + (1.0 - alpha_below) * alpha_above; }\n';
 
-            fragmentCode += 'vec4 blend(vec4 overlying, vec4 underlying) {\n';
-            fragmentCode += 'vec3 blended = overlying.rgb + ((1.0-overlying.a)*underlying.rgb);\n';
-            fragmentCode += 'float alpha = underlying.a + (1.0-underlying.a)*overlying.a;\n';
-            fragmentCode += 'return vec4(blended, alpha); }\n';
+            // Blending equation:
+            // (see http://en.wikibooks.org/wiki/GLSL_Programming/Unity/Transparency)
+            //
+            // TODO: Think of integrating http://mouaif.wordpress.com/?p=94
+            //
+            // vec4 result = SrcFactor * colorOnTop + DstFactor * colorBelow;
+            //
+            // To implement a special blending mode, SrcFactor and DstFactor have to
+            // be chosen correctly:
+            //
+            // * Alpha blending:
+            // -----------------
+            //
+            //   SrcFactor = SrcAlpha = vec4(gl_FragColor.a)
+            //   DstFactor = OneMinusSrcAlpha = vec4(1.0 - gl_FragColor.a)
+            //
+            // Corresponding GLSL code:
+            fragmentCode += 'vec4 alphaBlend(vec4 colorOnTop, vec4 colorBelow) {        \n';
+            fragmentCode += '  vec4 srcFac = vec4(colorOnTop.a);                        \n';
+            fragmentCode += '  vec4 dstFac = vec4(1.0 - colorOnTop.a);                  \n';
+            fragmentCode += '                                                           \n';
+            fragmentCode += '  vec4 result = srcFac * colorOnTop + dstFac * colorBelow; \n';
+            fragmentCode += '  return result;                                           \n';
+            fragmentCode += '}                                                          \n';
 
             fragmentCode += 'void main() { \n';
             for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
                 var desc = opts.texture_descriptions[idx];
-                fragmentCode += 'vec4 color' + idx + ' = texture2D(tex_' + desc.id + ', fragTexCoord); \n';
-                fragmentCode += 'color' + idx + ' = color' + idx + ' * transparency_' + desc.id + '; \n';
-                // fragmentCode += 'color' + idx + '.a = transparency_' + desc.id + '; \n';
+                fragmentCode += '  vec4 color' + idx + ' = texture2D(tex_' + desc.id + ', fragTexCoord); \n';
+                fragmentCode += '  color' + idx + ' = color' + idx + ' * transparency_' + desc.id + '; \n';
                 if (idx == 0) {
-                    fragmentCode += 'vec4 mixedColor = color0; \n';
+                    fragmentCode += '  vec4 colorOnTop = color0; \n';
                 } else {
-                    fragmentCode += 'mixedColor = blend(color' + (idx-1) + ', color' + idx + '); \n';
-                    //fragmentCode += 'mixedColor = mix(color' + idx + ', color' + (idx-1) + ', color' + (idx-1) + '.a); \n';
-                    //fragmentCode += 'color' + idx + ' = color' + idx + ' * transparency_' + desc.id + '; \n';
-                    //fragmentCode += 'mixedColor = mixedColor + color' + idx + ';\n';
-                    //fragmentCode += 'mixedColor.a = blend(color' + idx + '.a, color' + (idx - 1) + '.a);\n';
+                    fragmentCode += '  colorOnTop = alphaBlend(colorOnTop, color' + idx + '); \n';
                 }
             }
-            fragmentCode += 'gl_FragColor = mixedColor; \n';
+            fragmentCode += '  gl_FragColor = colorOnTop; \n';
             fragmentCode += '} \n';
+
+            // console.log('fragmentCode:\n' + fragmentCode);
 
             var shaderPartFragment = document.createElement('shaderPart');
             shaderPartFragment.setAttribute('type', 'FRAGMENT');
@@ -500,8 +513,13 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
                 demResponse = response;
             } else {
                 textureResponses.push(response);
+                // console.log('[RBV.Models.DemWithOverlays::receiveData] received layer: ' + response.layerName + ' / ordinal: ' + response.ordinal);
             }
         }
+
+        var textureResponses = _.sortBy(textureResponses, function(item) {
+            return item.ordinal
+        });
 
         // textureResponses.reverse();
         var YResolution = this.YResolution || (parseFloat(demResponse.maxHMvalue) - parseFloat(demResponse.minHMvalue));

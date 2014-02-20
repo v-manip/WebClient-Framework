@@ -17,6 +17,12 @@
 			tagName: "ul",
 
 			initialize: function(options) {
+				// Initially tell the models in the collection, which layer ordinal they have:
+				var idx = 0;
+				this.collection.forEach(function(model) {
+					model.set('ordinal', idx++);
+					// console.log('[LayerSeleectionView::initialize] layer: ' + model.get('view').id + ' / ordinal: ' + model.get('ordinal'));
+				});
 			},
 
 			onShow: function(view){

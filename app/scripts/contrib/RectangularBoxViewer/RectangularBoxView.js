@@ -99,7 +99,8 @@ define([
 					urls: value.model.get('view').urls,
 					crs: 'EPSG:4326',
 					format: value.model.get('view').format.replace('image/', ''),
-					transparent: 'true'
+					transparent: 'true',
+					ordinal: value.model.get('ordinal')
 				});
 				this.imageryProviders.push(layer);
 

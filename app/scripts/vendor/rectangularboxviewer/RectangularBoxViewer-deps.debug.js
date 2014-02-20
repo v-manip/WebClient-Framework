@@ -5607,12 +5607,15 @@ EarthServerGenericClient.combinedCallBack = function(callback,numberToCombine,sa
  * @param width - Width of the response image.
  * @param height - Height of the response image.
  */
-EarthServerGenericClient.getCoverageWMS = function(callback,responseData,WMSurl,WMScoverID,WMSCRS,WMSImageFormat,BoundingBox,WMSVersion,width,height,timespan)
+EarthServerGenericClient.getCoverageWMS = function(callback,responseData,WMSurl,WMScoverID,WMSCRS,WMSImageFormat,BoundingBox,WMSVersion,width,height,timespan, transparent)
 {
     responseData.textureUrl = WMSurl + "?service=WMS&version=" + WMSVersion +"&request=Getmap&layers=" + WMScoverID;
     responseData.textureUrl += "&" + WMSCRS + "&format=image/" + WMSImageFormat;
     responseData.textureUrl += "&bbox=" + BoundingBox.minLatitude + "," + BoundingBox.minLongitude + ","+ BoundingBox.maxLatitude + "," + BoundingBox.maxLongitude;
     responseData.textureUrl += "&width="+width+"&height="+height;
+    if (transparent) {
+        responseData.textureUrl += "&transparent="+transparent;
+    }
     if (timespan) {
         responseData.textureUrl += "&time="+timespan;
     }
@@ -6164,8 +6167,9 @@ EarthServerGenericClient.startRequests = function(calling_module, providers, opt
     for (var idx = 0; idx < providers.length; ++idx) {
         var provider = providers[idx];
         var responseData = new EarthServerGenericClient.ServerResponseData();
-        // FIXXME: necessary for LODTerrainWithOverlays. This parameter is _not_ specified in ServerResponseData!
+        // FIXXME: necessary for LODTerrainWithOverlays. This parameters are _not_ specified in ServerResponseData!
         responseData.layerName = provider.id;
+        responseData.ordinal = provider.ordinal;
 
         switch (provider.protocol) {
             case 'WMS':
@@ -6178,6 +6182,7 @@ EarthServerGenericClient.startRequests = function(calling_module, providers, opt
                 var ResX = opts.resX;
                 var ResZ = opts.resZ;
                 var timespan = opts.timespan;
+                var transparent = provider.transparent;
 
                 // FIXXME: get rid of the plethora of parameters and replace them with a single 'opts' object. It's Javascript, after all ;-)
                 //   API-Suggestion:  ESGC.getCoverageWMS(promise, opts, true/false) -> true/false determines if one ServerResponseData
@@ -6185,7 +6190,7 @@ EarthServerGenericClient.startRequests = function(calling_module, providers, opt
                 //   Future API-Suggestion: The functionality of generating and carrying out a request is the sole responsibility of the 
                 //   'OGCProvider' class. 'startRequests' should simply iterate over the providers and let them do their jobs, e.g.:
                 //   provider.startRequest(promise, opts, true/false).
-                EarthServerGenericClient.getCoverageWMS(promise, responseData, WMSurl, WMScoverID, WMSCRS, WMSImageFormat, BoundingBox, WMSversion, ResX, ResZ, timespan);
+                EarthServerGenericClient.getCoverageWMS(promise, responseData, WMSurl, WMScoverID, WMSCRS, WMSImageFormat, BoundingBox, WMSversion, ResX, ResZ, timespan, transparent);
                 break;
             case 'WCS':
                 var WCSurl = provider.urls[0];
