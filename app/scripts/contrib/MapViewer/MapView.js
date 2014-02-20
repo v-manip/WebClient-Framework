@@ -290,7 +290,7 @@ define(['backbone.marionette',
 			},
 
 			onExportGeoJSON: function() {
-				var geojsonstring = this.geojson.write(this.polygonLayer.features, true);
+				var geojsonstring = this.geojson.write(this.vectorLayer.features, true);
 
 				var blob = new Blob([geojsonstring], {
 					type: "text/plain;charset=utf-8"
