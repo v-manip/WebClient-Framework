@@ -13,7 +13,7 @@ define([
 			X3DOMView.prototype.initialize.call(this, opts);
 			this.enableEmptyView(true); // this is the default
 
-			this.isInitialized = false;
+			this.model_DemWithOverlays = null;
 
 			this.sceneDefaults = {
 				setTimeLog: false,
@@ -101,7 +101,7 @@ define([
 			// FIXXME: rethink when to apply changes and when not. Taking into account only the aoi may
 			// not be sufficient, not sure...
 			// FIXXME: for some reason the function is called with only a model set. Find out where the trigger is!
-			if (!this.currentAoI || !isVisible) {
+			if (!this.currentAoI || !isVisible || !this.model_DemWithOverlays) {
 				return;
 			}
 
@@ -111,7 +111,9 @@ define([
 					urls: model.get('view').urls,
 					crs: model.get('view').crs,
 					format: model.get('view').format.replace('image/', ''),
-					transparent: 'true'
+					transparent: 'true',
+					ordinal: model.get('ordinal'),
+					opacity: model.get('opacity')
 				}));
 				// console.log('[RectangularBoxView::onLayerChange] Added ' + model.get('name'));
 			} else {
@@ -218,7 +220,8 @@ define([
 					crs: 'EPSG:4326',
 					format: value.model.get('view').format.replace('image/', ''),
 					transparent: 'true',
-					ordinal: value.model.get('ordinal')
+					ordinal: value.model.get('ordinal'),
+					opacity: value.model.get('opacity')
 				});
 				selectedLayers.push(layer);
 			});

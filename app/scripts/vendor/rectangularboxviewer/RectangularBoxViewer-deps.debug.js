@@ -6153,9 +6153,12 @@ EarthServerGenericClient.sendRequests = function(calling_module, providers, opts
     for (var idx = 0; idx < providers.length; ++idx) {
         var provider = providers[idx];
         var responseData = new EarthServerGenericClient.ServerResponseData();
-        // FIXXME: necessary for LODTerrainWithOverlays. This parameters are _not_ specified in ServerResponseData!
-        responseData.layerName = provider.id;
-        responseData.ordinal = provider.ordinal;
+        // FIXXME: necessary for LODTerrainWithOverlays. The 'info' object is _not_ (yet) specified in ServerResponseData!
+        responseData.layerInfo = {
+            id: provider.id,
+            opacity: provider.opacity,
+            ordinal: provider.ordinal
+        };
 
         switch (provider.protocol) {
             case 'WMS':
