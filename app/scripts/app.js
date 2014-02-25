@@ -100,7 +100,7 @@
 				}, this);
 
 				//Productsare loaded and added to the global collection
-                                                        var ordinal = 0;
+                var ordinal = 0;
 				_.each(config.mapConfig.products, function(products) {
 					globals.products.add(
 						new m.LayerModel({
@@ -108,6 +108,8 @@
 							visible: products.visible,
                             ordinal: ordinal,
 							timeSlider: products.timeSlider,
+							// Default to WMS if no protocol is defined
+							timeSliderProtocol: (products.timeSliderProtocol) ? products.timeSliderProtocol : "WMS",
 							color: products.color,
 							//time: products.time, // Is set in TimeSliderView on time change.
 								opacity: 1,

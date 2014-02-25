@@ -72,16 +72,31 @@
           var product = globals.products.find(function(model) { return model.get('name') == options.name; });
           if (product){
             if(options.visible && product.get('timeSlider')){
-              this.slider.addDataset(
-                {
-                  /*id: product.get('download').id,
-                  color: product.get('color'),
-                  data: new TimeSlider.Plugin.EOWCS({ url: product.get('download').url, eoid: product.get('download').id, dataset: product.get('download').id })*/
-                  id: product.get('view').id,
-                  color: product.get('color'),
-                  data: new TimeSlider.Plugin.WMS({ url: product.get('view').urls[0], eoid: product.get('view').id, dataset: product.get('view').id })
-                }
-              );
+
+              switch (product.get("timeSliderProtocol")){
+                case "WMS":
+                  this.slider.addDataset({
+                    id: product.get('view').id,
+                    color: product.get('color'),
+                    data: new TimeSlider.Plugin.WMS({ url: product.get('view').urls[0], eoid: product.get('view').id, dataset: product.get('view').id })
+                  });
+                  break;
+                case "EOWCS":
+                  this.slider.addDataset({
+                    id: product.get('download').id,
+                    color: product.get('color'),
+                    data: new TimeSlider.Plugin.EOWCS({ url: product.get('download').url, eoid: product.get('download').id, dataset: product.get('download').id })
+                  });
+                  break;
+                case "WPS":
+                  this.slider.addDataset({
+                    id: product.get('download').id,
+                    color: product.get('color'),
+                    data: new TimeSlider.Plugin.WPS({ url: product.get('download').url, eoid: product.get('download').id, dataset: product.get('download').id })
+                  });
+                  break;
+              }
+              
             }else{
               this.slider.removeDataset(product.get('download').id);
             }
