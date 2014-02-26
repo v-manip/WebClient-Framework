@@ -13,6 +13,7 @@ define([
 			X3DOMView.prototype.initialize.call(this, opts);
 			this.enableEmptyView(true); // this is the default
 
+			this.scene = null;
 			this.model_DemWithOverlays = null;
 
 			this.sceneDefaults = {
@@ -101,7 +102,7 @@ define([
 			// FIXXME: rethink when to apply changes and when not. Taking into account only the aoi may
 			// not be sufficient, not sure...
 			// FIXXME: for some reason the function is called with only a model set. Find out where the trigger is!
-			if (!this.currentAoI || !isVisible || !this.model_DemWithOverlays) {
+			if (!this.currentAoI || (typeof isVisible === 'undefined') || !this.model_DemWithOverlays) {
 				return;
 			}
 
@@ -160,7 +161,7 @@ define([
 				var bounds = area.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
-				this._updateScene(_.extend(this.sceneDefaults, this.options, {
+				this._createScene(_.extend(this.sceneDefaults, this.options, {
 					aoi: this.currentAoI,
 					toi: toi
 				}));
@@ -174,39 +175,49 @@ define([
 			this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 
 			if (this.currentAoI) {
-				this._updateScene(_.extend(this.sceneDefaults, this.options, {
+				this._createScene(_.extend(this.sceneDefaults, this.options, {
 					aoi: this.currentAoI,
 					toi: this.currentToI
 				}));
 			}
 		},
 
-		_updateScene: function(opts) {
+		_createScene: function(opts) {
 			this.enableEmptyView(false);
 			this.onShow();
 
-			// A Context can hold multiple Providers. They are registered with
-			// an id. When instantiating a model later on it is connected via
-			// this id with the corresponding Providers.
-			var context = new RBV.Context({
-				toi: this.toi(),
-				aoi: [this.currentAoI, 0, 100000]
-			});
-			context.addProvider('dem', this.demProvider.id, this.demProvider);
+			if (this.scene) {
+				this.model_DemWithOverlays.reset();
+				this.context.setToI(this.toi());
+				this.context.setAoI(this.currentAoI, 0, 100000);
+				// FIXXME: this is not the nicest solution to reset the provider
+				this.demProvider.set('isUpToDate', false);
+			} else {
+				// A Context can hold multiple Providers. They are registered with
+				// an id. When instantiating a model later on it is connected via
+				// this id with the corresponding Providers.
+				this.context = new RBV.Context({
+					toi: this.toi(),
+					aoi: [this.currentAoI, 0, 100000]
+				});
+				this.scene = new RBV.Scene(_.extend(this.sceneDefaults, {
+					context: this.context
+				}));
+
+				if (!this.model_DemWithOverlays) {
+					this.model_DemWithOverlays = new RBV.Models.DemWithOverlays();
+				}
+			}
+
+			this.context.reset();
+			// FIXXME: this is too clumsy!
+			this.context.addProvider('dem', this.demProvider.id, this.demProvider);
 			_.each(this.imageryProviders, function(item, idx) {
-				context.addProvider('imagery', item.id, item);
+				this.context.addProvider('imagery', item.id, item);
 				console.log('registering: ' + item.id);
 			});
-
-			var scene = new RBV.Scene(_.extend(this.sceneDefaults, {
-				context: context
-			}));
-
-			if (!this.model_DemWithOverlays) {
-				this.model_DemWithOverlays = new RBV.Models.DemWithOverlays();
-				// Note: for the moment the DEM provider is static:
-				this.model_DemWithOverlays.setDemProvider(context.getProvider('dem', this.demProvider.id));
-			}
+			// Note: for the moment the DEM provider is static:
+			this.model_DemWithOverlays.setDemProvider(this.context.getProvider('dem', this.demProvider.id));
 
 			// Get the currently selected layers and setup the model accordingly:
 			var selectedLayers = [];
@@ -230,8 +241,8 @@ define([
 				this.model_DemWithOverlays.addImageryProvider(layer);
 			}.bind(this));
 
-			scene.addModel(this.model_DemWithOverlays, [this.demProvider]);
-			scene.show(this.options);
+			this.scene.addModel(this.model_DemWithOverlays, [this.demProvider]);
+			this.scene.show(this.options);
 		},
 
 		toi: function() {

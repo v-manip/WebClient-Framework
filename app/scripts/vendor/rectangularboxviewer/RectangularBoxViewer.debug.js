@@ -17,6 +17,10 @@ RBV.Context = function(opts) {
 	this.providers = {};
 };
 
+RBV.Context.prototype.reset = function() {
+	this.providers = {};
+};
+
 RBV.Context.prototype.setToI = function(timespan) {
 	this.toi = timespan;
 };
@@ -95,8 +99,7 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
      * The third chunk has 31 values and the length if 30. With a scale of 4 it's also back to the size 120.
      * @type {number}
      */
-    var chunkSize = 3;
-    // var chunkSize = 121;
+    var chunkSize = 121;
     /**
      * General information about the number of chunks needed to build the terrain.
      * @type {number}
@@ -120,6 +123,10 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
         //chunkInfo = null;
 
         EarthServerGenericClient.MainScene.reportProgress(this.index);
+    };
+
+    this.reset = function() {
+        EarthServerGenericClient.MainScene.removeModelCallbacks(this.index);
     };
 
     this.createTextureDescriptionsFromServerResponses = function(responses) {
@@ -190,27 +197,30 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
     this.addOverlays = function(provider_array) {
         this.textureResponses = this.textureResponses.concat(provider_array);
         var texture_descriptions = this.createTextureDescriptionsFromServerResponses(this.textureResponses);
-        var multiTextureN = this.createMultiTextureNode({
-            texture_descriptions: texture_descriptions
-        });
-        this.appearancesN[this.name].replaceMultiTexture(multiTextureN);
 
-        var shaderN = this.createShaderNode({
-            texture_descriptions: texture_descriptions,
-            namespace: this.name
-        });
-        this.appearancesN[this.name].replaceShader(shaderN);
+        this.updateShader(texture_descriptions);
     };
 
-    this.updateShader = function(texture_descriptions) {
-        console.log('update shader - NIY');
+    this.removeOverlayById = function(id) {
+        var layer = _.find(this.textureResponses, function(response) {
+            return response.layerInfo.id === id;
+        });
+
+        if (!layer) {
+            return;
+        }
+
+        this.textureResponses = _.without(this.textureResponses, layer);
+        var texture_descriptions = this.createTextureDescriptionsFromServerResponses(this.textureResponses);
+
+        this.updateShader(texture_descriptions);
     };
 
     this.createMultiTextureNode = function(opts) {
         var multiTextureN = new RBV.Renderer.MultiTexture();
         for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
             multiTextureN.addTexture(new RBV.Renderer.Texture({
-                hideChildren: true,
+                hideChildren: false,
                 repeatS: true,
                 repeatT: true,
                 canvasEl: opts.texture_descriptions[idx].textureEl
@@ -225,7 +235,8 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
         shaderN.setVertexCode(this.createVertexShaderCode());
         shaderN.setFragmentCode(this.createFragmentShaderCode({
             texture_descriptions: opts.texture_descriptions,
-            namespace: opts.name
+            namespace: opts.name,
+            debug: opts.debug || false
         }));
 
         for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
@@ -237,6 +248,7 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
                 type: 'SFFloat',
                 value: desc.opacity
             });
+            console.log('opacity: ' + desc.opacity);
 
             shaderN.addUniform({
                 id: opts.namespace + '_texture_for_' + desc.id,
@@ -248,6 +260,21 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
 
         return shaderN;
     }
+
+    this.updateShader = function(texture_descriptions) {
+        var multiTextureN = this.createMultiTextureNode({
+            texture_descriptions: texture_descriptions
+        });
+        this.appearancesN[this.name].replaceMultiTexture(multiTextureN);
+
+        var shaderN = this.createShaderNode({
+            texture_descriptions: texture_descriptions,
+            namespace: this.name,
+            debug: false
+        });
+        this.appearancesN[this.name].replaceShader(shaderN);
+    };
+
     /**
      * FIXXME: adapt description!
      *
@@ -310,7 +337,6 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
         return vertexCode;
     };
 
-
     this.createFragmentShaderCode = function(opts) {
         var fragmentCode = '#ifdef GL_ES \n';
         fragmentCode += 'precision highp float; \n';
@@ -358,8 +384,11 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
                 fragmentCode += '  colorOnTop = alphaBlend(colorOnTop, color' + idx + '); \n';
             }
         }
-        fragmentCode += '  gl_FragColor = colorOnTop; \n';
-        // fragmentCode += '  gl_FragColor = vec4(0,0,1.0,1); \n';
+        if (!opts.debug) {
+            fragmentCode += '  gl_FragColor = colorOnTop; \n';
+        } else {
+            fragmentCode += '  gl_FragColor = vec4(0,0,1.0,1); \n';
+        }
         fragmentCode += '} \n';
 
         // console.log('fragmentCode:\n' + fragmentCode);
@@ -377,6 +406,14 @@ RBV.Visualization.LODTerrainWithOverlays = function(opts) {
 
         if (transparencyFN) {
             transparencyFN.setAttribute('value', String(1.0 - value));
+            var textureResponse = _.find(this.textureResponses, function(texture) {
+                return texture.layerInfo.id === texture_id;
+            });
+            if (textureResponse) {
+                textureResponse.layerInfo.opacity = 1.0 - value;
+            } else {
+                console.error('[LODTerrainWithOverlays::setTransparencyFor] cannot find textureResponse "' + texture_id + '". This should not happen!');
+            }
         } else {
             console.log('RBV.Visualization.LODTerrainWithOverlays: Cannot find transparency field: ' + transparencyFieldId);
         }
@@ -400,8 +437,27 @@ RBV.Models.DemWithOverlays = function() {
     this.terrain = null;
     this.demRequest = null;
     this.imageryProviders = [];
+
+    this.isResetted = true;
 };
 RBV.Models.DemWithOverlays.inheritsFrom(EarthServerGenericClient.AbstractSceneModel);
+
+
+RBV.Models.DemWithOverlays.prototype.reset = function() {
+    this.demRequest = null;
+    this.imageryProviders = [];
+
+    if (this.terrain) {
+        this.terrain.reset(); // removes pending callbacks in the EarthServerGenericClient runtime
+        this.terrain = null;
+    }
+
+
+    // FIXXME: this removes ALL models, which is not what we want...
+    EarthServerGenericClient.MainScene.resetScene();
+    this.setDefaults();
+    this.isResetted = true;
+}
 
 /**
  * Sets the DEM request.
@@ -440,6 +496,7 @@ RBV.Models.DemWithOverlays.prototype.removeImageryProviderById = function(id) {
     });
 
     if (provider) {
+        provider.off('change:opacity');
         var idx = _.indexOf(this.imageryProviders, provider);
         this.imageryProviders.splice(idx, 1);
     } else {
@@ -480,9 +537,10 @@ RBV.Models.DemWithOverlays.prototype.setTransparencyFor = function(id, value) {
     });
 
     if (layer) {
+        // FIXXME: the attribute is set here, its change event triggers the function registered
+        // in 'addImageryProvider'. Are there any advantages in calling terrain.setTransparencyFor()
+        // here directly?
         layer.set('opacity', value);
-    } else {
-        console.error('[RBV.Models.DemWithOverlays::setTransparencyFor] Layer "' + id + '" not found!');
     }
 };
 /**
@@ -493,6 +551,8 @@ RBV.Models.DemWithOverlays.prototype.setTransparencyFor = function(id, value) {
  * @param cubeSizeZ - Size of the fishtank/cube on the z-axis.
  */
 RBV.Models.DemWithOverlays.prototype.createModel = function(root, cubeSizeX, cubeSizeY, cubeSizeZ) {
+    this.isResetted = false;
+
     if (typeof root === 'undefined') {
         throw Error('[Model_DEMWithOverlays::createModel] root is not defined')
     }
@@ -524,21 +584,21 @@ RBV.Models.DemWithOverlays.prototype.requestData = function() {
     // First find out which data has to be requested:
 
     // Convert the original Backbone.Model layers to 'plain-old-data' javascript objects:
-    var requests = [];
+    var layerRequests = [];
     _.each(this.imageryProviders, function(layer, idx) {
         if (!layer.get('isUpToDate')) {
             layer.set('isUpToDate', true);
-            requests.push(layer.toJSON());
+            layerRequests.push(layer.toJSON());
         }
     });
 
     if (!this.demRequest.get('isUpToDate')) {
         this.demRequest.set('isUpToDate', true);
-        requests.push(this.demRequest.toJSON());
+        layerRequests.push(this.demRequest.toJSON());
     };
 
-    if (requests.length) {
-        EarthServerGenericClient.sendRequests(this, requests, {
+    if (layerRequests.length) {
+        EarthServerGenericClient.sendRequests(this, layerRequests, {
             bbox: this.bbox,
             timespan: this.timespan,
             resX: this.XResolution,
@@ -548,11 +608,21 @@ RBV.Models.DemWithOverlays.prototype.requestData = function() {
 };
 
 RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
+    // In case the model was resetted after a request was send which did not resolve yet,
+    // the incoming request is skipped here:
+    if (this.isResetted) {
+        return;
+    }
+
     if (this.checkReceivedData(serverResponses)) {
         var initialSetup = false;
         if (!this.terrain) {
             initialSetup = true;
         }
+
+        var serverResponses = _.sortBy(serverResponses, function(response) {
+            return response.layerInfo.ordinal
+        });
 
         if (initialSetup) {
             // Setup and create the initial terrain:
@@ -573,11 +643,7 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
                 }
             }
 
-            var textureResponses = _.sortBy(textureResponses, function(response) {
-                return response.layerInfo.ordinal
-            });
 
-            // textureResponses.reverse();
             var YResolution = this.YResolution || (parseFloat(demResponse.maxHMvalue) - parseFloat(demResponse.minHMvalue));
             var transform = this.createTransform(demResponse.width, YResolution, demResponse.height, parseFloat(demResponse.minHMvalue), demResponse.minXvalue, demResponse.minZvalue);
             this.root.appendChild(transform);
@@ -594,8 +660,6 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
                 name: this.name
             });
 
-            this.terrain.getAppearances = this.getAppearances;
-            this.terrain.setTransparency = this.setTransparency;
             this.terrain.createTerrain();
             EarthServerGenericClient.MainScene.timeLogEnd("Update Terrain " + this.name);
             this.elevationUpdateBinding();
@@ -606,10 +670,7 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
 
             transform = null;
         } else {
-            var textureResponses = _.sortBy(serverResponses, function(response) {
-                return response.layerInfo.ordinal
-            });
-            this.terrain.addOverlays(textureResponses);
+            this.terrain.addOverlays(serverResponses);
         }
     }
 };
