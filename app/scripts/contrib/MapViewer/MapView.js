@@ -52,6 +52,11 @@ define(['backbone.marionette',
 					});
 				}.bind(this));
 
+				
+				this.map.events.register("moveend", this.map, function(data) {
+					Communicator.mediator.trigger("map:position:change", this.map.getExtent());
+				}.bind(this));
+
 				// Add layers for different selection methods
 				this.vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
 				

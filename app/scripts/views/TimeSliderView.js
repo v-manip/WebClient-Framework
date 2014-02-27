@@ -26,10 +26,13 @@
       onShow: function(view) {
 
         this.listenTo(Communicator.mediator, "map:layer:change", this.changeLayer);
+        this.listenTo(Communicator.mediator, "map:position:change", this.updateExtent);
         Communicator.reqres.setHandler('get:time', this.returnTime);
 
         var selectionstart = new Date(this.options.brush.start);
         var selectionend = new Date(this.options.brush.end);
+
+        this.activeWPSproducts = [];
 
         this.slider = new TimeSlider(this.el, {
 
@@ -94,11 +97,15 @@
                     color: product.get('color'),
                     data: new TimeSlider.Plugin.WPS({ url: product.get('download').url, eoid: product.get('download').id, dataset: product.get('download').id })
                   });
+                  this.activeWPSproducts.push(product.get('download').id);
                   break;
               }
               
             }else{
               this.slider.removeDataset(product.get('download').id);
+              if (this.activeWPSproducts.indexOf(product.get('download').id)!=-1)
+                this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(product.get('download').id), 1);
+              console.log(this.activeWPSproducts);
             }
           }
         }
@@ -106,7 +113,17 @@
 
       returnTime: function(){
         return Communicator.mediator.timeOfInterest;
+      },
+
+      updateExtent: function(extent){
+        
+        for (var i=0; i<this.activeWPSproducts.length; i++){
+          console.log(this.activeWPSproducts[i]);
+          this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
+        }
       }
+
+      //
 
     });
     return {'TimeSliderView':TimeSliderView};
