@@ -1,5 +1,81 @@
 var RBV = RBV || {};
 
+// Helper function to correctly set up the prototype chain, for subclasses.
+// Similar to `goog.inherits`, but uses a hash of prototype properties and
+// class properties to be extended.
+//
+// Note: Copied verbatim from Backbone (www.backbonejs.org).
+RBV.extend = function(protoProps, staticProps) {
+	var parent = this;
+	var child;
+
+	// The constructor function for the new subclass is either defined by you
+	// (the "constructor" property in your `extend` definition), or defaulted
+	// by us to simply call the parent's constructor.
+	if (protoProps && _.has(protoProps, 'constructor')) {
+		child = protoProps.constructor;
+	} else {
+		child = function() {
+			return parent.apply(this, arguments);
+		};
+	}
+
+	// Add static properties to the constructor function, if supplied.
+	_.extend(child, parent, staticProps);
+
+	// Set the prototype chain to inherit from `parent`, without calling
+	// `parent`'s constructor function.
+	var Surrogate = function() {
+		this.constructor = child;
+	};
+	Surrogate.prototype = parent.prototype;
+	child.prototype = new Surrogate;
+
+	// Add prototype properties (instance properties) to the subclass,
+	// if supplied.
+	if (protoProps) _.extend(child.prototype, protoProps);
+
+	// Set a convenience property in case the parent's prototype is needed
+	// later.
+	child.__super__ = parent.prototype;
+
+	return child;
+};
+RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Nodes = RBV.Renderer.Nodes || {};
+
+RBV.Renderer.Nodes.Base = function(options) {
+	this.el = null;
+	this.options = options || {}; // FIXXME: replace with some 'arguments' logic?
+
+	if (!this.options.el) {
+		if (this.tagName) {
+			this.el = document.createElement(this.tagName);
+		} else {
+			this.el = document.createElement('Field');
+		}
+		// console.log('Created element "' + this.tagName + '"');
+	} else {
+		this.el = this.options.el;
+	}
+
+	if (_.isFunction(this.initialize)) {
+		this.initialize.apply(this, arguments);
+	}
+}
+RBV.Renderer.Nodes.Base.extend = RBV.extend;
+
+/**
+ * Removes all DOM data and recreates a new (empty) element.
+ */
+RBV.Renderer.Nodes.Base.prototype.removeFromDOM = function() {
+	if (this.el.parentNode) {
+		this.el.parentNode.removeChild(this.el);
+	}
+	RBV.Renderer.Nodes.Base.call(this, this.options);
+}
+var RBV = RBV || {};
+
 /**
  * @class Context: Defines data and state for a model. Changes to the visualization
  * of a model are done solely via the context object.
@@ -55,372 +131,97 @@ RBV.Context.prototype.getProvider = function(type, id) {
 
 	return null;
 };
-RBV.Visualization = RBV.Visualization || {};
+/**
+ * @class Runtime: Manages multiple EarthServerClient-based models. It's main responsibility
+ * is to select a model to be shown.
+ */
+RBV.Runtime = function(opts) {
+
+};
+var RBV = RBV || {};
 
 /**
- * @class This terrain builds up a LOD with 3 levels of the received data.
- * @param root - Dom Element to append the terrain to.
- * @param data - Received Data of the Server request.
- * @param index - Index of the model that uses this terrain.
- * @param noDataValue - Array with the RGB values to be considered as no data available and shall be drawn transparent.
- * @param noDemValue - The single value in the DEM that should be considered as NODATA
- * @augments EarthServerGenericClient.AbstractTerrain
- * @constructor
+ * @class Scene: The 'Scene' object is a 'wrapper' around a RBV.Runtime that provides a
+ * predefined set of EarthServerClient models, which can be selected via the
+ * Scene's API.
+ *
+ * RBV.Provider objects can be added to the Scene. Depending on the displayed Model one
+ * ore more providers are selected to provide the data base for the model.
+ *
+ * Application which need direct control over runtimes can directly use
+ * the RBV.Runtime objects and manage them to their liking.
  */
-// root, data, index, noDataValue, noDemValue
-RBV.Visualization.LODTerrainWithOverlays = function(opts) {
-    this.data = opts.demResponse;
-    this.textureResponses = opts.textureResponses;
-    this.index = opts.index;
-    this.noData = opts.noDataValue;
-    this.noDemValue = opts.noDemValue;
-    this.root = opts.root;
-    this.name = 'TerrainApp_' + this.index;
+RBV.Scene = function(opts) {
+	// There is one context for all Models at the moment (for simplicity):
+	this.context = opts.context || null;
 
-    this.transparencysFN = {};
-    this.appearancesN = {};
+	// FIXXME: those values are model specific, how to handle?
+	this.resolution = opts.resolution || [500, 500];
+	this.noDemValue = opts.noDemValue || 0;
 
-    /**
-     * Distance to change between full and 1/2 resolution.
-     * @type {number}
-     */
-    var lodRange1 = 5000;
-    /**
-     * Distance to change between 1/2 and 1/4 resolution.
-     * @type {number}
-     */
-    var lodRange2 = 17000;
-
-    /**
-     * Size of one chunk. Chunks at the borders can be smaller.
-     * We want to build 3 chunks for the LOD with different resolution but the same size on the screen.
-     * With 121 values the length of the most detailed chunk is 120.
-     * The second chunk has 61 values and the length of 60. With a scale of 2 it's back to the size of 120.
-     * The third chunk has 31 values and the length if 30. With a scale of 4 it's also back to the size 120.
-     * @type {number}
-     */
-    var chunkSize = 121;
-    /**
-     * General information about the number of chunks needed to build the terrain.
-     * @type {number}
-     */
-    var chunkInfo = this.calcNumberOfChunks(this.data.width, this.data.height, chunkSize);
-
-    /**
-     * Counter for the insertion of chunks.
-     * @type {number}
-     */
-    var currentChunk = 0;
-
-    /**
-     * Builds the terrain and appends it into the scene.
-     */
-    this.createTerrain = function() {
-        for (currentChunk = 0; currentChunk < chunkInfo.numChunks; currentChunk++) {
-            EarthServerGenericClient.MainScene.enterCallbackForNextFrame(this.index);
-        }
-        currentChunk = 0;
-        //chunkInfo = null;
-
-        EarthServerGenericClient.MainScene.reportProgress(this.index);
-    };
-
-    this.reset = function() {
-        EarthServerGenericClient.MainScene.removeModelCallbacks(this.index);
-    };
-
-    this.createTextureDescriptionsFromServerResponses = function(responses) {
-        var texture_descriptions = [];
-        for (var idx = 0; idx < responses.length; idx++) {
-            var textureData = responses[idx].texture;
-            var textureEl = this.createCanvas(textureData, this.index, this.noDataValue, false);
-
-            texture_descriptions.push({
-                id: responses[idx].layerInfo.id,
-                opacity: responses[idx].layerInfo.opacity,
-                textureEl: textureEl
-            });
-        };
-
-        return texture_descriptions;
-    };
-
-    /**
-     * The Scene Manager calls this function after a few frames since the last insertion of a chunk.
-     */
-    this.nextFrame = function() {
-        //Build all necessary information and values to create a chunk
-        var info = this.createChunkInfo(this.index, chunkSize, chunkInfo, currentChunk, this.data.width, this.data.height);
-        var hm = this.getHeightMap(info);
-
-        var texture_descriptions = this.createTextureDescriptionsFromServerResponses(this.textureResponses);
-
-        var appearances = this.createAppearances({
-            name: this.name,
-            lodCounts: 3,
-            modelIndex: this.index,
-            texture_descriptions: texture_descriptions,
-            transparency: this.data.transparency,
-            specularColor: this.data.specularColor,
-            diffuseColor: this.data.diffuseColor,
-            upright: false
-        });
-
-        var transform = document.createElement('Transform');
-        transform.setAttribute('translation', info.xpos + ' 0 ' + info.ypos);
-        transform.setAttribute('scale', '1.0 1.0 1.0');
-
-        var lodNode = document.createElement('LOD');
-        lodNode.setAttribute('Range', lodRange1 + ',' + lodRange2);
-        lodNode.setAttribute('id', 'lod' + info.ID);
-
-        if (this.noDataValue !== undefined || this.noDemValue != undefined) {
-            new GapGrid(lodNode, info, hm, appearances, this.noDemValue);
-        } else {
-            new ElevationGrid(lodNode, info, hm, appearances);
-        }
-
-        transform.appendChild(lodNode);
-        this.root.appendChild(transform);
-
-        currentChunk++;
-
-        // FIXXME: circular references?
-        // //Delete vars avoid circular references
-        // info = null;
-        // hm = null;
-        // appearance = null;
-        // transform = null;
-        // lodNode = null;
-    };
-
-    this.addOverlays = function(provider_array) {
-        this.textureResponses = this.textureResponses.concat(provider_array);
-        var texture_descriptions = this.createTextureDescriptionsFromServerResponses(this.textureResponses);
-
-        this.updateShader(texture_descriptions);
-    };
-
-    this.removeOverlayById = function(id) {
-        var layer = _.find(this.textureResponses, function(response) {
-            return response.layerInfo.id === id;
-        });
-
-        if (!layer) {
-            return;
-        }
-
-        this.textureResponses = _.without(this.textureResponses, layer);
-        var texture_descriptions = this.createTextureDescriptionsFromServerResponses(this.textureResponses);
-
-        this.updateShader(texture_descriptions);
-    };
-
-    this.createMultiTextureNode = function(opts) {
-        var multiTextureN = new RBV.Renderer.MultiTexture();
-        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
-            multiTextureN.addTexture(new RBV.Renderer.Texture({
-                hideChildren: false,
-                repeatS: true,
-                repeatT: true,
-                canvasEl: opts.texture_descriptions[idx].textureEl
-            }));
-        }
-
-        return multiTextureN;
-    };
-
-    this.createShaderNode = function(opts) {
-        var shaderN = new RBV.Renderer.Shader();
-        shaderN.setVertexCode(this.createVertexShaderCode());
-        shaderN.setFragmentCode(this.createFragmentShaderCode({
-            texture_descriptions: opts.texture_descriptions,
-            namespace: opts.name,
-            debug: opts.debug || false
-        }));
-
-        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
-            var desc = opts.texture_descriptions[idx];
-
-            shaderN.addUniform({
-                id: opts.namespace + '_transparency_for_' + desc.id,
-                name: 'transparency_' + desc.id,
-                type: 'SFFloat',
-                value: desc.opacity
-            });
-            console.log('opacity: ' + desc.opacity);
-
-            shaderN.addUniform({
-                id: opts.namespace + '_texture_for_' + desc.id,
-                name: 'tex_' + desc.id,
-                type: 'SFFloat',
-                value: idx
-            });
-        }
-
-        return shaderN;
-    }
-
-    this.updateShader = function(texture_descriptions) {
-        var multiTextureN = this.createMultiTextureNode({
-            texture_descriptions: texture_descriptions
-        });
-        this.appearancesN[this.name].replaceMultiTexture(multiTextureN);
-
-        var shaderN = this.createShaderNode({
-            texture_descriptions: texture_descriptions,
-            namespace: this.name,
-            debug: false
-        });
-        this.appearancesN[this.name].replaceShader(shaderN);
-    };
-
-    /**
-     * FIXXME: adapt description!
-     *
-     * This function handles the creation and usage of the appearances. It can be called for every shape or LOD that should use a canvasTexture.
-     * It returns the amount of appearances specified. For every name only one appearance exits, every other uses it.
-     * @param AppearanceName - Name of the appearance. If this name is not set in the array, it will be registered.
-     *      In the case the name is already set, the existing one will be used.
-     * @param AppearanceCount - Number of appearance to be created. E.g. the LODs use a bunch of three appearance nodes.
-     * @param modelIndex - Index of the model using this appearance.
-     * @param canvasTexture - Canvas element to be used in the appearance as texture.
-     * @param transparency - Transparency of the appearance.
-     * @param specular - Specular color of the appearance.
-     * @param diffuse - Diffuse color of the appearance.
-     * @param upright - Flag if the terrain is upright (underground data) and the texture stands upright in the cube.
-     * @returns {Array} - Array of appearance nodes. If any error occurs, the function will return null.
-     */
-    this.createAppearances = function(opts) {
-        var appearanceN = new RBV.Renderer.Appearance({
-            transparency: opts.transparency
-        });
-
-        if (this.appearancesN[opts.name]) { // use the already defined appearance
-            appearanceN.el.setAttribute("use", opts.name);
-        } else {
-            this.appearancesN[opts.name] = appearanceN;
-            appearanceN.el.setAttribute("id", opts.name);
-            appearanceN.el.setAttribute("def", opts.name);
-
-            var materialN = new RBV.Renderer.Material({
-                specularColor: opts.specularColor,
-                diffuseColor: opts.diffuseColor,
-                transparency: opts.transparency
-            });
-            appearanceN.appendChild(materialN);
-
-            this.multiTextureN = this.createMultiTextureNode({
-                texture_descriptions: opts.texture_descriptions
-            });
-            appearanceN.appendMultiTexture(this.multiTextureN);
-
-            var shaderN = this.createShaderNode({
-                texture_descriptions: opts.texture_descriptions,
-                namespace: opts.name
-            });
-            appearanceN.appendShader(shaderN);
-        }
-
-        return [appearanceN.el];
-    };
-
-    this.createVertexShaderCode = function() {
-        var vertexCode = 'attribute vec3 position; \n';
-        vertexCode += 'attribute vec3 texcoord; \n';
-        vertexCode += 'uniform mat4 modelViewProjectionMatrix; \n';
-        vertexCode += 'varying vec2 fragTexCoord; \n';
-        vertexCode += 'void main() { \n';
-        vertexCode += 'fragTexCoord = vec2(texcoord.x, 1.0 - texcoord.y);\n';
-        vertexCode += 'gl_Position = modelViewProjectionMatrix * vec4(position, 1.0); }\n';
-
-        return vertexCode;
-    };
-
-    this.createFragmentShaderCode = function(opts) {
-        var fragmentCode = '#ifdef GL_ES \n';
-        fragmentCode += 'precision highp float; \n';
-        fragmentCode += '#endif \n';
-        fragmentCode += 'varying vec2 fragTexCoord; \n';
-        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
-            var desc = opts.texture_descriptions[idx];
-            fragmentCode += 'uniform float transparency_' + desc.id + '; \n';
-            fragmentCode += 'uniform sampler2D tex_' + desc.id + '; \n';
-        }
-
-        // Blending equation:
-        // (see http://en.wikibooks.org/wiki/GLSL_Programming/Unity/Transparency)
-        //
-        // TODO: Think of integrating http://mouaif.wordpress.com/?p=94
-        //
-        // vec4 result = SrcFactor * colorOnTop + DstFactor * colorBelow;
-        //
-        // To implement a special blending mode, SrcFactor and DstFactor have to
-        // be chosen correctly:
-        //
-        // * Alpha blending:
-        // -----------------
-        //
-        //   SrcFactor = SrcAlpha = vec4(gl_FragColor.a)
-        //   DstFactor = OneMinusSrcAlpha = vec4(1.0 - gl_FragColor.a)
-        //
-        // Corresponding GLSL code:
-        fragmentCode += 'vec4 alphaBlend(vec4 colorOnTop, vec4 colorBelow) {        \n';
-        fragmentCode += '  vec4 srcFac = vec4(colorOnTop.a);                        \n';
-        fragmentCode += '  vec4 dstFac = vec4(1.0 - colorOnTop.a);                  \n';
-        fragmentCode += '                                                           \n';
-        fragmentCode += '  vec4 result = srcFac * colorOnTop + dstFac * colorBelow; \n';
-        fragmentCode += '  return result;                                           \n';
-        fragmentCode += '}                                                          \n';
-
-        fragmentCode += 'void main() { \n';
-        for (var idx = 0; idx < opts.texture_descriptions.length; idx++) {
-            var desc = opts.texture_descriptions[idx];
-            fragmentCode += '  vec4 color' + idx + ' = texture2D(tex_' + desc.id + ', fragTexCoord); \n';
-            fragmentCode += '  color' + idx + ' = color' + idx + ' * transparency_' + desc.id + '; \n';
-            if (idx == 0) {
-                fragmentCode += '  vec4 colorOnTop = color0; \n';
-            } else {
-                fragmentCode += '  colorOnTop = alphaBlend(colorOnTop, color' + idx + '); \n';
-            }
-        }
-        if (!opts.debug) {
-            fragmentCode += '  gl_FragColor = colorOnTop; \n';
-        } else {
-            fragmentCode += '  gl_FragColor = vec4(0,0,1.0,1); \n';
-        }
-        fragmentCode += '} \n';
-
-        // console.log('fragmentCode:\n' + fragmentCode);
-
-        return fragmentCode;
-    };
-
-    /**
-     * Overwrites function from base terrain class. Sets the transparency in the shader.
-     * @param value - Transparency value between 0 (full visible) and 1 (invisible).
-     */
-    this.setTransparencyFor = function(texture_id, value) {
-        var transparencyFieldId = 'TerrainApp_' + this.index + '_transparency_for_' + texture_id;
-        var transparencyFN = document.getElementById(transparencyFieldId);
-
-        if (transparencyFN) {
-            transparencyFN.setAttribute('value', String(1.0 - value));
-            var textureResponse = _.find(this.textureResponses, function(texture) {
-                return texture.layerInfo.id === texture_id;
-            });
-            if (textureResponse) {
-                textureResponse.layerInfo.opacity = 1.0 - value;
-            } else {
-                console.error('[LODTerrainWithOverlays::setTransparencyFor] cannot find textureResponse "' + texture_id + '". This should not happen!');
-            }
-        } else {
-            console.log('RBV.Visualization.LODTerrainWithOverlays: Cannot find transparency field: ' + transparencyFieldId);
-        }
-    };
+	this._setupEarthServerGenericClient(opts);
 };
 
-RBV.Visualization.LODTerrainWithOverlays.inheritsFrom(EarthServerGenericClient.AbstractTerrain);
+// FIXXME: Currently the model needs to know if a Provider has a custom
+// mimetype handler attached. This is due to the slightly "clumpsy" way
+// the EarthServerGenericClient library is handling data requests.
+// Adding a provider or request based abstraction to the EarthServerGenericClient
+// would solve the problem, as then the abstraction layer takes care of the
+// mimetype handling, not the model itself.
+RBV.Scene.prototype.addModel = function(model, providers) {
+	for (var idx = 0; idx < providers.length; idx++) {
+		var mimeTypeHandlers = providers[idx].getMimeTypeHandlers();
+		for (var key in mimeTypeHandlers) {
+			if (mimeTypeHandlers.hasOwnProperty(key)) {
+				model.registerMIMETypeHandler(key, mimeTypeHandlers[key]);
+			}
+		}
+	};
+	EarthServerGenericClient.MainScene.addModel(model);
+
+	this.model = model;
+};
+
+RBV.Scene.prototype.show = function(opts) {
+	this.model.setAreaOfInterest(this.context.aoi[0], this.context.aoi[1], this.context.aoi[2], this.context.aoi[3], this.context.aoi[4], this.context.aoi[5]);
+	this.model.setTimespan(this.context.toi);
+	// this.model.setOffset(0, 0.2, 0);
+	// this.model.setScale(1, 3, 1);
+
+	// create the viewer: Cube has 60% height compared to width and length
+	// EarthServerGenericClient.MainScene.createScene('x3dScene', 'theScene', 1, 0.6, 1);
+	// EarthServerGenericClient.MainScene.createScene('x3dScene', 'x3dScene', 1, 0.6, 1);
+	// FIXXME: this was the only combination that worked, investigate API!
+	EarthServerGenericClient.MainScene.createScene(opts.x3dscene_id, opts.x3dscene_id, 1, 0.8, 1);
+	EarthServerGenericClient.MainScene.createAxisLabels("Latitude", "Height", "Longitude");
+	var pb = new EarthServerGenericClient.createProgressBar("progressbar");
+	EarthServerGenericClient.MainScene.setProgressCallback(pb.updateValue);
+	EarthServerGenericClient.MainScene.createUI('x3domUI');
+	EarthServerGenericClient.MainScene.createModels();
+};
+
+RBV.Scene.prototype.setContext = function(context) {
+	this.context = context;
+};
+
+/**
+ * Registers a handler for a specific format for preprocessing data received
+ * by a data request. An eventual registered handler with the same mimetype
+ * will be overwritten.
+ *
+ * @param mimetype - MIME type name (i.e. 'image/x-aaigrid')
+ */
+RBV.Scene.prototype.registerMIMETypeHandler = function(mimetype, handler) {
+	this.mimeTypeHandlers[mimetype, handler];
+	// FIXXME: has to be delegated to a Model!
+};
+
+RBV.Scene.prototype._setupEarthServerGenericClient = function(opts) {
+	EarthServerGenericClient.MainScene.resetScene();
+	EarthServerGenericClient.MainScene.setTimeLog(opts.setTimeLog);
+	EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
+	EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
+};
 RBV.Models = RBV.Models || {};
 
 "use strict";
@@ -432,7 +233,7 @@ RBV.Models = RBV.Models || {};
  */
 RBV.Models.DemWithOverlays = function() {
     this.setDefaults();
-    this.name = "DEM with overlay(s)";
+    this.id = "DEMWithOverlays";
 
     this.terrain = null;
     this.demRequest = null;
@@ -557,7 +358,7 @@ RBV.Models.DemWithOverlays.prototype.createModel = function(root, cubeSizeX, cub
         throw Error('[Model_DEMWithOverlays::createModel] root is not defined')
     }
 
-    EarthServerGenericClient.MainScene.timeLogStart("Create Model_DEMWithOverlays " + this.name);
+    EarthServerGenericClient.MainScene.timeLogStart("Create Model_DEMWithOverlays " + this.id);
 
     this.cubeSizeX = cubeSizeX;
     this.cubeSizeY = cubeSizeY;
@@ -649,24 +450,24 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
             this.root.appendChild(transform);
 
             //Create Terrain out of the received demResponse
-            EarthServerGenericClient.MainScene.timeLogStart("Update Terrain " + this.name);
-            this.terrain = new RBV.Visualization.LODTerrainWithOverlays({
+            EarthServerGenericClient.MainScene.timeLogStart("Update Terrain " + this.id);
+            this.terrain = new RBV.Renderer.Components.LODTerrainWithOverlays({
+                id: this.id,
                 root: transform,
                 demResponse: demResponse,
                 textureResponses: textureResponses,
                 index: this.index,
                 noDataValue: this.noData,
                 demNoDataValue: this.demNoData,
-                name: this.name
             });
 
             this.terrain.createTerrain();
-            EarthServerGenericClient.MainScene.timeLogEnd("Update Terrain " + this.name);
+            EarthServerGenericClient.MainScene.timeLogEnd("Update Terrain " + this.id);
             this.elevationUpdateBinding();
             if (this.sidePanels) {
                 this.terrain.createSidePanels(this.transformNode, 1);
             }
-            EarthServerGenericClient.MainScene.timeLogEnd("Create Model_DEMWithOverlays " + this.name);
+            EarthServerGenericClient.MainScene.timeLogEnd("Create Model_DEMWithOverlays " + this.id);
 
             transform = null;
         } else {
@@ -691,7 +492,7 @@ RBV.Models.DemWithOverlays.prototype.checkReceivedData = function(serverResponse
         }
 
         // if (data === null || !data.validate()) {
-        //     alert(this.name + ": Request not successful.");
+        //     alert(this.id + ": Request not successful.");
         //     console.log(data);
         //     this.reportProgress(); //NO Terrain will be built so report the progress here
         //     this.removePlaceHolder(); //Remove the placeHolder.
@@ -727,72 +528,394 @@ RBV.Models.DemWithOverlays.prototype.checkReceivedData = function(serverResponse
 RBV.Models.DemWithOverlays.prototype.setSpecificElement = function(element) {
     EarthServerGenericClient.appendElevationSlider(element, this.index);
 };
-RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Components = RBV.Renderer.Components || {};
 
-// Helper function to correctly set up the prototype chain, for subclasses.
-// Similar to `goog.inherits`, but uses a hash of prototype properties and
-// class properties to be extended.
-//
-// Note: Copied verbatim from Backbone (www.backbonejs.org).
-var extend = function(protoProps, staticProps) {
-	var parent = this;
-	var child;
+/**
+ * @class This terrain builds up a LOD with 3 levels of the received data.
+ * @param root - Dom Element to append the terrain to.
+ * @param data - Received Data of the Server request.
+ * @param index - Index of the model that uses this terrain.
+ * @param noDataValue - Array with the RGB values to be considered as no data available and shall be drawn transparent.
+ * @param noDemValue - The single value in the DEM that should be considered as NODATA
+ * @augments EarthServerGenericClient.AbstractTerrain
+ * @constructor
+ */
+// root, data, index, noDataValue, noDemValue
+RBV.Renderer.Components.LODTerrainWithOverlays = function(opts) {
+    this.data = opts.demResponse;
+    this.index = opts.index;
+    this.noData = opts.noDataValue;
+    this.noDemValue = opts.noDemValue;
+    this.root = opts.root;
+    this.name = opts.id + this.index;
 
-	// The constructor function for the new subclass is either defined by you
-	// (the "constructor" property in your `extend` definition), or defaulted
-	// by us to simply call the parent's constructor.
-	if (protoProps && _.has(protoProps, 'constructor')) {
-		child = protoProps.constructor;
-	} else {
-		child = function() {
-			return parent.apply(this, arguments);
-		};
-	}
+    this.textureDescs = this.extractTextureDescFromResponses(opts.textureResponses);
 
-	// Add static properties to the constructor function, if supplied.
-	_.extend(child, parent, staticProps);
+    /**
+     * Distance to change between full and 1/2 resolution.
+     * @type {number}
+     */
+    var lodRange1 = 5000;
+    /**
+     * Distance to change between 1/2 and 1/4 resolution.
+     * @type {number}
+     */
+    var lodRange2 = 17000;
 
-	// Set the prototype chain to inherit from `parent`, without calling
-	// `parent`'s constructor function.
-	var Surrogate = function() {
-		this.constructor = child;
-	};
-	Surrogate.prototype = parent.prototype;
-	child.prototype = new Surrogate;
+    /**
+     * Size of one chunk. Chunks at the borders can be smaller.
+     * We want to build 3 chunks for the LOD with different resolution but the same size on the screen.
+     * With 121 values the length of the most detailed chunk is 120.
+     * The second chunk has 61 values and the length of 60. With a scale of 2 it's back to the size of 120.
+     * The third chunk has 31 values and the length if 30. With a scale of 4 it's also back to the size 120.
+     * @type {number}
+     */
+    var chunkSize = 121;
+    /**
+     * General information about the number of chunks needed to build the terrain.
+     * @type {number}
+     */
+    var chunkInfo = this.calcNumberOfChunks(this.data.width, this.data.height, chunkSize);
 
-	// Add prototype properties (instance properties) to the subclass,
-	// if supplied.
-	if (protoProps) _.extend(child.prototype, protoProps);
+    /**
+     * Counter for the insertion of chunks.
+     * @type {number}
+     */
+    var currentChunk = 0;
 
-	// Set a convenience property in case the parent's prototype is needed
-	// later.
-	child.__super__ = parent.prototype;
+    /**
+     * Builds the terrain and appends it into the scene.
+     */
+    this.createTerrain = function() {
+        for (currentChunk = 0; currentChunk < chunkInfo.numChunks; currentChunk++) {
+            EarthServerGenericClient.MainScene.enterCallbackForNextFrame(this.index);
+        }
+        currentChunk = 0;
 
-	return child;
+        if (!this.textureBlendEffect) {
+
+            this.textureBlendEffect = new RBV.Renderer.Effects.TextureBlend({
+                id: this.name,
+                transparency: this.data.transparency,
+                material: {
+                    specular: this.data.specularColor,
+                    diffuse: this.data.diffuseColor,
+                    transparency: this.data.transparency
+                },
+                upright: false
+            });
+
+            for (var idx = 0; idx < this.textureDescs.length; idx++) {
+                var desc = this.textureDescs[idx];
+                this.textureBlendEffect.addTextureFromDesc(desc);
+            };
+            this.textureBlendEffect.commitChanges();
+        }
+
+        EarthServerGenericClient.MainScene.reportProgress(this.index);
+    };
+
+    /**
+     * The Scene Manager calls this function after a few frames since the last insertion of a chunk.
+     */
+    this.nextFrame = function() {
+        //Build all necessary information and values to create a chunk
+        var info = this.createChunkInfo(this.index, chunkSize, chunkInfo, currentChunk, this.data.width, this.data.height);
+        var hm = this.getHeightMap(info);
+
+        var transform = document.createElement('Transform');
+        transform.setAttribute('translation', info.xpos + ' 0 ' + info.ypos);
+        transform.setAttribute('scale', '1.0 1.0 1.0');
+
+        var lodNode = document.createElement('LOD');
+        lodNode.setAttribute('Range', lodRange1 + ',' + lodRange2);
+        lodNode.setAttribute('id', 'lod' + info.ID);
+
+        var appearances = [this.textureBlendEffect.appearance().el];
+        if (this.noDataValue !== undefined || this.noDemValue != undefined) {
+            new GapGrid(lodNode, info, hm, appearances, this.noDemValue);
+        } else {
+            new ElevationGrid(lodNode, info, hm, appearances);
+        }
+
+        transform.appendChild(lodNode);
+        this.root.appendChild(transform);
+
+        currentChunk++;
+    };
+};
+RBV.Renderer.Components.LODTerrainWithOverlays.inheritsFrom(EarthServerGenericClient.AbstractTerrain);
+
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.reset = function() {
+    EarthServerGenericClient.MainScene.removeModelCallbacks(this.index);
 };
 
-RBV.Renderer.Node = function(options) {
-	this.el = null;
-	this.options = options || {}; // FIXXME: replace with some 'arguments' logic?
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.addOverlays = function(serverResponses) {
+    this.textureDescs = this.textureDescs.concat(this.extractTextureDescFromResponses(serverResponses));
+    this.updateEffect();
+};
 
-	if (!this.options.el) {
-		if (this.tagName) {
-			this.el = document.createElement(this.tagName);
-		} else {
-			this.el = document.createElement('Field');
-		}
-		// console.log('Created element "' + this.tagName + '"');
-	} else {
-		this.el = this.options.el;
-	}
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.removeOverlayById = function(id) {
+    var textureDescription = _.find(this.textureDescs, function(desc) {
+        return desc.id === id;
+    });
 
-	if (_.isFunction(this.initialize)) {
-		this.initialize.apply(this, arguments);
-	}
+    if (!textureDescription) {
+        return;
+    }
+
+    this.textureDescs = _.without(this.textureDescs, textureDescription);
+
+    this.updateEffect();
+};
+
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.updateEffect = function() {
+    // NOTE: When adding an overlay the best way is to completely reset the blend effect
+    // and add _all_ textures again. This has the advantage that opacity changes of existing
+    // overlays are incorporated. Otherwise the update in the underlying shader code causes
+    // existing layers to be reset to their initial opacity.
+    // The opacity tracking mechanism for existing overlays is implemented in the
+    // 'setTransparencyFor' function.
+    this.textureBlendEffect.reset();
+    for (var idx = 0; idx < this.textureDescs.length; idx++) {
+        var desc = this.textureDescs[idx];
+        this.textureBlendEffect.addTextureFromDesc(desc);
+    };
+    this.textureBlendEffect.commitChanges();
+};
+
+/**
+ * Overwrites function from base terrain class. Sets the transparency in the shader.
+ * @param value - Transparency value between 0 (full visible) and 1 (invisible).
+ */
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.setTransparencyFor = function(texture_id, value) {
+    var transparencyFieldId = this.name + '_transparency_for_' + texture_id;
+    var transparencyFN = document.getElementById(transparencyFieldId);
+
+    if (transparencyFN) {
+        transparencyFN.setAttribute('value', String(1.0 - value));
+        var textureDesc = _.find(this.textureDescs, function(desc) {
+            return desc.id === texture_id;
+        });
+        if (textureDesc) {
+            textureDesc.opacity = 1.0 - value;
+        } else {
+            console.error('[LODTerrainWithOverlays::setTransparencyFor] cannot find textureResponse "' + texture_id + '". This should not happen!');
+        }
+    } else {
+        console.log('RBV.Renderer.Components.LODTerrainWithOverlays: Cannot find transparency field: ' + transparencyFieldId);
+    }
+};
+
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.extractTextureDescFromResponses = function(responses) {
+    var texture_descriptions = [];
+    for (var idx = 0; idx < responses.length; idx++) {
+        var textureData = responses[idx].texture;
+        var textureEl = this.createCanvas(textureData, this.index, this.noDataValue, false);
+
+        texture_descriptions.push({
+            id: responses[idx].layerInfo.id,
+            opacity: responses[idx].layerInfo.opacity,
+            textureEl: textureEl
+        });
+    };
+
+    return texture_descriptions;
+};
+RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Effects = RBV.Renderer.Effects || {};
+
+RBV.Renderer.Effects.TextureBlend = function(opts) {
+	this._appearanceN = null;
+	this._materialN = null;
+	this._shaderN = null;
+	this._multiTextureN = null;
+	this._textureDescs = [];
+
+	this._id = opts.id || 'Effect::TextureBlend';
+
+	this._options = opts;
+
+	this._setup();
 }
-RBV.Renderer.Node.extend = extend;
 
-RBV.Renderer.Appearance = RBV.Renderer.Node.extend({
+RBV.Renderer.Effects.TextureBlend.prototype._setup = function() {
+	this._appearanceN = new RBV.Renderer.Nodes.Appearance({
+		id: this._id,
+		transparency: this._options.transparency
+	});
+	// FIXXME: currently the appearance is added to all X3D scenes
+	// in the page so that it can be 'used'. Make this configurable!
+	var x3d_scenes = document.getElementsByTagName('scene');
+	for (var idx = 0; idx < x3d_scenes.length; idx++) {
+		var scene = x3d_scenes[idx];
+		scene.appendChild(this._appearanceN.el);
+	};
+
+	// this._materialN = new RBV.Renderer.Nodes.Material({
+	// 	specularColor: this._options.material.specular,
+	// 	diffuseColor: this._options.material.diffuse,
+	// 	transparency: this._options.material.transparency
+	// });
+	// this._appearanceN.appendChild(this._materialN);
+
+	this._multiTextureN = new RBV.Renderer.Nodes.MultiTexture();
+	this._appearanceN.appendMultiTexture(this._multiTextureN);
+
+	this._shaderN = new RBV.Renderer.Nodes.Shader();
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype.reset = function(desc) {
+	this._textureDescs = [];
+	// The appearance internally resets this._shaderN and this._multiTextureN
+	// as a 'sideeffect':
+	this._appearanceN.reset();
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype.addTextureFromDesc = function(desc) {
+	// FIXXME: integrate desc.transform, to be able to cleanup when removing a texture!
+	this._textureDescs.push({
+		id: desc.id,
+		textureEl: desc.textureEl,
+		opacity: desc.opacity,
+		transform: desc.transform
+	});
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype.commitChanges = function() {
+	this._updateMultiTextureNode();
+	this._updateShaderNode();
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype.appearance = function() {
+	return new RBV.Renderer.Nodes.Appearance({
+		use: this._id,
+		transparency: this._options.transparency
+	});
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype.id = function() {
+	return this._id;
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype._updateMultiTextureNode = function() {
+	// FIXXME: rethink sideeffects regarding removeFromDOM/appendMultiTexture/replaceMultiTexture!
+	// For now it is working and properly encapsulated...
+	this._multiTextureN.removeFromDOM();
+	for (var idx = 0; idx < this._textureDescs.length; idx++) {
+		var desc = this._textureDescs[idx];
+
+		// FIXXME: 'texture' parameter should support type RBV.Renderer.Nodes.Texture for consistency!
+		this._multiTextureN.addTexture(new RBV.Renderer.Nodes.Texture({
+			hideChildren: false,
+			repeatS: true,
+			repeatT: true,
+			canvasEl: desc.textureEl
+		}), desc.transform);
+	};
+
+	this._appearanceN.appendMultiTexture(this._multiTextureN);
+}
+
+RBV.Renderer.Effects.TextureBlend.prototype._updateShaderNode = function() {
+	// FIXXME: rethink sideeffects regarding removeFromDOM/appendShader/replaceShader!
+	// For now it is working and properly encapsulated...
+	this._shaderN.removeFromDOM();
+	this._shaderN.setVertexCode(this._createVertexShaderCode());
+	this._shaderN.setFragmentCode(this._createFragmentShaderCode());
+
+	for (var idx = 0; idx < this._textureDescs.length; idx++) {
+		var desc = this._textureDescs[idx];
+
+		this._shaderN.addUniform({
+			id: this._id + '_transparency_for_' + desc.id,
+			name: 'transparency_' + desc.id,
+			type: 'SFFloat',
+			value: desc.opacity
+		});
+
+		this._shaderN.addUniform({
+			id: this._id + '_texture_for_' + desc.id,
+			name: 'tex_' + desc.id,
+			type: 'SFFloat',
+			value: idx
+		});
+	}
+
+	this._appearanceN.appendShader(this._shaderN);
+}
+
+RBV.Renderer.Effects.TextureBlend.prototype._createVertexShaderCode = function() {
+	var vertexCode = 'attribute vec3 position; \n';
+	vertexCode += 'attribute vec3 texcoord; \n';
+	vertexCode += 'uniform mat4 modelViewProjectionMatrix; \n';
+	vertexCode += 'varying vec2 fragTexCoord; \n';
+	vertexCode += 'void main() { \n';
+	vertexCode += 'fragTexCoord = vec2(texcoord.x, 1.0 - texcoord.y);\n';
+	vertexCode += 'gl_Position = modelViewProjectionMatrix * vec4(position, 1.0); }\n';
+
+	return vertexCode;
+};
+
+RBV.Renderer.Effects.TextureBlend.prototype._createFragmentShaderCode = function() {
+	var fragmentCode = '#ifdef GL_ES \n';
+	fragmentCode += 'precision highp float; \n';
+	fragmentCode += '#endif \n';
+	fragmentCode += 'varying vec2 fragTexCoord; \n';
+	for (var idx = 0; idx < this._textureDescs.length; idx++) {
+		var desc = this._textureDescs[idx];
+		fragmentCode += 'uniform float transparency_' + desc.id + '; \n';
+		fragmentCode += 'uniform sampler2D tex_' + desc.id + '; \n';
+	}
+
+	// Blending equation:
+	// (see http://en.wikibooks.org/wiki/GLSL_Programming/Unity/Transparency)
+	//
+	// TODO: Think of integrating http://mouaif.wordpress.com/?p=94
+	//
+	// vec4 result = SrcFactor * colorOnTop + DstFactor * colorBelow;
+	//
+	// To implement a special blending mode, SrcFactor and DstFactor have to
+	// be chosen correctly:
+	//
+	// * Alpha blending:
+	// -----------------
+	//
+	//   SrcFactor = SrcAlpha = vec4(gl_FragColor.a)
+	//   DstFactor = OneMinusSrcAlpha = vec4(1.0 - gl_FragColor.a)
+	//
+	// Corresponding GLSL code:
+	fragmentCode += 'vec4 alphaBlend(vec4 colorOnTop, vec4 colorBelow) {        \n';
+	fragmentCode += '  vec4 srcFac = vec4(colorOnTop.a);                        \n';
+	fragmentCode += '  vec4 dstFac = vec4(1.0 - colorOnTop.a);                  \n';
+	fragmentCode += '                                                           \n';
+	fragmentCode += '  vec4 result = srcFac * colorOnTop + dstFac * colorBelow; \n';
+	fragmentCode += '  return result;                                           \n';
+	fragmentCode += '}                                                          \n';
+
+	fragmentCode += 'void main() { \n';
+	for (var idx = 0; idx < this._textureDescs.length; idx++) {
+		var desc = this._textureDescs[idx];
+		fragmentCode += '  vec4 color' + idx + ' = texture2D(tex_' + desc.id + ', fragTexCoord); \n';
+		fragmentCode += '  color' + idx + ' = color' + idx + ' * transparency_' + desc.id + '; \n';
+		if (idx == 0) {
+			fragmentCode += '  vec4 colorOnTop = color0; \n';
+		} else {
+			fragmentCode += '  colorOnTop = alphaBlend(colorOnTop, color' + idx + '); \n';
+		}
+	}
+	fragmentCode += '  gl_FragColor = colorOnTop; \n';
+	// fragmentCode += '  gl_FragColor = vec4(0,0,1.0,1); \n';
+	fragmentCode += '} \n';
+
+	// console.log('fragmentCode:\n' + fragmentCode);
+
+	return fragmentCode;
+};
+RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Nodes = RBV.Renderer.Nodes || {};
+
+RBV.Renderer.Nodes.Appearance = RBV.Renderer.Nodes.Base.extend({
 	tagName: 'Appearance',
 
 	initialize: function(opts) {
@@ -802,6 +925,15 @@ RBV.Renderer.Appearance = RBV.Renderer.Node.extend({
 			this.el.setAttribute('sortType', 'transparent');
 		}
 
+		if (opts.use) {
+			this.el.setAttribute("use", opts.use);
+
+		} else {
+			this.el.setAttribute("id", opts.id);
+			this.el.setAttribute("def", opts.id);
+		}
+
+		this.shaderN = null;
 		this.nodes = {};
 
 		// FIXXME: integrate automatic def/use mechanism
@@ -831,13 +963,35 @@ RBV.Renderer.Appearance = RBV.Renderer.Node.extend({
 	},
 
 	replaceShader: function(node) {
-		this.el.removeChild(this.shaderN.el);
+		if (this.shaderN) {
+			this.el.removeChild(this.shaderN.el);
+		}
 		this.shaderN = node;
 		this.el.appendChild(this.shaderN.el);
+	},
+
+	reset: function() {
+		this.shaderN.removeFromDOM();
+		this.multiTextureN.removeFromDOM();
 	}
 });
+RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Nodes = RBV.Renderer.Nodes || {};
 
-RBV.Renderer.Shader = RBV.Renderer.Node.extend({
+RBV.Renderer.Nodes.Material = RBV.Renderer.Nodes.Base.extend({
+	tagName: 'Material',
+
+	initialize: function(opts) {
+		this.el.setAttribute('specularColor', opts.specularColor);
+		this.el.setAttribute('diffuseColor', opts.diffuseColor);
+		this.el.setAttribute('transparency', opts.transparency);
+		this.el.setAttribute('ID', opts.namespace + '_mat');
+	}
+});
+RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Nodes = RBV.Renderer.Nodes || {};
+
+RBV.Renderer.Nodes.Shader = RBV.Renderer.Nodes.Base.extend({
 	tagName: 'ComposedShader',
 
 	vertexUrl: '',
@@ -876,8 +1030,10 @@ RBV.Renderer.Shader = RBV.Renderer.Node.extend({
 		this.el.appendChild(uniformFN);
 	}
 });
+RBV.Renderer = RBV.Renderer || {};
+RBV.Renderer.Nodes = RBV.Renderer.Nodes || {};
 
-RBV.Renderer.Texture = RBV.Renderer.Node.extend({
+RBV.Renderer.Nodes.Texture = RBV.Renderer.Nodes.Base.extend({
 	tagName: 'Texture',
 
 	initialize: function(opts) {
@@ -889,7 +1045,7 @@ RBV.Renderer.Texture = RBV.Renderer.Node.extend({
 	}
 });
 
-RBV.Renderer.TextureTransform = RBV.Renderer.Node.extend({
+RBV.Renderer.Nodes.TextureTransform = RBV.Renderer.Nodes.Base.extend({
 	tagName: 'TextureTransform',
 
 	initialize: function(opts) {
@@ -898,18 +1054,7 @@ RBV.Renderer.TextureTransform = RBV.Renderer.Node.extend({
 	}
 });
 
-RBV.Renderer.Material = RBV.Renderer.Node.extend({
-	tagName: 'Material',
-
-	initialize: function(opts) {
-		this.el.setAttribute('specularColor', opts.specularColor);
-		this.el.setAttribute('diffuseColor', opts.diffuseColor);
-		this.el.setAttribute('transparency', opts.transparency);
-		this.el.setAttribute('ID', opts.namespace + '_mat');
-	}
-});
-
-RBV.Renderer.MultiTexture = RBV.Renderer.Node.extend({
+RBV.Renderer.Nodes.MultiTexture = RBV.Renderer.Nodes.Base.extend({
 	tagName: 'MultiTexture',
 
 	addTexture: function(texture, transform) {
@@ -917,102 +1062,19 @@ RBV.Renderer.MultiTexture = RBV.Renderer.Node.extend({
 		if (typeof transform !== 'undefined') {
 			this.el.appendChild(transform.el);
 		} else {
-			var t = new RBV.Renderer.TextureTransform({
+			var t = new RBV.Renderer.Nodes.TextureTransform({
 				scale: '1,-1',
 				rotation: 0
 			});
 			this.el.appendChild(t.el);
 		}
+	},
+
+	// Removes all DOM data and recreates a new (empty) element.
+	removeFromDOM: function() {
+		if (this.el.parentNode) {
+			this.el.parentNode.removeChild(this.el);
+		}
+		RBV.Renderer.Nodes.Base.call(this, this.options);
 	}
 });
-/**
- * @class Runtime: Manages multiple EarthServerClient-based models. It's main responsibility
- * is to select a model to be shown.
- */
-RBV.Runtime = function(opts) {
-
-};
-var RBV = RBV || {};
-
-/**
- * @class Scene: The 'Scene' object is a 'wrapper' around a RBV.Runtime that provides a
- * predefined set of EarthServerClient models, which can be selected via the
- * Scene's API.
- *
- * RBV.Provider objects can be added to the Scene. Depending on the displayed Model one
- * ore more providers are selected to provide the data base for the model.
- *
- * Application which need direct control over runtimes can directly use
- * the RBV.Runtime objects and manage them to their liking.
- */
-RBV.Scene = function(opts) {
-	// There is one context for all Models at the moment (for simplicity):
-	this.context = opts.context || null;
-
-	// FIXXME: those values are model specific, how to handle?
-	this.resolution = opts.resolution || [500, 500];
-	this.noDemValue = opts.noDemValue || 0;
-
-	this._setupEarthServerGenericClient(opts);
-};
-
-// FIXXME: Currently the model needs to know if a Provider has a custom
-// mimetype handler attached. This is due to the slightly "clumpsy" way
-// the EarthServerGenericClient library is handling data requests.
-// Adding a provider or request based abstraction to the EarthServerGenericClient
-// would solve the problem, as then the abstraction layer takes care of the
-// mimetype handling, not the model itself.
-RBV.Scene.prototype.addModel = function(model, providers) {
-	for (var idx = 0; idx < providers.length; idx++) {
-		var mimeTypeHandlers = providers[idx].getMimeTypeHandlers();
-		for (var key in mimeTypeHandlers) {
-			if (mimeTypeHandlers.hasOwnProperty(key)) {
-				model.registerMIMETypeHandler(key, mimeTypeHandlers[key]);
-			}
-		}
-	};
-	EarthServerGenericClient.MainScene.addModel(model);
-
-	this.model = model;
-};
-
-RBV.Scene.prototype.show = function(opts) {
-	this.model.setAreaOfInterest(this.context.aoi[0], this.context.aoi[1], this.context.aoi[2], this.context.aoi[3], this.context.aoi[4], this.context.aoi[5]);
-	this.model.setTimespan(this.context.toi);
-	// this.model.setOffset(0, 0.2, 0);
-	// this.model.setScale(1, 3, 1);
-
-	// create the viewer: Cube has 60% height compared to width and length
-	// EarthServerGenericClient.MainScene.createScene('x3dScene', 'theScene', 1, 0.6, 1);
-	// EarthServerGenericClient.MainScene.createScene('x3dScene', 'x3dScene', 1, 0.6, 1);
-	// FIXXME: this was the only combination that worked, investigate API!
-	EarthServerGenericClient.MainScene.createScene(opts.x3dscene_id, opts.x3dscene_id, 1, 0.8, 1);
-	EarthServerGenericClient.MainScene.createAxisLabels("Latitude", "Height", "Longitude");
-	var pb = new EarthServerGenericClient.createProgressBar("progressbar");
-	EarthServerGenericClient.MainScene.setProgressCallback(pb.updateValue);
-	EarthServerGenericClient.MainScene.createUI('x3domUI');
-	EarthServerGenericClient.MainScene.createModels();
-};
-
-RBV.Scene.prototype.setContext = function(context) {
-	this.context = context;
-};
-
-/**
- * Registers a handler for a specific format for preprocessing data received
- * by a data request. An eventual registered handler with the same mimetype
- * will be overwritten.
- *
- * @param mimetype - MIME type name (i.e. 'image/x-aaigrid')
- */
-RBV.Scene.prototype.registerMIMETypeHandler = function(mimetype, handler) {
-	this.mimeTypeHandlers[mimetype, handler];
-	// FIXXME: has to be delegated to a Model!
-};
-
-RBV.Scene.prototype._setupEarthServerGenericClient = function(opts) {
-	EarthServerGenericClient.MainScene.resetScene();
-	EarthServerGenericClient.MainScene.setTimeLog(opts.setTimeLog);
-	EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
-	EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
-};
