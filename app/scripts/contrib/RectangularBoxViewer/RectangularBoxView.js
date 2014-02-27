@@ -94,9 +94,31 @@ define([
 		},
 
 		supportsLayer: function(model) {
-			return (model.get('view').protocol === 'WMS') ? true : false;
+			if (model.get('view').isBaseLayer) {
+				var views = model.get('views');
+				var isSupported = false;
+				for (var idx = 0; idx < views.length; idx++) {
+					var view = views[idx];
+					if (view.protocol.toUpperCase() === 'WMS') {
+						isSupported = true;
+						break;
+					}
+				};
+				return isSupported;
+			} else {
+				return (model.get('view').protocol.toUpperCase() === 'WMS') ? true : false;
+			}
 		},
-
+			onSortProducts: function(productLayers) {
+				globals.products.each(function(product) {
+					if (this.isModelCompatible(product)) {
+						var productLayer = this.map.getLayersByName(product.get("name"))[0];
+						var index = globals.products.indexOf(productLayer);
+						this.map.setLayerIndex(productLayer, index);
+					}
+				}, this);
+				console.log("Map products sorted");
+			},
 		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
 		onLayerChange: function(model, isVisible) {
 			// FIXXME: rethink when to apply changes and when not. Taking into account only the aoi may
@@ -107,21 +129,53 @@ define([
 			}
 
 			if (isVisible) {
-				this.model_DemWithOverlays.addImageryProvider(new VMANIP.Layers.WMS({
-					id: model.get('view').id,
-					urls: model.get('view').urls,
-					crs: model.get('view').crs,
-					format: model.get('view').format.replace('image/', ''),
-					transparent: 'true',
-					ordinal: model.get('ordinal'),
-					opacity: model.get('opacity')
-				}));
+				var layer = null;
+				if (model.get('view').isBaseLayer) {
+					// Find compatible baselayer protocol:
+					var view = _.find(model.get('views'), function(view) {
+						return view.protocol.toUpperCase() === 'WMS';
+					});
+					if (view) {
+						layer = new VMANIP.Layers.WMS({
+							id: view.id,
+							urls: view.urls,
+							crs: view.crs,
+							format: view.format.replace('image/', ''),
+							transparent: 'true',
+							// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
+							ordinal: 10000, // A base layer is always the most bottom layer. 
+							opacity: 1 //model.get('opacity')
+						});
+					}
+				} else {
+					layer = new VMANIP.Layers.WMS({
+						id: model.get('view').id,
+						urls: model.get('view').urls,
+						crs: model.get('view').crs,
+						format: model.get('view').format.replace('image/', ''),
+						transparent: 'true',
+						ordinal: model.get('ordinal'),
+						opacity: model.get('opacity')
+					})
+				}
+				this.model_DemWithOverlays.addImageryProvider(layer);
 				// console.log('[RectangularBoxView::onLayerChange] Added ' + model.get('name'));
 			} else {
 				this.model_DemWithOverlays.removeImageryProviderById(model.get('view').id);
 				// console.log('[RectangularBoxView::onLayerChange] Removed ' + model.get('name'));
 			}
 		},
+
+		// onSortUpdated: function(productLayers) {
+		// 	globals.products.each(function(product) {
+		// 		if (this.supportsLayer(product)) {
+		// 			var productLayer = this.map.getLayersByName(product.get("name"))[0];
+		// 			var index = globals.products.indexOf(productLayer);
+		// 			this.map.setLayerIndex(productLayer, index);
+		// 		}
+		// 	}, this);
+		// 	console.log("Map products sorted");
+		// },
 
 		_onUpdateOpacity: function(desc) {
 			var layer_id = desc.model.get('view').id;
@@ -132,6 +186,7 @@ define([
 			this.listenTo(this.context(), 'selection:changed', this._setAreaOfInterest);
 			this.listenTo(this.context(), 'time:change', this._onTimeChange);
 			this.listenTo(this.context(), 'map:layer:change', this.onLayerChange);
+			// this.listenTo(this.context(), "productCollection:sortUpdated", this.onSortUpdated);
 			this.listenTo(this.context(), 'productCollection:updateOpacity', this._onUpdateOpacity);
 		},
 
@@ -223,17 +278,37 @@ define([
 			var selectedLayers = [];
 
 			// Initially create the imagery provider based on the currently selected layers:
-			var items = this.getModelsForSelectedLayers(this.supportsLayer);
-			_.forEach(items, function(value, key) {
-				var layer = new VMANIP.Layers.WMS({
-					id: value.model.get('view').id,
-					urls: value.model.get('view').urls,
-					crs: 'EPSG:4326',
-					format: value.model.get('view').format.replace('image/', ''),
-					transparent: 'true',
-					ordinal: value.model.get('ordinal'),
-					opacity: value.model.get('opacity')
-				});
+			var model_descs = this.getModelsForSelectedLayers(this.supportsLayer);
+			_.forEach(model_descs, function(desc, key) {
+				var layer = null;
+				var model = desc.model;
+				if (desc.type === 'baselayer') {
+					// Find compatible baselayer protocol:
+					var view = _.find(model.get('views'), function(view) {
+						return view.protocol.toUpperCase() === 'WMS';
+					});
+
+					layer = new VMANIP.Layers.WMS({
+						id: view.id,
+						urls: view.urls,
+						crs: 'EPSG:4326',
+						format: view.format.replace('image/', ''),
+						transparent: 'true',
+						// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
+						ordinal: 10000, // A base layer is always the most bottom layer.
+						opacity: 1 //model.get('opacity')
+					});
+				} else {
+					layer = new VMANIP.Layers.WMS({
+						id: model.get('view').id,
+						urls: model.get('view').urls,
+						crs: 'EPSG:4326',
+						format: model.get('view').format.replace('image/', ''),
+						transparent: 'true',
+						ordinal: model.get('ordinal'),
+						opacity: model.get('opacity')
+					});
+				}
 				selectedLayers.push(layer);
 			});
 
