@@ -1,9 +1,11 @@
 define([
 	'app',
 	'./X3DOMView',
+	'globals',
+	'communicator',
 	'underscore',
 	'jqueryui'
-], function(App, X3DOMView, _) {
+], function(App, X3DOMView, globals, Communicator, _) {
 
 	'use strict';
 
@@ -14,7 +16,7 @@ define([
 			this.enableEmptyView(true); // this is the default
 
 			this.scene = null;
-			this.model_DemWithOverlays = null;
+			this.modelTerrainWithOverlay = null;
 
 			this.sceneDefaults = {
 				setTimeLog: false,
@@ -39,7 +41,7 @@ define([
 			this.currentToI = null;
 
 			// FIXXME: add to config.json and get it from there then!
-			this.demProvider = new VMANIP.Layers.WCS({
+			this.terrainLayer = new VMANIP.Layers.WCS({
 				id: 'ACE2',
 				urls: ['http://data.eox.at/elevation?'],
 				crs: ['SRS', 'EPSG:4326'],
@@ -48,7 +50,7 @@ define([
 				datatype: 'text'
 			});
 
-			this.demProvider.registerMimeTypeHandler('image/x-aaigrid', function(receivedData, responseData) {
+			this.terrainLayer.registerMimeTypeHandler('image/x-aaigrid', function(receivedData, responseData) {
 				var lines = receivedData.split('\n');
 				var ncols = parseInt(lines[8].replace('ncols', ''));
 				var nrows = parseInt(lines[9].replace('nrows', ''));
@@ -95,6 +97,8 @@ define([
 
 		supportsLayer: function(model) {
 			if (model.get('view').isBaseLayer) {
+				console.log('SKIPPING REQUEST!!!');
+				return false;
 				var views = model.get('views');
 				var isSupported = false;
 				for (var idx = 0; idx < views.length; idx++) {
@@ -109,22 +113,29 @@ define([
 				return (model.get('view').protocol.toUpperCase() === 'WMS') ? true : false;
 			}
 		},
-			onSortProducts: function(productLayers) {
-				globals.products.each(function(product) {
-					if (this.isModelCompatible(product)) {
-						var productLayer = this.map.getLayersByName(product.get("name"))[0];
-						var index = globals.products.indexOf(productLayer);
-						this.map.setLayerIndex(productLayer, index);
-					}
-				}, this);
-				console.log("Map products sorted");
-			},
+
+		// onSortProducts: function(productLayers) {
+		// 	globals.products.each(function(product) {
+		// 		if (this.isModelCompatible(product)) {
+		// 			var productLayer = this.map.getLayersByName(product.get("name"))[0];
+		// 			var index = globals.products.indexOf(productLayer);
+		// 			this.map.setLayerIndex(productLayer, index);
+		// 		}
+		// 	}, this);
+		// 	console.log("Map products sorted");
+		// },
+
 		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
 		onLayerChange: function(model, isVisible) {
+			if (!model.hasOwnProperty('isBaseLayer')) {
+				var layer = this.context.getLayerById(model.get('view').id, 'imagery');
+				this.context.trigger('change:layer:visibility', layer, isVisible);
+			}
+			return;
 			// FIXXME: rethink when to apply changes and when not. Taking into account only the aoi may
 			// not be sufficient, not sure...
 			// FIXXME: for some reason the function is called with only a model set. Find out where the trigger is!
-			if (!this.currentAoI || (typeof isVisible === 'undefined') || !this.model_DemWithOverlays) {
+			if (!this.currentAoI || (typeof isVisible === 'undefined') || !this.modelTerrainWithOverlay) {
 				return;
 			}
 
@@ -158,10 +169,11 @@ define([
 						opacity: model.get('opacity')
 					})
 				}
-				this.model_DemWithOverlays.addImageryProvider(layer);
+				this.modelTerrainWithOverlay.addImageLayer(layer);
+				this.context.addLayer('imagery', layer.id, layer);
 				// console.log('[RectangularBoxView::onLayerChange] Added ' + model.get('name'));
 			} else {
-				this.model_DemWithOverlays.removeImageryProviderById(model.get('view').id);
+				this.modelTerrainWithOverlay.removeImageLayerById(model.get('view').id);
 				// console.log('[RectangularBoxView::onLayerChange] Removed ' + model.get('name'));
 			}
 		},
@@ -178,8 +190,11 @@ define([
 		// },
 
 		_onUpdateOpacity: function(desc) {
-			var layer_id = desc.model.get('view').id;
-			this.model_DemWithOverlays.setTransparencyFor(layer_id, desc.value);
+			this.context.updateLayerOpacity(desc.model.get('view').id, desc.value);
+
+			// TODO: This is also possible, but...
+			//var layer = this.context.getLayerById(desc.model.get('view').id, 'imagery');
+			//this.context.trigger('change:layer:opacity', layer, desc.value);
 		},
 
 		didInsertElement: function() {
@@ -242,16 +257,18 @@ define([
 			this.onShow();
 
 			if (this.scene) {
-				this.model_DemWithOverlays.reset();
+				this.modelTerrainWithOverlay.reset();
 				this.context.setToI(this.toi());
 				this.context.setAoI(this.currentAoI, 0, 100000);
-				// FIXXME: this is not the nicest solution to reset the provider
-				this.demProvider.set('isUpToDate', false);
+				// FIXXME: this is not the nicest solution to reset the layer
+				this.terrainLayer.set('isUpToDate', false);
 			} else {
 				// A Context can hold multiple Providers. They are registered with
 				// an id. When instantiating a model later on it is connected via
 				// this id with the corresponding Providers.
 				this.context = new RBV.Context({
+					mediator: Communicator.mediator,
+					globals: globals,
 					toi: this.toi(),
 					aoi: [this.currentAoI, 0, 100000]
 				});
@@ -259,64 +276,18 @@ define([
 					context: this.context
 				}));
 
-				if (!this.model_DemWithOverlays) {
-					this.model_DemWithOverlays = new RBV.Models.DemWithOverlays();
+				if (!this.modelTerrainWithOverlay) {
+					this.modelTerrainWithOverlay = new RBV.Models.DemWithOverlays();
 				}
 			}
 
-			this.context.reset();
 			// FIXXME: this is too clumsy!
-			this.context.addProvider('dem', this.demProvider.id, this.demProvider);
+			this.context.addLayer('terrain', this.terrainLayer.id, this.terrainLayer);
 			_.each(this.imageryProviders, function(item, idx) {
-				this.context.addProvider('imagery', item.id, item);
-				console.log('registering: ' + item.id);
-			});
-			// Note: for the moment the DEM provider is static:
-			this.model_DemWithOverlays.setDemProvider(this.context.getProvider('dem', this.demProvider.id));
-
-			// Get the currently selected layers and setup the model accordingly:
-			var selectedLayers = [];
-
-			// Initially create the imagery provider based on the currently selected layers:
-			var model_descs = this.getModelsForSelectedLayers(this.supportsLayer);
-			_.forEach(model_descs, function(desc, key) {
-				var layer = null;
-				var model = desc.model;
-				if (desc.type === 'baselayer') {
-					// Find compatible baselayer protocol:
-					var view = _.find(model.get('views'), function(view) {
-						return view.protocol.toUpperCase() === 'WMS';
-					});
-
-					layer = new VMANIP.Layers.WMS({
-						id: view.id,
-						urls: view.urls,
-						crs: 'EPSG:4326',
-						format: view.format.replace('image/', ''),
-						transparent: 'true',
-						// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
-						ordinal: 10000, // A base layer is always the most bottom layer.
-						opacity: 1 //model.get('opacity')
-					});
-				} else {
-					layer = new VMANIP.Layers.WMS({
-						id: model.get('view').id,
-						urls: model.get('view').urls,
-						crs: 'EPSG:4326',
-						format: model.get('view').format.replace('image/', ''),
-						transparent: 'true',
-						ordinal: model.get('ordinal'),
-						opacity: model.get('opacity')
-					});
-				}
-				selectedLayers.push(layer);
+				this.context.addLayer('imagery', item.id, item);
 			});
 
-			_.each(selectedLayers, function(layer, idx) {
-				this.model_DemWithOverlays.addImageryProvider(layer);
-			}.bind(this));
-
-			this.scene.addModel(this.model_DemWithOverlays, [this.demProvider]);
+			this.scene.addModel(this.modelTerrainWithOverlay, [this.terrainLayer]);
 			this.scene.show(this.options);
 		},
 

@@ -140,6 +140,47 @@
       }
     ],
     "products": [
+    {
+        "name": "Blue Marble",
+        "visible": false,
+        "timeSlider": true,
+        "color":"brown",
+        "view": {
+          "id": "bluemarble",
+          "protocol": "WMS",
+          "urls": [
+              "http://tiles.maps.eox.at/wms"
+          ],
+          "style": "default",
+          "format": "image/jpeg",
+          "crs": "EPSG:4326"
+        },
+        "download": {
+          "id": "SPOT4_View",
+          "protocol": "EOWCS",
+          "url": "http://demo.v-manip.eox.at/browse/ows"
+        }
+      },{
+        "name": "Terrain",
+        "visible": false,
+        "timeSlider": true,
+        "color":"orange",
+        "view": {
+          "id": "terrain",
+          "protocol": "WMS",
+          "urls": [
+              "http://tiles.maps.eox.at/wms"
+          ],
+          "style": "default",
+          "format": "image/jpeg",
+          "crs": "EPSG:4326"
+        },
+        "download": {
+          "id": "SPOT4_View",
+          "protocol": "EOWCS",
+          "url": "http://demo.v-manip.eox.at/browse/ows"
+        }
+      },
       {
         "name": "SPOT 4 View",
         "visible": false,
