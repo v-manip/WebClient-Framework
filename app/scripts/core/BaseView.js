@@ -25,7 +25,7 @@ define([
 		 */
 		cacheViewerInstance: true,
 
-		/* Stores the 'context' (accessible in the child object via 'this.context()') and sets up
+		/* Stores the 'context' (accessible in the child object via 'this.legacyContext()') and sets up
 		 * the base configuration.
 		 */
 		initialize: function(opts) {
@@ -44,7 +44,7 @@ define([
 
 			// Encapsulate the context object to ensure it is not unintendently
 			// changed from outside:
-			this.context = function() {
+			this.legacyContext = function() {
 				return opts.context;
 			}
 		},
@@ -55,7 +55,7 @@ define([
 		 */
 		_setupVMANIPContext: function() {
 			if (_.isFunction(this.onLayerChange)) {
-				this.listenTo(this.context(), 'map:layer:change', this._onLayerChangeBase);
+				this.listenTo(this.legacyContext(), 'map:layer:change', this._onLayerChangeBase);
 			}
 		},
 

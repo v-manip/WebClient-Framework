@@ -11,37 +11,33 @@ define([
 
 	var RectangularBoxView = X3DOMView.extend({
 		initialize: function(opts) {
-			// Initialize parent upfront to have this.context() initialized:
+			this.options = opts;
+
+			// Initialize parent upfront to have this.legacyContext() initialized:
 			X3DOMView.prototype.initialize.call(this, opts);
 			this.enableEmptyView(true); // this is the default
 
-			this.scene = null;
-			this.modelTerrainWithOverlay = null;
+			this.setupContext();
+			this.setupScene();
+		},
 
-			this.sceneDefaults = {
-				setTimeLog: false,
-				addLightToScene: true,
-				background: ["0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2",
-					"0.9 1.5 1.57",
-					"0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2",
-					"0.9 1.5 1.57"
-				],
-				onClickFunction: function(modelIndex, hitPoint) {
-					var height = EarthServerGenericClient.MainScene.getDemValueAt3DPosition(modelIndex, hitPoint[0], hitPoint[2]);
-					console.log("Height at clicked position: ", height)
-				},
-
-				resolution: [500, 500],
-
-				noDemValue: 0
-			};
-
+		setupContext: function() {
 			// Set a default AoI as the timeline can be changed even if no AoI is selected in the WebClient:
 			this.currentAoI = [17.6726953125, 56.8705859375, 19.3865625, 58.12302734375];
 			this.currentToI = null;
 
+			// A Context can hold multiple Providers. They are registered with
+			// an id. When instantiating a model later on it is connected via
+			// this id with the corresponding Providers.
+			this.context = new RBV.Context({
+				mediator: Communicator.mediator,
+				globals: globals,
+				toi: this.toi(),
+				aoi: [this.currentAoI, 0, 100000]
+			});
+
 			// FIXXME: add to config.json and get it from there then!
-			this.terrainLayer = new VMANIP.Layers.WCS({
+			var terrainLayer = new VMANIP.Layers.WCS({
 				id: 'ACE2',
 				urls: ['http://data.eox.at/elevation?'],
 				crs: ['SRS', 'EPSG:4326'],
@@ -50,7 +46,7 @@ define([
 				datatype: 'text'
 			});
 
-			this.terrainLayer.registerMimeTypeHandler('image/x-aaigrid', function(receivedData, responseData) {
+			terrainLayer.registerMimeTypeHandler('image/x-aaigrid', function(receivedData, responseData) {
 				var lines = receivedData.split('\n');
 				var ncols = parseInt(lines[8].replace('ncols', ''));
 				var nrows = parseInt(lines[9].replace('nrows', ''));
@@ -92,7 +88,36 @@ define([
 				return true;
 			});
 
-			this.options = opts;
+			this.context.addLayer('terrain', terrainLayer.id, terrainLayer);
+		},
+
+		setupScene: function() {
+			this.scene = null;
+			this.modelTerrainWithOverlay = null;
+
+			this.modelTerrainWithOverlay = new RBV.Models.DemWithOverlays();
+		},
+
+
+		_createScene: function(opts) {
+			this.enableEmptyView(false);
+			this.onShow();
+
+			if (this.scene) {
+				this.modelTerrainWithOverlay.reset();
+				this.context.setToI(this.toi());
+				this.context.setAoI(this.currentAoI, 0, 100000);
+				// FIXXME: this is not the nicest solution to reset the layer
+				this.terrainLayer.set('isUpToDate', false);
+			} else {
+				this.scene = new RBV.Scene({
+					context: this.context,
+					x3dscene_id: opts.x3dscene_id
+				});
+			}
+
+			this.scene.addModel(this.modelTerrainWithOverlay);
+			this.scene.show(this.options);
 		},
 
 		supportsLayer: function(model) {
@@ -198,11 +223,11 @@ define([
 		},
 
 		didInsertElement: function() {
-			this.listenTo(this.context(), 'selection:changed', this._setAreaOfInterest);
-			this.listenTo(this.context(), 'time:change', this._onTimeChange);
-			this.listenTo(this.context(), 'map:layer:change', this.onLayerChange);
-			// this.listenTo(this.context(), "productCollection:sortUpdated", this.onSortUpdated);
-			this.listenTo(this.context(), 'productCollection:updateOpacity', this._onUpdateOpacity);
+			this.listenTo(this.legacyContext(), 'selection:changed', this._setAreaOfInterest);
+			this.listenTo(this.legacyContext(), 'time:change', this._onTimeChange);
+			this.listenTo(this.legacyContext(), 'map:layer:change', this.onLayerChange);
+			// this.listenTo(this.legacyContext(), "productCollection:sortUpdated", this.onSortUpdated);
+			this.listenTo(this.legacyContext(), 'productCollection:updateOpacity', this._onUpdateOpacity);
 		},
 
 		showEmptyView: function() {
@@ -222,8 +247,8 @@ define([
 				// In case no ToI was set during the lifecycle of this viewer we can access
 				// the time of interest from the global context:
 				if (!toi) {
-					var starttime = new Date(this.context().timeOfInterest.start);
-					var endtime = new Date(this.context().timeOfInterest.end);
+					var starttime = new Date(this.legacyContext().timeOfInterest.start);
+					var endtime = new Date(this.legacyContext().timeOfInterest.end);
 
 					toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 				}
@@ -231,10 +256,10 @@ define([
 				var bounds = area.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
-				this._createScene(_.extend(this.sceneDefaults, this.options, {
+				this._createScene(this.options, {
 					aoi: this.currentAoI,
 					toi: toi
-				}));
+				});
 			}
 		},
 
@@ -252,52 +277,13 @@ define([
 			}
 		},
 
-		_createScene: function(opts) {
-			this.enableEmptyView(false);
-			this.onShow();
-
-			if (this.scene) {
-				this.modelTerrainWithOverlay.reset();
-				this.context.setToI(this.toi());
-				this.context.setAoI(this.currentAoI, 0, 100000);
-				// FIXXME: this is not the nicest solution to reset the layer
-				this.terrainLayer.set('isUpToDate', false);
-			} else {
-				// A Context can hold multiple Providers. They are registered with
-				// an id. When instantiating a model later on it is connected via
-				// this id with the corresponding Providers.
-				this.context = new RBV.Context({
-					mediator: Communicator.mediator,
-					globals: globals,
-					toi: this.toi(),
-					aoi: [this.currentAoI, 0, 100000]
-				});
-				this.scene = new RBV.Scene(_.extend(this.sceneDefaults, {
-					context: this.context
-				}));
-
-				if (!this.modelTerrainWithOverlay) {
-					this.modelTerrainWithOverlay = new RBV.Models.DemWithOverlays();
-				}
-			}
-
-			// FIXXME: this is too clumsy!
-			this.context.addLayer('terrain', this.terrainLayer.id, this.terrainLayer);
-			_.each(this.imageryProviders, function(item, idx) {
-				this.context.addLayer('imagery', item.id, item);
-			});
-
-			this.scene.addModel(this.modelTerrainWithOverlay, [this.terrainLayer]);
-			this.scene.show(this.options);
-		},
-
 		toi: function() {
 			var toi = this.currentToI;
 			// In case no ToI was set during the lifecycle of this viewer we can access
 			// the time of interest from the global context:
 			if (!toi) {
-				var starttime = new Date(this.context().timeOfInterest.start);
-				var endtime = new Date(this.context().timeOfInterest.end);
+				var starttime = new Date(this.legacyContext().timeOfInterest.start);
+				var endtime = new Date(this.legacyContext().timeOfInterest.end);
 
 				toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 			}
