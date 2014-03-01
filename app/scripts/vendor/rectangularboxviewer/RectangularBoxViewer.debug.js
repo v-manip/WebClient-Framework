@@ -81,6 +81,10 @@ var RBV = RBV || {};
  * of a model are done solely via the context object.
  */
 RBV.Context = function(opts) {
+	// FIXXME: These will be removed after the transition to a refactored VMANIP framework.
+	this.legacyContext = opts.mediator;
+	this.legacyGlobals = opts.globals;
+
 	this.toi = opts.toi || null;
 	if (typeof opts.aoi !== 'undefined') {
 		this.aoi = opts.aoi[0];
@@ -90,11 +94,140 @@ RBV.Context = function(opts) {
 		this.aoi = null;
 	}
 
-	this.providers = {};
+	this.layers = this.legacyCreateLayersFromGlobalContext();
+};
+_.extend(RBV.Context.prototype, Backbone.Events);
+
+/**
+ * For now the RBV.Context is only used in the RBV. The 'real context' is
+ * still wired in the surrounding 'WebClient-Framework' code. This legacy
+ * function sets upt the RBV.Context from the real context. After a full
+ * transition to the new Context system this function will be obsolete.
+ */
+RBV.Context.prototype.legacyCreateLayersFromGlobalContext = function() {
+	var layers = {};
+	// Currently the global context only contains 'imagery' layers:
+	layers['imagery'] = [];
+
+	var model_descs = this.legacyGetModelDescsFromGlobalContext();
+	_.forEach(model_descs, function(desc) {
+		var layer = null;
+		var model = desc.model;
+		if (desc.type === 'baselayer') {
+			// Find compatible baselayer protocol:
+			var view = _.find(model.get('views'), function(view) {
+				return view.protocol.toUpperCase() === 'WMS';
+			});
+
+			layer = new VMANIP.Layers.WMS({
+				id: view.id,
+				urls: view.urls,
+				crs: 'EPSG:4326',
+				format: view.format.replace('image/', ''),
+				transparent: 'false',
+				// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
+				ordinal: 10000, // A base layer is always the most bottom layer.
+				opacity: 1,
+				baselayer: true //model.get('opacity')
+			});
+		} else {
+			layer = new VMANIP.Layers.WMS({
+				id: model.get('view').id,
+				urls: model.get('view').urls,
+				crs: 'EPSG:4326',
+				format: model.get('view').format.replace('image/', ''),
+				transparent: 'true',
+				ordinal: model.get('ordinal'),
+				opacity: model.get('opacity'),
+				baselayer: false
+			});
+		}
+		layers['imagery'].push(layer);
+	});
+
+	return layers;
 };
 
+/**
+ * Returns the model of the currently selected layers. If a 'filter' function is given it will be applied to check
+ * if the model is compatible with the given filter.
+ */
+RBV.Context.prototype.legacyGetModelDescsFromGlobalContext = function(type, filter) {
+	var models_desc = {};
+
+	this.legacyGlobals.baseLayers.each(function(model) {
+		if (typeof filter !== 'undefined') {
+			if (filter(model)) {
+				models_desc[model.get('name')] = {
+					model: model,
+					type: 'baselayer'
+				};
+				// console.log('[BaseView::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
+			}
+		} else {
+			models_desc[model.get('name')] = {
+				model: model,
+				type: 'baselayer'
+			};
+		}
+	});
+
+	this.legacyGlobals.products.each(function(model) {
+		if (typeof filter !== 'undefined') {
+			if (filter(model)) {
+				models_desc[model.get('name')] = {
+					model: model,
+					type: 'product'
+				};
+				// console.log('[BaseView::setLayersFromAppContext] added product "' + model.get('name') + '"');
+			}
+		} else {
+			models_desc[model.get('name')] = {
+				model: model,
+				type: 'product'
+			};
+		}
+	});
+
+	this.legacyGlobals.overlays.each(function(model) {
+		if (typeof filter !== 'undefined') {
+			if (filter(model)) {
+				models_desc[model.get('name')] = {
+					model: model,
+					type: 'overlay'
+				};
+				// console.log('[BaseView::setLayersFromAppContext] added overlay "' + model.get('name') + '"');
+			}
+		} else {
+			models_desc[model.get('name')] = {
+				model: model,
+				type: 'overlay'
+			};
+		}
+	});
+
+	return models_desc;
+}
+
+RBV.Context.prototype.getAllLayers = function() {
+	var layers = [];
+
+	_.forEach(this.layers, function(group) {
+		_.forEach(group, function(layer) {
+			layers.push(layer);
+		})
+	});
+
+	return layers;
+}
+
+RBV.Context.prototype.updateLayerOpacity = function(id, value) {
+	var layer = this.getLayerById(id, 'imagery');
+	layer.set('opacity', value);
+}
+
 RBV.Context.prototype.reset = function() {
-	this.providers = {};
+	this.layers = {};
 };
 
 RBV.Context.prototype.setToI = function(timespan) {
@@ -106,31 +239,109 @@ RBV.Context.prototype.setAoI = function(bbox, min_height, max_height) {
 	this.aoi.push(min_height, max_height);
 };
 
-RBV.Context.prototype.addProvider = function(type, id, provider) {
-	var provider_desc = {
-		id: id,
-		provider: provider
-	};
-
-	if (!this.providers[type]) {
-		this.providers[type] = [];
+RBV.Context.prototype.addLayer = function(type, id, layer) {
+	if (!this.layers[type]) {
+		this.layers[type] = [];
 	}
-	this.providers[type].push(provider_desc);
+	this.layers[type].push(layer);
 };
 
-RBV.Context.prototype.getProvider = function(type, id) {
-	if (!this.providers[type]) {
+RBV.Context.prototype.getLayerById = function(id, type) {
+	if (!this.layers[type]) {
 		return null;
 	}
 
-	for (var idx = 0; idx < this.providers[type].length; idx++) {
-		if (this.providers[type][idx].id === id) {
-			return this.providers[type][idx].provider;
+	for (var idx = 0; idx < this.layers[type].length; idx++) {
+		if (this.layers[type][idx].id === id) {
+			return this.layers[type][idx];
 		}
 	};
 
 	return null;
 };
+
+RBV.Context.prototype.getLayersByType = function(type) {
+	if (!this.layers[type]) {
+		return [];
+	}
+
+	return this.layers[type];
+};
+
+/**
+ * Returns the model of the currently selected layers. If a 'filter' function is given it will be applied to check
+ * if the model is compatible with the given filter.
+ */
+RBV.Context.prototype.getSelectedLayersByType = function(type, filter) {
+	var models_desc = {};
+
+	this.legacyGlobals.baseLayers.each(function(model) {
+		if (model.get('visible')) {
+			if (typeof filter !== 'undefined') {
+				if (filter(model)) {
+					models_desc[model.get('name')] = {
+						model: model,
+						type: 'baselayer'
+					};
+					// console.log('[BaseView::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
+				}
+			} else {
+				models_desc[model.get('name')] = {
+					model: model,
+					type: 'baselayer'
+				};
+			}
+		}
+	});
+
+	this.legacyGlobals.products.each(function(model) {
+		if (model.get('visible')) {
+			if (typeof filter !== 'undefined') {
+				if (filter(model)) {
+					models_desc[model.get('name')] = {
+						model: model,
+						type: 'product'
+					};
+					// console.log('[BaseView::setLayersFromAppContext] added product "' + model.get('name') + '"');
+				}
+			} else {
+				models_desc[model.get('name')] = {
+					model: model,
+					type: 'product'
+				};
+			}
+		}
+	});
+
+	this.legacyGlobals.overlays.each(function(model) {
+		if (model.get('visible')) {
+			if (typeof filter !== 'undefined') {
+				if (filter(model)) {
+					models_desc[model.get('name')] = {
+						model: model,
+						type: 'overlay'
+					};
+					// console.log('[BaseView::setLayersFromAppContext] added overlay "' + model.get('name') + '"');
+				}
+			} else {
+				models_desc[model.get('name')] = {
+					model: model,
+					type: 'overlay'
+				};
+			}
+		}
+	});
+
+	var selectedLayers = [];
+
+	_.forEach(models_desc, function(desc) {
+		var layer = this.getLayerById(desc.model.get('view').id, 'imagery');
+		console.log('added: ' + layer.get('id'));
+		selectedLayers.push(layer);
+	}.bind(this));
+
+	return selectedLayers;
+}
 /**
  * @class Runtime: Manages multiple EarthServerClient-based models. It's main responsibility
  * is to select a model to be shown.
@@ -152,12 +363,29 @@ var RBV = RBV || {};
  * the RBV.Runtime objects and manage them to their liking.
  */
 RBV.Scene = function(opts) {
+	this.defaultOptions = {
+		setTimeLog: false,
+		addLightToScene: true,
+		background: ["0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2",
+			"0.9 1.5 1.57",
+			"0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2 0.2",
+			"0.9 1.5 1.57"
+		],
+		onClickFunction: function(modelIndex, hitPoint) {
+			var height = EarthServerGenericClient.MainScene.getDemValueAt3DPosition(modelIndex, hitPoint[0], hitPoint[2]);
+			console.log("Height at clicked position: ", height)
+		},
+
+		resolution: [500, 500],
+
+		noDemValue: 0
+	};
+
+	this.options = {};
+	_.extend(this.options, this.defaultOptions, opts);
+
 	// There is one context for all Models at the moment (for simplicity):
 	this.context = opts.context || null;
-
-	// FIXXME: those values are model specific, how to handle?
-	this.resolution = opts.resolution || [500, 500];
-	this.noDemValue = opts.noDemValue || 0;
 
 	this._setupEarthServerGenericClient(opts);
 };
@@ -168,21 +396,23 @@ RBV.Scene = function(opts) {
 // Adding a provider or request based abstraction to the EarthServerGenericClient
 // would solve the problem, as then the abstraction layer takes care of the
 // mimetype handling, not the model itself.
-RBV.Scene.prototype.addModel = function(model, providers) {
-	for (var idx = 0; idx < providers.length; idx++) {
-		var mimeTypeHandlers = providers[idx].getMimeTypeHandlers();
+RBV.Scene.prototype.addModel = function(model) {
+	model.applyContext(this.context);
+
+	_.forEach(this.context.getAllLayers(), function(layer) {
+		var mimeTypeHandlers = layer.getMimeTypeHandlers();
 		for (var key in mimeTypeHandlers) {
 			if (mimeTypeHandlers.hasOwnProperty(key)) {
 				model.registerMIMETypeHandler(key, mimeTypeHandlers[key]);
 			}
 		}
-	};
+	});
 	EarthServerGenericClient.MainScene.addModel(model);
 
 	this.model = model;
 };
 
-RBV.Scene.prototype.show = function(opts) {
+RBV.Scene.prototype.show = function() {
 	this.model.setAreaOfInterest(this.context.aoi[0], this.context.aoi[1], this.context.aoi[2], this.context.aoi[3], this.context.aoi[4], this.context.aoi[5]);
 	this.model.setTimespan(this.context.toi);
 	// this.model.setOffset(0, 0.2, 0);
@@ -192,7 +422,7 @@ RBV.Scene.prototype.show = function(opts) {
 	// EarthServerGenericClient.MainScene.createScene('x3dScene', 'theScene', 1, 0.6, 1);
 	// EarthServerGenericClient.MainScene.createScene('x3dScene', 'x3dScene', 1, 0.6, 1);
 	// FIXXME: this was the only combination that worked, investigate API!
-	EarthServerGenericClient.MainScene.createScene(opts.x3dscene_id, opts.x3dscene_id, 1, 0.8, 1);
+	EarthServerGenericClient.MainScene.createScene(this.options.x3dscene_id, this.options.x3dscene_id, 1, 0.8, 1);
 	EarthServerGenericClient.MainScene.createAxisLabels("Latitude", "Height", "Longitude");
 	var pb = new EarthServerGenericClient.createProgressBar("progressbar");
 	EarthServerGenericClient.MainScene.setProgressCallback(pb.updateValue);
@@ -216,11 +446,11 @@ RBV.Scene.prototype.registerMIMETypeHandler = function(mimetype, handler) {
 	// FIXXME: has to be delegated to a Model!
 };
 
-RBV.Scene.prototype._setupEarthServerGenericClient = function(opts) {
+RBV.Scene.prototype._setupEarthServerGenericClient = function() {
 	EarthServerGenericClient.MainScene.resetScene();
-	EarthServerGenericClient.MainScene.setTimeLog(opts.setTimeLog);
-	EarthServerGenericClient.MainScene.addLightToScene(opts.addLightToScene);
-	EarthServerGenericClient.MainScene.setBackground(opts.background[0], opts.background[1], opts.background[2], opts.background[3]);
+	EarthServerGenericClient.MainScene.setTimeLog(this.options.setTimeLog);
+	EarthServerGenericClient.MainScene.addLightToScene(this.options.addLightToScene);
+	EarthServerGenericClient.MainScene.setBackground(this.options.background[0], this.options.background[1], this.options.background[2], this.options.background[3]);
 };
 RBV.Models = RBV.Models || {};
 
@@ -233,52 +463,113 @@ RBV.Models = RBV.Models || {};
  */
 RBV.Models.DemWithOverlays = function() {
     this.setDefaults();
-    this.id = "DEMWithOverlays";
+    this.id = "LODTerrainWithOverlays";
+    this.isReset = true;
+
+    this.context = null;
+    this.terrainLayer = null;
+    this.imageryLayers = [];
 
     this.terrain = null;
-    this.demRequest = null;
-    this.imageryProviders = [];
-
-    this.isResetted = true;
 };
 RBV.Models.DemWithOverlays.inheritsFrom(EarthServerGenericClient.AbstractSceneModel);
 
+RBV.Models.DemWithOverlays.prototype.supportsLayer = function(model) {
+    if (model.get('view').isBaseLayer) {
+        console.log('SKIPPING REQUEST!!!');
+        return false;
+        var views = model.get('views');
+        var isSupported = false;
+        for (var idx = 0; idx < views.length; idx++) {
+            var view = views[idx];
+            if (view.protocol.toUpperCase() === 'WMS') {
+                isSupported = true;
+                break;
+            }
+        };
+        return isSupported;
+    } else {
+        return (model.get('view').protocol.toUpperCase() === 'WMS') ? true : false;
+    }
+}
+
+RBV.Models.DemWithOverlays.prototype.applyContext = function(context) {
+    this.reset();
+
+    this.context = context;
+
+    var terrainLayers = this.context.getLayersByType('terrain');
+    if (!terrainLayers.length) {
+        throw "[RBV.Models.DemWithOverlays] Context has no 'terrain' layer. Aborting!";
+    }
+    // Take the first available terrain layer:
+    this.terrainLayer = terrainLayers[0];
+    this.imageryLayers = this.context.getSelectedLayersByType('imagery', this.supportsLayer);
+
+    //Register to context relevant changes: 
+    _.forEach(this.imageryLayers, function(layer) {
+        layer.on('change:opacity', this.onOpacityChange, this);
+    }.bind(this));
+
+    // TODO: Listening on all layers is also possible, but not so efficient, I guess:
+    // this.context.on('change:layer:opacity', function(layer, opacity) {
+    //     console.log('visibility: ' + layer.get('id'));
+    //     console.log('visibility: ' + opacity);
+    // });
+
+    this.context.on('change:layer:visibility', function(layer, visibility) {
+        this.addImageLayer(layer);
+    }.bind(this));
+}
 
 RBV.Models.DemWithOverlays.prototype.reset = function() {
-    this.demRequest = null;
-    this.imageryProviders = [];
+    // Remove context change handler:
+    _.forEach(this.imageryLayers, function(layer) {
+        layer.off('change:opacity', this.onOpacityChange);
+        layer.set('isUpToDate', false);
+    }.bind(this));
+
+    if (this.terrainLayer) {
+        this.terrainLayer.set('isUpToDate', false);
+    }
+    this.terrainLayer = null;
+    this.imageryLayers = [];
 
     if (this.terrain) {
         this.terrain.reset(); // removes pending callbacks in the EarthServerGenericClient runtime
         this.terrain = null;
     }
 
-
     // FIXXME: this removes ALL models, which is not what we want...
+    // FIXXME: resetScene() internally also does a cleanup for this.terrain. Take this into account!
     EarthServerGenericClient.MainScene.resetScene();
     this.setDefaults();
-    this.isResetted = true;
+    this.isReset = true;
 }
 
+RBV.Models.DemWithOverlays.prototype.onOpacityChange = function(layer, value) {
+    this.terrain.setTransparencyFor(layer.get('id'), (1 - value));
+};
+
 /**
- * Sets the DEM request.
- * @param request - Configured Request object
- * @see Request
+ * Sets the terrain layer.
+ * @param layer - VMANIP.Layer object
+ * @see Layer
  */
-RBV.Models.DemWithOverlays.prototype.setDemProvider = function(provider) {
-    this.demRequest = provider;
+RBV.Models.DemWithOverlays.prototype.addTerrainLayer = function(layer) {
+    this.terrainLayer = layer;
 };
 
 /**
  * Adds an imagery request.
- * @param request - Configured Request object
- * @see Request
+ * @param request - Configured Layer object
+ * @see Layer
  */
-RBV.Models.DemWithOverlays.prototype.addImageryProvider = function(provider) {
-    this.imageryProviders.push(provider);
+RBV.Models.DemWithOverlays.prototype.addImageLayer = function(layer) {
+    this.imageryLayers.push(layer);
 
     // Connect to transparency change events:
-    provider.on('change:opacity', function(layer, value) {
+    layer.on('change:opacity', function(layer, value) {
         this.terrain.setTransparencyFor(layer.get('id'), (1 - value));
     }.bind(this));
 
@@ -287,25 +578,22 @@ RBV.Models.DemWithOverlays.prototype.addImageryProvider = function(provider) {
     }
 };
 
-/**
- * Removes an imagery request.
- * @param provider - The provider to be removed
- */
-RBV.Models.DemWithOverlays.prototype.removeImageryProviderById = function(id) {
-    var provider = _.find(this.imageryProviders, function(item) {
+RBV.Models.DemWithOverlays.prototype.removeImageLayerById = function(id) {
+    var layer = _.find(this.imageryLayers, function(item) {
         return id === item.get('id');
     });
 
-    if (provider) {
-        provider.off('change:opacity');
-        var idx = _.indexOf(this.imageryProviders, provider);
-        this.imageryProviders.splice(idx, 1);
+    if (layer) {
+        layer.off('change:opacity', this.onOpacityChange);
+        var idx = _.indexOf(this.imageryLayers, layer);
+        this.imageryLayers.splice(idx, 1);
     } else {
-        console.error('[RBV.Models.DemWithOverlays::removeImageryProviderById] Layer "' + id + '" not found!');
+        console.error('[RBV.Models.DemWithOverlays::removeImageLayerById] Layer "' + id + '" not found!');
     }
 
     if (this.terrain) {
         this.terrain.removeOverlayById(id);
+
     }
 };
 
@@ -331,19 +619,6 @@ RBV.Models.DemWithOverlays.prototype.update = function(hasNewData) {
     }
 }
 
-RBV.Models.DemWithOverlays.prototype.setTransparencyFor = function(id, value) {
-    // Find corresponding layer:
-    var layer = _.find(this.imageryProviders, function(layer) {
-        return layer.get('id') === id;
-    });
-
-    if (layer) {
-        // FIXXME: the attribute is set here, its change event triggers the function registered
-        // in 'addImageryProvider'. Are there any advantages in calling terrain.setTransparencyFor()
-        // here directly?
-        layer.set('opacity', value);
-    }
-};
 /**
  * Creates the x3d geometry and appends it to the given root node. This is done automatically by the SceneManager.
  * @param root - X3D node to append the model.
@@ -352,7 +627,7 @@ RBV.Models.DemWithOverlays.prototype.setTransparencyFor = function(id, value) {
  * @param cubeSizeZ - Size of the fishtank/cube on the z-axis.
  */
 RBV.Models.DemWithOverlays.prototype.createModel = function(root, cubeSizeX, cubeSizeY, cubeSizeZ) {
-    this.isResetted = false;
+    this.isReset = false;
 
     if (typeof root === 'undefined') {
         throw Error('[Model_DEMWithOverlays::createModel] root is not defined')
@@ -378,7 +653,7 @@ RBV.Models.DemWithOverlays.prototype.createModel = function(root, cubeSizeX, cub
 };
 
 /**
- * Requests data based on the available layers and calls 'receiveData' afterwards with the ServerResponses.
+ * Layers data based on the available layers and calls 'receiveData' afterwards with the ServerResponses.
  * The internal logic only requests data that has to be updated.
  */
 RBV.Models.DemWithOverlays.prototype.requestData = function() {
@@ -386,16 +661,16 @@ RBV.Models.DemWithOverlays.prototype.requestData = function() {
 
     // Convert the original Backbone.Model layers to 'plain-old-data' javascript objects:
     var layerRequests = [];
-    _.each(this.imageryProviders, function(layer, idx) {
+    _.each(this.imageryLayers, function(layer, idx) {
         if (!layer.get('isUpToDate')) {
             layer.set('isUpToDate', true);
             layerRequests.push(layer.toJSON());
         }
     });
 
-    if (!this.demRequest.get('isUpToDate')) {
-        this.demRequest.set('isUpToDate', true);
-        layerRequests.push(this.demRequest.toJSON());
+    if (!this.terrainLayer.get('isUpToDate')) {
+        this.terrainLayer.set('isUpToDate', true);
+        layerRequests.push(this.terrainLayer.toJSON());
     };
 
     if (layerRequests.length) {
@@ -411,7 +686,7 @@ RBV.Models.DemWithOverlays.prototype.requestData = function() {
 RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
     // In case the model was resetted after a request was send which did not resolve yet,
     // the incoming request is skipped here:
-    if (this.isResetted) {
+    if (this.isReset) {
         return;
     }
 
@@ -421,59 +696,72 @@ RBV.Models.DemWithOverlays.prototype.receiveData = function(serverResponses) {
             initialSetup = true;
         }
 
-        var serverResponses = _.sortBy(serverResponses, function(response) {
-            return response.layerInfo.ordinal
-        });
-
         if (initialSetup) {
-            // Setup and create the initial terrain:
             this.removePlaceHolder();
 
-            // Distinguish between 'imagery' and 'dem' ServerResponses in the serverResponses
-            // FIXXME: This is clumsy...
-            var demResponse = null;
-            var textureResponses = [];
-            var lastidx = -1;
-            for (var idx = 0; idx < serverResponses.length; ++idx) {
-                var response = serverResponses[idx];
-                if (response.heightmap) {
-                    demResponse = response;
-                } else {
-                    textureResponses.push(response);
-                    // console.log('[RBV.Models.DemWithOverlays::receiveData] received layer: ' + response.layerInfo.id+ ' / ordinal: ' + response.layerInfo.ordinal);
-                }
-            }
+            EarthServerGenericClient.MainScene.timeLogStart("Update Terrain " + this.id);
 
+            // FIXXME: I want to get rid of the ServerResponse object and replace it with a VMANIP.Layer.
+            // The Layer is the natural place to request data and store it in an appropriate way.
+            // Currently there is mixture of VMANIP.Layers and EarthServer.ServerResponses, where also
+            // my naming is not consistent everywhere. Keep that in mind if you struggle with the types,
+            // but things will improve soon ;-)
+            var layers = this.createLayersFromServerResponses(serverResponses);
 
-            var YResolution = this.YResolution || (parseFloat(demResponse.maxHMvalue) - parseFloat(demResponse.minHMvalue));
-            var transform = this.createTransform(demResponse.width, YResolution, demResponse.height, parseFloat(demResponse.minHMvalue), demResponse.minXvalue, demResponse.minZvalue);
+            var transform = this.createTransformInScene(layers.terrain);
             this.root.appendChild(transform);
 
-            //Create Terrain out of the received demResponse
-            EarthServerGenericClient.MainScene.timeLogStart("Update Terrain " + this.id);
             this.terrain = new RBV.Renderer.Components.LODTerrainWithOverlays({
                 id: this.id,
                 root: transform,
-                demResponse: demResponse,
-                textureResponses: textureResponses,
+                terrainLayer: layers.terrain,
+                imageryLayers: layers.images,
                 index: this.index,
                 noDataValue: this.noData,
                 demNoDataValue: this.demNoData,
             });
-
             this.terrain.createTerrain();
-            EarthServerGenericClient.MainScene.timeLogEnd("Update Terrain " + this.id);
-            this.elevationUpdateBinding();
-            if (this.sidePanels) {
-                this.terrain.createSidePanels(this.transformNode, 1);
-            }
-            EarthServerGenericClient.MainScene.timeLogEnd("Create Model_DEMWithOverlays " + this.id);
 
-            transform = null;
+            EarthServerGenericClient.MainScene.timeLogEnd("Update Terrain " + this.id);
+
+            // this.elevationUpdateBinding();
+            // if (this.sidePanels) {
+            //     this.terrain.createSidePanels(this.transformNode, 1);
+            // }
+            // EarthServerGenericClient.MainScene.timeLogEnd("Create Model_DEMWithOverlays " + this.id);
         } else {
             this.terrain.addOverlays(serverResponses);
         }
     }
+};
+
+RBV.Models.DemWithOverlays.prototype.createLayersFromServerResponses = function(serverResponses) {
+    // Distinguish between 'imagery' and 'dem' ServerResponses in the serverResponses
+    // FIXXME: This is clumsy...
+    var terrainLayer = null;
+    var imageryLayers = [];
+    var lastidx = -1;
+    for (var idx = 0; idx < serverResponses.length; ++idx) {
+        var response = serverResponses[idx];
+        if (response.heightmap) {
+            terrainLayer = response;
+        } else {
+            imageryLayers.push(response);
+            // console.log('[RBV.Models.DemWithOverlays::receiveData] received layer: ' + response.layerInfo.id+ ' / ordinal: ' + response.layerInfo.ordinal);
+        }
+    }
+
+    return {
+        terrain: terrainLayer,
+        images: imageryLayers
+    };
+}
+
+RBV.Models.DemWithOverlays.prototype.createTransformInScene = function(terrainLayer) {
+    var YResolution = this.YResolution || (parseFloat(terrainLayer.maxHMvalue) - parseFloat(terrainLayer.minHMvalue));
+    var boxTransform = this.createTransform(terrainLayer.width, YResolution, terrainLayer.height, parseFloat(terrainLayer.minHMvalue), terrainLayer.minXvalue, terrainLayer.minZvalue);
+
+    return boxTransform;
 };
 
 /**
@@ -492,7 +780,7 @@ RBV.Models.DemWithOverlays.prototype.checkReceivedData = function(serverResponse
         }
 
         // if (data === null || !data.validate()) {
-        //     alert(this.id + ": Request not successful.");
+        //     alert(this.id + ": Layer not successful.");
         //     console.log(data);
         //     this.reportProgress(); //NO Terrain will be built so report the progress here
         //     this.removePlaceHolder(); //Remove the placeHolder.
@@ -542,14 +830,14 @@ RBV.Renderer.Components = RBV.Renderer.Components || {};
  */
 // root, data, index, noDataValue, noDemValue
 RBV.Renderer.Components.LODTerrainWithOverlays = function(opts) {
-    this.data = opts.demResponse;
+    this.data = opts.terrainLayer;
     this.index = opts.index;
     this.noData = opts.noDataValue;
     this.noDemValue = opts.noDemValue;
     this.root = opts.root;
     this.name = opts.id + this.index;
 
-    this.textureDescs = this.extractTextureDescFromResponses(opts.textureResponses);
+    this.textureDescs = this.extractTextureDesc(opts.imageryLayers);
 
     /**
      * Distance to change between full and 1/2 resolution.
@@ -651,7 +939,7 @@ RBV.Renderer.Components.LODTerrainWithOverlays.prototype.reset = function() {
 };
 
 RBV.Renderer.Components.LODTerrainWithOverlays.prototype.addOverlays = function(serverResponses) {
-    this.textureDescs = this.textureDescs.concat(this.extractTextureDescFromResponses(serverResponses));
+    this.textureDescs = this.textureDescs.concat(this.extractTextureDesc(serverResponses));
     this.updateEffect();
 };
 
@@ -665,7 +953,6 @@ RBV.Renderer.Components.LODTerrainWithOverlays.prototype.removeOverlayById = fun
     }
 
     this.textureDescs = _.without(this.textureDescs, textureDescription);
-
     this.updateEffect();
 };
 
@@ -707,15 +994,16 @@ RBV.Renderer.Components.LODTerrainWithOverlays.prototype.setTransparencyFor = fu
     }
 };
 
-RBV.Renderer.Components.LODTerrainWithOverlays.prototype.extractTextureDescFromResponses = function(responses) {
+RBV.Renderer.Components.LODTerrainWithOverlays.prototype.extractTextureDesc = function(layers) {
     var texture_descriptions = [];
-    for (var idx = 0; idx < responses.length; idx++) {
-        var textureData = responses[idx].texture;
+    for (var idx = 0; idx < layers.length; idx++) {
+        var textureData = layers[idx].texture;
         var textureEl = this.createCanvas(textureData, this.index, this.noDataValue, false);
 
         texture_descriptions.push({
-            id: responses[idx].layerInfo.id,
-            opacity: responses[idx].layerInfo.opacity,
+            id: layers[idx].layerInfo.id,
+            opacity: layers[idx].layerInfo.opacity,
+            ordinal: layers[idx].layerInfo.ordinal,
             textureEl: textureEl
         });
     };
@@ -778,13 +1066,24 @@ RBV.Renderer.Effects.TextureBlend.prototype.addTextureFromDesc = function(desc) 
 		id: desc.id,
 		textureEl: desc.textureEl,
 		opacity: desc.opacity,
+		ordinal: desc.ordinal,
 		transform: desc.transform
 	});
 };
 
 RBV.Renderer.Effects.TextureBlend.prototype.commitChanges = function() {
+	this._textureDescs = _.sortBy(this._textureDescs, function(desc) {
+		return desc.ordinal
+	});
+	// this._textureDescs.reverse();
+
 	this._updateMultiTextureNode();
 	this._updateShaderNode();
+
+	console.log('[RBV.Renderer.Effects.TextureBlend.TextureBlend] Texturestack:');
+	_.forEach(this._textureDescs, function(desc, idx) {
+		console.log('  * ordinal: ' + desc.ordinal + ' / id: ' + desc.id);
+	})
 };
 
 RBV.Renderer.Effects.TextureBlend.prototype.appearance = function() {
@@ -908,7 +1207,7 @@ RBV.Renderer.Effects.TextureBlend.prototype._createFragmentShaderCode = function
 	// fragmentCode += '  gl_FragColor = vec4(0,0,1.0,1); \n';
 	fragmentCode += '} \n';
 
-	// console.log('fragmentCode:\n' + fragmentCode);
+	console.log('fragmentCode:\n' + fragmentCode);
 
 	return fragmentCode;
 };
@@ -1068,13 +1367,5 @@ RBV.Renderer.Nodes.MultiTexture = RBV.Renderer.Nodes.Base.extend({
 			});
 			this.el.appendChild(t.el);
 		}
-	},
-
-	// Removes all DOM data and recreates a new (empty) element.
-	removeFromDOM: function() {
-		if (this.el.parentNode) {
-			this.el.parentNode.removeChild(this.el);
-		}
-		RBV.Renderer.Nodes.Base.call(this, this.options);
 	}
 });

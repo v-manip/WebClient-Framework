@@ -18,7 +18,6 @@ define([
 			this.enableEmptyView(true); // this is the default
 
 			this.setupContext();
-			this.setupScene();
 		},
 
 		setupContext: function() {
@@ -92,9 +91,10 @@ define([
 		},
 
 		setupScene: function() {
-			this.scene = null;
-			this.modelTerrainWithOverlay = null;
-
+			this.scene = new RBV.Scene({
+				context: this.context,
+				x3dscene_id: this.options.x3dscene_id
+			});
 			this.modelTerrainWithOverlay = new RBV.Models.DemWithOverlays();
 		},
 
@@ -107,17 +107,12 @@ define([
 				this.modelTerrainWithOverlay.reset();
 				this.context.setToI(this.toi());
 				this.context.setAoI(this.currentAoI, 0, 100000);
-				// FIXXME: this is not the nicest solution to reset the layer
-				this.terrainLayer.set('isUpToDate', false);
 			} else {
-				this.scene = new RBV.Scene({
-					context: this.context,
-					x3dscene_id: opts.x3dscene_id
-				});
+				this.setupScene();
 			}
 
 			this.scene.addModel(this.modelTerrainWithOverlay);
-			this.scene.show(this.options);
+			this.scene.show();
 		},
 
 		supportsLayer: function(model) {
@@ -157,50 +152,6 @@ define([
 				this.context.trigger('change:layer:visibility', layer, isVisible);
 			}
 			return;
-			// FIXXME: rethink when to apply changes and when not. Taking into account only the aoi may
-			// not be sufficient, not sure...
-			// FIXXME: for some reason the function is called with only a model set. Find out where the trigger is!
-			if (!this.currentAoI || (typeof isVisible === 'undefined') || !this.modelTerrainWithOverlay) {
-				return;
-			}
-
-			if (isVisible) {
-				var layer = null;
-				if (model.get('view').isBaseLayer) {
-					// Find compatible baselayer protocol:
-					var view = _.find(model.get('views'), function(view) {
-						return view.protocol.toUpperCase() === 'WMS';
-					});
-					if (view) {
-						layer = new VMANIP.Layers.WMS({
-							id: view.id,
-							urls: view.urls,
-							crs: view.crs,
-							format: view.format.replace('image/', ''),
-							transparent: 'true',
-							// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
-							ordinal: 10000, // A base layer is always the most bottom layer. 
-							opacity: 1 //model.get('opacity')
-						});
-					}
-				} else {
-					layer = new VMANIP.Layers.WMS({
-						id: model.get('view').id,
-						urls: model.get('view').urls,
-						crs: model.get('view').crs,
-						format: model.get('view').format.replace('image/', ''),
-						transparent: 'true',
-						ordinal: model.get('ordinal'),
-						opacity: model.get('opacity')
-					})
-				}
-				this.modelTerrainWithOverlay.addImageLayer(layer);
-				this.context.addLayer('imagery', layer.id, layer);
-				// console.log('[RectangularBoxView::onLayerChange] Added ' + model.get('name'));
-			} else {
-				this.modelTerrainWithOverlay.removeImageLayerById(model.get('view').id);
-				// console.log('[RectangularBoxView::onLayerChange] Removed ' + model.get('name'));
-			}
 		},
 
 		// onSortUpdated: function(productLayers) {
@@ -216,10 +167,6 @@ define([
 
 		_onUpdateOpacity: function(desc) {
 			this.context.updateLayerOpacity(desc.model.get('view').id, desc.value);
-
-			// TODO: This is also possible, but...
-			//var layer = this.context.getLayerById(desc.model.get('view').id, 'imagery');
-			//this.context.trigger('change:layer:opacity', layer, desc.value);
 		},
 
 		didInsertElement: function() {

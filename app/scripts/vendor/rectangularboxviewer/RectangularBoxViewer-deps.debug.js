@@ -7678,7 +7678,14 @@ EarthServerGenericClient.createBasicUI = function(domElementID)
  */
 EarthServerGenericClient.destroyBasicUI = function(domElementID)
 {
-    $( "#"+domElementID ).accordion( "destroy" );
+    var elem = $( "#"+domElementID );
+    if (elem) {
+        try {
+            elem.accordion( "destroy" );
+        } catch (err) {
+            console.log('[EarthServerGenericClient.destroyBasicUI] Trying to destroy non initialized Accordion. Catched and good to continue...');
+        }
+    }
 };
 
 /**
