@@ -91,6 +91,9 @@ define([
 		},
 
 		setupScene: function() {
+			this.context.setToI(this.toi());
+			this.context.setAoI(this.currentAoI, 0, 100000);
+
 			this.scene = new RBV.Scene({
 				context: this.context,
 				x3dscene_id: this.options.x3dscene_id
