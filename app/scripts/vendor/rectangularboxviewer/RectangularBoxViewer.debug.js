@@ -1150,7 +1150,7 @@ RBV.Renderer.Effects.TextureBlend.prototype._createVertexShaderCode = function()
 	vertexCode += 'uniform mat4 modelViewProjectionMatrix; \n';
 	vertexCode += 'varying vec2 fragTexCoord; \n';
 	vertexCode += 'void main() { \n';
-	vertexCode += 'fragTexCoord = vec2(texcoord.x, 1.0 - texcoord.y);\n';
+	vertexCode += 'fragTexCoord = vec2(texcoord.x, texcoord.y);\n';
 	vertexCode += 'gl_Position = modelViewProjectionMatrix * vec4(position, 1.0); }\n';
 
 	return vertexCode;
