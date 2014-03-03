@@ -331,6 +331,11 @@ define(['backbone.marionette',
 	            }, this);
             },
 
+            onSetExtent: function(bbox) {
+            	this.map.zoomToExtent(bbox);
+
+            },
+
 			onClose: function(){
 				this.isClosed = true;
 			},

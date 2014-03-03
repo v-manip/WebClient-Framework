@@ -14,7 +14,8 @@
     var TimeSliderView = Backbone.Marionette.ItemView.extend({
       id: 'timeslider',
       events: {
-        'selectionChanged': 'onChangeTime'
+        'selectionChanged': 'onChangeTime',
+        'coverageselected': 'onCoverageSelected'
       },
       initialize: function(options){
         this.options = options;
@@ -120,6 +121,14 @@
         for (var i=0; i<this.activeWPSproducts.length; i++){
           console.log(this.activeWPSproducts[i]);
           this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
+        }
+      },
+
+      onCoverageSelected: function(evt){
+        if (evt.originalEvent.detail.bbox){
+          var bbox = evt.originalEvent.detail.bbox.replace(/[()]/g,'').split(',').map(parseFloat);
+          this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
+          Communicator.mediator.trigger("map:set:extent", bbox);
         }
       }
 
