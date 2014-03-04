@@ -78,15 +78,17 @@
         "timeSlider": true,
         "timeSliderProtocol": "WPS",
         "color":"blue",
-        "view": {
-          "id": "SPOT4_View",
-          "protocol": "WMS",
-          "urls": [
-              "http://demo.v-manip.eox.at/browse/ows"
-          ],
-          "style": "default",
-          "format": "image/png"
-        },
+        "views": [
+          {
+            "id": "SPOT4_View",
+            "protocol": "WMS",
+            "urls": [
+                "http://demo.v-manip.eox.at/browse/ows"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
         "download": {
           "id": "SPOT4_View",
           "protocol": "EOWCS",
@@ -99,15 +101,17 @@
         "timeSlider": true,
         "timeSliderProtocol": "EOWCS",
         "color":"green",
-        "view": {
-          "id": "daily_FSC_PanEuropean_Optical",
-          "protocol": "WMS",
-          "urls": [
-              "http://neso.cryoland.enveo.at/cryoland/ows"
-          ],
-          "style": "default",
-          "format": "image/png"
-        },
+        "views": [
+          {
+            "id": "daily_FSC_PanEuropean_Optical",
+            "protocol": "WMS",
+            "urls": [
+                "http://neso.cryoland.enveo.at/cryoland/ows"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
         "download": {
           "id": "daily_FSC_PanEuropean_Optical",
           "protocol": "EOWCS",
@@ -120,15 +124,17 @@
         "timeSlider": true,
         "timeSliderProtocol": "EOWCS",
         "color":"red",
-        "view": {
-          "id": "daily_SWE_PanEuropean_Microwave",
-          "protocol": "WMS",
-          "urls": [
-              "http://neso.cryoland.enveo.at/cryoland/ows"
-          ],
-          "style": "default",
-          "format": "image/png"
-        },
+        "views": [
+          {
+            "id": "daily_SWE_PanEuropean_Microwave",
+            "protocol": "WMS",
+            "urls": [
+                "http://neso.cryoland.enveo.at/cryoland/ows"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
         "download": {
           "id": "daily_SWE_PanEuropean_Microwave",
           "protocol": "EOWCS",
@@ -141,15 +147,26 @@
         "timeSlider": true,
         "timeSliderProtocol": "WPS",
         "color":"purple",
-        "view": {
-          "id": "vrvis_demo",
-          "protocol": ["W3DS", "WMS"],
-          "urls": [
-              "http://demo.v-manip.eox.at/browse/ows?"
-          ],
-          "style": "default",
-          "format": "image/png"
-        },
+        "views": [
+          {
+            "id": "vrvis_demo",
+            "protocol": "W3DS",
+            "urls": [
+                "http://demo.v-manip.eox.at/browse/ows?"
+            ],
+            "style": "default",
+            "format": "image/png"
+          },
+          {
+            "id": "vrvis_demo_outlines",
+            "protocol": "WMS",
+            "urls": [
+                "http://demo.v-manip.eox.at/browse/ows?"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
         "download": {
           "id": "vrvis_demo",
           "protocol": "EOWCS",
@@ -162,15 +179,26 @@
         "timeSlider": true,
         "timeSliderProtocol": "WPS",
         "color":"black",
-        "view": {
-          "id": "eox_demo",
-          "protocol": ["W3DS", "WMS"],
-          "urls": [
-              "http://demo.v-manip.eox.at/browse/ows?"
-          ],
-          "style": "default",
-          "format": "image/png"
-        },
+        "views": [
+          {
+            "id": "eox_demo",
+            "protocol": "W3DS",
+            "urls": [
+                "http://demo.v-manip.eox.at/browse/ows?"
+            ],
+            "style": "default",
+            "format": "image/png"
+          },
+          {
+            "id": "eox_demo",
+            "protocol": "WMS",
+            "urls": [
+                "http://demo.v-manip.eox.at/browse/ows?"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
         "download": {
           "id": "SRTM_mosaic",
           "protocol": "EOWCS",

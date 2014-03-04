@@ -140,51 +140,58 @@ define(['backbone.marionette',
 			//method to create layer depending on protocol
             //setting possible description attributes
             createLayer: function (layerdesc) {
+
                 var return_layer = null;
-                var layer = layerdesc.get('view');
-                var used_protocol = layer.protocol;
-                var used_id = layer.id;
+                var views = layerdesc.get('views');
+                var view = undefined;
 
-                if (layer.protocol instanceof Array){
-                	// Check if it is a 3d layer
-                	var w3ds = _.find(layer.protocol, function(prot){ return prot == "W3DS"; });
-                	if(w3ds){
-                		// For now only WMS 2D visualization is supported
-                		// TODO: Check if there will be another case (e.g. WMTS)
-                		var wms = _.find(layer.protocol, function(prot){ return prot == "WMS"; });
-                		if(wms){
-                			used_protocol = "WMS";
-                			used_id = layer.id + "_outlines";
+                if( typeof(views) == 'undefined'){
+	                view = layerdesc.get('view');
+	            }else{
+	            	
+	            	if (views.length == 1){
+	                	view = views[0];
+	                }else{
+	                	
+	                	// Check if it is a 3d layer
+	                	var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
+	                	if(w3ds){
+	                		// For now only WMS 2D visualization is supported
+	                		// TODO: Check if there will be another case (e.g. WMTS)
+	                		var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
+	                		if(wms){
+	                			view = wms;
 
-                		}else{
-                			// Something was defined wrong in the config
-                			used_protocol = null;
-                		}
-                	}
+	                		}else{
+	                			// Something was defined wrong in the config
+	                			view = null;
+	                		}
+	                	}
+	                }
+	            }
+                
 
-                }
-
-                switch(used_protocol){
+                switch(view.protocol){
                     case "WMTS":
                         return_layer = new OpenLayers.Layer.WMTS({
                             name: layerdesc.get("name"),
-	                        layer: used_id,
-	                        protocol: used_protocol,
-	                        url: layer.urls,
-	                        matrixSet: layer.matrixSet,
-	                        style: layer.style,
-	                        format: layer.format,
-	                        maxExtent: layer.maxExtent,
-	                        resolutions: layer.resolutions,
-	                        projection: layer.projection,
-	                        gutter: layer.gutter,
-	                        buffer: layer.buffer,
-	                        units: layer.units,
-	                        transitionEffect: layer.transitionEffect,
-	                        isphericalMercator: layer.isphericalMercator,
-	                        isBaseLayer: layer.isBaseLayer,
-	                        wrapDateLine: layer.wrapDateLine,
-	                        zoomOffset: layer.zoomOffset,
+	                        layer: view.id,
+	                        protocol: view.protocol,
+	                        url: view.urls,
+	                        matrixSet: view.matrixSet,
+	                        style: view.style,
+	                        format: view.format,
+	                        maxExtent: view.maxExtent,
+	                        resolutions: view.resolutions,
+	                        projection: view.projection,
+	                        gutter: view.gutter,
+	                        buffer: view.buffer,
+	                        units: view.units,
+	                        transitionEffect: view.transitionEffect,
+	                        isphericalMercator: view.isphericalMercator,
+	                        isBaseLayer: view.isBaseLayer,
+	                        wrapDateLine: view.wrapDateLine,
+	                        zoomOffset: view.zoomOffset,
 	                        visible: layerdesc.get("visible"),
 	                        time: layerdesc.get('time')
                         });
@@ -193,29 +200,29 @@ define(['backbone.marionette',
                     case "WMS":
                         return_layer = new OpenLayers.Layer.WMS(
                             layerdesc.get("name"),
-                            layer.urls[0],
+                            view.urls[0],
                             {
-                                layers: used_id,
+                                layers: view.id,
                                 transparent: "true",
                                 format: "image/png",
                                 time: layerdesc.get('time')
                             },
                             {
                                 format: 'image/png',
-                                matrixSet: layer.matrixSet,
-                                style: layer.style,
-                                format: layer.format,
-                                maxExtent: layer.maxExtent,
-                                resolutions: layer.resolutions,
-                                projection: layer.projection,
-                                gutter: layer.gutter,
-                                buffer: layer.buffer,
-                                units: layer.units,
-                                transitionEffect: layer.transitionEffect,
-                                isphericalMercator: layer.isphericalMercator,
-                                isBaseLayer: layer.isBaseLayer,
-                                wrapDateLine: layer.wrapDateLine,
-                                zoomOffset: layer.zoomOffset,
+                                matrixSet: view.matrixSet,
+                                style: view.style,
+                                format: view.format,
+                                maxExtent: view.maxExtent,
+                                resolutions: view.resolutions,
+                                projection: view.projection,
+                                gutter: view.gutter,
+                                buffer: view.buffer,
+                                units: view.units,
+                                transitionEffect: view.transitionEffect,
+                                isphericalMercator: view.isphericalMercator,
+                                isBaseLayer: view.isBaseLayer,
+                                wrapDateLine: view.wrapDateLine,
+                                zoomOffset: view.zoomOffset,
                                 visibility: layerdesc.get("visible")
                             }
                         );

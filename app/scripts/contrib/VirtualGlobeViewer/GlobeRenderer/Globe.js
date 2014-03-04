@@ -151,39 +151,45 @@ define([
     Globe.prototype.createCommonLayerOptionsFromModel = function(model) {
         var opts = {};
 
-        opts.baseUrl = model.get('view').urls[0];
+        var views = model.get('views');
+        var view = undefined;
+
+        if( typeof(views) == 'undefined'){
+            view = model.get('view');
+        }else{
+            
+            if (views.length == 1){
+                view = views[0];
+            }else{
+                
+                // Check if it is a 3d layer
+                var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
+                var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
+                if(w3ds){
+                    view = w3ds;
+                }else if(wms){
+                    view = wms;
+                }else{
+                    // Something was defined wrong in the config
+                    view = null;
+                }
+            }
+        }
+
+        opts.baseUrl = view.urls[0];
 
         opts.style = ''; // MapProxy needs a style argument, even if its empty
-        if (model.get('view').style) {
-            opts.style = model.get('view').style;
+        if (view.style) {
+            opts.style = view.style;
         }
 
-        var layer_model = model.get('view');
-        var layer = layer_model.id;
-        var used_protocol = layer_model.protocol;
-
-        if (layer_model.protocol instanceof Array){
-            // Check what protocols are in array
-            var w3ds = _.find(layer_model.protocol, function(prot){ return prot == "W3DS"; });
-            var wmts = _.find(layer_model.protocol, function(prot){ return prot == "WMTS"; });
-            var wms = _.find(layer_model.protocol, function(prot){ return prot == "WMS"; });
-
-            if(w3ds)
-                used_protocol = "W3DS"
-            else if(wmts)
-                used_protocol = "WMTS";
-            else if (wms)
-                used_protocol = "WMS";
-        }
-
-
-        if (used_protocol === 'WMS') {
-            opts.layers = layer;
+        if (view.protocol === 'WMS') {
+            opts.layers = view.id;
         } else {
-            opts.layer = layer;
+            opts.layer = view.id;
         }
 
-        opts.format = model.get('view').format || 'image/jpeg';
+        opts.format = view.format || 'image/jpeg';
 
         if (model.get('time')) {
             opts.time = model.get('time');
@@ -197,38 +203,53 @@ define([
     };
 
     Globe.prototype.addLayer = function(model, isBaseLayer) {
+
+
         var layerDesc = this.layerCache[model.get('name')];
         var layer = undefined;
 
         if (typeof layerDesc === 'undefined') {
+
             var opts = this.createCommonLayerOptionsFromModel(model);
 
-            var layer_model = model.get('view');
+            var views = model.get('views');
+            var view = undefined;
 
-            var used_protocol = layer_model.protocol;
-
-            if (layer_model.protocol instanceof Array){
-                // Check if it is a 3d layer
-                var w3ds = _.find(layer_model.protocol, function(prot){ return prot == "W3DS"; });
-                var wmts = _.find(layer_model.protocol, function(prot){ return prot == "WMTS"; });
-                var wms = _.find(layer_model.protocol, function(prot){ return prot == "WMS"; });
-
-                if(w3ds)
-                    used_protocol = "W3DS"
-                else if(wmts)
-                    used_protocol = "WMTS";
-                else if (wms)
-                    used_protocol = "WMS";
+            if( typeof(views) == 'undefined'){
+                view = model.get('view');
+            }else{
+                
+                if (views.length == 1){
+                    view = views[0];
+                }else{
+                    
+                    // Check if it is a 3d layer
+                    var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
+                    var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
+                    if(w3ds){
+                        view = w3ds;
+                    }else if(wms){
+                        view = wms;
+                    }else{
+                        // Something was defined wrong in the config
+                        view = null;
+                    }
+                }
             }
 
-            if (used_protocol === 'WMTS') {
+            //var layer_model = model.get('view');
+
+            //var used_protocol = layer_model.protocol;
+
+            
+            if (view.protocol === 'WMTS') {
                 var layer_opts = _.extend(opts, {
-                    matrixSet: model.get('view').matrixSet,
+                    matrixSet: view.matrixSet,
                 });
                 layer = new GlobWeb.WMTSLayer(layer_opts);
-            } else if (used_protocol === 'WMS') {
+            } else if (view.protocol === 'WMS') {
                 layer = new GlobWeb.WMSLayer(opts);
-            } else if (used_protocol === 'W3DS') {
+            } else if (view.protocol === 'W3DS') {
                 layer = new W3DSLayer(opts);
                 console.log('[Globe::addLayer] added W3DS layer. ', layer);
             }

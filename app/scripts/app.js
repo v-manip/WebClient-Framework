@@ -113,27 +113,8 @@
 							color: products.color,
 							//time: products.time, // Is set in TimeSliderView on time change.
 								opacity: 1,
-								view: {
-									id: products.view.id,
-									protocol: products.view.protocol,
-									urls: products.view.urls,
-									visualization: products.view.visualization,
-									projection: products.view.projection,
-									attribution: products.view.attribution,
-									matrixSet: products.view.matrixSet,
-									style: products.view.style,
-									format: products.view.format,
-									resolutions: products.view.resolutions,
-									maxExtent: products.view.maxExtent,
-									gutter: products.view.gutter,
-									buffer: products.view.buffer,
-									units: products.view.units,
-									transitionEffect: products.view.transitionEffect,
-									isphericalMercator: products.view.isphericalMercator,
-									isBaseLayer: false,
-									wrapDateLine: products.view.wrapDateLine,
-									zoomOffset: products.view.zoomOffset
-								},
+								views: products.views,
+								view: {isBaseLayer: false},
 								download: {
 									id: products.download.id,
 									protocol: products.download.protocol,
@@ -141,7 +122,7 @@
 								}
 							})
 					);
-					console.log("Added product " + products.view.id );
+					console.log("Added product " + products.name );
 				}, this);
 
 				//Overlays are loaded and added to the global collection

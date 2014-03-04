@@ -39,7 +39,7 @@
 				wrapDateLine: null,
 				zoomOffset: null,
 			},
-
+			views:[],
 			download: {
 				id : '',
 				protocol: '',
