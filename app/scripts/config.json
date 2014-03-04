@@ -136,33 +136,14 @@
         }
       },
       {
-        "name": "SRTM",
-        "visible": false,
-        "timeSlider": false,
-        "color":"yellow",
-        "view": {
-          "id": "SRTM8bit_mosaic",
-          "protocol": "WMS",
-          "urls": [
-              "http://earthserver.eox.at/open/ows"
-          ],
-          "style": "default",
-          "format": "image/png"
-        },
-        "download": {
-          "id": "SRTM_mosaic",
-          "protocol": "EOWCS",
-          "url": "http://earthserver.eox.at/open/ows"
-        }
-      },
-      {
         "name": "Vertical Curtain VRVis",
         "visible": false,
-        "timeSlider": false,
+        "timeSlider": true,
+        "timeSliderProtocol": "WPS",
         "color":"purple",
         "view": {
           "id": "vrvis_demo",
-          "protocol": "W3DS",
+          "protocol": ["W3DS", "WMS"],
           "urls": [
               "http://demo.v-manip.eox.at/browse/ows?"
           ],
@@ -170,19 +151,20 @@
           "format": "image/png"
         },
         "download": {
-          "id": "SRTM_mosaic",
+          "id": "vrvis_demo",
           "protocol": "EOWCS",
-          "url": "http://earthserver.eox.at/open/ows"
+          "url": "http://demo.v-manip.eox.at/browse/ows?"
         }
       },
       {
         "name": "Vertical Curtain EOX",
         "visible": false,
-        "timeSlider": false,
+        "timeSlider": true,
+        "timeSliderProtocol": "WPS",
         "color":"black",
         "view": {
           "id": "eox_demo",
-          "protocol": "W3DS",
+          "protocol": ["W3DS", "WMS"],
           "urls": [
               "http://demo.v-manip.eox.at/browse/ows?"
           ],
@@ -192,7 +174,7 @@
         "download": {
           "id": "SRTM_mosaic",
           "protocol": "EOWCS",
-          "url": "http://earthserver.eox.at/open/ows"
+          "url": "http://demo.v-manip.eox.at/browse/ows?"
         }
       }
     ],

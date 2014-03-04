@@ -93,18 +93,18 @@ define(['backbone.marionette',
 				// Go through all products and add them to the map
 				globals.products.each(function(product) {
 					// FIXXME: quick hack to not include W3DS layers:
-					if (this.isModelCompatible(product)) {
+					//if (this.isModelCompatible(product)) {
 						this.map.addLayer(this.createLayer(product));
-					}
+					//}
 				}, this);
 
 				// Go through all products and add them to the map
                 globals.overlays.each(function(overlay){
 					// FIXXME: quick hack to not include W3DS layers:
-					if (this.isModelCompatible(overlay)) {
+					//if (this.isModelCompatible(overlay)) {
 						console.log('protocol: ' + overlay.get('view').protocol);
 						this.map.addLayer(this.createLayer(overlay));
-					}
+					//}
                 }, this);
 
 				// Order (sort) the product layers based on collection order
@@ -142,6 +142,25 @@ define(['backbone.marionette',
             createLayer: function (layerdesc) {
                 var return_layer = null;
                 var layer = layerdesc.get('view');
+
+                if (layer.protocol instanceof Array){
+                	// Check if it is a 3d layer
+                	var w3ds = _.find(layer.protocol, function(prot){ return prot == "W3DS"; });
+                	if(w3ds){
+                		// For now only WMS 2D visualization is supported
+                		// TODO: Check if there will be another case (e.g. WMTS)
+                		var wms = _.find(layer.protocol, function(prot){ return prot == "WMS"; });
+                		if(wms){
+                			layer.protocol = "WMS";
+                			layer.id = layer.id + "_outlines";
+
+                		}else{
+                			// Something was defined wrong in the config
+                			layer.protocol = null;
+                		}
+                	}
+
+                }
 
                 switch(layer.protocol){
                     case "WMTS":
@@ -223,11 +242,11 @@ define(['backbone.marionette',
 
 			onSortProducts: function(productLayers) {
 				globals.products.each(function(product) {
-					if (this.isModelCompatible(product)) {
+					//if (this.isModelCompatible(product)) {
 						var productLayer = this.map.getLayersByName(product.get("name"))[0];
 						var index = globals.products.indexOf(productLayer);
 						this.map.setLayerIndex(productLayer, index);
-					}
+					//}
 				}, this);
 				console.log("Map products sorted");
 			},

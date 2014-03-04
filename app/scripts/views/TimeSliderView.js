@@ -45,7 +45,7 @@
             start: selectionstart,
             end: selectionend
           },
-          debounce: 200,
+          debounce: 300,
 
           datasets: []
 
