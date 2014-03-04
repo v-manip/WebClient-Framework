@@ -142,6 +142,8 @@ define(['backbone.marionette',
             createLayer: function (layerdesc) {
                 var return_layer = null;
                 var layer = layerdesc.get('view');
+                var used_protocol = layer.protocol;
+                var used_id = layer.id;
 
                 if (layer.protocol instanceof Array){
                 	// Check if it is a 3d layer
@@ -151,23 +153,23 @@ define(['backbone.marionette',
                 		// TODO: Check if there will be another case (e.g. WMTS)
                 		var wms = _.find(layer.protocol, function(prot){ return prot == "WMS"; });
                 		if(wms){
-                			layer.protocol = "WMS";
-                			layer.id = layer.id + "_outlines";
+                			used_protocol = "WMS";
+                			used_id = layer.id + "_outlines";
 
                 		}else{
                 			// Something was defined wrong in the config
-                			layer.protocol = null;
+                			used_protocol = null;
                 		}
                 	}
 
                 }
 
-                switch(layer.protocol){
+                switch(used_protocol){
                     case "WMTS":
                         return_layer = new OpenLayers.Layer.WMTS({
                             name: layerdesc.get("name"),
-	                        layer: layer.id,
-	                        protocol: layer.protocol,
+	                        layer: used_id,
+	                        protocol: used_protocol,
 	                        url: layer.urls,
 	                        matrixSet: layer.matrixSet,
 	                        style: layer.style,
@@ -193,7 +195,7 @@ define(['backbone.marionette',
                             layerdesc.get("name"),
                             layer.urls[0],
                             {
-                                layers: layer.id,
+                                layers: used_id,
                                 transparent: "true",
                                 format: "image/png",
                                 time: layerdesc.get('time')
