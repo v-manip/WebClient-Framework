@@ -51,6 +51,7 @@ define([
 			this.listenTo(Communicator.mediator, 'time:change', _.bind(this.mapView.onTimeChange, this.mapView));
 
 			Communicator.reqres.setHandler('get:selection:json', _.bind(this.mapView.onGetGeoJSON, this.mapView));
+			Communicator.reqres.setHandler('map:get:extent', _.bind(this.mapView.onGetMapExtent, this.mapView));
 
 			this.mapView.listenTo(this.mapView.model, 'change', function(model, options) {
 				/*Communicator.mediator.trigger("router:setUrl", {

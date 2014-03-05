@@ -335,6 +335,10 @@ define(['backbone.marionette',
                 return this.geojson.write(this.vectorLayer.features, true);
             },
 
+            onGetMapExtent: function(){
+            	return this.map.getExtent();
+            },
+           
 			onDone: function(evt) {
 				
 				// TODO: How to handle multiple draws etc has to be thought of

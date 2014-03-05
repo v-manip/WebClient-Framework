@@ -83,23 +83,41 @@
                   this.slider.addDataset({
                     id: product.get('view').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.WMS({ url: product.get('view').urls[0], eoid: product.get('view').id, dataset: product.get('view').id })
+                    data: new TimeSlider.Plugin.WMS({
+                      url: product.get('view').urls[0],
+                      eoid: product.get('view').id,
+                      dataset: product.get('view').id
+                    })
                   });
                   break;
                 case "EOWCS":
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.EOWCS({ url: product.get('download').url, eoid: product.get('download').id, dataset: product.get('download').id })
+                    data: new TimeSlider.Plugin.EOWCS({
+                        url: product.get('download').url,
+                        eoid: product.get('download').id,
+                        dataset: product.get('download').id
+                     })
                   });
                   break;
                 case "WPS":
+                  var extent = Communicator.reqres.request('map:get:extent');
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.WPS({ url: product.get('download').url, eoid: product.get('download').id, dataset: product.get('download').id })
+                    data: new TimeSlider.Plugin.WPS({
+                        url: product.get('download').url,
+                        eoid: product.get('download').id,
+                        dataset: product.get('download').id ,
+                        bbox: [extent.left, extent.bottom, extent.right, extent.top]
+                     })
                   });
                   this.activeWPSproducts.push(product.get('download').id);
+                  // For some reason updateBBox is needed, altough bbox it is initialized already.
+                  // Withouth this update the first time activating a layer after the first map move
+                  // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
+                  this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
                   break;
               }
               
