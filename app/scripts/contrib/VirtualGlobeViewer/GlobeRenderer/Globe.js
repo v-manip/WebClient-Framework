@@ -5,7 +5,7 @@ define([
     'virtualglobeviewer/SceneGraph/Renderer',
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
-    './glTFLoader',
+    'virtualglobeviewer/Loader/glTF/glTFLoader',
     'openlayers' // FIXXME: replace OpenLayers with generic format!
 ], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, OpenLayers) {
 
@@ -52,25 +52,26 @@ define([
         }));
         
         // // glTF loader test:
-        // var sgRenderer;
-        // var renderContext = this.globe.renderContext;
+        var sgRenderer;
+        var renderContext = this.globe.renderContext;
 
-        // var loader = Object.create(GlobWebGLTFLoader);
-        // loader.initWithPath("/data/vcurtains/vrvis-demo/vrvis-demo.json");
+        var loader = Object.create(GlobWebGLTFLoader);
+        loader.initWithPath("/data/products/vrvis_demo_timestamps/test.json");
 
-        // var onLoadedCallback = function(success, rootObj) {
-        //     sgRenderer = new SceneGraphRenderer(renderContext, rootObj, {
-        //         minNear: GlobWebRenderContext.minNear,
-        //         far: 6,
-        //         fov: 45,
-        //         enableAlphaBlending: true
-        //     });
-        //     renderContext.addRenderer(sgRenderer);   
-        // };
+        var onLoadedCallback = function(success, rootObj) {
+            sgRenderer = new SceneGraphRenderer(renderContext, rootObj, {
+                minNear: GlobWebRenderContext.minNear,
+                far: 6,
+                fov: 45,
+                enableAlphaBlending: true
+            });
+            renderContext.addRenderer(sgRenderer);
+            console.log('asdlkfjasldkfjasdlkfjasldkfjaksldfasdf');
+        };
 
-        // loader.load({
-        //     rootObj: new SceneGraph.Node()
-        // }, onLoadedCallback);
+        loader.load({
+            rootObj: new SceneGraph.Node()
+        }, onLoadedCallback);
 
         // // W3DS layer test:
         // var w3dslayer = new W3DSLayer({
