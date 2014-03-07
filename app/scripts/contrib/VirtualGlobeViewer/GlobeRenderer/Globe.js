@@ -168,14 +168,6 @@ define([
 
         opts.format = model.get('view').format || 'image/jpeg';
 
-        if (model.get('time')) {
-            opts.time = model.get('time');
-        }
-
-        if (model.get('time')) {
-            opts.time = model.get('time')
-        }
-
         if (opts.format === 'image/png') {
             opts.transparent = true;
         }
@@ -189,6 +181,7 @@ define([
 
         if (typeof layerDesc === 'undefined') {
             var opts = this.createCommonLayerOptionsFromModel(model);
+            opts.time = this.currentToI;
 
             if (model.get('view').protocol === 'WMTS') {
                 var layer_opts = _.extend(opts, {
@@ -310,6 +303,10 @@ define([
 
     Globe.prototype.zoomTo = function(pos) {
         this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
+    };
+
+    Globe.prototype.setToI = function(time) {
+        this.currentToI = time;
     };
 
     Globe.prototype.onOpacityChange = function(layer_name, opacity) {

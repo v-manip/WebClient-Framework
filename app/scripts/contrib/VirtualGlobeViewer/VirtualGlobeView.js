@@ -29,11 +29,13 @@ define([
             };
 
             this._initialLayers = {};
+            this.currentToI = this.toi();
         },
 
         didInsertElement: function() {
             if (!this.getViewer()) {
                 this.setViewer(this._createGlobe());
+                this.getViewer().setToI(this.toi());
                 this._setLayersFromAppContext();
                 this.zoomTo(this._startPosition);
             }
@@ -128,10 +130,27 @@ define([
         },
 
         _onTimeChange: function(time) {
+            this.currentToI = time;
+            this.getViewer.setToI(time);
+
             // FIXXME: currently all overlay layers are destroyed and recreated with the new time set. This
             // should be changed to set the new time on existing layers in the Globe's layerChache.
             this._removeAllOverlays();
             this._setLayersFromAppContext();
+        },
+
+        toi: function() {
+            var toi = this.currentToI;
+            // In case no ToI was set during the lifecycle of this viewer we can access
+            // the time of interest from the global context:
+            if (!toi) {
+                var starttime = new Date(this.legacyContext().timeOfInterest.start);
+                var endtime = new Date(this.legacyContext().timeOfInterest.end);
+
+                toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
+            }
+
+            return toi;
         },
 
         _sortOverlayLayers: function() {
