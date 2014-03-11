@@ -87,6 +87,12 @@ module.exports = function (grunt) {
                 https: false,
                 changeOrigin: true,
                 xforward: false
+            }, {
+                context: '/gltf',
+                host: 'localhost',
+                port: 3080,
+                https: false,
+                changeOrigin: true,
             }
             // MH: This setting is not working for W3DS. Port 38000 has to be taken in that case, see above!
             // ,{

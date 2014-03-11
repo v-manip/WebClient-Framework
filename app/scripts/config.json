@@ -361,6 +361,27 @@
           "protocol": "EOWCS",
           "url": "http://earthserver.eox.at/open/ows"
         }
+      },
+      {
+        "name": "Cloudsat",
+        "visible": false,
+        "timeSlider": false,
+        "color":"orange",
+        "view": {
+          "id": "Cloudsat",
+          "protocol": "W3DS",
+          "urls": [
+              "http://localhost:9000/ows?",
+              "http://demo.v-manip.eox.at/browse/ows?"
+          ],
+          "style": "default",
+          "format": "image/png"
+        },
+        "download": {
+          "id": "SRTM_mosaic",
+          "protocol": "EOWCS",
+          "url": "http://earthserver.eox.at/open/ows"
+        }
       }
     ],
     "overlays": [
