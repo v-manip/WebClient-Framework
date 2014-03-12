@@ -47,10 +47,6 @@ define([
         });
         this.globe.setBaseElevation(srtmElevationWCSGlobal);
 
-        this.globe.addLayer(new TileWireframeLayer({
-            outline: true
-        }));
-        
         // // glTF loader test:
         // var sgRenderer;
         // var renderContext = this.globe.renderContext;
@@ -193,6 +189,10 @@ define([
             } else if (model.get('view').protocol === 'W3DS') {
                 layer = new W3DSLayer(opts);
                 console.log('[Globe::addLayer] added W3DS layer. ', layer);
+            } else if (model.get('view').protocol === 'WIREFRAME') {
+                layer = new TileWireframeLayer({
+                    outline: true
+                });
             }
 
             // set initial opacity:
