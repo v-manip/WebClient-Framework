@@ -39,14 +39,6 @@ define([
             inertia: true
         });
 
-        // Elevation Layer:
-        var srtmElevationWCSGlobal = new GlobWeb.WCSElevationLayer({
-            baseUrl: "http://data.eox.at/elevation?",
-            coverage: "ACE2",
-            version: "2.0.0"
-        });
-        this.globe.setBaseElevation(srtmElevationWCSGlobal);
-
         // // glTF loader test:
         // var sgRenderer;
         // var renderContext = this.globe.renderContext;
@@ -174,6 +166,7 @@ define([
     Globe.prototype.addLayer = function(model, isBaseLayer) {
         var layerDesc = this.layerCache[model.get('name')];
         var layer = undefined;
+        var isElevationLayer = false;
 
         if (typeof layerDesc === 'undefined') {
             var opts = this.createCommonLayerOptionsFromModel(model);
@@ -188,32 +181,45 @@ define([
                 layer = new GlobWeb.WMSLayer(opts);
             } else if (model.get('view').protocol === 'W3DS') {
                 layer = new W3DSLayer(opts);
-                console.log('[Globe::addLayer] added W3DS layer. ', layer);
+                // console.log('[Globe::addLayer] added W3DS layer. ', layer);
             } else if (model.get('view').protocol === 'WIREFRAME') {
                 layer = new TileWireframeLayer({
                     outline: true
                 });
+            } else if (model.get('view').protocol === 'DEM') {
+                layer = new GlobWeb.WCSElevationLayer({
+                    baseUrl: "http://data.eox.at/elevation?",
+                    coverage: "ACE2",
+                    version: "2.0.0"
+                });
+                isElevationLayer = true;
+            } else {
+                console.log('[Globe::addLayer] protocol "' + model.get('view').protocol + '" is not supported');
             }
 
-            // set initial opacity:
-            layer.opacity(model.get('opacity'));
+            if (!isElevationLayer) {
+                // set initial opacity:
+                layer.opacity(model.get('opacity'));
 
-            // Register the layer to the internal cache for removal or for changing the timespan later on:
-            layerDesc = {
-                model: model,
-                layer: layer,
-                isBaseLayer: isBaseLayer
-            };
-            this.layerCache[model.get('name')] = layerDesc;
+                // Register the layer to the internal cache for removal or for changing the timespan later on:
+                layerDesc = {
+                    model: model,
+                    layer: layer,
+                    isBaseLayer: isBaseLayer
+                };
+                this.layerCache[model.get('name')] = layerDesc;
+            }
 
-            console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
+            // console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
         } else {
             layer = layerDesc.layer;
-            console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
+            // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
         }
 
         if (isBaseLayer) {
             this.globe.setBaseImagery(layer);
+        } else if (isElevationLayer) {
+            this.globe.setBaseElevation(layer);
         } else {
             // FIXXME: when adding a layer the 'ordinal' has to be considered!
             // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
@@ -250,8 +256,13 @@ define([
     Globe.prototype.removeLayer = function(model, isBaseLayer) {
         console.log('removeLayer: ' + model.get('name') + " (baseLayer: " + isBaseLayer + ")");
 
+        var isElevationLayer = model.get('view').protocol === 'DEM';
+
         if (isBaseLayer) {
             this.globe.setBaseImagery(null);
+        } else if (isElevationLayer) {
+            this.globe.setBaseElevation(null);
+            console.log('removed DEM');
         } else {
             var layerDesc = this.layerCache[model.get('name')];
             if (typeof layerDesc !== 'undefined') {
@@ -259,7 +270,7 @@ define([
                 var idx = _.indexOf(this.overlayLayers, layerDesc);
                 this.overlayLayers.splice(idx, 1);
             }
-        }
+        } 
     };
 
     Globe.prototype.clearCache = function() {

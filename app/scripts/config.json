@@ -372,6 +372,21 @@
                 "url": "http://earthserver.eox.at/open/ows"
             }
         }, {
+            "name": "Digital Elevation Model",
+            "visible": true,
+            "timeSlider": false,
+            "color": "white",
+            "view": {
+                "id": "Wireframe",
+                "protocol": "DEM",
+                "urls": [
+                    "http://data.eox.at/elevation?"
+                ],
+                "style": "default",
+                "format": "image/png"
+            },
+            "download": {}
+        }, {
             "name": "Wireframe",
             "visible": true,
             "timeSlider": false,
@@ -385,11 +400,7 @@
                 "style": "default",
                 "format": "image/png"
             },
-            "download": {
-                "id": "SRTM_mosaic",
-                "protocol": "EOWCS",
-                "url": "http://earthserver.eox.at/open/ows"
-            }
+            "download": {}
         }],
         "overlays": [{
             "name": "Streets",
