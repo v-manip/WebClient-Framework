@@ -114,7 +114,7 @@ define([
         
         // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
         _onLayerChange: function(options) {
-            var model = this.getModelForLayer(options.name, options.isBaseLayer);; 
+            var model = this.getModelForLayer(options.name, options.isBaseLayer); 
 
             if (options.visible) {
                 this._addLayer(model, options.isBaseLayer);
