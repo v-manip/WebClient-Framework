@@ -59,24 +59,6 @@ define([
         // loader.load({
         //     rootObj: new SceneGraph.Node()
         // }, onLoadedCallback);
-
-        // // W3DS layer test:
-        // var w3dslayer = new W3DSLayer({
-        //     baseUrl: 'http://localhost:9000/ows?',
-        //     layer: 'adm_aeolus',
-        //     format: 'model/gltf',
-        //     matrixSet: 'WGS84',
-        //     opacity: 0.7
-        // });
-        // this.globe.addLayer(w3dslayer);
-
-        // var blueMarbleLayer = new GlobWeb.WMSLayer({ baseUrl: "http://demonstrator.telespazio.com/wmspub", layers: "BlueMarble" });
-        // this.globe.setBaseImagery( blueMarbleLayer );
-        // Add stats
-        // var stats = new GlobWeb.Stats(globe, {
-        // 	element: 'fps',
-        // 	verbose: false
-        // });
     };
 
     var convertFromOpenLayers = function(ol_geometry, altitude) {
