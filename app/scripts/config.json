@@ -99,7 +99,7 @@
       {
         "name": "Cloudsat",
         "visible": false,
-        "timeSlider": false,
+        "timeSlider": true,
         "timeSliderProtocol": "WPS",
         "color":"purple",
         "views": [
@@ -108,7 +108,7 @@
             "protocol": "W3DS",
             "urls": [
                     "http://localhost:9000/ows?",
-                    "http://demo.v-manip.eox.at/browse/ows?"
+                    "http://demo.v-manip.eox.at/browse/ows"
             ],
             "style": "default",
             "format": "image/png"
@@ -116,13 +116,17 @@
             "id": "vrvis_demo_outlines",
             "protocol": "WMS",
             "urls": [
-                "http://demo.v-manip.eox.at/browse/ows?"
+                "http://demo.v-manip.eox.at/browse/ows"
             ],
             "style": "default",
             "format": "image/png"
           }
         ],
-        "download": {}
+        "download": {
+          "id": "vrvis_demo",
+          "protocol": "EOWCS",
+          "url": "http://demo.v-manip.eox.at/browse/ows"
+        }
       },
       {
         "name": "SPOT 4 View",
