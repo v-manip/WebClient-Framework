@@ -29,11 +29,13 @@ define([
             };
 
             this._initialLayers = {};
+            this.currentToI = this.toi();
         },
 
         didInsertElement: function() {
             if (!this.getViewer()) {
                 this.setViewer(this._createGlobe());
+                this.getViewer().setToI(this.toi());
                 this._setLayersFromAppContext();
                 this.zoomTo(this._startPosition);
             }
@@ -94,31 +96,6 @@ define([
             this._initLayers();
         },
 
-        _getLayerModel: function(options) {
-            var layerModel = undefined;
-            if (options.isBaseLayer) {
-                layerModel = globals.baseLayers.find(function(model) {
-                    return model.get('name') === options.name;
-                });
-            } else {
-                layerModel = globals.products.find(function(model) {
-                    return model.get('name') === options.name;
-                });
-
-                if (!layerModel) {
-                    layerModel = globals.overlays.find(function(model) {
-                        return model.get('name') === options.name;
-                    });
-                }
-            }
-
-            if (typeof layerModel === 'undefined') {
-                throw Error('Product ' + options.name + ' is unknown!');
-            }
-
-            return layerModel;
-        },
-
         _addAreaOfInterest: function(geojson) {
             this.getViewer().addAreaOfInterest(geojson);
         },
@@ -134,9 +111,10 @@ define([
         _removeAllOverlays: function() {
             this.getViewer().removeAllOverlays();
         },
-
+        
+        // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
         _onLayerChange: function(options) {
-            var model = this._getLayerModel(options); // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
+            var model = this.getModelForLayer(options.name, options.isBaseLayer); 
 
             if (options.visible) {
                 this._addLayer(model, options.isBaseLayer);
@@ -152,10 +130,27 @@ define([
         },
 
         _onTimeChange: function(time) {
+            this.currentToI = time;
+            this.getViewer.setToI(time);
+
             // FIXXME: currently all overlay layers are destroyed and recreated with the new time set. This
             // should be changed to set the new time on existing layers in the Globe's layerChache.
             this._removeAllOverlays();
             this._setLayersFromAppContext();
+        },
+
+        toi: function() {
+            var toi = this.currentToI;
+            // In case no ToI was set during the lifecycle of this viewer we can access
+            // the time of interest from the global context:
+            if (!toi) {
+                var starttime = new Date(this.legacyContext().timeOfInterest.start);
+                var endtime = new Date(this.legacyContext().timeOfInterest.end);
+
+                toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
+            }
+
+            return toi;
         },
 
         _sortOverlayLayers: function() {

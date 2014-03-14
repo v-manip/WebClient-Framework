@@ -2,16 +2,27 @@
 	"folders":
 	[
 		{
-			"name": "Webclient",
-			"path": "app"
+			"name": "vmanip-core",
+			"path": "../vmanip-core",
+            "folder_exclude_patterns": ["node_modules"]
+		},
+		{
+			"name": "vmanip-app-backbone",
+			"path": "app",
+            "folder_exclude_patterns": ["bower_components"]
 		},
 		{
 			"name": "RectangularBoxViewer",
-			"path": "../RectangularBoxViewer"
+			"path": "../RectangularBoxViewer",
+            "folder_exclude_patterns": ["dist", "node_modules"]
 		},
 		{
 			"name": "VirtualGlobeViewer",
 			"path": "app/bower_components/virtualglobeviewer/src"
+		},
+		{
+			"name": "EarthServer",
+			"path": "../EarthServer"
 		},
 		{
 			"path": "/media/Daten/Projekte/vmanip/ngeo-b/vagrant/shares/v-manip-server/vmanip_server/mesh_cache"

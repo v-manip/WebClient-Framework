@@ -1,8 +1,9 @@
 define([
 	'backbone.marionette',
+	'globals',
 	'jquery',
 	'underscore'
-], function(Marionette, $, _) {
+], function(Marionette, globals, $, _) {
 
 	'use strict';
 
@@ -24,7 +25,7 @@ define([
 		 */
 		cacheViewerInstance: true,
 
-		/* Stores the 'context' (accessible in the child object via 'this.context()') and sets up
+		/* Stores the 'context' (accessible in the child object via 'this.legacyContext()') and sets up
 		 * the base configuration.
 		 */
 		initialize: function(opts) {
@@ -43,8 +44,44 @@ define([
 
 			// Encapsulate the context object to ensure it is not unintendently
 			// changed from outside:
-			this.context = function() {
+			this.legacyContext = function() {
 				return opts.context;
+			}
+		},
+
+		/*
+		 * Connects the default VMANIP context events if a corresponding method property exists in the
+		 * extended object.
+		 */
+		_setupVMANIPContext: function() {
+			if (_.isFunction(this.onLayerChange)) {
+				this.listenTo(this.legacyContext(), 'map:layer:change', this._onLayerChangeBase);
+			}
+		},
+
+		/*
+		 * Internal function to check if the changed layer is supported by the view via the extended objects
+		 * 'supportsLayer' function. If no such function is defined _all_ layers are accepted by default and the
+		 * extended objects 'onLayerChange' method is called. If 'supportsLayer' is defined its returning boolean
+		 * value determines the execution of 'onLayerChange'.
+		 */
+		_onLayerChangeBase: function(options) {
+			if (!_.isFunction(this.supportsLayer)) {
+				return true;
+			}
+
+			var model = this.getModelForLayer(options.name, options.isBaseLayer);
+
+			if (!model) {
+				console.log('[BaseView::_onLayerChangeBase] no model found for ' + options.name);
+				return;
+			}
+
+			if (!this.supportsLayer(model)) {
+				//console.log('[BaseView::_onLayerChangeBase] not a supported layer: ' + model.get('name'));
+				return;
+			} else {
+				this.onLayerChange(model, options.visible);
 			}
 		},
 
@@ -56,6 +93,7 @@ define([
 		onShow: function() {
 			if (this.isClosed) {
 				if (_.isFunction(this.didInsertElement)) {
+					this._setupVMANIPContext();
 					this.didInsertElement();
 				}
 
@@ -117,17 +155,111 @@ define([
 			this.isEmpty = flag;
 		},
 
-		/* Sets the viewer. If a viewer is set the 'cacheViewerInstance' property can be used to
+		/**
+		 * Sets the viewer. If a viewer is set the 'cacheViewerInstance' property can be used to
 		 * manage the lifecycle of the viewer.
 		 */
 		setViewer: function(viewer) {
 			this.viewer = viewer;
 		},
 
-		/* Returs the viewer, if any is set.
+		/**
+		 * Returs the viewer, if any is set.
 		 */
 		getViewer: function() {
 			return this.viewer;
+		},
+
+		/**
+		 * Returns the models of the currently selected layers. If a 'filter' function is given it will be applied to check
+		 * if the model is compatible with the given filter.
+		 */
+		getModelsForSelectedLayers: function(filter) {
+			var models = {};
+
+			globals.baseLayers.each(function(model) {
+				if (model.get('visible')) {
+					if (typeof filter !== 'undefined') {
+						if (filter(model)) {
+							models[model.get('name')] = {
+								model: model,
+								type: 'baselayer'
+							};
+							// console.log('[BaseView::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
+						}
+					} else {
+						models[model.get('name')] = {
+							model: model,
+							type: 'baselayer'
+						};
+					}
+				}
+			});
+
+			globals.products.each(function(model) {
+				if (model.get('visible')) {
+					if (typeof filter !== 'undefined') {
+						if (filter(model)) {
+							models[model.get('name')] = {
+								model: model,
+								type: 'product'
+							};
+							// console.log('[BaseView::setLayersFromAppContext] added product "' + model.get('name') + '"');
+						}
+					} else {
+						models[model.get('name')] = {
+							model: model,
+							type: 'product'
+						};
+					}
+				}
+			});
+
+			globals.overlays.each(function(model) {
+				if (model.get('visible')) {
+					if (typeof filter !== 'undefined') {
+						if (filter(model)) {
+							models[model.get('name')] = {
+								model: model,
+								type: 'overlay'
+							};
+							// console.log('[BaseView::setLayersFromAppContext] added overlay "' + model.get('name') + '"');
+						}
+					} else {
+						models[model.get('name')] = {
+							model: model,
+							type: 'overlay'
+						};
+					}
+				}
+			});
+
+			return models;
+		},
+
+		getModelForLayer: function(name, isBaseLayer) {
+			var layerModel = undefined;
+			if (isBaseLayer) {
+				layerModel = globals.baseLayers.find(function(model) {
+					return model.get('name') === name;
+				});
+			} else {
+				layerModel = globals.products.find(function(model) {
+					return model.get('name') === name;
+				});
+
+				if (!layerModel) {
+					layerModel = globals.overlays.find(function(model) {
+						return model.get('name') === name;
+					});
+				}
+			}
+
+			if (typeof layerModel === 'undefined') {
+				throw Error('[BaseView::getModelForLayer] Product ' + name + ' is unknown!');
+			}
+
+			return layerModel;
 		},
 	});
 

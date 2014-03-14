@@ -39,18 +39,6 @@ define([
             inertia: true
         });
 
-        // Elevation Layer:
-        var srtmElevationWCSGlobal = new GlobWeb.WCSElevationLayer({
-            baseUrl: "http://data.eox.at/elevation?",
-            coverage: "ACE2",
-            version: "2.0.0"
-        });
-        this.globe.setBaseElevation(srtmElevationWCSGlobal);
-
-        this.globe.addLayer(new TileWireframeLayer({
-            outline: true
-        }));
-        
         // // glTF loader test:
         // var sgRenderer;
         // var renderContext = this.globe.renderContext;
@@ -71,24 +59,6 @@ define([
         // loader.load({
         //     rootObj: new SceneGraph.Node()
         // }, onLoadedCallback);
-
-        // // W3DS layer test:
-        // var w3dslayer = new W3DSLayer({
-        //     baseUrl: 'http://localhost:9000/ows?',
-        //     layer: 'adm_aeolus',
-        //     format: 'model/gltf',
-        //     matrixSet: 'WGS84',
-        //     opacity: 0.7
-        // });
-        // this.globe.addLayer(w3dslayer);
-
-        // var blueMarbleLayer = new GlobWeb.WMSLayer({ baseUrl: "http://demonstrator.telespazio.com/wmspub", layers: "BlueMarble" });
-        // this.globe.setBaseImagery( blueMarbleLayer );
-        // Add stats
-        // var stats = new GlobWeb.Stats(globe, {
-        // 	element: 'fps',
-        // 	verbose: false
-        // });
     };
 
     var convertFromOpenLayers = function(ol_geometry, altitude) {
@@ -148,6 +118,33 @@ define([
         }
     };
 
+    // Globe.prototype.createCommonLayerOptionsFromModel = function(model) {
+    //     var opts = {};
+
+    //     opts.baseUrl = model.get('view').urls[0];
+
+    //     opts.style = ''; // MapProxy needs a style argument, even if its empty
+    //     if (model.get('view').style) {
+    //         opts.style = model.get('view').style;
+    //     }
+
+    //     var layer = model.get('view').id;
+
+    //     if (model.get('view').protocol === 'WMS') {
+    //         opts.layers = layer;
+    //     } else {
+    //         opts.layer = layer;
+    //     }
+
+    //     opts.format = model.get('view').format || 'image/jpeg';
+
+    //     if (opts.format === 'image/png') {
+    //         opts.transparent = true;
+    //     }
+
+    //     return opts;
+    // };
+
     Globe.prototype.createCommonLayerOptionsFromModel = function(model) {
         var opts = {};
 
@@ -191,10 +188,6 @@ define([
 
         opts.format = view.format || 'image/jpeg';
 
-        if (model.get('time')) {
-            opts.time = model.get('time');
-        }
-
         if (opts.format === 'image/png') {
             opts.transparent = true;
         }
@@ -203,15 +196,15 @@ define([
     };
 
     Globe.prototype.addLayer = function(model, isBaseLayer) {
-
-
         var layerDesc = this.layerCache[model.get('name')];
         var layer = undefined;
+        var isElevationLayer = false;
 
         if (typeof layerDesc === 'undefined') {
-
             var opts = this.createCommonLayerOptionsFromModel(model);
+            opts.time = this.currentToI;
 
+            // FIXXME: use this.getSupportedViews()!
             var views = model.get('views');
             var view = undefined;
 
@@ -237,11 +230,6 @@ define([
                 }
             }
 
-            //var layer_model = model.get('view');
-
-            //var used_protocol = layer_model.protocol;
-
-            
             if (view.protocol === 'WMTS') {
                 var layer_opts = _.extend(opts, {
                     matrixSet: view.matrixSet,
@@ -251,28 +239,45 @@ define([
                 layer = new GlobWeb.WMSLayer(opts);
             } else if (view.protocol === 'W3DS') {
                 layer = new W3DSLayer(opts);
-                console.log('[Globe::addLayer] added W3DS layer. ', layer);
+                // console.log('[Globe::addLayer] added W3DS layer. ', layer);
+            } else if (view.protocol === 'WIREFRAME') {
+                layer = new TileWireframeLayer({
+                    outline: true
+                });
+            } else if (view.protocol === 'DEM') {
+                layer = new GlobWeb.WCSElevationLayer({
+                    baseUrl: "http://data.eox.at/elevation?",
+                    coverage: "ACE2",
+                    version: "2.0.0"
+                });
+                isElevationLayer = true;
+            } else {
+                console.log('[Globe::addLayer] protocol "' + view.protocol + '" is not supported');
             }
 
-            // set initial opacity:
-            layer.opacity(model.get('opacity'));
+            if (!isElevationLayer) {
+                // set initial opacity:
+                layer.opacity(model.get('opacity'));
 
-            // Register the layer to the internal cache for removal or for changing the timespan later on:
-            layerDesc = {
-                model: model,
-                layer: layer,
-                isBaseLayer: isBaseLayer
-            };
-            this.layerCache[model.get('name')] = layerDesc;
+                // Register the layer to the internal cache for removal or for changing the timespan later on:
+                layerDesc = {
+                    model: model,
+                    layer: layer,
+                    isBaseLayer: isBaseLayer
+                };
+                this.layerCache[model.get('name')] = layerDesc;
+            }
 
-            console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
+            // console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
         } else {
             layer = layerDesc.layer;
-            console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
+            // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
         }
 
         if (isBaseLayer) {
             this.globe.setBaseImagery(layer);
+        } else if (isElevationLayer) {
+            this.globe.setBaseElevation(layer);
         } else {
             // FIXXME: when adding a layer the 'ordinal' has to be considered!
             // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
@@ -292,7 +297,7 @@ define([
         // Remove the current overlay layers (setting this.overlayLayers.length = 0):
         this.removeAllOverlays();
 
-        _.each(sortedOverlayLayers, function(desc) {
+        _.each(sortedOverlayLayers.reverse(), function(desc) {
             console.log('sort: adding layer with ordinal: ' + desc.model.get('ordinal'));
             this.addLayer(desc.model, desc.isBaseLayer);
         }.bind(this));
@@ -309,8 +314,38 @@ define([
     Globe.prototype.removeLayer = function(model, isBaseLayer) {
         console.log('removeLayer: ' + model.get('name') + " (baseLayer: " + isBaseLayer + ")");
 
+        var views = model.get('views');
+        var view = undefined;
+
+        // FIXXME: use this.getSupportedViews()!
+        if( typeof(views) == 'undefined'){
+            view = model.get('view');
+        }else{
+            
+            if (views.length == 1){
+                view = views[0];
+            }else{
+                
+                // Check if it is a 3d layer
+                var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
+                var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
+                if(w3ds){
+                    view = w3ds;
+                }else if(wms){
+                    view = wms;
+                }else{
+                    // Something was defined wrong in the config
+                    view = null;
+                }
+            }
+        }
+
+        var isElevationLayer = view.protocol === 'DEM';
+
         if (isBaseLayer) {
             this.globe.setBaseImagery(null);
+        } else if (isElevationLayer) {
+            this.globe.setBaseElevation(null);
         } else {
             var layerDesc = this.layerCache[model.get('name')];
             if (typeof layerDesc !== 'undefined') {
@@ -318,7 +353,7 @@ define([
                 var idx = _.indexOf(this.overlayLayers, layerDesc);
                 this.overlayLayers.splice(idx, 1);
             }
-        }
+        } 
     };
 
     Globe.prototype.clearCache = function() {
@@ -364,6 +399,10 @@ define([
         this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
     };
 
+    Globe.prototype.setToI = function(time) {
+        this.currentToI = time;
+    };
+
     Globe.prototype.onOpacityChange = function(layer_name, opacity) {
         var layerDesc = this.layerCache[layer_name];
         if (typeof layerDesc !== 'undefined') {
@@ -386,9 +425,9 @@ define([
 
 
 // var elevationLayer = new GlobWeb.WCSElevationLayer({
-// 	baseUrl: "http://demonstrator.telespazio.com/wcspub",
-// 	coverage: "GTOPO",
-// 	version: "1.0.0"
+//  baseUrl: "http://demonstrator.telespazio.com/wcspub",
+//  coverage: "GTOPO",
+//  version: "1.0.0"
 // });
 // globe.setBaseElevation(elevationLayer);
 
@@ -401,8 +440,8 @@ define([
 //test_selectiontool.run();
 
 // var atmosphere = new GlobWeb.AtmosphereLayer({
-// 	visible: true,
-// 	exposure: 1.4
+//  visible: true,
+//  exposure: 1.4
 // });
 // globe.addLayer(atmosphere);
 
@@ -411,16 +450,16 @@ define([
 
 // Add some vector layer
 // $.ajax({
-// 	url: "europe.json",
-// 	success: function(data) {
-// 		var vectorLayer = new GlobWeb.VectorLayer();
-// 		vectorLayer.addFeatureCollection(data);
-// 		globe.addLayer(vectorLayer);
-// 		console.log("added vectorlayer");
-// 	},
-// 	error: function() {
-// 		console.log("error");
-// 	}
+//  url: "europe.json",
+//  success: function(data) {
+//      var vectorLayer = new GlobWeb.VectorLayer();
+//      vectorLayer.addFeatureCollection(data);
+//      globe.addLayer(vectorLayer);
+//      console.log("added vectorlayer");
+//  },
+//  error: function() {
+//      console.log("error");
+//  }
 // });
 
 // var effectLayer = new GlobWeb.EffectLayer();
@@ -430,14 +469,14 @@ define([
 // effect_desc.id = "overlay_triangle";
 
 // var vertexShader = "\
-// 	attribute vec3 vertex;\n\
-// 	attribute vec4 color;\n\
-// 	varying vec4 vColor;\n\
+//  attribute vec3 vertex;\n\
+//  attribute vec4 color;\n\
+//  varying vec4 vColor;\n\
 //           uniform mat4 viewProjectionMatrix;\n\
 //           void main(void) {\n\
 //               gl_Position = viewProjectionMatrix * vec4(vertex, 1.0);\n\
 //               /*gl_Position = vec4(vertex, 1.0);*/\n\
-// 		vColor = color;\n\
+//      vColor = color;\n\
 //           }\n\
 //           ";
 
@@ -467,7 +506,7 @@ define([
 // effectLayer.addEffect(effect_desc);
 
 // var geo = [47.070761, 15.439498, 100],
-// 	dest = [];
+//  dest = [];
 // CoordinateSystem.fromGeoTo3D(geo, dest)
 // console.log("Worldcoordinates:");
 // console.dir(dest);
@@ -475,15 +514,15 @@ define([
 
 
 // var style = new GlobWeb.FeatureStyle({
-// 	iconUrl: null,
-// 	//icon: Text.generateImageData("Coucou!"),
-// 	pointMaxSize: 4000,
-// 	radius: 10,
-// 	renderer: "pulsar"
+//  iconUrl: null,
+//  //icon: Text.generateImageData("Coucou!"),
+//  pointMaxSize: 4000,
+//  radius: 10,
+//  renderer: "pulsar"
 // });
 
 // var layer = new GlobWeb.VectorLayer({
-// 	style: style
+//  style: style
 // });
 // globe.addLayer(layer);
 
@@ -493,11 +532,11 @@ define([
 // // console.dir(dest);
 
 // var geoJSON = {
-// 	"type": "Feature",
-// 	"geometry": {
-// 		"type": "Point",
-// 		"coordinates": [15.439498, 47.070761]
-// 	}
+//  "type": "Feature",
+//  "geometry": {
+//      "type": "Point",
+//      "coordinates": [15.439498, 47.070761]
+//  }
 // }
 // layer.addFeature(geoJSON);
 // layer.animate(0, 4);
@@ -505,15 +544,15 @@ define([
 // var canvas = this.el;
 // var poi;
 // canvas.onclick = function(event) {
-// 	//if (poi) layer.removeFeature(poi);
+//  //if (poi) layer.removeFeature(poi);
 
-// 	var pos = globe.renderContext.getXYRelativeToCanvas(event);
-// 	var lonlat = globe.getLonLatFromPixel(pos[0], pos[1]);
-// 	poi = {
-// 		geometry: {
-// 			type: "Point",
-// 			coordinates: lonlat
-// 		}
-// 	};
-// 	layer.addFeature(poi);
+//  var pos = globe.renderContext.getXYRelativeToCanvas(event);
+//  var lonlat = globe.getLonLatFromPixel(pos[0], pos[1]);
+//  poi = {
+//      geometry: {
+//          type: "Point",
+//          coordinates: lonlat
+//      }
+//  };
+//  layer.addFeature(poi);
 // };

@@ -93,7 +93,8 @@
 								wrapDateLine: baselayer.wrapDateLine,
 								zoomOffset: baselayer.zoomOffset,
 									//time: baselayer.time // Is set in TimeSliderView on time change.
-							}
+							},
+							views: baselayer.views
 						})
 					);
 					console.log("Added baselayer " + baselayer.id );

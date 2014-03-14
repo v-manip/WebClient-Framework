@@ -52,6 +52,7 @@ module.exports = function (grunt) {
                     '<%= yeoman.app %>/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
                     '<%= yeoman.app %>/scripts/config.json',
                     '<%= yeoman.app %>/templates/{,*/}*.hbs',
+                    '<%= yeoman.app %>/scripts/vendor/vmanip-core/*.js',
                     '<%= yeoman.app %>/scripts/vendor/rectangularboxviewer/*.js'
                 ]
             }
@@ -79,14 +80,30 @@ module.exports = function (grunt) {
                 https: false,
                 changeOrigin: true,
                 xforward: false
-            },{
-                context: '/browse/ows',
+            }, {
+                context: '/c',
                 host: 'localhost',
                 port: 3080,
                 https: false,
                 changeOrigin: true,
                 xforward: false
-            }],            
+            }, {
+                context: '/gltf',
+                host: 'localhost',
+                port: 3080,
+                https: false,
+                changeOrigin: true,
+            }
+            // MH: This setting is not working for W3DS. Port 38000 has to be taken in that case, see above!
+            // ,{
+            //     context: '/browse/ows',
+            //     host: 'localhost',
+            //     port: 3080,
+            //     https: false,
+            //     changeOrigin: true,
+            //     xforward: false
+            // }
+            ],            
             livereload: {
                 options: {
                     middleware: function (connect) {
@@ -339,6 +356,7 @@ module.exports = function (grunt) {
                         'bower_components/backbone-amd/backbone-min.map',
                         'bower_components/underscore-amd/underscore-min.js',
                         'bower_components/d3/d3.min.js',
+                        'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/d3.TimeSlider/d3.timeslider.min.js',
                         'bower_components/d3.TimeSlider/d3.timeslider.plugins.min.js',
                         'bower_components/libcoverage/libcoverage.min.js',
@@ -359,6 +377,7 @@ module.exports = function (grunt) {
                         'bower_components/Keypress/keypress.js',
                         'bower_components/analyticsviewer/lib/scripts/analytics.min.js',
                         'bower_components/nvd3/nv.d3.min.js',
+                        'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
                         'scripts/vendor/rectangularboxviewer/*.js',
                         'data/**'
@@ -411,6 +430,14 @@ module.exports = function (grunt) {
                     dest: '<%= yeoman.dist %>/images',
                     src: [
                         'generated/*'
+                    ]
+                }, {
+                    expand: true,
+                    flatten: true,
+                    cwd: '<%= yeoman.app %>',
+                    dest: '<%= yeoman.dist %>/styles/images',
+                    src: [
+                        'bower_components/jquery-ui/themes/smoothness/images/*'
                     ]
                 }]
             }

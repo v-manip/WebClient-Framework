@@ -2,7 +2,8 @@
 <!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
 <!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
 <!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+<!--[if gt IE 8]><!--> 
+<html class="no-js"> <!--<![endif]-->
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -23,22 +24,16 @@
         <script src="bower_components/modernizr/modernizr.js"></script>
         <!-- endbuild -->
 
-        <script type="text/javascript" src="bower_components/Keypress/keypress.js"></script>
+        <script type="text/javascript" src="scripts/vendor/vmanip-core/vmanip-core-deps.debug.js"></script>
+        <script type="text/javascript" src="scripts/vendor/vmanip-core/vmanip-core.debug.js"></script>
         <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer-deps.debug.js"></script>
         <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer.debug.js"></script>
+        <script type="text/javascript" src="bower_components/Keypress/keypress.js"></script>          
     </head>
     <body>
-  
-
         <!--[if lt IE 7]>
             <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
         <![endif]-->
-
-
-        <!-- build:js scripts/init.js -->
-        <script data-main="scripts/init" src="bower_components/requirejs/require.js"></script>
-        <!-- endbuild -->
-
 
         <div id="content">
             <div id="main"></div>
@@ -49,46 +44,37 @@
             <div id="bottomBar"></div>
         </div>
 
-    <div id="loadscreen" class="modal-backdrop"> <i class="fa fa-cog fa-spin fa-4x"></i> </div>
+        <div id="loadscreen" class="modal-backdrop"> <i class="fa fa-cog fa-spin fa-4x"></i> </div>
 
-    <!-- HIDDEN DOWNLOAD DIV -->
-    <div id="div-downloads">
-      <iframe name="iframe-download-post" id="iframe-download-post"></iframe>
-    </div>
-
-    <!-- HIDDEN X3DOM DIV -->
-    <div id="x3dom-hidden" style="display:none">
-        <div id="x3dom-wrapper">
-            <div id="progressbar"></div>
-            <X3D id="x3d" showlog="false" showstat="false" showprogress="false">
-                <scene id="x3dScene"></scene>
-            </X3D>
-  
-            <div id='x3domUI'></div>
+        <!-- HIDDEN DOWNLOAD DIV -->
+        <div id="div-downloads">
+          <iframe name="iframe-download-post" id="iframe-download-post"></iframe>
         </div>
-    </div>
+
+        <!-- HIDDEN X3DOM DIV -->
+        <div id="x3dom-hidden" style="display:none">
+            <div id="x3dom-wrapper">
+                <div id="progressbar"></div>
+                <X3D id="x3d" showlog="false" showstat="false" showprogress="false">
+                    <scene id="x3dScene"></scene>
+                </X3D>
+      
+                <div id='x3domUI'></div>
+            </div>
+        </div>
 
         <script id="rbv-empty-view-template" type="text/html">
           <i class="sprite sprite-scatter"></i> Please select an Area of Interest (AoI) in one of the MapViewer!
         </script>
 
-        <!-- build:js scripts/main.js -->
-        <script data-main="scripts/init" src="bower_components/requirejs/require.js"></script>
+        <div id="preload">
+           <img src="images/glyphicons.png" width="1" height="1" alt="Preload image" />
+        </div>
+
+        <div id="error-messages"></div>
+
+        <!-- build:js scripts/init.js -->
+        <script data-main="scripts/init" src="bower_components/requirejs/require.js"></script>     
         <!-- endbuild -->
-
-    <div id="preload">
-       <img src="images/glyphicons.png" width="1" height="1" alt="Preload image" />
-    </div>
-
-    <div id="error-messages"></div>
-
-
-    <!-- Google Analytics: change UA-XXXXX-X to be your site's ID. -->
-    <!--<script>
-        var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
-        (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-        g.src='//www.google-analytics.com/ga.js';
-        s.parentNode.insertBefore(g,s)}(document,'script'));
-    </script>-->
-</body>
+    </body>
 </html>

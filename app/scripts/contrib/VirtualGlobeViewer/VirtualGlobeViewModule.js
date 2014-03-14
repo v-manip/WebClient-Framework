@@ -42,6 +42,14 @@ define([
                 };
             }
 
+            // This is a debug start position at level_0:
+            // startPosition = {
+            //     center: [0, 0],
+            //     distance: 5000000,
+            //     duration: 1,
+            //     tilt: 0
+            // }
+
             // Go through instances and return first free one
             for (var contr in this.instances) {
                 if (!this.instances[contr].isActive()) {
@@ -70,6 +78,36 @@ define([
             var keypressListener = new keypress.Listener();
             keypressListener.simple_combo("a", function() {
                 controller.zoomTo(controller.getStartPosition());
+            });
+
+            // level 0 tiles only:
+            keypressListener.simple_combo("1", function() {
+                controller.zoomTo({
+                    center: [0, 0],
+                    distance: 20000000,
+                    duration: 1,
+                    tilt: 0
+                });
+            });
+
+            // level 2 tiles only:
+            keypressListener.simple_combo("2", function() {
+                controller.zoomTo({
+                    center: [0, 0],
+                    distance: 10000000,
+                    duration: 1,
+                    tilt: 0
+                });
+            });
+
+            // level 3 tiles only:
+            keypressListener.simple_combo("3", function() {
+                controller.zoomTo({
+                    center: [0, 0],
+                    distance: 5000000,
+                    duration: 1,
+                    tilt: 0
+                });
             });
         };
     });

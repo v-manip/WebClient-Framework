@@ -73,6 +73,26 @@
     ],
     "products": [
       {
+        "name": "Cloudsat",
+        "visible": false,
+        "timeSlider": false,
+        "timeSliderProtocol": "WPS",
+        "color":"purple",
+        "views": [
+          {
+            "id": "Cloudsat",
+            "protocol": "W3DS",
+            "urls": [
+                    "http://localhost:9000/ows?",
+                    "http://demo.v-manip.eox.at/browse/ows?"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
+        "download": {}
+      },
+      {
         "name": "SPOT 4 View",
         "visible": false,
         "timeSlider": true,
@@ -142,69 +162,72 @@
         }
       },
       {
-        "name": "Vertical Curtain VRVis",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"purple",
-        "views": [
-          {
-            "id": "vrvis_demo",
-            "protocol": "W3DS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows?"
+            "name": "Blue Marble",
+            "visible": false,
+            "timeSlider": true,
+            "color": "brown",
+            "views": [{
+                "id": "bluemarble",
+                "protocol": "WMS",
+                "urls": [
+                    "http://tiles.maps.eox.at/wms"
+                ],
+                "style": "default",
+                "format": "image/jpeg",
+                "crs": "EPSG:4326"
+              }
             ],
-            "style": "default",
-            "format": "image/png"
-          },
-          {
-            "id": "vrvis_demo_outlines",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows?"
+            "download": {}
+        }, {
+            "name": "Terrain",
+            "visible": false,
+            "timeSlider": true,
+            "color": "orange",
+            "views": [{
+                "id": "terrain",
+                "protocol": "WMS",
+                "urls": [
+                    "http://tiles.maps.eox.at/wms"
+                ],
+                "style": "default",
+                "format": "image/jpeg",
+                "crs": "EPSG:4326"
+              }
             ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "vrvis_demo",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows?"
+            "download": {}
+        }, {
+            "name": "Digital Elevation Model",
+            "visible": true,
+            "timeSlider": false,
+            "color": "lightgray",
+            "views": [{
+                "id": "Wireframe",
+                "protocol": "DEM",
+                "urls": [
+                    "http://data.eox.at/elevation?"
+                ],
+                "style": "default",
+                "format": "image/png"
+              }
+            ],
+            "download": {}
+        }, {
+            "name": "Wireframe",
+            "visible": true,
+            "timeSlider": false,
+            "color": "lightgray",
+            "views": [{
+                "id": "Wireframe",
+                "protocol": "WIREFRAME",
+                "urls": [
+                    "http://localhost:9000/ows?"
+                ],
+                "style": "default",
+                "format": "image/png"
+              }
+            ],
+            "download": {}
         }
-      },
-      {
-        "name": "Vertical Curtain EOX",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"black",
-        "views": [
-          {
-            "id": "eox_demo",
-            "protocol": "W3DS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows?"
-            ],
-            "style": "default",
-            "format": "image/png"
-          },
-          {
-            "id": "eox_demo",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows?"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "SRTM_mosaic",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows?"
-        }
-      }
     ],
     "overlays": [
        {

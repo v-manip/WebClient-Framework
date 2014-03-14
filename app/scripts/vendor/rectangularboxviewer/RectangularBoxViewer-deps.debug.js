@@ -1505,7 +1505,9 @@ EarthServerGenericClient.SceneManager = function()
         if( nextFrameCallback.length !== 0 && lastFrameInsert >= framesBetweenDomInsertion)
         {
             var callbackIndex = nextFrameCallback.shift();
-            models[callbackIndex].terrain.nextFrame();
+            if (models[callbackIndex]) {
+                models[callbackIndex].terrain.nextFrame();
+            }
             lastFrameInsert = 0;
         }
     };
@@ -1517,6 +1519,22 @@ EarthServerGenericClient.SceneManager = function()
     this.enterCallbackForNextFrame = function( modelIndex )
     {
         nextFrameCallback.push( modelIndex );
+    };
+
+    /**
+     * This function removes eventual callbacks for a model (e.g. if a model is removed during pending callbacks).
+     * @param modelIndex - Index of the model that uses the terrain.
+     */
+    this.removeModelCallbacks = function( modelIndex )
+    {
+        var newCallbacks = [];
+
+        for (var idx = 0; idx < nextFrameCallback.length; idx++) {
+            if (nextFrameCallback[idx] !== modelIndex) {
+                newCallbacks.push(nextFrameCallback[idx]);
+            }
+        };
+        nextFrameCallback = newCallbacks;
     };
 
     /**
@@ -5607,12 +5625,15 @@ EarthServerGenericClient.combinedCallBack = function(callback,numberToCombine,sa
  * @param width - Width of the response image.
  * @param height - Height of the response image.
  */
-EarthServerGenericClient.getCoverageWMS = function(callback,responseData,WMSurl,WMScoverID,WMSCRS,WMSImageFormat,BoundingBox,WMSVersion,width,height,timespan)
+EarthServerGenericClient.getCoverageWMS = function(callback,responseData,WMSurl,WMScoverID,WMSCRS,WMSImageFormat,BoundingBox,WMSVersion,width,height,timespan, transparent)
 {
     responseData.textureUrl = WMSurl + "?service=WMS&version=" + WMSVersion +"&request=Getmap&layers=" + WMScoverID;
     responseData.textureUrl += "&" + WMSCRS + "&format=image/" + WMSImageFormat;
     responseData.textureUrl += "&bbox=" + BoundingBox.minLatitude + "," + BoundingBox.minLongitude + ","+ BoundingBox.maxLatitude + "," + BoundingBox.maxLongitude;
     responseData.textureUrl += "&width="+width+"&height="+height;
+    if (transparent) {
+        responseData.textureUrl += "&transparent="+transparent;
+    }
     if (timespan) {
         responseData.textureUrl += "&time="+timespan;
     }
@@ -6137,20 +6158,6 @@ EarthServerGenericClient.requestWCPSImageWCPSDem = function(callback,imageURL,im
     EarthServerGenericClient.getWCPSDemCoverage(combine,responseData,demURL,demQuery);
 };
 
-/** 
- * Convenience function. Its only purpose is to provide a meaningful API for models. Technically
- * a Model could directly use 'startRequests'.
- */
-EarthServerGenericClient.getDEMWithOverlays = function(calling_module, opts) {
-    var requests = [];
-    requests.push(opts.dem);
-    for (var idx=0; idx<opts.imagery.length; ++idx) {
-        requests.push(opts.imagery[idx]);
-    }
-
-    EarthServerGenericClient.startRequests(calling_module, requests, opts);
-}
-
 /**
  * Carries out the requests from all OGCProviders stored in the parameter array.
  * @param opts.timespan
@@ -6158,43 +6165,50 @@ EarthServerGenericClient.getDEMWithOverlays = function(calling_module, opts) {
  * @param opts.resX
  * @param opts.resY
  */
-EarthServerGenericClient.startRequests = function(calling_module, providers, opts) {
-    var promise = new EarthServerGenericClient.combinedCallBack(calling_module, providers.length, true);
+EarthServerGenericClient.sendRequests = function(calling_module, layerRequests, opts) {
+    var promise = new EarthServerGenericClient.combinedCallBack(calling_module, layerRequests.length, true);
 
-    for (var idx = 0; idx < providers.length; ++idx) {
-        var provider = providers[idx];
+    for (var idx = 0; idx < layerRequests.length; ++idx) {
+        var layerRequest = layerRequests[idx];
         var responseData = new EarthServerGenericClient.ServerResponseData();
+        // FIXXME: necessary for LODTerrainWithOverlays. The 'info' object is _not_ (yet) specified in ServerResponseData!
+        responseData.layerInfo = {
+            id: layerRequest.id,
+            opacity: layerRequest.opacity,
+            ordinal: layerRequest.ordinal
+        };
 
-        switch (provider.protocol) {
+        switch (layerRequest.protocol) {
             case 'WMS':
-                var WMSurl = provider.urls[0];
-                var WMScoverID = provider.id;
-                var WMSCRS = 'SRS=' + provider.crs;
-                var WMSImageFormat = provider.format;
+                var WMSurl = layerRequest.urls[0];
+                var WMScoverID = layerRequest.id;
+                var WMSCRS = 'SRS=' + layerRequest.crs;
+                var WMSImageFormat = layerRequest.format;
                 var BoundingBox = opts.bbox;
-                var WMSversion = provider.version;
+                var WMSversion = layerRequest.version;
                 var ResX = opts.resX;
                 var ResZ = opts.resZ;
                 var timespan = opts.timespan;
+                var transparent = layerRequest.transparent;
 
                 // FIXXME: get rid of the plethora of parameters and replace them with a single 'opts' object. It's Javascript, after all ;-)
                 //   API-Suggestion:  ESGC.getCoverageWMS(promise, opts, true/false) -> true/false determines if one ServerResponseData
                 //   object is created internally for all requests, or if each response gets its own ServerResponseData object.
                 //   Future API-Suggestion: The functionality of generating and carrying out a request is the sole responsibility of the 
-                //   'OGCProvider' class. 'startRequests' should simply iterate over the providers and let them do their jobs, e.g.:
-                //   provider.startRequest(promise, opts, true/false).
-                EarthServerGenericClient.getCoverageWMS(promise, responseData, WMSurl, WMScoverID, WMSCRS, WMSImageFormat, BoundingBox, WMSversion, ResX, ResZ, timespan);
+                //   'OGCRequest' class. 'sendRequests' should simply iterate over the layerRequests and let them do their jobs, e.g.:
+                //   layerRequest.startRequest(promise, opts, true/false).
+                EarthServerGenericClient.getCoverageWMS(promise, responseData, WMSurl, WMScoverID, WMSCRS, WMSImageFormat, BoundingBox, WMSversion, ResX, ResZ, timespan, transparent);
                 break;
             case 'WCS':
-                var WCSurl = provider.urls[0];
-                var WCScoverID = provider.id;
-                var WCSCRS = provider.crs;
-                var WCSMimeType = provider.format;
-                var WCSDataType = provider.datatype;
-                var WCSOutputFormat = provider.format;
-                var WCSOutputCRS = provider.outputCRS;
+                var WCSurl = layerRequest.urls[0];
+                var WCScoverID = layerRequest.id;
+                var WCSCRS = layerRequest.crs;
+                var WCSMimeType = layerRequest.format;
+                var WCSDataType = layerRequest.datatype;
+                var WCSOutputFormat = layerRequest.format;
+                var WCSOutputCRS = layerRequest.outputCRS;
                 var BoundingBox = opts.bbox;
-                var WCSVersion = provider.version;
+                var WCSVersion = layerRequest.version;
                 var ResX = opts.resX;
                 var ResZ = opts.resZ;
                 var timespan = opts.timespan;
@@ -6203,7 +6217,7 @@ EarthServerGenericClient.startRequests = function(calling_module, providers, opt
                 EarthServerGenericClient.getCoverageWCS(promise, responseData, WCSurl, WCScoverID, BoundingBox, WCSVersion, WCSMimeType, WCSDataType, WCSOutputFormat, ResX, ResZ, WCSOutputCRS);
                 break;
             default:
-                console.log('[EarthServerGenericClient.performRequests] protocol "' + provider.protocol + '"" not supported');
+                console.log('[EarthServerGenericClient.performRequests] protocol "' + layerRequest.protocol + '"" not supported');
                 break;
         }
     }
@@ -7664,7 +7678,14 @@ EarthServerGenericClient.createBasicUI = function(domElementID)
  */
 EarthServerGenericClient.destroyBasicUI = function(domElementID)
 {
-    $( "#"+domElementID ).accordion( "destroy" );
+    var elem = $( "#"+domElementID );
+    if (elem) {
+        try {
+            elem.accordion( "destroy" );
+        } catch (err) {
+            console.log('[EarthServerGenericClient.destroyBasicUI] Trying to destroy non initialized Accordion. Catched and good to continue...');
+        }
+    }
 };
 
 /**
@@ -7992,7 +8013,7 @@ EarthServerGenericClient.HeightProfileVisualisation = function(index,getHeightma
     }
 };
 EarthServerGenericClient.HeightProfileVisualisation.inheritsFrom( EarthServerGenericClient.AbstractVisualisation);
-/** X3DOM Runtime, http://www.x3dom.org/ 1.6.0-dev - fa599b611f4a3dc0d32ecf6dd20fad6bf3390fee - Tue Dec 10 16:10:30 2013 +0100 *//*
+/** X3DOM Runtime, http://www.x3dom.org/ 1.6.0-dev - 64279d5485abed8b5f3e22955e54553c67c7cb72 - Tue Feb 25 16:40:43 2014 +0100 *//*
  * X3DOM JavaScript Library
  * http://www.x3dom.org
  *
@@ -8076,14 +8097,13 @@ if (!Array.filter) {
  * @namespace Namespace container for x3dom objects.
  */
 var x3dom = {
-    canvases: []
-};
+    canvases : [],
 
-x3dom.x3dNS = 'http://www.web3d.org/specifications/x3d-namespace'; // non-standard, but sort of supported by Xj3D
-x3dom.x3dextNS = 'http://philip.html5.org/x3d/ext';
-x3dom.xsltNS = 'http://www.w3.org/1999/XSL/x3dom.Transform';
-x3dom.xhtmlNS = 'http://www.w3.org/1999/xhtml';
-// <<<<<<<<<<<<<
+    x3dNS    : 'http://www.web3d.org/specifications/x3d-namespace',
+    x3dextNS : 'http://philip.html5.org/x3d/ext',
+    xsltNS   : 'http://www.w3.org/1999/XSL/x3dom.Transform',
+    xhtmlNS  : 'http://www.w3.org/1999/xhtml'
+};
 
 /** @namespace the x3dom.nodeTypes namespace. */
 x3dom.nodeTypes = {};
@@ -8123,10 +8143,9 @@ x3dom.registerNodeType = function(nodeTypeName, componentName, nodeDef) {
 /** Test if node is registered X3D element */
 x3dom.isX3DElement = function(node) {
     // x3dom.debug.logInfo("node=" + node + "node.nodeType=" + node.nodeType + ", node.localName=" + node.localName + ", ");
-    return (node.nodeType === Node.ELEMENT_NODE && node.localName &&
-        (x3dom.nodeTypes[node.localName] || x3dom.nodeTypesLC[node.localName.toLowerCase()] ||
-         node.localName.toLowerCase() === "x3d" || node.localName.toLowerCase() === "websg" ||
-         node.localName.toLowerCase() === "scene" || node.localName.toLowerCase() === "route" ));
+    var name = (node.nodeType === Node.ELEMENT_NODE && node.localName) ? node.localName.toLowerCase() : null;
+    return (name && (x3dom.nodeTypes[node.localName] || x3dom.nodeTypesLC[name] ||
+            name == "x3d" || name == "websg" || name == "route"));
 };
 
 /*
@@ -8139,21 +8158,18 @@ x3dom.isX3DElement = function(node) {
  *	generated internally that shares the same prototype:
  *
  *	Parameters:
- *
  *   	f - Method f a constructor
  *
  *	Returns:
- *
  * 		A suitable prototype object
  *
  *	See Also:
- *
  *		Douglas Crockford's essay on <prototypical inheritance at http://javascript.crockford.com/prototypal.html>.
  */
 x3dom.extend = function(f) {
-  function g() {}
-  g.prototype = f.prototype || f;
-  return new g();
+  function G() {}
+  G.prototype = f.prototype || f;
+  return new G();
 };
 
 /**
@@ -8172,10 +8188,9 @@ x3dom.extend = function(f) {
  */
 x3dom.getStyle = function(oElm, strCssRule) {
     var strValue = "";
-    if (document.defaultView.getComputedStyle && document.defaultView.getComputedStyle(oElm, null)) {
-        //strValue = window.getComputedStyle(oElm).webkitTransform;
-        strValue = document.defaultView.getComputedStyle(oElm, null).getPropertyValue(strCssRule);
-        //strValue = window.getComputedStyle(oElm, "")[strCssRule];
+    var style = document.defaultView.getComputedStyle ? document.defaultView.getComputedStyle(oElm, null) : null;
+    if (style) {
+        strValue = style.getPropertyValue(strCssRule);
     }
     else if(oElm.currentStyle){
         strCssRule = strCssRule.replace(/\-(\w)/g, function (strMatch, p1){ return p1.toUpperCase(); });
@@ -8193,11 +8208,11 @@ x3dom.getStyle = function(oElm, strCssRule) {
     @return the constructor function of the new class
   */
 function defineClass(parent, ctor, methods) {
-    function inheritance() {}
-
     if (parent) {
-        inheritance.prototype = parent.prototype;
-        ctor.prototype = new inheritance();
+        function Inheritance() {}
+        Inheritance.prototype = parent.prototype;
+
+        ctor.prototype = new Inheritance();
         ctor.prototype.constructor = ctor;
         ctor.superClass = parent;
     }
@@ -8216,14 +8231,11 @@ function defineClass(parent, ctor, methods) {
     @return true or false
   */
 x3dom.isa = function(object, clazz) {
-	if (!object) {
+	if (!object || !object.constructor || object.constructor.superClass === undefined) {
 		return false;
 	}
     if (object.constructor === clazz) {
         return true;
-    }
-    if (object.constructor.superClass === undefined) {
-        return false;
     }
 
     function f(c) {
@@ -8240,7 +8252,11 @@ x3dom.isa = function(object, clazz) {
 
 
 /// helper
-x3dom.getGlobal = function() { return (function(){ return this;}).call(null); };
+x3dom.getGlobal = function () {
+    return (function () {
+        return this;
+    }).call(null);
+};
 
 
 /**
@@ -8256,17 +8272,16 @@ x3dom.getGlobal = function() { return (function(){ return this;}).call(null); };
  *              is used instead.
  * @param  path_prefix A prefix URI to add to the resource to be loaded.
  *                     The URI must be given in normalized path form ending in a
- *                     path seperator (i.e. src/nodes/). It can be in absolute
+ *                     path separator (i.e. src/nodes/). It can be in absolute
  *                     URI form (http://somedomain.tld/src/nodes/)
  * @param  blocking    By default the lookup is done via blocking jax request.
  *                     set to false to use the script i
  */
 x3dom.loadJS = function(src, path_prefix, blocking) {
-    var blocking = (blocking === false) ? blocking : true;   // default to true
+    blocking = (blocking === false) ? blocking : true;   // default to true
 
     if (blocking) {
         var url = (path_prefix) ? path_prefix.trim() + src : src;
-
         var req = new XMLHttpRequest();
 
         if (req) {
@@ -8279,7 +8294,6 @@ x3dom.loadJS = function(src, path_prefix, blocking) {
             // http://perfectionkills.com/global-eval-what-are-the-options/#indirect_eval_call_examples
             eval(req.responseText);
         }
-
     } else {
         var head = document.getElementsByTagName('HEAD').item(0);
         var script = document.createElement("script");
@@ -8289,8 +8303,7 @@ x3dom.loadJS = function(src, path_prefix, blocking) {
             //alert("Trying to load external JS file: " + loadpath);
             script.type = "text/javascript";
             script.src = loadpath;
-//        head.appendChild(script);
-            head.appendChild(script, head.firstChild);
+            head.appendChild(script);
         } else {
             alert("No document object found. Can't load components!");
             //x3dom.debug.logError("No document object found. Can't load components");
@@ -10053,6 +10066,7 @@ x3dom.EarClipping = {
 x3dom.Utils = {};
 
 x3dom.Utils.maxIndexableCoords = 65535;
+x3dom.Utils.needLineWidth = false;  // lineWidth not impl. in IE11
 x3dom.Utils.measurements = [];
 
 
@@ -10104,7 +10118,7 @@ x3dom.Utils.isNumber = function(n) {
 /*****************************************************************************
 * 
 *****************************************************************************/
-x3dom.Utils.createTexture2D = function(gl, doc, src, bgnd, withCredentials, scale)
+x3dom.Utils.createTexture2D = function(gl, doc, src, bgnd, withCredentials, scale, genMipMaps)
 {
 	var texture = gl.createTexture();
 
@@ -10112,6 +10126,9 @@ x3dom.Utils.createTexture2D = function(gl, doc, src, bgnd, withCredentials, scal
     var data = new Uint8Array([0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255]);
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 2, 2, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+    if (genMipMaps) {
+        gl.generateMipmap(gl.TEXTURE_2D);
+    }
     gl.bindTexture(gl.TEXTURE_2D, null);
 
     texture.ready = false;
@@ -10135,6 +10152,9 @@ x3dom.Utils.createTexture2D = function(gl, doc, src, bgnd, withCredentials, scal
 		gl.bindTexture(gl.TEXTURE_2D, texture);
 		//gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+        if (genMipMaps) {
+            gl.generateMipmap(gl.TEXTURE_2D);
+        }
 		gl.bindTexture(gl.TEXTURE_2D, null);
 		if(bgnd == true) {
 			gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -10160,7 +10180,7 @@ x3dom.Utils.createTexture2D = function(gl, doc, src, bgnd, withCredentials, scal
 /*****************************************************************************
 * 
 *****************************************************************************/
-x3dom.Utils.createTextureCube = function(gl, doc, url, bgnd, withCredentials, scale)
+x3dom.Utils.createTextureCube = function(gl, doc, url, bgnd, withCredentials, scale, genMipMaps)
 {
 	var texture = gl.createTexture();
 
@@ -10217,6 +10237,13 @@ x3dom.Utils.createTextureCube = function(gl, doc, url, bgnd, withCredentials, sc
                     texture.width  = width;
                     texture.height = height;
 					texture.textureCubeReady = true;
+
+                    if (genMipMaps) {
+                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, texture);
+                        gl.generateMipmap(gl.TEXTURE_CUBE_MAP);
+                        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+                    }
+
 					x3dom.debug.logInfo("[Utils|createTextureCube] Loading CubeMap finished...");
 					doc.needRender = true;
 				}
@@ -10235,6 +10262,74 @@ x3dom.Utils.createTextureCube = function(gl, doc, url, bgnd, withCredentials, sc
 	}
 	
 	return texture;
+};
+
+/*****************************************************************************
+ * Initialize framebuffer object and associated texture(s)
+ *****************************************************************************/
+x3dom.Utils.initFBO = function(gl, w, h, type, mipMap, needRenderBuf, numMrt) {
+    var tex = gl.createTexture();
+    tex.width  = w;
+    tex.height = h;
+
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, type, null);
+    if (mipMap)
+        gl.generateMipmap(gl.TEXTURE_2D);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+
+    var i, mrts = null;
+
+    if (x3dom.caps.DRAW_BUFFERS && numMrt !== undefined) {
+        mrts = [ tex ];
+
+        for (i=1; i<numMrt; i++) {
+            mrts[i] = gl.createTexture();
+            mrts[i].width  = w;
+            mrts[i].height = h;
+
+            gl.bindTexture(gl.TEXTURE_2D, mrts[i]);
+            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, w, h, 0, gl.RGBA, type, null);
+            if (mipMap)
+                gl.generateMipmap(gl.TEXTURE_2D);
+            gl.bindTexture(gl.TEXTURE_2D, null);
+        }
+    }
+
+    var fbo = gl.createFramebuffer();
+    var rb = null;
+
+    if (needRenderBuf) {
+        rb = gl.createRenderbuffer();
+
+        gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
+        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    if (x3dom.caps.DRAW_BUFFERS && numMrt !== undefined) {
+        for (i=1; i<numMrt; i++) {
+            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, mrts[i], 0);
+        }
+    }
+    gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
+
+    var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (status != gl.FRAMEBUFFER_COMPLETE) {
+        x3dom.debug.logWarning("[Utils|InitFBO] FBO-Status: " + status);
+    }
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    return {
+        fbo: fbo, rbo: rb,
+        tex: tex, texTargets: mrts,
+        width: w, height: h,
+        type: type
+    };
 };
 
 /*****************************************************************************
@@ -10649,7 +10744,7 @@ x3dom.Utils.generateProperties = function (viewarea, shape)
 	if (appearance && appearance._shader &&
         x3dom.isa(appearance._shader, x3dom.nodeTypes.ComposedShader)) {
 
-		property.CSHADER          = shape._objectID;
+		property.CSHADER          = appearance._shader._id; //shape._objectID;
 	}
     else if (geometry) {
 
@@ -10661,19 +10756,14 @@ x3dom.Utils.generateProperties = function (viewarea, shape)
         property.IMAGEGEOMETRY    = (x3dom.isa(geometry, x3dom.nodeTypes.ImageGeometry))  ? 1 : 0;
         property.IG_PRECISION     = (property.IMAGEGEOMETRY) ? geometry.numCoordinateTextures() : 0;
         property.IG_INDEXED       = (property.IMAGEGEOMETRY && geometry.getIndexTexture() != null) ? 1 : 0;
-        property.POINTLINE2D      = x3dom.isa(geometry, x3dom.nodeTypes.PointSet) ||
-                                    x3dom.isa(geometry, x3dom.nodeTypes.IndexedLineSet) ||
-                                    x3dom.isa(geometry, x3dom.nodeTypes.Polypoint2D) ||
-                                    x3dom.isa(geometry, x3dom.nodeTypes.Polyline2D) ||
-                                    x3dom.isa(geometry, x3dom.nodeTypes.Arc2D) ||
-                                    x3dom.isa(geometry, x3dom.nodeTypes.Circle2D) ? 1 : 0;
+        property.POINTLINE2D      = !geometry.needLighting() ? 1 : 0;
         
         property.APPMAT           = (appearance && (material || property.CSSHADER) ) ? 1 : 0;
         property.SHADOW           = (viewarea.getLightsShadow()) ? 1 : 0;
         property.FOG              = (viewarea._scene.getFog()._vf.visibilityRange > 0) ? 1 : 0;
         property.CSSHADER         = (appearance && appearance._shader &&
                                      x3dom.isa(appearance._shader, x3dom.nodeTypes.CommonSurfaceShader)) ? 1 : 0;
-        property.LIGHTS           = (!property.POINTLINE2D && appearance && (material || property.CSSHADER)) ?
+        property.LIGHTS           = (!property.POINTLINE2D && appearance && shape.isLit() && (material || property.CSSHADER)) ?
                                      viewarea.getLights().length + (viewarea._scene.getNavigationInfo()._vf.headlight) : 0;
         property.TEXTURED         = (texture || property.TEXT) ? 1 : 0;
         property.TEXTRAFO         = (appearance && appearance._cf.textureTransform.node) ? 1 : 0;
@@ -10699,6 +10789,7 @@ x3dom.Utils.generateProperties = function (viewarea, shape)
                                      (property.BITLODGEOMETRY && geometry.hasColor()) ||
                                      (property.POPGEOMETRY    && geometry.hasColor()) ||
                                      (geometry._vf.color !== undefined && geometry._vf.color.length > 0)) ? 1 : 0;
+        
         property.GAMMACORRECTION  = environment._vf.gammaCorrectionDefault;
 	}
 	
@@ -10924,6 +11015,11 @@ x3dom.States = function (x3dElem) {
      *
      */
     this.update = function () {
+        if (!x3dElem.runtime && this.updateMethodID !== undefined) {
+            clearInterval(this.updateMethodID);
+            return;
+        }
+
         var infos = x3dElem.runtime.states.infos;
         var measurements = x3dElem.runtime.states.measurements;
 
@@ -10932,25 +11028,23 @@ x3dom.States = function (x3dElem) {
 
         //Create list items
         for (var m in measurements) {
-            if (!measurements.hasOwnProperty(m)) {
-                continue;
+            if (measurements.hasOwnProperty(m)) {
+                infoItem = document.createElement('li');
+                infoItem.className = 'x3dom-states-item';
+
+                infoTitle = document.createElement('div');
+                infoTitle.className = 'x3dom-states-item-title';
+                infoTitle.appendChild(document.createTextNode(m));
+
+                infoValue = document.createElement('div');
+                infoValue.className = 'x3dom-states-item-value';
+                infoValue.appendChild(document.createTextNode(this.toFixed(measurements[m])));
+
+                infoItem.appendChild(infoTitle);
+                infoItem.appendChild(infoValue);
+
+                this.measureList.appendChild(infoItem);
             }
-
-            infoItem = document.createElement('li');
-            infoItem.className = 'x3dom-states-item';
-
-            infoTitle = document.createElement('div');
-            infoTitle.className = 'x3dom-states-item-title';
-            infoTitle.appendChild(document.createTextNode(m));
-
-            infoValue = document.createElement('div');
-            infoValue.className = 'x3dom-states-item-value';
-            infoValue.appendChild(document.createTextNode(this.toFixed(measurements[m])));
-
-            infoItem.appendChild(infoTitle);
-            infoItem.appendChild(infoValue);
-
-            this.measureList.appendChild(infoItem);
         }
 
         //Clear info list
@@ -10976,7 +11070,7 @@ x3dom.States = function (x3dElem) {
         }
     };
 
-    window.setInterval(function () {
+    this.updateMethodID = window.setInterval(function () {
         that.update();
     }, 1000);
 
@@ -13010,7 +13104,7 @@ x3dom.DrawableCollection.prototype.cull = function (transform, graphState, singl
     var volume = node.getVolume();      // create on request
     var MASK_SET = 63;  // 2^6-1, i.e. all sides of the volume
 
-    if (this.frustumCulling) {
+    if (this.frustumCulling && graphState.needCulling) {
         var wvol;
 
         if (singlePath && !graphState.worldVolume.isValid()) {
@@ -13048,14 +13142,15 @@ x3dom.DrawableCollection.prototype.cull = function (transform, graphState, singl
 
         graphState.coverage = (r * 2.0) / projPixelLength;
 
-        if (this.smallFeatureThreshold > 0 && graphState.coverage < this.smallFeatureThreshold) {
+        if (this.smallFeatureThreshold > 0 && graphState.coverage < this.smallFeatureThreshold && 
+            graphState.needCulling) {
             return 0;   // differentiate between outside and this case
         }
     }
 
     // not culled, incr node cnt
     this.numberOfNodes++;
-
+    
     return planeMask;   // >0, inside
 };
 
@@ -14093,7 +14188,7 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
     var that = this;
 	this.canvasIdx = canvasIdx;
 
-    this.initContext = function(canvas, forbidMobileShaders, forceMobileShaders, tryWebGL2, tryIE11)
+    this.initContext = function(canvas, forbidMobileShaders, forceMobileShaders, forceFlashForIE, tryWebGL2)
     {
         x3dom.debug.logInfo("Initializing X3DCanvas for [" + canvas.id + "]");
         var gl = x3dom.gfx_webgl(canvas, forbidMobileShaders, forceMobileShaders, tryWebGL2, x3dElem);
@@ -14104,10 +14199,16 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
             return null;
         } else {
             var webglVersion = parseFloat(x3dom.caps.VERSION.match(/\d+\.\d+/)[0]);
-            if (webglVersion < 1.0 && !tryIE11) {
-                x3dom.debug.logError("No valid 3D context found...");
-                this.x3dElem.removeChild(canvas);
-                return null;
+            if (webglVersion < 1.0) {
+                console.log(forceFlashForIE);
+                if (forceFlashForIE) {
+                    x3dom.debug.logError("No valid 3D context found...");
+                    this.x3dElem.removeChild(canvas);
+                    return null;
+                } else {
+                    x3dom.debug.logError("WebGL version " + x3dom.caps.VERSION +
+                        " lacks important WebGL/GLSL features needed for shadows, special vertex attribute types, etc.!");
+                }
             }
         }
         
@@ -14233,7 +14334,15 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
                     version = "dev";
                 }
                 else {
-                    version = x3dom.versionInfo.version.substr(3);
+                    //Get modification number
+                    var modification = test.substr(test.length-1);
+
+                    //Check if modification number is greater than 0
+                    if(modification > 0) {
+                        version = x3dom.versionInfo.version;
+                    } else {
+                        version = x3dom.versionInfo.version.substr(3);
+                    }
                 }
 
                 swf_path = "http://www.x3dom.org/download/" + version + "/x3dom.swf";
@@ -14496,7 +14605,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
         progressDiv.oncontextmenu = progressDiv.onmousedown = function(evt) {
             evt.preventDefault();
             evt.stopPropagation();
-            evt.returnValue = false;
             return false;
         };
         return progressDiv;
@@ -14530,10 +14638,10 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 		this.canvas = this.createHTMLCanvas(x3dElem);
 		this.canvas.parent = this;
 		this.gl = this.initContext( this.canvas, 
-		            (this.backend.search("desktop") >= 0), 
+		            (this.backend.search("desktop") >= 0),
 		            (this.backend.search("mobile") >= 0),
-                    (this.backend.search("webgl2") >= 0),
-                    (this.backend.search("ie11") >= 0));
+                    (this.backend.search("flashie") >= 0),
+                    (this.backend.search("webgl2") >= 0));
 		this.backend = 'webgl';
 		if (this.gl == null)
 		{
@@ -14569,22 +14677,23 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
             case "width":
                 that.canvas.setAttribute("width", newVal);
-                if (that.doc._viewarea) {
+                if (that.doc && that.doc._viewarea) {
                     that.doc._viewarea._width = parseInt(that.canvas.getAttribute("width"), 0);
+                    that.doc.needRender = true;
                 }
                 break;
 
             case "height":
                 that.canvas.setAttribute("height", newVal);
-                if (that.doc._viewarea) {
+                if (that.doc && that.doc._viewarea) {
                     that.doc._viewarea._height = parseInt(that.canvas.getAttribute("height"), 0);
+                    that.doc.needRender = true;
                 }
                 break;
 
             default:
+                break;
         }
-
-        that.doc.needRender = true;
     };
 
     var runtimeEnabled = x3dElem.getAttribute("runtimeEnabled");
@@ -14639,7 +14748,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
         this.canvas.oncontextmenu = function(evt) {
             evt.preventDefault();
             evt.stopPropagation();
-            evt.returnValue = false;
             return false;
         };
         
@@ -14679,8 +14787,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 				
 				this.parent.doc.onMousePress(that.gl, this.mouse_drag_x, this.mouse_drag_y, this.mouse_button);
 				this.parent.doc.needRender = true;
-				
-				evt.returnValue = true;
 			}
         }, false);
 
@@ -14692,8 +14798,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
 				this.parent.doc.onMouseRelease(that.gl, this.mouse_drag_x, this.mouse_drag_y, this.mouse_button, prev_mouse_button);
 				this.parent.doc.needRender = true;
-				
-				evt.returnValue = true;
 			}
         }, false);
 
@@ -14704,8 +14808,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
 				this.parent.doc.onMouseOver(that.gl, this.mouse_drag_x, this.mouse_drag_y, this.mouse_button);
 				this.parent.doc.needRender = true;
-				
-				evt.returnValue = true;
 			}
         }, false);
 
@@ -14716,8 +14818,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
 				this.parent.doc.onMouseOut(that.gl, this.mouse_drag_x, this.mouse_drag_y, this.mouse_button);
 				this.parent.doc.needRender = true;
-				
-				evt.returnValue = true;
 			}
         }, false);
 
@@ -14733,8 +14833,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
 				this.parent.doc.onDoubleClick(that.gl, this.mouse_drag_x, this.mouse_drag_y);
 				this.parent.doc.needRender = true;
-				
-				evt.returnValue = true;
 			}
         }, false);
 
@@ -14761,7 +14859,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 				// deliberately different for performance reasons
 				evt.preventDefault();
 				evt.stopPropagation();
-				evt.returnValue = false;
 			}
         }, false);
 
@@ -14776,7 +14873,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
                 evt.preventDefault();
                 evt.stopPropagation();
-                evt.returnValue = false;
 			}
         }, false);
 
@@ -14784,14 +14880,13 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 			if(!this.isMulti) {
                 this.focus();
 
-				this.mouse_drag_y -= 0.1 * evt.wheelDeltaY;
+				this.mouse_drag_y -= 0.1 * evt.wheelDelta;
 
 				this.parent.doc.onDrag(that.gl, this.mouse_drag_x, this.mouse_drag_y, 2);
 				this.parent.doc.needRender = true;
 
                 evt.preventDefault();
                 evt.stopPropagation();
-                evt.returnValue = false;
 			}
         }, false);
 
@@ -14803,7 +14898,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
                 this.parent.doc.onKeyPress(evt.charCode);
             }
             this.parent.doc.needRender = true;
-            evt.returnValue = true;
         }, true);
 
         // in webkit special keys are only handled on key-up
@@ -14813,7 +14907,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
                 this.parent.doc.onKeyUp(evt.keyCode);
             }
             this.parent.doc.needRender = true;
-            evt.returnValue = true;
         }, true);
 
         this.canvas.addEventListener('keydown', function (evt) {
@@ -14822,7 +14915,6 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
                 this.parent.doc.onKeyDown(evt.keyCode);
             }
             this.parent.doc.needRender = true;
-            evt.returnValue = true;
         }, true);
 
 
@@ -14936,7 +15028,7 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
             var i, pos;
 			for(i = 0; i < evt.touches.length; i++) {
 				pos = this.parent.mousePosition(evt.touches[i]);
-				touches.lastLayer.push(new Array(evt.touches[i].identifier, new x3dom.fields.SFVec2f(pos.x,pos.y)));
+				touches.lastLayer.push([evt.touches[i].identifier, new x3dom.fields.SFVec2f(pos.x,pos.y)]);
 			}
            
 			if(touches.numTouches < 1 && evt.touches.length == 1) {
@@ -15198,15 +15290,14 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
     */
     this.mousePosition = function(evt)
     {
-        var convertPoint = window.webkitConvertPointFromNodeToPage;
         var x = 0, y = 0;
 
         if ( "getBoundingClientRect" in document.documentElement ) {
             var elem = evt.target.offsetParent;    // should be x3dElem
     		var box = elem.getBoundingClientRect();
     		
-    		var scrollLeft =  window.pageXOffset || document.body.scrollLeft;
-    		var scrollTop =  window.pageYOffset || document.body.scrollTop;
+    		var scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+    		var scrollTop  = window.pageYOffset || document.documentElement.scrollTop;
             
             var compStyle = document.defaultView.getComputedStyle(elem, null);
             
@@ -15219,14 +15310,8 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
     		x = Math.round(evt.pageX - (box.left + paddingLeft + borderLeftWidth + scrollLeft));
     		y = Math.round(evt.pageY - (box.top + paddingTop + borderTopWidth + scrollTop));
         }
-        else if (convertPoint) {
-            var point = convertPoint(evt.target, new WebKitPoint(0, 0));
-
-            x = Math.round(point.x);
-            y = Math.round(point.y);
-        }
         else {
-    		x3dom.debug.logError('NO getBoundingClientRect, NO webkitConvertPointFromNodeToPage');
+    		x3dom.debug.logError('NO getBoundingClientRect');
     	}
     	
     	return new x3dom.fields.SFVec2f(x, y);
@@ -15235,90 +15320,76 @@ x3dom.X3DCanvas = function(x3dElem, canvasIdx) {
 
 x3dom.X3DCanvas.prototype.tick = function()
 {
-    try {
-        var runtime = this.x3dElem.runtime;
+    var runtime = this.x3dElem.runtime;
+    var d = new Date().getTime();
+    var diff = d - this.lastTimeFPSWasTaken;
 
-        var d = new Date().getTime();
-        var diff = d - this.lastTimeFPSWasTaken;
+    var fps = 1000.0 / (d - this.fps_t0);
+    this.fps_t0 = d;
 
-        var fps = 1000.0 / (d - this.fps_t0);
-        this.fps_t0 = d;
+    // update routes and stuff
+    this.doc.advanceTime(d / 1000.0);
+    var animD = new Date().getTime() - d;
 
-        // update routes and stuff
-        this.doc.advanceTime(d / 1000.0);
-        var animD = new Date().getTime() - d;
+    if (this.doc.needRender) {
+        // calc average frames per second
+        if (diff >= 1000) {
+            runtime.fps = this.framesSinceLastTime / (diff / 1000.0);
+            runtime.addMeasurement('FPS', runtime.fps);
 
-        if (this.doc.needRender) {
-            // calc average frames per second
-            if (diff >= 1000) {
-                runtime.fps = this.framesSinceLastTime / (diff / 1000.0);
-                runtime.addMeasurement('FPS', runtime.fps);
+            this.framesSinceLastTime = 0;
+            this.lastTimeFPSWasTaken = d;
+        }
+        this.framesSinceLastTime++;
 
-                this.framesSinceLastTime = 0;
-                this.lastTimeFPSWasTaken = d;
-            }
-            this.framesSinceLastTime++;
+        runtime.addMeasurement('ANIM', animD);
 
-            runtime.addMeasurement('ANIM', animD);
+        if (runtime.isReady == false) {
+            runtime.ready();
+            runtime.isReady = true;
+        }
 
-            if (runtime.isReady == false) {
-                runtime.ready();
-                runtime.isReady = true;
-            }
+        runtime.enterFrame();
 
-            runtime.enterFrame();
+        if (this.backend == 'flash') {
+            if (this.isFlashReady) {
+                this.canvas.setFPS({fps: fps});
 
-            if (this.backend == 'flash') {
-                if (this.isFlashReady) {
-                    this.canvas.setFPS({fps: fps});
-
-                    this.doc.needRender = false;
-                    this.doc.render(this.gl);
-                }
-            }
-            else {
-                // picking might require another pass
                 this.doc.needRender = false;
                 this.doc.render(this.gl);
-
-                if (!this.doc._scene._vf.doPickPass)
-                    runtime.removeMeasurement('PICKING');
             }
+        }
+        else {
+            // picking might require another pass
+            this.doc.needRender = false;
+            this.doc.render(this.gl);
 
-            runtime.exitFrame();
+            if (!this.doc._scene._vf.doPickPass)
+                runtime.removeMeasurement('PICKING');
         }
 
-        if (this.progressDiv) {
-            if (this.doc.downloadCount > 0) {
-                runtime.addInfo("#LOADS:", this.doc.downloadCount);
-            } else {
-                runtime.removeInfo("#LOADS:");
-            }
+        runtime.exitFrame();
+    }
 
-            if (this.doc.properties.getProperty("showProgress") !== 'false') {
-                if (this.progressDiv) {
-                    this.progressDiv.childNodes[0].textContent = 'Loading: ' + (+this.doc.downloadCount);
-                    if (this.doc.downloadCount > 0) {
-                        this.progressDiv.style.display = 'inline';
-                    } else {
-                        this.progressDiv.style.display = 'none';
-                    }
+    if (this.progressDiv) {
+        if (this.doc.downloadCount > 0) {
+            runtime.addInfo("#LOADS:", this.doc.downloadCount);
+        } else {
+            runtime.removeInfo("#LOADS:");
+        }
 
-                    /*
-                    var myThat = this;
-                    window.setTimeout( function() {
-                        myThat.doc.downloadCount = 0;
-                        myThat.progressDiv.style.display = 'none';
-                    }, 10000 );
-                    */
+        if (this.doc.properties.getProperty("showProgress") !== 'false') {
+            if (this.progressDiv) {
+                this.progressDiv.childNodes[0].textContent = 'Loading: ' + (+this.doc.downloadCount);
+                if (this.doc.downloadCount > 0) {
+                    this.progressDiv.style.display = 'inline';
+                } else {
+                    this.progressDiv.style.display = 'none';
                 }
-            } else {
-                this.progressDiv.style.display = 'none';
             }
+        } else {
+            this.progressDiv.style.display = 'none';
         }
-    } catch (e) {
-        x3dom.debug.logException(e);
-        throw e;
     }
 };
 
@@ -15338,9 +15409,11 @@ x3dom.X3DCanvas.prototype.load = function(uri, sceneElemPos, settings) {
 
 			// requestAnimationFrame https://cvs.khronos.org/svn/repos/registry/trunk/public/webgl/sdk/demos/common/webgl-utils.js
 			(function mainloop(){
-                x3dCanvas.watchForResize();
-        		x3dCanvas.tick();
-			    window.requestAnimFrame(mainloop, x3dCanvas);
+                if (x3dCanvas.doc && x3dCanvas.x3dElem.runtime) {
+                    x3dCanvas.watchForResize();
+                    x3dCanvas.tick();
+                    window.requestAnimFrame(mainloop, x3dCanvas);
+                }
 		    })();
 
         } else {
@@ -15935,10 +16008,7 @@ x3dom.Runtime.prototype.fitAll = function(updateCenterOfRotation)
     var scene = this.canvas.doc._scene;
     scene.updateVolume();
 
-    var min = x3dom.fields.SFVec3f.copy(scene._lastMin);
-    var max = x3dom.fields.SFVec3f.copy(scene._lastMax);
-
-    this.canvas.doc._viewarea.fit(min, max, updateCenterOfRotation);
+    this.canvas.doc._viewarea.fit(scene._lastMin, scene._lastMax, updateCenterOfRotation);
 };
 
 /**
@@ -15964,12 +16034,20 @@ x3dom.Runtime.prototype.fitObject = function(obj, updateCenterOfRotation)
         var vol = obj._x3domNode.getVolume();
         vol.getBounds(min, max);
 
-        if (!x3dom.isa(obj._x3domNode, x3dom.nodeTypes.Transform))
-        {
-            var mat = obj._x3domNode.getCurrentTransform();
+        var mat = obj._x3domNode.getCurrentTransform();
 
-            min = mat.multMatrixPnt(min);
-            max = mat.multMatrixPnt(max);
+        min = mat.multMatrixPnt(min);
+        max = mat.multMatrixPnt(max);
+
+        //TODO: revise separation of "getVolume" and "getCurrentTransform"
+        //      for the transform nodes - currently, both "overlap" because
+        //      both include the transform's own matrix
+        //      but which is what you usually expect from both methods...
+        if (x3dom.isa(obj._x3domNode, x3dom.nodeTypes.X3DTransformNode))
+        {
+            var invMat = obj._x3domNode._trafo.inverse();
+            min = invMat.multMatrixPnt(min);
+            max = invMat.multMatrixPnt(max);
         }
 
         this.canvas.doc._viewarea.fit(min, max, updateCenterOfRotation);
@@ -16614,13 +16692,20 @@ x3dom.userAgentFeature = {
 
 
 (function loadX3DOM() {
+    "use strict";
 
     var onload = function() {
         var i,j;  // counters
 
         // Search all X3D elements in the page
-        var x3ds = document.getElementsByTagName('X3D');
-        var w3sg = document.getElementsByTagName('webSG');	// FIXME
+        var x3ds_unfiltered = document.getElementsByTagName('X3D');
+        var x3ds = [];
+
+        // check if element already has been processed
+        for (i=0; i < x3ds_unfiltered.length; i++) {
+            if (x3ds_unfiltered[i].hasRuntime === undefined)
+                x3ds.push(x3ds_unfiltered[i]);
+        }
 
         // ~~ Components and params {{{ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         var params;
@@ -16681,10 +16766,8 @@ x3dom.userAgentFeature = {
                         x3dom.loadJS(components[j] + ".js", prefix);
                     }
                 }
-            }
 
-            // src=foo.x3d adding inline node, not a good idea, but...
-            if (typeof X3DOM_SECURITY_OFF != 'undefined' && X3DOM_SECURITY_OFF === true) {
+                // src=foo.x3d adding inline node, not a good idea, but...
                 if (x3ds[i].getAttribute("src")) {
                     var _scene = document.createElement("scene");
                     var _inl = document.createElement("Inline");
@@ -16707,12 +16790,11 @@ x3dom.userAgentFeature = {
             n.hasRuntime = true;
             return n;
         });
-        w3sg = Array.map(w3sg, function (n) {
-            n.hasRuntime = false;
-            return n;
-        });
-        
+
+        var w3sg = document.getElementsByTagName('webSG');	// THINKABOUTME: shall we still support exp. WebSG?!
+
         for (i=0; i<w3sg.length; i++) {
+            w3sg[i].hasRuntime = false;
             x3ds.push(w3sg[i]);
         }
 
@@ -16742,8 +16824,10 @@ x3dom.userAgentFeature = {
                 x3dom.insertActiveX(x3d_element);
                 continue;
             }
-        
-            x3dcanvas = new x3dom.X3DCanvas(x3d_element, i);
+
+            x3dcanvas = new x3dom.X3DCanvas(x3d_element, x3dom.canvases.length);
+
+            x3dom.canvases.push(x3dcanvas);
 
             if (x3dcanvas.gl === null) {
 
@@ -16802,8 +16886,6 @@ x3dom.userAgentFeature = {
                 x3ds[i].runtime.processIndicator(false);
             }
 
-            x3dom.canvases.push(x3dcanvas);
-
 			t1 = new Date().getTime() - t0;
             x3dom.debug.logInfo("Time for setup and init of GL element no. " + i + ": " + t1 + " ms.");
         }
@@ -16832,14 +16914,8 @@ x3dom.userAgentFeature = {
         }
     };
     
-    /** Initializes an <x3d> root element that was added after document load.
-     *
-     *  If there already was an <x3d> element, it needs to be removed before:
-     *  var x3d = document.getElementsByTagName("x3d")[0];
-	 *	x3d.parentNode.removeChild(x3d);
-     */
+    /** Initializes an <x3d> root element that was added after document load. */
     x3dom.reload = function() {
-        onunload();
         onload();
     };
 	
@@ -16938,11 +17014,12 @@ x3dom.Cache = function () {
 /**
  * Returns a Texture 2D
  */
-x3dom.Cache.prototype.getTexture2D = function (gl, doc, url, bgnd, withCredentials, scale) {
+x3dom.Cache.prototype.getTexture2D = function (gl, doc, url, bgnd, withCredentials, scale, genMipMaps) {
     var textureIdentifier = url;
 
     if (this.textures[textureIdentifier] === undefined) {
-        this.textures[textureIdentifier] = x3dom.Utils.createTexture2D(gl, doc, url, bgnd, withCredentials, scale);
+        this.textures[textureIdentifier] = x3dom.Utils.createTexture2D(
+                                           gl, doc, url, bgnd, withCredentials, scale, genMipMaps);
     }
 
     return this.textures[textureIdentifier];
@@ -16951,7 +17028,7 @@ x3dom.Cache.prototype.getTexture2D = function (gl, doc, url, bgnd, withCredentia
 /**
  * Returns a Cube Texture
  */
-x3dom.Cache.prototype.getTextureCube = function (gl, doc, url, bgnd, withCredentials, scale) {
+x3dom.Cache.prototype.getTextureCube = function (gl, doc, url, bgnd, withCredentials, scale, genMipMaps) {
     var textureIdentifier = "";
 
     for (var i = 0; i < url.length; ++i) {
@@ -16959,7 +17036,8 @@ x3dom.Cache.prototype.getTextureCube = function (gl, doc, url, bgnd, withCredent
     }
 
     if (this.textures[textureIdentifier] === undefined) {
-        this.textures[textureIdentifier] = x3dom.Utils.createTextureCube(gl, doc, url, bgnd, withCredentials, scale);
+        this.textures[textureIdentifier] = x3dom.Utils.createTextureCube(
+                                           gl, doc, url, bgnd, withCredentials, scale, genMipMaps);
     }
 
     return this.textures[textureIdentifier];
@@ -17014,6 +17092,9 @@ x3dom.Cache.prototype.getShader = function (gl, shaderIdentifier) {
             case x3dom.shader.NORMAL:
                 program = new x3dom.shader.NormalShader(gl);
                 break;
+            case x3dom.shader.TEXTURE_REFINEMENT:
+                program = new x3dom.shader.TextureRefinementShader(gl);
+                break;
             default:
                 break;
         }
@@ -17038,7 +17119,7 @@ x3dom.Cache.prototype.getDynamicShader = function (gl, viewarea, shape) {
 
     if (this.shaders[shaderID] === undefined) {
         var program;
-        if (properties.CSHADER >= 0) {
+        if (properties.CSHADER != -1) {
             program = new x3dom.shader.ComposedShader(gl, shape);
         } else {
             program = (x3dom.caps.MOBILE && !properties.CSSHADER) ?
@@ -17062,7 +17143,7 @@ x3dom.Cache.prototype.getShaderByProperties = function (gl, shape, properties) {
     if (this.shaders[shaderID] === undefined)
     {
         var program;
-        if (properties.CSHADER >= 0) {
+        if (properties.CSHADER != -1) {
             program = new x3dom.shader.ComposedShader(gl, shape);
         } else {
             program = (x3dom.caps.MOBILE && !properties.CSSHADER) ? new x3dom.shader.DynamicMobileShader(gl, properties) :
@@ -17099,20 +17180,19 @@ x3dom.Cache.prototype.getShadowRenderingShader = function (gl, shadowedLights) {
  * Release texture and shader resources
  */
 x3dom.Cache.prototype.Release = function (gl) {
-    for (var texture in this.textures) {
-        gl.deleteTexture(this.textures[texture]);
-    }
+    Array.forEach(this.textures, function(texture) {
+        gl.deleteTexture(texture);
+    });
     this.textures = [];
 
-    for (var shaderId in this.shaders) {
-        var shader = this.shaders[shaderId];
+    Array.forEach(this.shaders, function(shader) {
         var glShaders = gl.getAttachedShaders(shader.program);
         for (var i=0; i<glShaders.length; ++i) {
             gl.detachShader(shader.program, glShaders[i]);
             gl.deleteShader(glShaders[i]);
         }
         gl.deleteProgram(shader.program)
-    }
+    });
     this.shaders = [];
 };
 
@@ -17243,7 +17323,7 @@ x3dom.Texture.prototype.update = function()
 
 x3dom.Texture.prototype.updateTexture = function()
 {
-	var gl  = this.gl;
+    var gl  = this.gl;
 	var doc = this.doc;
 	var tex = this.node;
 	
@@ -17269,34 +17349,34 @@ x3dom.Texture.prototype.updateTexture = function()
 	} else {
 		this.format = gl.RGBA;
 	}
-	
-	//Looking for child texture
-	var childTex = (tex._video !== undefined && 
-					tex._video !== null && 
-					tex._needPerFrameUpdate !== undefined && 
-					tex._needPerFrameUpdate === true);
-	
-	//Set texture min, mag, wrapS and wrapT
-	if (tex._cf.textureProperties.node !== null) {
+
+    //Set texture min, mag, wrapS and wrapT
+    if (tex._cf.textureProperties.node !== null) {
 		var texProp = tex._cf.textureProperties.node;
-		
-		this.wrapS = x3dom.Utils.boundaryModesDic(gl, texProp._vf.boundaryModeS);
+
+        this.wrapS = x3dom.Utils.boundaryModesDic(gl, texProp._vf.boundaryModeS);
         this.wrapT = x3dom.Utils.boundaryModesDic(gl, texProp._vf.boundaryModeT);
 
 		this.minFilter = x3dom.Utils.minFilterDic(gl, texProp._vf.minificationFilter);
 		this.magFilter = x3dom.Utils.magFilterDic(gl, texProp._vf.magnificationFilter);
-		
+
 		if (texProp._vf.generateMipMaps === true) {
 			this.genMipMaps = true;
-						
+
 			if (this.minFilter == gl.NEAREST) {
 				this.minFilter  = gl.NEAREST_MIPMAP_NEAREST;
 			} else if (this.minFilter == gl.LINEAR) {
 				this.minFilter  = gl.LINEAR_MIPMAP_LINEAR;
 			}
+
+            if (this.texture && (this.texture.ready || this.texture.textureCubeReady)) {
+                gl.bindTexture(this.type, this.texture);
+                gl.generateMipmap(this.type);
+                gl.bindTexture(this.type, null);
+            }
 		} else {
 			this.genMipMaps = false;
-			
+
 			if ( (this.minFilter == gl.LINEAR_MIPMAP_LINEAR) ||
 				 (this.minFilter == gl.LINEAR_MIPMAP_NEAREST) ) {
 				this.minFilter  = gl.LINEAR;
@@ -17309,11 +17389,25 @@ x3dom.Texture.prototype.updateTexture = function()
 		if (tex._vf.repeatS == false || this.samplerName == "displacementMap") {
 			this.wrapS = gl.CLAMP_TO_EDGE;
 		}
+        else
+        {
+            this.wrapS = gl.REPEAT;
+        }
 		if (tex._vf.repeatT == false || this.samplerName == "displacementMap") {
 			this.wrapT = gl.CLAMP_TO_EDGE;
 		}
+        else
+        {
+            this.wrapT = gl.REPEAT;
+        }
 	}
-	
+
+    //Looking for child texture
+    var childTex = (tex._video !== undefined &&
+                    tex._video !== null &&
+                    tex._needPerFrameUpdate !== undefined &&
+                    tex._needPerFrameUpdate === true);
+
 	//Set texture
 	if (tex._isCanvas && tex._canvas)
 	{
@@ -17322,9 +17416,13 @@ x3dom.Texture.prototype.updateTexture = function()
 		}
         this.texture.width  = tex._canvas.width;
         this.texture.height = tex._canvas.height;
+        this.texture.ready = true;
 
 		gl.bindTexture(this.type, this.texture);
         gl.texImage2D(this.type, 0, this.format, this.format, gl.UNSIGNED_BYTE, tex._canvas);
+        if (this.genMipMaps) {
+            gl.generateMipmap(this.type);
+        }
 		gl.bindTexture(this.type, null);
 	}
 	else if (x3dom.isa(tex, x3dom.nodeTypes.RenderedTexture))
@@ -17336,6 +17434,9 @@ x3dom.Texture.prototype.updateTexture = function()
             this.texture = null;
             x3dom.debug.logError("Try updating RenderedTexture without FBO initialized!");
         }
+        if (this.texture) {
+            this.texture.ready = true;
+        }
 	}
 	else if (x3dom.isa(tex, x3dom.nodeTypes.PixelTexture))
 	{
@@ -17344,6 +17445,7 @@ x3dom.Texture.prototype.updateTexture = function()
 		}
         this.texture.width  = tex._vf.image.width;
         this.texture.height = tex._vf.image.height;
+        this.texture.ready = true;
 		
 		var pixelArr = tex._vf.image.toGL();
 		var pixelArrfont_size = tex._vf.image.width * tex._vf.image.height * tex._vf.image.comp;
@@ -17359,6 +17461,9 @@ x3dom.Texture.prototype.updateTexture = function()
         gl.texImage2D(this.type, 0, this.format, 
                       tex._vf.image.width, tex._vf.image.height, 0, 
                       this.format, gl.UNSIGNED_BYTE, pixels);
+        if (this.genMipMaps) {
+            gl.generateMipmap(this.type);
+        }
 		gl.bindTexture(this.type, null);
 	}
 	else if (x3dom.isa(tex, x3dom.nodeTypes.MovieTexture) || childTex)
@@ -17405,7 +17510,11 @@ x3dom.Texture.prototype.updateTexture = function()
 		{	
 			gl.bindTexture(that.type, that.texture);
 			gl.texImage2D(that.type, 0, that.format, that.format, gl.UNSIGNED_BYTE, tex._video);
+            if (that.genMipMaps) {
+                gl.generateMipmap(that.type);
+            }
 			gl.bindTexture(that.type, null);
+            that.texture.ready = true;
 			doc.needRender = true;
 		};
 		
@@ -17436,12 +17545,12 @@ x3dom.Texture.prototype.updateTexture = function()
 	else if (x3dom.isa(tex, x3dom.nodeTypes.X3DEnvironmentTextureNode)) 
 	{
 		this.texture = this.cache.getTextureCube(gl, doc, tex.getTexUrl(), false, 
-		                                         tex._vf.withCredentials, tex._vf.scale);
+		                                         tex._vf.withCredentials, tex._vf.scale, this.genMipMaps);
 	}
 	else 
 	{
 		this.texture = this.cache.getTexture2D(gl, doc, tex._nameSpace.getURL(tex._vf.url[0]), 
-		                                       false, tex._vf.withCredentials, tex._vf.scale);
+		                                       false, tex._vf.withCredentials, tex._vf.scale, this.genMipMaps);
 	}
 };
 
@@ -17612,6 +17721,7 @@ x3dom.shader.SHADOW = "shadow";
 x3dom.shader.BLUR = "blur";
 x3dom.shader.DEPTH = "depth";
 x3dom.shader.NORMAL = "normal";
+x3dom.shader.TEXTURE_REFINEMENT = "textureRefinement";
 
 /*
  * X3DOM JavaScript Library
@@ -17894,10 +18004,9 @@ x3dom.shader.light = function(numLights) {
 						"uniform float light"+l+"_ShadowIntensity;\n";
 	}
 	
-	shaderPart += 	"void lighting(in float lType, in vec3 lLocation, in vec3 lDirection, in vec3 lColor, in vec3 lAttenuation, " + 
+	shaderPart += 	"vec3 lighting(in float lType, in vec3 lLocation, in vec3 lDirection, in vec3 lColor, in vec3 lAttenuation, " +
 					"in float lRadius, in float lIntensity, in float lAmbientIntensity, in float lBeamWidth, " +
-					"in float lCutOffAngle, in vec3 N, in vec3 V, inout vec3 ambient, inout vec3 diffuse, " +
-					"inout vec3 specular)\n" +
+					"in float lCutOffAngle, in vec3 N, in vec3 V)\n" +
 					"{\n" +
 					"   vec3 L;\n" +
 					"   float spot = 1.0, attentuation = 0.0;\n" +
@@ -17922,15 +18031,16 @@ x3dom.shader.light = function(numLights) {
 					"   }\n" +
 					
 					"   vec3  H = normalize( L + V );\n" +
-					"   float NdotL = max(0.0, dot(L, N));\n" +
-					"   float NdotH = max(0.0, dot(H, N));\n" +
+					"   float NdotL = clamp(dot(L, N), 0.0, 1.0);\n" +
+					"   float NdotH = clamp(dot(H, N), 0.0, 1.0);\n" +
 					
 					"   float ambientFactor  = lAmbientIntensity * ambientIntensity;\n" +
 					"   float diffuseFactor  = lIntensity * NdotL;\n" +
 					"   float specularFactor = lIntensity * pow(NdotH, shininess*128.0);\n" +
-					"   ambient  += lColor * ambientFactor * attentuation * spot;\n" +
-					"   diffuse  += lColor * diffuseFactor * attentuation * spot;\n" +
-					"   specular += lColor * specularFactor * attentuation * spot;\n" +  
+                    "   return vec3(ambientFactor, diffuseFactor, specularFactor) * attentuation * spot;\n" +
+					//"   ambient  += lColor * ambientFactor * attentuation * spot;\n" +
+					//"   diffuse  += lColor * diffuseFactor * attentuation * spot;\n" +
+					//"   specular += lColor * specularFactor * attentuation * spot;\n" +
                     "}\n";
 						
 	return shaderPart;
@@ -18406,9 +18516,9 @@ x3dom.shader.DynamicShader.prototype.generateVertexShader = function(gl, propert
     gl.compileShader(vertexShader);
 		
 	if(!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)){
+        x3dom.debug.logInfo("VERTEX:\n" + shader);
 		x3dom.debug.logError("VertexShader " + gl.getShaderInfoLog(vertexShader));		
 	}
-	//x3dom.debug.logInfo("VERTEX:\n" + shader);
 	
 	return vertexShader;
 };
@@ -18423,7 +18533,7 @@ x3dom.shader.DynamicShader.prototype.generateFragmentShader = function(gl, prope
     			 "#endif\n\n";*/
     
   var shader = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n";
-  shader += "precision highp float;\n";
+  shader += " precision highp float;\n";
   shader += "#else\n";
   shader += " precision mediump float;\n";
   shader += "#endif\n\n";
@@ -18555,19 +18665,31 @@ x3dom.shader.DynamicShader.prototype.generateFragmentShader = function(gl, prope
 		}
 		
 		//Calculate lights
-		for(var l=0; l<properties.LIGHTS; l++) {
-			shader += " lighting(light"+l+"_Type, " +
-								"light"+l+"_Location, " +
-								"light"+l+"_Direction, " +
-								"light"+l+"_Color, " + 
-								"light"+l+"_Attenuation, " +
-								"light"+l+"_Radius, " +
-								"light"+l+"_Intensity, " + 
-								"light"+l+"_AmbientIntensity, " +
-								"light"+l+"_BeamWidth, " +
-								"light"+l+"_CutOffAngle, " +
-								"normal, eye, ambient, diffuse, specular);\n";
-		}
+        if (properties.LIGHTS) {
+            shader += "vec3 ads;\n";
+
+            for(var l=0; l<properties.LIGHTS; l++) {
+                var lightCol = "light"+l+"_Color";
+                shader += "ads = lighting(light"+l+"_Type, " +
+                                    "light"+l+"_Location, " +
+                                    "light"+l+"_Direction, " +
+                                    lightCol + ", " +
+                                    "light"+l+"_Attenuation, " +
+                                    "light"+l+"_Radius, " +
+                                    "light"+l+"_Intensity, " +
+                                    "light"+l+"_AmbientIntensity, " +
+                                    "light"+l+"_BeamWidth, " +
+                                    "light"+l+"_CutOffAngle, " +
+                                    "normal, eye);\n";
+                shader += "   ambient  += " + lightCol + " * ads.r;\n" +
+                          "   diffuse  += " + lightCol + " * ads.g;\n" +
+                          "   specular += " + lightCol + " * ads.b;\n";
+            }
+
+            shader += "ambient = clamp(ambient, 0.0, 1.0);\n";
+            shader += "diffuse = clamp(diffuse, 0.0, 1.0);\n";
+            shader += "specular = clamp(specular, 0.0, 1.0);\n";
+        }
 		
 		//Specularmap
 		if(properties.SPECMAP) {
@@ -18595,17 +18717,17 @@ x3dom.shader.DynamicShader.prototype.generateFragmentShader = function(gl, prope
 				shader += "color.a *= texColor.a;\n";
 			}
 			if(properties.BLENDING){
-				shader += "color.rgb = (emissiveColor + ambient*color.rgb + diffuse*color.rgb + specular*specularColor);\n";
+				shader += "color.rgb = (emissiveColor + clamp(ambient + diffuse, 0.0, 1.0) * color.rgb + specular*specularColor);\n";
 				if(properties.CUBEMAP) {
 					shader += "color.rgb = mix(color.rgb, texColor.rgb, vec3(0.75));\n";
 				} else {
 					shader += "color.rgb *= texColor.rgb;\n";
 				}
 			}else{
-				shader += "color.rgb = (emissiveColor + ambient*texColor.rgb + diffuse*texColor.rgb + specular*specularColor);\n";
+				shader += "color.rgb = (emissiveColor + clamp(ambient + diffuse, 0.0, 1.0) * texColor.rgb + specular*specularColor);\n";
 			}
 		}else{
-			shader += "color.rgb = (emissiveColor + ambient*color.rgb + diffuse*color.rgb + specular*specularColor);\n";
+			shader += "color.rgb = (emissiveColor + clamp(ambient + diffuse, 0.0, 1.0) * color.rgb + specular*specularColor);\n";
 		}
 		
 	} else {
@@ -18644,6 +18766,7 @@ x3dom.shader.DynamicShader.prototype.generateFragmentShader = function(gl, prope
 	}
 
     //Output the gamma encoded result.
+    shader += "color = clamp(color, 0.0, 1.0);\n";
     shader += "gl_FragColor = " + x3dom.shader.encodeGamma(properties, "color") + ";\n";
 	
 	//End Of Shader
@@ -18654,10 +18777,10 @@ x3dom.shader.DynamicShader.prototype.generateFragmentShader = function(gl, prope
     gl.compileShader(fragmentShader);
 		
 	if(!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)){
-		x3dom.debug.logError("FragmentShader " + gl.getShaderInfoLog(fragmentShader));		
+        x3dom.debug.logInfo("FRAGMENT:\n" + shader);
+		x3dom.debug.logError("FragmentShader " + gl.getShaderInfoLog(fragmentShader));
 	}
-    //x3dom.debug.logInfo("FRAGMENT:\n" + shader);
-	
+
 	return fragmentShader;
 };
 
@@ -19037,19 +19160,31 @@ x3dom.shader.DynamicMobileShader.prototype.generateVertexShader = function(gl, p
 		}
 		
 		//Calculate lighting
-		for(var i=0; i<properties.LIGHTS; i++) {		
-			shader += " lighting(light"+i+"_Type," +
-								"light"+i+"_Location," +
-								"light"+i+"_Direction," +
-								"light"+i+"_Color," + 
-								"light"+i+"_Attenuation," +
-								"light"+i+"_Radius," +
-								"light"+i+"_Intensity," + 
-								"light"+i+"_AmbientIntensity," +
-								"light"+i+"_BeamWidth," +
-								"light"+i+"_CutOffAngle," +
-								"normalMV, eye, ambient, diffuse, specular);\n";
-		}
+        if (properties.LIGHTS) {
+            shader += "vec3 ads;\n";
+
+            for(var l=0; l<properties.LIGHTS; l++) {
+                var lightCol = "light"+l+"_Color";
+                shader += "ads = lighting(light"+l+"_Type, " +
+                          "light"+l+"_Location, " +
+                          "light"+l+"_Direction, " +
+                          lightCol + ", " +
+                          "light"+l+"_Attenuation, " +
+                          "light"+l+"_Radius, " +
+                          "light"+l+"_Intensity, " +
+                          "light"+l+"_AmbientIntensity, " +
+                          "light"+l+"_BeamWidth, " +
+                          "light"+l+"_CutOffAngle, " +
+                          "normalMV, eye);\n";
+                shader += "   ambient  += " + lightCol + " * ads.r;\n" +
+                          "   diffuse  += " + lightCol + " * ads.g;\n" +
+                          "   specular += " + lightCol + " * ads.b;\n";
+            }
+
+            shader += "ambient = clamp(ambient, 0.0, 1.0);\n";
+            shader += "diffuse = clamp(diffuse, 0.0, 1.0);\n";
+            shader += "specular = clamp(specular, 0.0, 1.0);\n";
+        }
 		
 		//Textures & blending
 		if(properties.TEXTURED  && !properties.BLENDING) {
@@ -19058,7 +19193,7 @@ x3dom.shader.DynamicMobileShader.prototype.generateVertexShader = function(gl, p
 			shader += "fragColor.rgb = (emissiveColor + specular*specularColor);\n";
 			shader += "fragColor.a = alpha;\n";
 		} else {
-			shader += "fragColor.rgb = (emissiveColor + ambient*rgb + diffuse*rgb + specular*specularColor);\n";
+			shader += "fragColor.rgb = (emissiveColor + clamp(ambient + diffuse, 0.0, 1.0) * rgb + specular*specularColor);\n";
 			shader += "fragColor.a = alpha;\n";
 		}
 	} else {
@@ -19164,7 +19299,7 @@ x3dom.shader.DynamicMobileShader.prototype.generateFragmentShader = function(gl,
 				shader += "color.a *= texColor.a;\n";
 			}
 		} else {
-			shader += "color.rgb += fragAmbient*texColor.rgb + fragDiffuse*texColor.rgb;\n";
+			shader += "color.rgb += clamp(fragAmbient + fragDiffuse, 0.0, 1.0) * texColor.rgb;\n";
 			shader += "color.a *= texColor.a;\n";
 		}
 	} 
@@ -19177,7 +19312,7 @@ x3dom.shader.DynamicMobileShader.prototype.generateFragmentShader = function(gl,
 	}
 	
 	//Output
-	shader += "gl_FragColor = color;\n";
+	shader += "gl_FragColor = clamp(color, 0.0, 1.0);\n";
 	
 	//End of shader
 	shader += "}\n";
@@ -20876,8 +21011,115 @@ x3dom.shader.BlurShader.prototype.generateFragmentShader = function(gl)
  * Philip Taylor: http://philip.html5.org
  */
 
+/**
+ * Generate the final shader program
+ */
+x3dom.shader.TextureRefinementShader = function (gl) {
+    this.program = gl.createProgram();
+
+    var vertexShader = this.generateVertexShader(gl);
+    var fragmentShader = this.generateFragmentShader(gl);
+
+    gl.attachShader(this.program, vertexShader);
+    gl.attachShader(this.program, fragmentShader);
+
+    // optional, but position should be at location 0 for performance reasons
+    gl.bindAttribLocation(this.program, 0, "position");
+
+    gl.linkProgram(this.program);
+
+    return this.program;
+};
+
+/**
+ * Generate the vertex shader
+ */
+x3dom.shader.TextureRefinementShader.prototype.generateVertexShader = function (gl) {
+    var shader = "attribute vec2 position;\n" +
+                 "varying vec2 fragTexCoord;\n" +
+                 "\n" +
+                 "void main(void) {\n" +
+                 "    fragTexCoord = (position.xy + 1.0) / 2.0;\n" +
+                 "    gl_Position = vec4(position, -1.0, 1.0);\n" +
+                 "}\n";
+
+    var vertexShader = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vertexShader, shader);
+    gl.compileShader(vertexShader);
+
+    if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        x3dom.debug.logError("[TextureRefinementShader] VertexShader " + gl.getShaderInfoLog(vertexShader));
+    }
+
+    return vertexShader;
+};
+
+/**
+ * Generate the fragment shader
+ */
+x3dom.shader.TextureRefinementShader.prototype.generateFragmentShader = function (gl) {
+    var shader = "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+                 " precision highp float;\n" +
+                 "#else\n" +
+                 " precision mediump float;\n" +
+                 "#endif\n\n";
+
+    shader += "uniform sampler2D stamp;\n" +
+              "uniform sampler2D lastTex;\n" +
+              "uniform sampler2D curTex;\n" +
+              "uniform int mode;\n" +
+              "uniform vec2 repeat;\n" +
+              "varying vec2 fragTexCoord;\n" +
+              "\n" +
+              "void init(void);\n" +
+              "void refine(void);\n" +
+              "\n" +
+              "void main(void) {\n" +
+              "    if (mode == 0) { init(); }\n" +
+              "    else { refine(); }\n" +
+              "}\n" +
+              "\n" +
+              "void init(void) {\n" +
+              "    gl_FragColor = texture2D(curTex, fragTexCoord);\n" +
+              "}\n" +
+              "\n" +
+              "void refine(void) {\n" +
+              "    vec3 red = texture2D(stamp, repeat * fragTexCoord).rgb;\n" +
+              "    vec3 v1  = texture2D(lastTex, fragTexCoord).rgb;\n" +
+              "    vec3 v2  = texture2D(curTex, fragTexCoord).rgb;\n" +
+              "    if (red.r <= 0.5) {\n" +
+              "        gl_FragColor = vec4(v1, 1.0);\n" +
+              "    }\n" +
+              "    else {\n" +
+              "        gl_FragColor = vec4(v2, 1.0);\n" +
+              "    }\n" +
+              "}\n";
+
+    var fragmentShader = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fragmentShader, shader);
+    gl.compileShader(fragmentShader);
+
+    if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        x3dom.debug.logError("[TextureRefinementShader] FragmentShader " + gl.getShaderInfoLog(fragmentShader));
+    }
+
+    return fragmentShader;
+};
+
+/*
+ * X3DOM JavaScript Library
+ * http://www.x3dom.org
+ *
+ * (C)2009 Fraunhofer IGD, Darmstadt, Germany
+ * Dual licensed under the MIT and GPL
+ *
+ * Based on code originally provided by
+ * Philip Taylor: http://philip.html5.org
+ */
+
 
 x3dom.gfx_webgl = (function () {
+    "use strict";
 
     /*****************************************************************************
      * Context constructor
@@ -20890,7 +21132,6 @@ x3dom.gfx_webgl = (function () {
         this.IG_PositionBuffer = null;
         this.cache = new x3dom.Cache();
         this.stateManager = new x3dom.StateManager(ctx3d);
-        this.activeShader = null;
     }
 
 
@@ -21027,6 +21268,7 @@ x3dom.gfx_webgl = (function () {
         var q = 0, q5;
         var textures, t;
         var vertices, positionBuffer;
+        var texCoordBuffer, normalBuffer, colorBuffer;
         var indicesBuffer, indexArray;
 
         var shape = drawable.shape;
@@ -21452,7 +21694,7 @@ x3dom.gfx_webgl = (function () {
                     vertices = null;
                 }
                 if (sp.normal !== undefined || shape._webgl.normals[q]) {
-                    var normalBuffer = gl.createBuffer();
+                    normalBuffer = gl.createBuffer();
                     shape._webgl.buffers[q5 + 2] = normalBuffer;
 
                     var normals = new Float32Array(shape._webgl.normals[q]);
@@ -21486,7 +21728,7 @@ x3dom.gfx_webgl = (function () {
                     texCoords = null;
                 }
                 if (sp.color !== undefined) {
-                    var colorBuffer = gl.createBuffer();
+                    colorBuffer = gl.createBuffer();
                     shape._webgl.buffers[q5 + 4] = colorBuffer;
 
                     var colors = new Float32Array(shape._webgl.colors[q]);
@@ -21580,7 +21822,7 @@ x3dom.gfx_webgl = (function () {
                 bgnd._webgl.shader = this.cache.getShader(gl, x3dom.shader.BACKGROUND_CUBETEXTURE);
 
                 bgnd._webgl.texture = x3dom.Utils.createTextureCube(gl, bgnd._nameSpace.doc, url,
-                    true, bgnd._vf.withCredentials, true);
+                    true, bgnd._vf.withCredentials, true, false);
             }
             else {
                 bgnd._webgl = {
@@ -21594,7 +21836,7 @@ x3dom.gfx_webgl = (function () {
                 url = bgnd._nameSpace.getURL(url[0]);
 
                 bgnd._webgl.texture = x3dom.Utils.createTexture2D(gl, bgnd._nameSpace.doc, url,
-                    true, bgnd._vf.withCredentials, true);
+                    true, bgnd._vf.withCredentials, true, false);
 
                 bgnd._webgl.primType = gl.TRIANGLE_STRIP;
 
@@ -22306,7 +22548,9 @@ x3dom.gfx_webgl = (function () {
             sp.PG_bboxShiftVec = [0, 0, 0];
         }
 
-        this.stateManager.lineWidth(2);     // bigger lines for better picking
+        if (x3dom.Utils.needLineWidth) {
+            this.stateManager.lineWidth(2);     // bigger lines for better picking
+        }
 
         for (var i = 0; i < n; i++)
         {
@@ -22522,7 +22766,9 @@ x3dom.gfx_webgl = (function () {
             }
         }
 
-        this.stateManager.lineWidth(1);
+        if (x3dom.Utils.needLineWidth) {
+            this.stateManager.lineWidth(1);
+        }
 
         gl.flush();
 
@@ -22654,6 +22900,8 @@ x3dom.gfx_webgl = (function () {
         var mat = s_app ? s_app._cf.material.node : null;
         var shader = s_app ? s_app._shader : null;
 
+        var isUserDefinedShader = shader && x3dom.isa(shader, x3dom.nodeTypes.ComposedShader);
+
         if (s_gl.csshader) {
             sp.diffuseColor = shader._vf.diffuseFactor.toGL();
             sp.specularColor = shader._vf.specularFactor.toGL();
@@ -22700,7 +22948,7 @@ x3dom.gfx_webgl = (function () {
 
         //Look for user-defined shaders
         if (shader) {
-            if (x3dom.isa(shader, x3dom.nodeTypes.ComposedShader)) {
+            if (isUserDefinedShader) {
                 for (var fName in shader._vf) {
                     if (shader._vf.hasOwnProperty(fName) && fName !== 'language') {
                         var field = shader._vf[fName];
@@ -22887,7 +23135,7 @@ x3dom.gfx_webgl = (function () {
         {
             this.stateManager.lineWidth(lineProperties._vf.linewidthScaleFactor);
         }
-        else //Set Defaults
+        else if (x3dom.Utils.needLineWidth) //Set Defaults
         {
             this.stateManager.lineWidth(1);
         }
@@ -22917,8 +23165,16 @@ x3dom.gfx_webgl = (function () {
         sp.normalMatrix = model_view_inv.transpose().toGL();
         sp.modelViewMatrixInverse = model_view_inv.toGL();
 
-        sp.projectionMatrix = mat_proj.toGL();
         sp.modelViewProjectionMatrix = mat_scene.mult(transform).toGL();
+
+        // only calculate on "request" (maybe of interest for users)
+        if (isUserDefinedShader) {
+            sp.projectionMatrix = mat_proj.toGL();
+
+            sp.worldMatrix = transform.toGL();
+            sp.worldInverseTranspose = transform.inverse().transpose().toGL();
+            sp.viewMatrixInverse = mat_view.inverse().toGL();
+        }
 
 
         //PopGeometry: adapt LOD and set shader variables
@@ -22937,12 +23193,7 @@ x3dom.gfx_webgl = (function () {
             gl.texParameteri(tex.type, gl.TEXTURE_MAG_FILTER, tex.magFilter);
             gl.texParameteri(tex.type, gl.TEXTURE_MIN_FILTER, tex.minFilter);
 
-            // TODO: this is expensive and probably only required on change, track e.g. via stateManager
-            if (tex.genMipMaps) {
-                gl.generateMipmap(tex.type);
-            }
-
-            if (!shader || !x3dom.isa(shader, x3dom.nodeTypes.ComposedShader)) {
+            if (!shader || !isUserDefinedShader) {
                 if (!sp[tex.samplerName])
                     sp[tex.samplerName] = cnt;
             }
@@ -23505,8 +23756,12 @@ x3dom.gfx_webgl = (function () {
                     scene.callEvtHandler(("on" + eventType), event);
                 }
 
-                if (scene._shadowIdMap && scene._shadowIdMap.mapping) {
+                if (scene._shadowIdMap && scene._shadowIdMap.mapping &&
+                    objId < scene._shadowIdMap.mapping.length) {
                     var shIds = scene._shadowIdMap.mapping[objId].usage;
+                    if (!line) {
+                        line = viewarea.calcViewRay(x, y, cctowc);
+                    }
                     // find corresponding dom tree object
                     for (var c = 0; c < shIds.length; c++) {
                         var shObj = scene._nameSpace.defMap[shIds[c]];
@@ -23643,7 +23898,7 @@ x3dom.gfx_webgl = (function () {
         var rentex = viewarea._doc._nodeBag.renderTextures;
         var rt_tex, rtl_i, rtl_n = rentex.length;
 
-        // for initFbo
+        // for initFBO
         var type = gl.UNSIGNED_BYTE;
         var shadowType = gl.UNSIGNED_BYTE;
         var nearestFilt = false;
@@ -23652,12 +23907,14 @@ x3dom.gfx_webgl = (function () {
             type = gl.FLOAT;
             shadowType = gl.FLOAT;
             if (!x3dom.caps.FPL_TEXTURES) {
-                nearestFilt = true;
+                nearestFilt = true;             // TODO: use correct filtering for fp-textures
             }
         }
 
         var shadowedLights, numShadowMaps;
         var i, j, n, size, sizeAvailable;
+        var texType, refinementPos;
+        var vertices = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
 
         scene.updateVolume();
 		
@@ -23676,8 +23933,8 @@ x3dom.gfx_webgl = (function () {
             // TODO: FIXME when spec ready: readPixels not (yet?) available for float textures
             // https://bugzilla.mozilla.org/show_bug.cgi?id=681903
             // https://www.khronos.org/webgl/public-mailing-list/archives/1108/msg00025.html
-            scene._webgl.fboPick = this.initFbo(gl,
-                                   scene._webgl._currFboWidth, scene._webgl._currFboHeight, true, gl.UNSIGNED_BYTE);
+            scene._webgl.fboPick = x3dom.Utils.initFBO(gl,
+                                   scene._webgl._currFboWidth, scene._webgl._currFboHeight, gl.UNSIGNED_BYTE, false, true);
             scene._webgl.fboPick.pixelData = null;
 
             //Set picking shaders
@@ -23709,11 +23966,11 @@ x3dom.gfx_webgl = (function () {
 				scene._webgl.fboShadow[i] = [];
 				
 				for (j=0; j < numShadowMaps; j++)
-					scene._webgl.fboShadow[i][j] = this.initFbo(gl, size, size, nearestFilt, shadowType);
+					scene._webgl.fboShadow[i][j] = x3dom.Utils.initFBO(gl, size, size, shadowType, false, true);
 			}
 			
 			if (scene._webgl.fboShadow.length > 0)
-				scene._webgl.fboScene = this.initFbo(gl, this.canvas.width, this.canvas.height, nearestFilt, shadowType);
+				scene._webgl.fboScene = x3dom.Utils.initFBO(gl, this.canvas.width, this.canvas.height, shadowType, false, true);
 			scene._webgl.fboBlur = [];
 						
 			//initialize blur fbo (different fbos for different sizes)
@@ -23727,24 +23984,52 @@ x3dom.gfx_webgl = (function () {
 						sizeAvailable = true;
 				}
 				if (!sizeAvailable) 
-					scene._webgl.fboBlur[scene._webgl.fboBlur.length] = this.initFbo(gl, size, size, nearestFilt, shadowType);
+					scene._webgl.fboBlur[scene._webgl.fboBlur.length] = x3dom.Utils.initFBO(gl, size, size, shadowType, false, true);
 			}
 			
 			//initialize Data for post processing
 			scene._webgl.ppBuffer = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, scene._webgl.ppBuffer);
-			var vertices = [-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1];
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);		
 			
 			scene._webgl.shadowShader = this.cache.getShader(gl, x3dom.shader.SHADOW);
+
+            // TODO; cleanup on shutdown and lazily create on first use like size-dependent variables below
+            scene._webgl.refinement = {
+                stamps: new Array(2),
+                positionBuffer: gl.createBuffer()
+            };
+            gl.bindBuffer(gl.ARRAY_BUFFER, scene._webgl.refinement.positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
             
-            // TODO; for testing do it on init, but must be refreshed on node change!
+            // This must be refreshed on node change!
             for (rtl_i = 0; rtl_i < rtl_n; rtl_i++) {
                 rt_tex = rentex[rtl_i];
+
+                texType = rt_tex.requirePingPong() ? gl.UNSIGNED_BYTE : type;
                 rt_tex._webgl = {};
-                rt_tex._webgl.fbo = this.initFbo(gl,
-                    rt_tex._vf.dimensions[0],
-                    rt_tex._vf.dimensions[1], nearestFilt, type);
+                rt_tex._webgl.fbo = x3dom.Utils.initFBO(gl,
+                    rt_tex._vf.dimensions[0], rt_tex._vf.dimensions[1], texType, false, !rt_tex.requirePingPong());
+
+                rt_tex._cleanupGLObjects = function(retainTex) {
+                    if (!retainTex)
+                        gl.deleteTexture(this._webgl.fbo.tex);
+                    if (this._webgl.fbo.rbo)
+                        gl.deleteRenderbuffer(this._webgl.fbo.rbo);
+                    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                    gl.deleteFramebuffer(this._webgl.fbo.fbo);
+                    this._webgl.fbo.rbo = null;
+                    this._webgl.fbo.fbo = null;
+                };
+
+                if (rt_tex.requirePingPong()) {
+                    refinementPos = rt_tex._vf.dimensions[0] + "x" + rt_tex._vf.dimensions[1];
+                    if (scene._webgl.refinement[refinementPos] === undefined) {
+                        scene._webgl.refinement[refinementPos] = x3dom.Utils.initFBO(gl,
+                            rt_tex._vf.dimensions[0], rt_tex._vf.dimensions[1], texType, false, false);
+                    }
+                    rt_tex._webgl.texture = null;
+                }
             }
 
             viewarea._last_mat_view = x3dom.fields.SFMatrix4f.identity();
@@ -23763,7 +24048,7 @@ x3dom.gfx_webgl = (function () {
                 scene._webgl._currFboWidth = fboWidth;
                 scene._webgl._currFboHeight = fboHeight;
 
-                scene._webgl.fboPick = this.initFbo(gl, fboWidth, fboHeight, true, scene._webgl.fboPick.typ);
+                scene._webgl.fboPick = x3dom.Utils.initFBO(gl, fboWidth, fboHeight, scene._webgl.fboPick.type, false, true);
                 scene._webgl.fboPick.pixelData = null;
 
                 x3dom.debug.logInfo("Refreshed picking FBO to size (" + fboWidth + ", " + fboHeight + ")");
@@ -23777,9 +24062,34 @@ x3dom.gfx_webgl = (function () {
                     continue;
 
                 rt_tex.invalidateGLObject();
+                if (rt_tex._cleanupGLObjects)
+                    rt_tex._cleanupGLObjects();
+                else
+                    rt_tex._cleanupGLObjects = function(retainTex) {
+                        if (!retainTex)
+                            gl.deleteTexture(this._webgl.fbo.tex);
+                        if (this._webgl.fbo.rbo)
+                            gl.deleteRenderbuffer(this._webgl.fbo.rbo);
+                        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+                        gl.deleteFramebuffer(this._webgl.fbo.fbo);
+                        this._webgl.fbo.rbo = null;
+                        this._webgl.fbo.fbo = null;
+                    };
+
+                texType = rt_tex.requirePingPong() ? gl.UNSIGNED_BYTE : type;
                 rt_tex._webgl = {};
-                rt_tex._webgl.fbo = this.initFbo(gl,
-                                    rt_tex._vf.dimensions[0], rt_tex._vf.dimensions[1], nearestFilt, type);
+                rt_tex._webgl.fbo = x3dom.Utils.initFBO(gl,
+                                    rt_tex._vf.dimensions[0], rt_tex._vf.dimensions[1], texType, false, !rt_tex.requirePingPong());
+
+                if (rt_tex.requirePingPong()) {
+                    refinementPos = rt_tex._vf.dimensions[0] + "x" + rt_tex._vf.dimensions[1];
+                    if (scene._webgl.refinement[refinementPos] === undefined) {
+                        scene._webgl.refinement[refinementPos] = x3dom.Utils.initFBO(gl,
+                            rt_tex._vf.dimensions[0], rt_tex._vf.dimensions[1], texType, false, false);
+                    }
+                    rt_tex._webgl.texture = null;
+                }
+
                 x3dom.debug.logInfo("Init/resize RenderedTexture_" + rtl_i + " to size " +
                                     rt_tex._vf.dimensions[0] + " x " + rt_tex._vf.dimensions[1]);
             }			
@@ -23803,7 +24113,7 @@ x3dom.gfx_webgl = (function () {
 					scene._webgl.fboShadow[i][0].height != size) {
 					scene._webgl.fboShadow[i] = [];
 					for (j=0;j<numShadowMaps;j++){
-						scene._webgl.fboShadow[i][j] = this.initFbo(gl, size, size, nearestFilt, shadowType);
+						scene._webgl.fboShadow[i][j] = x3dom.Utils.initFBO(gl, size, size, shadowType, false, true);
 					}
 				}			
 			}
@@ -23818,12 +24128,12 @@ x3dom.gfx_webgl = (function () {
 						sizeAvailable = true;
 				}
 				if (!sizeAvailable) 
-					scene._webgl.fboBlur[scene._webgl.fboBlur.length] = this.initFbo(gl, size, size, nearestFilt, shadowType);
+					scene._webgl.fboBlur[scene._webgl.fboBlur.length] = x3dom.Utils.initFBO(gl, size, size, shadowType, false, true);
 			}
 
 			if (scene._webgl.fboShadow.length > 0 && typeof scene._webgl.fboScene == "undefined" || scene._webgl.fboScene &&
 				(this.canvas.width != scene._webgl.fboScene.width || this.canvas.height != scene._webgl.fboScene.height)) {
-				scene._webgl.fboScene = this.initFbo(gl, this.canvas.width, this.canvas.height, nearestFilt, shadowType);
+				scene._webgl.fboScene = x3dom.Utils.initFBO(gl, this.canvas.width, this.canvas.height, shadowType, false, true);
 			}
         }
 
@@ -24062,6 +24372,8 @@ x3dom.gfx_webgl = (function () {
 
             for (rtl_i = 0; rtl_i < rtl_n; rtl_i++) {
                 rt_tex = rentex[rtl_i];
+                if (!rt_tex._webgl.fbo.fbo) // might be deleted (--> RefinementTexture when finished)
+                    continue;
 
                 this.stateManager.viewport(rtl_i * this.canvas.width / 8, 5 * this.canvas.height / 8,
                                            this.canvas.width / 8, this.canvas.height / 8);
@@ -24087,10 +24399,146 @@ x3dom.gfx_webgl = (function () {
     };
 
     /*****************************************************************************
+     * Render special PingPong-Pass
+     *****************************************************************************/
+    Context.prototype.renderPingPongPass = function (gl, viewarea, rt) {
+        var scene = viewarea._scene;
+        var refinementPos = rt._vf.dimensions[0] + "x" + rt._vf.dimensions[1];
+        var refinementFbo = scene._webgl.refinement[refinementPos];
+
+
+        // load stamp textures
+        if (rt._currLoadLevel == 0 && (!scene._webgl.refinement.stamps[0] || !scene._webgl.refinement.stamps[1])) {
+            scene._webgl.refinement.stamps[0] = this.cache.getTexture2D(gl, rt._nameSpace.doc,
+                                    rt._nameSpace.getURL(rt._vf.stamp0), false, false, false, false);
+            scene._webgl.refinement.stamps[1] = this.cache.getTexture2D(gl, rt._nameSpace.doc,
+                                    rt._nameSpace.getURL(rt._vf.stamp1), false, false, false, false);
+        }
+
+        // load next level of image
+        if (rt._currLoadLevel < rt._loadLevel) {
+            rt._currLoadLevel++;
+
+            if (rt._webgl.texture)
+                gl.deleteTexture(rt._webgl.texture);
+
+            var filename = rt._vf.url[0] + "/" + rt._currLoadLevel + "." + rt._vf.format;
+
+            rt._webgl.texture = x3dom.Utils.createTexture2D(gl, rt._nameSpace.doc,
+                                rt._nameSpace.getURL(filename), false, false, false, false);
+
+            (rt._currLoadLevel % 2 == 0) ? rt._repeat.x *= 2.0 : rt._repeat.y *= 2.0;
+        }
+
+        if (!rt._webgl.texture.ready ||
+            !scene._webgl.refinement.stamps[0].ready || !scene._webgl.refinement.stamps[1].ready)
+            return;
+
+        // first pass
+        this.stateManager.bindFramebuffer(gl.FRAMEBUFFER, refinementFbo.fbo);
+        this.stateManager.viewport(0, 0, refinementFbo.width, refinementFbo.height);
+
+        this.stateManager.disable(gl.BLEND);
+        this.stateManager.disable(gl.CULL_FACE);
+        this.stateManager.disable(gl.DEPTH_TEST);
+
+        gl.clearColor(0, 0, 0, 1);
+        gl.clearDepth(1);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        var sp = this.cache.getShader(gl, x3dom.shader.TEXTURE_REFINEMENT);
+        this.stateManager.useProgram(sp);
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, scene._webgl.refinement.positionBuffer);
+        gl.vertexAttribPointer(sp.position, 2, gl.FLOAT, false, 0, 0);
+        gl.enableVertexAttribArray(sp.position);
+
+        sp.stamp = 0;
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, scene._webgl.refinement.stamps[(rt._currLoadLevel + 1) % 2]);    // draw stamp
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
+        if (rt._currLoadLevel > 1) {
+            sp.lastTex = 1;
+            gl.activeTexture(gl.TEXTURE1);
+            gl.bindTexture(gl.TEXTURE_2D, rt._webgl.fbo.tex);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        }
+
+        sp.curTex = 2;
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, rt._webgl.texture);    // draw level image to fbo
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        sp.mode = rt._currLoadLevel - 1;
+        sp.repeat = rt._repeat.toGL();
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        // second pass
+        this.stateManager.bindFramebuffer(gl.FRAMEBUFFER, rt._webgl.fbo.fbo);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+        sp.mode = 0;
+        sp.curTex = 2;
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, refinementFbo.tex);   // draw result to fbo
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+
+        gl.disableVertexAttribArray(sp.position);
+
+        // pass done
+        this.stateManager.bindFramebuffer(gl.FRAMEBUFFER, null);
+        this.stateManager.viewport(0, 0, this.canvas.width, this.canvas.height);
+
+        if (rt._vf.autoRefinement)
+            rt.nextLevel();
+
+        if (rt._currLoadLevel == rt._vf.maxLevel)
+            rt._currLoadLevel++;
+
+        // we're finally done: cleanup/delete all helper FBOs
+        if (!rt.requirePingPong()) {
+            gl.deleteTexture(rt._webgl.texture);
+            delete rt._webgl.texture;
+
+            rt._cleanupGLObjects(true);
+        }
+
+        rt._renderedImage++;
+    };
+
+    /*****************************************************************************
      * Render RenderedTexture-Pass
      *****************************************************************************/
     Context.prototype.renderRTPass = function (gl, viewarea, rt)
     {
+        /// begin special case (progressive image refinement)
+        if (x3dom.isa(rt, x3dom.nodeTypes.RefinementTexture)) {
+            if (rt.requirePingPong()) {
+                this.renderPingPongPass(gl, viewarea, rt);
+            }
+            return;
+        }
+        /// end special case
+
         switch (rt._vf.update.toUpperCase()) {
             case "NONE":
                 return;
@@ -24419,106 +24867,6 @@ x3dom.gfx_webgl = (function () {
         //Release Texture and Shader Resources
         this.cache.Release(gl);
     };
-
-    /*****************************************************************************
-     * Start of fbo init stuff
-     *****************************************************************************/
-    Context.prototype.emptyTexImage2D = function (gl, internalFormat, width, height, format, type) {
-        try {
-            gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, null);
-        }
-        catch (e) {
-            // seems to be no longer necessary, but anyway...
-            var bytes = 3;
-            switch (internalFormat) {
-                case gl.DEPTH_COMPONENT:
-                    bytes = 3;
-                    break;
-                case gl.ALPHA:
-                    bytes = 1;
-                    break;
-                case gl.RGB:
-                    bytes = 3;
-                    break;
-                case gl.RGBA:
-                    bytes = 4;
-                    break;
-                case gl.LUMINANCE:
-                    bytes = 1;
-                    break;
-                case gl.LUMINANCE_ALPHA:
-                    bytes = 2;
-                    break;
-            }
-            var pixels = new Uint8Array(width * height * bytes);
-            gl.texImage2D(gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, type, pixels);
-        }
-    };
-
-    /*****************************************************************************
-     * Init Texture
-     *****************************************************************************/
-    Context.prototype.initTex = function (gl, w, h, nearest, type) {
-        var tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-
-        this.emptyTexImage2D(gl, gl.RGBA, w, h, gl.RGBA, type);
-        //this.emptyTexImage2D(gl, gl.DEPTH_COMPONENT16, w, h, gl.DEPTH_COMPONENT, gl.UNSIGNED_BYTE);
-
-        if (nearest) {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        }
-        else {
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        }
-        //gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        //gl.generateMipmap(gl.TEXTURE_2D);
-        gl.bindTexture(gl.TEXTURE_2D, null);
-
-        tex.width = w;
-        tex.height = h;
-
-        return tex;
-    };
-
-    /*****************************************************************************
-     * Creates FBO with given size
-     * (taken from FBO utilities for WebGL by Emanuele Ruffaldi 2009)
-     *
-     * Returned Object has rbo, fbo, tex, width, height
-     *****************************************************************************/
-    Context.prototype.initFbo = function (gl, w, h, nearest, type) {
-        var fbo = gl.createFramebuffer();
-        var rb = gl.createRenderbuffer();
-
-        var tex = this.initTex(gl, w, h, nearest, type);
-
-        this.stateManager.bindFramebuffer(gl.FRAMEBUFFER, fbo);
-        gl.bindRenderbuffer(gl.RENDERBUFFER, rb);
-        gl.renderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT16, w, h);
-        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
-
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
-        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, rb);
-        this.stateManager.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-        var status = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-        if (status != gl.FRAMEBUFFER_COMPLETE)
-            x3dom.debug.logWarning("[Context|InitFBO] FBO-Status: " + status);
-
-        return {
-            fbo: fbo,
-            rbo: rb,
-            tex: tex,
-            width: w,
-            height: h,
-            typ: type
-        };
-    };
 	
 	/*****************************************************************************
     * Draw shadows on screen
@@ -24617,11 +24965,16 @@ x3dom.gfx_webgl = (function () {
 				numShadowMaps = mat_light.length;
 				
 				for (i=0; i< numShadowMaps; i++){
-						gl.activeTexture(gl.TEXTURE1 + shadowIndex);
-						gl.bindTexture(gl.TEXTURE_2D, shadowMaps[i].tex);
-						sp['light'+p+'_'+i+'_ShadowMap'] = shadowIndex+1;
-						sp['light'+p+'_'+i+'_Matrix'] = mat_light[i].toGL();
-						shadowIndex++;
+                    gl.activeTexture(gl.TEXTURE1 + shadowIndex);
+                    gl.bindTexture(gl.TEXTURE_2D, shadowMaps[i].tex);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+                    sp['light'+p+'_'+i+'_ShadowMap'] = shadowIndex+1;
+                    sp['light'+p+'_'+i+'_Matrix'] = mat_light[i].toGL();
+                    shadowIndex++;
 				}
 				sp['light'+p+'_ViewMatrix'] = lightMatrix.toGL();						
 
@@ -25716,6 +26069,15 @@ x3dom.X3DDocument.prototype._setup = function (sceneDoc, uriDocs, sceneElemPos) 
             }
             else if (x3dom.isa(node, x3dom.nodeTypes.RenderedTexture)) {
                 cleanNodeBag(doc._nodeBag.renderTextures, node);
+                if (node._cleanupGLObjects) {
+                    node._cleanupGLObjects();
+                }
+            }
+            else if (x3dom.isa(node, x3dom.nodeTypes.Texture)) {
+                node.shutdown();    // general texture might have video
+            }
+            else if (x3dom.isa(node, x3dom.nodeTypes.AudioClip)) {
+                node.shutdown();
             }
             else if (x3dom.isa(node, x3dom.nodeTypes.X3DBindableNode)) {
                 var stack = node._stack;
@@ -25726,6 +26088,12 @@ x3dom.X3DDocument.prototype._setup = function (sceneDoc, uriDocs, sceneElemPos) 
                 // Background may have geometry
                 if (node._cleanupGLObjects) {
                     node._cleanupGLObjects();
+                }
+            }
+            else if (x3dom.isa(node, x3dom.nodeTypes.Scene)) {
+                if (node._webgl) {
+                    node._webgl = null;
+                    // TODO; explicitly delete all gl objects
                 }
             }
 
@@ -25782,6 +26150,40 @@ x3dom.X3DDocument.prototype._setup = function (sceneDoc, uriDocs, sceneElemPos) 
                 if (fromNode && toNode) {
                     fromNode.removeRoute(domNode.getAttribute('fromField'), toNode, domNode.getAttribute('toField'));
                 }
+            }
+            else if (domNode.localName && domNode.localName.toUpperCase() == "X3D") {
+                setTimeout(function() {
+                    // console.log('parentNode: ', domNode.parentNode);
+
+                    if (!domNode.parentNode) {
+                        var runtime = domNode.runtime;
+
+                        if (runtime && runtime.canvas && runtime.canvas.doc && runtime.canvas.doc._scene) {
+                            var sceneNode = runtime.canvas.doc._scene._xmlNode;
+
+                            removeX3DOMBackendGraph(sceneNode);
+
+                            // also clear corresponding X3DCanvas element
+                            for (var i=0; i<x3dom.canvases.length; i++) {
+                                if (x3dom.canvases[i] === runtime.canvas) {
+                                    x3dom.canvases[i].doc.shutdown(x3dom.canvases[i].gl);
+                                    x3dom.canvases.splice(i, 1);
+                                    break;
+                                }
+                            }
+
+                            runtime.canvas.doc._scene = null;
+                            runtime.canvas.doc._viewarea = null;
+                            runtime.canvas.doc = null;
+                            runtime.canvas = null;
+                            runtime = null;
+
+                            domNode.context = null;
+                            domNode.runtime = null;
+                            //domNode.hasRuntime = undefined;
+                        }
+                    }
+                }, 1000);
             }
         },
         
@@ -26053,10 +26455,11 @@ x3dom.X3DDocument.prototype.onKeyPress = function(charCode)
 				states.display();
 			}
             x3dom.debug.logInfo("a: show all | d: show helper buffers | s: small feature culling | t: light view | " +
-                                "m: toggle render mode | c: frustum culling | p: intersect type | r: reset view | " +
+                                "m: toggle render mode | c: frustum culling | p: intersect type | r: reset view | \n" +
                                 "e: examine mode | f: fly mode | y: freefly mode | w: walk mode | h: helicopter mode | " +
-                                "l: lookAt mode | o: lookaround | g: game mode | u: upright position | v: print viewpoint info | " +
-                                "pageUp: next view | pageDown: prev. view | +: increase speed | -: decrease speed ");
+                                "l: lookAt mode | o: lookaround | g: game mode | n: turntable | u: upright position | \n" +
+                                "v: print viewpoint info | pageUp: next view | pageDown: prev. view | " +
+                                "+: increase speed | -: decrease speed ");
             break;
         case  43: /* + (incr. speed) */
             nav._vf.speed = 2 * nav._vf.speed;
@@ -26084,7 +26487,7 @@ x3dom.X3DDocument.prototype.onKeyPress = function(charCode)
             nav._heliUpdated = false;
             x3dom.debug.logInfo("Changed helicopter height to " + nav._vf.typeParams[1]);
             break;
-        case  56: /* 8 (decr height) */
+        case  56: /* 8 (decr angle) */
             nav._vf.typeParams[0] -= 0.02;
             nav._heliUpdated = false;
             x3dom.debug.logInfo("Changed helicopter angle to " + nav._vf.typeParams[0]);
@@ -26119,6 +26522,9 @@ x3dom.X3DDocument.prototype.onKeyPress = function(charCode)
             break;
         case 104: /* h, helicopter mode */
             nav.setType("helicopter", this._viewarea);
+            break;
+        case 105: /* i, fit all */
+            this._viewarea.fit(this._scene._lastMin, this._scene._lastMax);
             break;
         case 108: /* l, lookAt mode */
             nav.setType("lookat", this._viewarea);
@@ -26436,7 +26842,7 @@ x3dom.Viewarea.prototype.navigateTo = function(timeStamp)
         var step = (this._lastButton & 2) ? -1 : 1;
         step *= (this._deltaT * navi._vf.speed);
 
-        var phi = Math.PI * this._deltaT * (this._pressX - this._lastX) / this._width;
+        var phi = 2 * Math.PI * this._deltaT * (this._pressX - this._lastX) / this._width;
         var theta = Math.PI * this._deltaT * (this._pressY - this._lastY) / this._height;
 
         if (this._needNavigationMatrixUpdate === true)
@@ -27204,16 +27610,12 @@ x3dom.Viewarea.prototype.fit = function(min, max, updateCenterOfRotation)
         updateCenterOfRotation = true;
     }
 
-    var scene = this._scene;
-
     var dia2 = max.subtract(min).multiply(0.5);    // half diameter
     var center = min.add(dia2);                    // center in wc
-    var bsr = min.subtract(center).length();       // bounding sphere radius
+    var bsr = dia2.length();                       // bounding sphere radius
 
-    var viewpoint = scene.getViewpoint();
+    var viewpoint = this._scene.getViewpoint();
     var fov = viewpoint.getFieldOfView();
-
-    var tanfov2 = Math.tan(fov / 2.0);
 
     var viewmat = x3dom.fields.SFMatrix4f.copy(this.getViewMatrix());
 
@@ -27221,16 +27623,17 @@ x3dom.Viewarea.prototype.fit = function(min, max, updateCenterOfRotation)
     var upDir = new x3dom.fields.SFVec3f(viewmat._10, viewmat._11, viewmat._12);
     var viewDir = new x3dom.fields.SFVec3f(viewmat._20, viewmat._21, viewmat._22);
 
-    var dist = (bsr / tanfov2);
-    var lookAt = center;
-    var eyePos = lookAt.add(viewDir.multiply(dist));
+    var tanfov2 = Math.tan(fov / 2.0);
+    var dist = bsr / tanfov2;
+
+    var eyePos = center.add(viewDir.multiply(dist));
 
     viewmat._03 = -rightDir.dot(eyePos);
     viewmat._13 = -upDir.dot(eyePos);
     viewmat._23 = -viewDir.dot(eyePos);
 
     if (updateCenterOfRotation) {
-        viewpoint._vf.centerOfRotation = center;
+        viewpoint.setCenterOfRotation(center);
     }
 
     this.animateTo(viewmat, viewpoint);
@@ -27259,11 +27662,16 @@ x3dom.Viewarea.prototype.resetView = function()
         this._scene.getViewpoint().resetView();
     }
 
+    this.resetNavHelpers();
+    navi._heliUpdated = false;
+};
+
+x3dom.Viewarea.prototype.resetNavHelpers = function()
+{
     this._rotMat = x3dom.fields.SFMatrix4f.identity();
     this._transMat = x3dom.fields.SFMatrix4f.identity();
     this._movement = new x3dom.fields.SFVec3f(0, 0, 0);
     this._needNavigationMatrixUpdate = true;
-    navi._heliUpdated = false;
 };
 
 x3dom.Viewarea.prototype.uprightView = function()
@@ -27400,6 +27808,29 @@ x3dom.Viewarea.prototype.initMouseState = function()
     this._needNavigationMatrixUpdate = true;
 };
 
+x3dom.Viewarea.prototype.initTurnTable = function(navi)
+{
+    var currViewMat = this.getViewMatrix();
+
+    var viewpoint = this._scene.getViewpoint();
+    var center = x3dom.fields.SFVec3f.copy(viewpoint.getCenterOfRotation());
+
+    this._flyMat = currViewMat.inverse();
+
+    this._from = this._flyMat.e3();
+    //this._at = this._from.subtract(this._flyMat.e2());
+    this._at = center;
+    this._up = this._flyMat.e1();
+
+    this._flyMat = x3dom.fields.SFMatrix4f.lookAt(this._from, this._at, this._up);
+    this._flyMat = this.calcOrbit(0, 0, navi);
+
+    var dur = 0.2 / navi._vf.speed;   // fly to pivot point
+    this.animateTo(this._flyMat.inverse(), viewpoint, dur);
+
+    this.resetNavHelpers();
+};
+
 x3dom.Viewarea.prototype.onMousePress = function (x, y, buttonState)
 {
     this._needNavigationMatrixUpdate = true;
@@ -27418,26 +27849,9 @@ x3dom.Viewarea.prototype.onMousePress = function (x, y, buttonState)
     this._isMoving = false;
 
     var navi = this._scene.getNavigationInfo();
-    var navType = navi.getType();
 
-    if (navType === "turntable")
-    {
-        var currViewMat = this.getViewMatrix();
-
-        var viewpoint = this._scene.getViewpoint();
-        var center = x3dom.fields.SFVec3f.copy(viewpoint.getCenterOfRotation());
-
-        this._flyMat = currViewMat.inverse();
-
-        this._from = this._flyMat.e3();
-        //this._at = this._from.subtract(this._flyMat.e2());
-        this._at = center;
-        this._up = this._flyMat.e1();
-
-        this._flyMat = x3dom.fields.SFMatrix4f.lookAt(this._from, this._at, this._up);
-
-        var dur = 0.2 / navi._vf.speed;   // fly to pivot point
-        this.animateTo(this._flyMat.inverse(), viewpoint, dur);
+    if (navi.getType() === "turntable") {
+        this.initTurnTable(navi);
     }
 };
 
@@ -27596,12 +28010,7 @@ x3dom.Viewarea.prototype.onDoubleClick = function (x, y)
 
     var viewpoint = this._scene.getViewpoint();
 
-    if (viewpoint._vf.centerOfRotation) {
-        viewpoint._vf.centerOfRotation.setValues(this._pick);
-    }
-    else {
-        viewpoint._centerOfRotation.setValues(this._pick);  // Viewfrustum
-    }
+    viewpoint.setCenterOfRotation(this._pick);
     x3dom.debug.logInfo("New center of Rotation:  " + this._pick);
 
     var mat = this.getViewMatrix().inverse();
@@ -27714,7 +28123,7 @@ x3dom.Viewarea.prototype.onDrag = function (x, y, buttonState)
 
     var dx = x - this._lastX;
     var dy = y - this._lastY;
-    var d, vec, mat = null;
+    var d, vec, cor, mat = null;
     var alpha, beta;
 
     buttonState = ((navRestrict & buttonState) != buttonState) ? navRestrict : buttonState;
@@ -27758,13 +28167,25 @@ x3dom.Viewarea.prototype.onDrag = function (x, y, buttonState)
 			d = ((d < x3dom.fields.Eps) ? 1 : d) * navi._vf.speed;
 
             vec = new x3dom.fields.SFVec3f(0, 0, d*(dx+dy)/this._height);
-            this._movement = this._movement.add(vec);
 
-            mat = this.getViewpointMatrix().mult(this._transMat);
-            //TODO; move real distance along viewing ray
-            this._transMat = mat.inverse().
-                             mult(x3dom.fields.SFMatrix4f.translation(this._movement)).
-                             mult(mat);
+            if (x3dom.isa(viewpoint, x3dom.nodeTypes.OrthoViewpoint))
+            {
+                viewpoint._vf.fieldOfView[0] += vec.z;
+                viewpoint._vf.fieldOfView[1] += vec.z;
+                viewpoint._vf.fieldOfView[2] -= vec.z;
+                viewpoint._vf.fieldOfView[3] -= vec.z;
+                viewpoint._projMatrix = null;
+                viewpoint.resetView();
+            }
+            else
+            {
+                this._movement = this._movement.add(vec);
+                mat = this.getViewpointMatrix().mult(this._transMat);
+                //TODO; move real distance along viewing ray
+                this._transMat = mat.inverse().
+                                 mult(x3dom.fields.SFMatrix4f.translation(this._movement)).
+                                 mult(mat);
+            }
         }
 
         this._isMoving = true;
@@ -27776,46 +28197,7 @@ x3dom.Viewarea.prototype.onDrag = function (x, y, buttonState)
             alpha = (dy * 2 * Math.PI) / this._height;
             beta = (dx * 2 * Math.PI) / this._width;
 
-            this._up   = this._flyMat.e1();
-            this._from = this._flyMat.e3();
-
-            var offset = this._from.subtract(this._at);
-
-            // angle in xz-plane
-            var phi = Math.atan2(offset.x, offset.z);
-
-            // angle from y-axis
-            var theta = Math.atan2(Math.sqrt(offset.x * offset.x + offset.z * offset.z), offset.y);
-
-            phi -= Math.min(beta, 0.1);
-            theta -= Math.min(alpha, 0.1);
-
-            // clamp theta
-            var typeParams = navi.getTypeParams();
-            theta = Math.max(typeParams[2], Math.min(typeParams[3], theta));
-
-            var radius = offset.length();
-
-            // calc new cam position
-            var rSinPhi = radius * Math.sin(theta);
-
-            offset.x = rSinPhi * Math.sin(phi);
-            offset.y = radius  * Math.cos(theta);
-            offset.z = rSinPhi * Math.cos(phi);
-
-            offset = this._at.add(offset);
-
-            // calc new up vector
-            theta -= Math.PI / 2;
-
-            var sinPhi = Math.sin(theta);
-            var cosPhi = Math.cos(theta);
-            var up = new x3dom.fields.SFVec3f(sinPhi * Math.sin(phi), cosPhi, sinPhi * Math.cos(phi));
-
-            if (up.y < 0)
-                up = up.negate();
-
-            this._flyMat = x3dom.fields.SFMatrix4f.lookAt(offset, this._at, up);
+            this._flyMat = this.calcOrbit(alpha, beta, navi);
             viewpoint.setView(this._flyMat.inverse());
         }
         else if (buttonState & 2) //right
@@ -27824,20 +28206,63 @@ x3dom.Viewarea.prototype.onDrag = function (x, y, buttonState)
             d = ((d < x3dom.fields.Eps) ? 1 : d) * navi._vf.speed;
 
             this._up   = this._flyMat.e1();
-            this._from = this._flyMat.e3();
+            this._from = this._flyMat.e3(); // eye
 
             // zoom in/out
-            var lastDir  = this._from.subtract(this._at);
+            cor = viewpoint.getCenterOfRotation();
+
+            var lastDir  = cor.subtract(this._from);
             var lastDirL = lastDir.length();
+            lastDir = lastDir.normalize();
 
-            var zoomAmount = -d*(dx+dy) / this._height;
+            var zoomAmount = d * (dx + dy) / this._height;
 
-            //maintain minimum distance to prevent orientation flips
-            var newDist = Math.max(lastDirL + zoomAmount, 1.0);
+        /*
+            // maintain minimum distance to prevent orientation flips
+            var newDist = Math.min(zoomAmount, lastDirL - 0.01);
 
-            this._from = this._at.addScaled(lastDir.normalize(), newDist);
+            // move along viewing ray, scaled with zoom factor
+            this._from = this._from.addScaled(lastDir, newDist);
+        */
 
-            this._flyMat = x3dom.fields.SFMatrix4f.lookAt(this._from, this._at, this._up);
+            // add z offset to look-at position, alternatively clamp
+            var diff = zoomAmount - lastDirL + 0.01;
+            if (diff >= 0) {
+                cor = cor.addScaled(lastDir, diff);
+                viewpoint.setCenterOfRotation(cor);
+            }
+
+            // move along viewing ray, scaled with zoom factor
+            this._from = this._from.addScaled(lastDir, zoomAmount);
+
+            // update camera matrix with lookAt() and invert again
+            this._flyMat = x3dom.fields.SFMatrix4f.lookAt(this._from, cor, this._up);
+            viewpoint.setView(this._flyMat.inverse());
+        }
+        else if (buttonState & 4) //middle
+        {
+            d = (this._scene._lastMax.subtract(this._scene._lastMin)).length();
+            d = ((d < x3dom.fields.Eps) ? 1 : d) * navi._vf.speed * 0.75;
+
+            var tx = -d * dx / this._width;
+            var ty =  d * dy / this._height;
+
+            this._up   = this._flyMat.e1();
+            this._from = this._flyMat.e3(); // eye
+            var s = this._flyMat.e0();
+
+            // add xy offset to camera position for pan
+            this._from = this._from.addScaled(this._up, ty);
+            this._from = this._from.addScaled(s, tx);
+
+            // add xy offset to look-at position
+            cor = viewpoint.getCenterOfRotation();
+            cor = cor.addScaled(this._up, ty);
+            cor = cor.addScaled(s, tx);
+            viewpoint.setCenterOfRotation(cor);
+
+            // update camera matrix with lookAt() and invert
+            this._flyMat = x3dom.fields.SFMatrix4f.lookAt(this._from, cor, this._up);
             viewpoint.setView(this._flyMat.inverse());
         }
 
@@ -27849,6 +28274,50 @@ x3dom.Viewarea.prototype.onDrag = function (x, y, buttonState)
 
     this._lastX = x;
     this._lastY = y;
+};
+
+x3dom.Viewarea.prototype.calcOrbit = function (alpha, beta, navi)
+{
+    this._up   = this._flyMat.e1();
+    this._from = this._flyMat.e3();
+
+    var offset = this._from.subtract(this._at);
+
+    // angle in xz-plane
+    var phi = Math.atan2(offset.x, offset.z);
+
+    // angle from y-axis
+    var theta = Math.atan2(Math.sqrt(offset.x * offset.x + offset.z * offset.z), offset.y);
+
+    phi -= Math.min(beta, 0.1);
+    theta -= Math.min(alpha, 0.1);
+
+    // clamp theta
+    var typeParams = navi.getTypeParams();
+    theta = Math.max(typeParams[2], Math.min(typeParams[3], theta));
+
+    var radius = offset.length();
+
+    // calc new cam position
+    var rSinPhi = radius * Math.sin(theta);
+
+    offset.x = rSinPhi * Math.sin(phi);
+    offset.y = radius  * Math.cos(theta);
+    offset.z = rSinPhi * Math.cos(phi);
+
+    offset = this._at.add(offset);
+
+    // calc new up vector
+    theta -= Math.PI / 2;
+
+    var sinPhi = Math.sin(theta);
+    var cosPhi = Math.cos(theta);
+    var up = new x3dom.fields.SFVec3f(sinPhi * Math.sin(phi), cosPhi, sinPhi * Math.cos(phi));
+
+    if (up.y < 0)
+        up = up.negate();
+
+    return x3dom.fields.SFMatrix4f.lookAt(offset, this._at, up);
 };
 
 x3dom.Viewarea.prototype.prepareEvents = function (x, y, buttonState, eventType)
@@ -28525,9 +28994,9 @@ if (typeof x3dom === "undefined")
 {
     x3dom = {
         extend: function(f) {
-            function g() {}
-            g.prototype = f.prototype || f;
-            return new g();
+            function G() {}
+            G.prototype = f.prototype || f;
+            return new G();
         },
 
         debug: {
@@ -28557,6 +29026,10 @@ if (typeof x3dom === "undefined")
 /** @namespace The x3dom.fields namespace. */
 x3dom.fields = {};
 
+/// shortcut for convenience
+var VecMath = x3dom.fields;
+
+// Epsilon
 x3dom.fields.Eps = 0.000001;
 
 
@@ -28567,7 +29040,7 @@ x3dom.fields.Eps = 0.000001;
 ///////////////////////////////////////////////////////////////////////////////
 /** SFMatrix4f constructor. 
     @class Represents a SFMatrix4f
-    THINKABOUTME: use 2-dim array instead of _xx?
+    THINKABOUTME: use array instead of _xx?
   */
 x3dom.fields.SFMatrix4f = function(	_00, _01, _02, _03, 
 									_10, _11, _12, _13, 
@@ -30097,6 +30570,20 @@ x3dom.fields.Quaternion.prototype.setValue = function(matrix)
     }
 };
 
+x3dom.fields.Quaternion.prototype.setFromEuler = function (alpha, beta, gamma) {
+    var sx = Math.sin(alpha * 0.5);
+    var cx = Math.cos(alpha * 0.5);
+    var sy = Math.sin(beta  * 0.5);
+    var cy = Math.cos(beta  * 0.5);
+    var sz = Math.sin(gamma * 0.5);
+    var cz = Math.cos(gamma * 0.5);
+
+    this.x = (sx * cy * cz) - (cx * sy * sz);
+    this.y = (cx * sy * cz) + (sx * cy * sz);
+    this.z = (cx * cy * sz) - (sx * sy * cz);
+    this.w = (cx * cy * cz) + (sx * sy * sz);
+};
+
 x3dom.fields.Quaternion.prototype.dot = function (that) {
     return this.x*that.x + this.y*that.y + this.z*that.z + this.w*that.w;
 };
@@ -30607,9 +31094,7 @@ x3dom.fields.SFImage.prototype.toGL = function() {
   */
 x3dom.fields.MFColor = function(colorArray) {
 
-    if (arguments.length === 0) {
-    }
-    else {
+    if (colorArray) {
         var that = this;
         colorArray.map( function(c) { that.push(c); }, this );
     }
@@ -30628,9 +31113,7 @@ x3dom.fields.MFColor.parse = function(str) {
 };
 
 x3dom.fields.MFColor.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-0-9eE\.]+)/g);
     for (var i=0, n=mc?mc.length:0; i<n; i+=3) {
         this.push( new x3dom.fields.SFColor(+mc[i+0], +mc[i+1], +mc[i+2]) );
@@ -30655,9 +31138,7 @@ x3dom.fields.MFColor.prototype.toGL = function() {
     @class Represents a MFColorRGBA
   */
 x3dom.fields.MFColorRGBA = function(colorArray) {
-    if (arguments.length === 0) {
-    }
-    else {
+    if (colorArray) {
         var that = this;
         colorArray.map( function(c) { that.push(c); }, this );
     }
@@ -30676,12 +31157,10 @@ x3dom.fields.MFColorRGBA.parse = function(str) {
 };
 
 x3dom.fields.MFColorRGBA.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-0-9eE\.]+)/g);
     for (var i=0, n=mc?mc.length:0; i<n; i+=4) {
-        this.push( new x3dom.fields.SFColor(+mc[i+0], +mc[i+1], +mc[i+2], +mc[i+3]) );
+        this.push( new x3dom.fields.SFColorRGBA(+mc[i+0], +mc[i+1], +mc[i+2], +mc[i+3]) );
     }
 };
 
@@ -30704,9 +31183,7 @@ x3dom.fields.MFColorRGBA.prototype.toGL = function() {
     @class Represents a MFRotation
   */
 x3dom.fields.MFRotation = function(rotArray) {
-    if (arguments.length === 0) {        
-    }
-    else {
+    if (rotArray) {
         var that = this;
         rotArray.map( function(v) { that.push(v); }, this );
     }
@@ -30726,9 +31203,7 @@ x3dom.fields.MFRotation.parse = function(str) {
 };
 
 x3dom.fields.MFRotation.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-0-9eE\.]+)/g);
     for (var i=0, n=mc?mc.length:0; i<n; i+=4) {
         this.push( x3dom.fields.Quaternion.axisAngle(new x3dom.fields.SFVec3f(+mc[i+0], +mc[i+1], +mc[i+2]), +mc[i+3]) );
@@ -30755,21 +31230,19 @@ x3dom.fields.MFRotation.prototype.toGL = function() {
     @class Represents a MFVec3f
   */
 x3dom.fields.MFVec3f = function(vec3Array) {
-    if (arguments.length === 0) {        
-    }
-    else {
+    if (vec3Array) {
         var that = this;
         vec3Array.map( function(v) { that.push(v); }, this );
     }
 };
+
+x3dom.fields.MFVec3f.prototype = x3dom.extend([]);
 
 x3dom.fields.MFVec3f.copy = function(vec3Array) {
     var destination = new x3dom.fields.MFVec3f();
     vec3Array.map( function(v) { destination.push(x3dom.fields.SFVec3f.copy(v)); }, this );
     return destination;
 };
-
-x3dom.fields.MFVec3f.prototype = x3dom.extend([]);
 
 x3dom.fields.MFVec3f.parse = function(str) {
     var mc = str.match(/([+\-0-9eE\.]+)/g);
@@ -30782,9 +31255,7 @@ x3dom.fields.MFVec3f.parse = function(str) {
 };
 
 x3dom.fields.MFVec3f.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-0-9eE\.]+)/g);
     for (var i=0, n=mc?mc.length:0; i<n; i+=3) {
         this.push( new x3dom.fields.SFVec3f(+mc[i+0], +mc[i+1], +mc[i+2]) );
@@ -30809,9 +31280,7 @@ x3dom.fields.MFVec3f.prototype.toGL = function() {
     @class Represents a MFVec2f
   */
 x3dom.fields.MFVec2f = function(vec2Array) {
-    if (arguments.length === 0) {        
-    }
-    else {
+    if (vec2Array) {
         var that = this;
         vec2Array.map( function(v) { that.push(v); }, this );
     }
@@ -30830,9 +31299,7 @@ x3dom.fields.MFVec2f.parse = function(str) {
 };
 
 x3dom.fields.MFVec2f.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-0-9eE\.]+)/g);
     for (var i=0, n=mc?mc.length:0; i<n; i+=2) {
         this.push( new x3dom.fields.SFVec2f(+mc[i+0], +mc[i+1]) );
@@ -30856,9 +31323,7 @@ x3dom.fields.MFVec2f.prototype.toGL = function() {
     @class Represents a MFInt32
   */
 x3dom.fields.MFInt32 = function(array) {
-    if (arguments.length === 0) {
-    }
-    else if (array && array.map) {
+    if (array) {
         var that = this;
         array.map( function(v) { that.push(v); }, this );
     }
@@ -30877,9 +31342,7 @@ x3dom.fields.MFInt32.parse = function(str) {
 };
 
 x3dom.fields.MFInt32.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-]?\d+\s*){1},?\s*/g);
     for (var i=0, n=mc?mc.length:0; i<n; ++i) {
         this.push( parseInt(mc[i], 10) );
@@ -30902,9 +31365,7 @@ x3dom.fields.MFInt32.prototype.toGL = function() {
     @class Represents a MFFloat
   */
 x3dom.fields.MFFloat = function(array) {
-    if (arguments.length === 0) {
-    }
-    else if (array && array.map) {
+    if (array) {
         var that = this;
         array.map( function(v) { that.push(v); }, this );
     }
@@ -30923,9 +31384,7 @@ x3dom.fields.MFFloat.parse = function(str) {
 };
 
 x3dom.fields.MFFloat.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
-    }
+    this.length = 0;
     var mc = str.match(/([+\-0-9eE\.]+)/g);
     for (var i=0, n=mc?mc.length:0; i<n; i++) {
         this.push( +mc[i] );
@@ -30948,9 +31407,7 @@ x3dom.fields.MFFloat.prototype.toGL = function() {
  @class Represents a MFBoolean
  */
 x3dom.fields.MFBoolean = function(array) {
-    if (arguments.length === 0) {
-    }
-    else if (array && array.map) {
+    if (array) {
         var that = this;
         array.map( function(v) { that.push(v); }, this );
     }
@@ -30959,24 +31416,28 @@ x3dom.fields.MFBoolean = function(array) {
 x3dom.fields.MFBoolean.prototype = x3dom.extend([]);
 
 x3dom.fields.MFBoolean.parse = function(str) {
+    var mc = str.match(/(true|false|1|0)/ig);
     var vals = [];
-    // TODO; parse!!!
+    for (var i=0, n=mc?mc.length:0; i<n; i++) {
+        vals.push( (mc[i] == '1' || mc[i].toLowerCase() == 'true') );
+    }
 
     return new x3dom.fields.MFBoolean( vals );
 };
 
 x3dom.fields.MFBoolean.prototype.setValueByStr = function(str) {
-    while (this.length) {
-        this.pop();
+    this.length = 0;
+    var mc = str.match(/(true|false|1|0)/ig);
+    for (var i=0, n=mc?mc.length:0; i<n; i++) {
+        this.push( (mc[i] == '1' || mc[i].toLowerCase() == 'true') );
     }
-    // TODO; parse!!!
 };
 
 x3dom.fields.MFBoolean.prototype.toGL = function() {
     var a = [];
 
     Array.map( this, function(v) {
-        a.push(v);
+        a.push(v ? 1 : 0);
     });
 
     return a;
@@ -30988,13 +31449,13 @@ x3dom.fields.MFBoolean.prototype.toGL = function() {
     @class Represents a MFString
   */
 x3dom.fields.MFString = function(strArray) {
-    if (arguments.length === 0) {
-    }
-    else if (strArray && strArray.map) {
+    if (strArray && strArray.map) {
         var that = this;
         strArray.map( function(v) { that.push(v); }, this );
     }
 };
+
+x3dom.fields.MFString.prototype = x3dom.extend([]);
 
 x3dom.fields.MFString.parse = function(str) {
     var arr = [];
@@ -31014,32 +31475,27 @@ x3dom.fields.MFString.parse = function(str) {
     return new x3dom.fields.MFString( arr );
 };
 
-x3dom.fields.MFString.prototype = x3dom.extend([]);
-
 x3dom.fields.MFString.prototype.setValueByStr = function(str) {
-    var arr = this;
-    while (arr.length) {
-        arr.pop();
-    }
+    this.length = 0;
     // ignore leading whitespace?
     if (str.length && str[0] == '"') {
         var m, re = /"((?:[^\\"]|\\\\|\\")*)"/g;
         while ((m = re.exec(str))) {
             var s = m[1].replace(/\\([\\"])/, "$1");
             if (s !== undefined) {
-                arr.push(s);
+                this.push(s);
             }
         }
     }
     else {
-        arr.push(str);
+        this.push(str);
     }
     return this;
 };
 
 x3dom.fields.MFString.prototype.toString = function () {
     var str = "";
-    for (var i=0; i<this.length; i++) {
+    for (var i=0, n=this.length; i<n; i++) {
 		 str = str + this[i] + " ";
     }
     return str;
@@ -31306,6 +31762,13 @@ x3dom.fields.BoxVolume = function(min, max)
     }
 
     this.updateInternals();
+};
+
+x3dom.fields.BoxVolume.prototype.getScalarValue = function()
+{
+    var extent = this.max.subtract(this.min);
+
+    return (extent.x*extent.y*extent.z);
 };
 
 x3dom.fields.BoxVolume.copy = function(other)
@@ -31929,6 +32392,32 @@ x3dom.setElementAttribute = function(attrName, newVal)
     }
 };
 
+
+// helper to get a reference to a nodes's field
+x3dom.requestFieldRef = function(fieldName)
+{
+    var x3dNode = this._x3domNode;
+    if (x3dNode && x3dNode._vf[fieldName])
+    {
+        return x3dNode._vf[fieldName];
+    }
+
+    return null;
+} ;
+
+
+// helper to return a reference to a nodes's field
+x3dom.returnFieldRef = function(fieldName)
+{
+    var x3dNode = this._x3domNode;
+    if (x3dNode && x3dNode._vf[fieldName])
+    {
+        x3dNode.fieldChanged(fieldName);
+        x3dNode._nameSpace.doc.needRender = true;
+    }
+};
+
+
 x3dom.NodeNameSpace.prototype.setupTree = function (domNode) {
     var n = null;
 
@@ -32003,19 +32492,27 @@ x3dom.NodeNameSpace.prototype.setupTree = function (domNode) {
             // check and create ROUTEs
             if (domNode.localName.toLowerCase() === 'route') {
                 var route = domNode;
-                var fromNode = this.defMap[route.getAttribute('fromNode')];
-                var toNode = this.defMap[route.getAttribute('toNode')];
-                //x3dom.debug.logInfo("ROUTE: from=" + fromNode._DEF + ", to=" + toNode._DEF);
+                var fnAtt = route.getAttribute('fromNode') || route.getAttribute('fromnode');
+                var tnAtt = route.getAttribute('toNode') || route.getAttribute('tonode');
+                var fromNode = this.defMap[fnAtt];
+                var toNode = this.defMap[tnAtt];
                 if (! (fromNode && toNode)) {
-                    x3dom.debug.logWarning("Broken route - can't find all DEFs for " +
-                                route.getAttribute('fromNode')+" -> "+ route.getAttribute('toNode'));
-                    return null;
+                    x3dom.debug.logWarning("Broken route - can't find all DEFs for " + fnAtt + " -> " + tnAtt);
                 }
-                fromNode.setupRoute(route.getAttribute('fromField'), toNode, route.getAttribute('toField'));
-                // Store reference to namespace for being able to remove route later on
-                route._nodeNameSpace = this;
+                else {
+                    //x3dom.debug.logInfo("ROUTE: from=" + fromNode._DEF + ", to=" + toNode._DEF);
+                    fnAtt = route.getAttribute('fromField') || route.getAttribute('fromfield');
+                    tnAtt = route.getAttribute('toField') || route.getAttribute('tofield');
+                    fromNode.setupRoute(fnAtt, toNode, tnAtt);
+                    // Store reference to namespace for being able to remove route later on
+                    route._nodeNameSpace = this;
+                }
                 return null;
             }
+
+            //attach X3DOM's custom field interface functions
+            domNode.requestFieldRef = x3dom.requestFieldRef;
+            domNode.returnFieldRef  = x3dom.returnFieldRef;
 
             // find the NodeType for the given dom-node
             var nodeType = x3dom.nodeTypesLC[domNode.localName.toLowerCase()];
@@ -32316,8 +32813,16 @@ x3dom.registerNodeType(
             var f = this._vf[field];
 
             if (f === undefined) {
+                for (var key in this._vf) {
+                    if (key.toLowerCase() == field) {
+                        field = key;
+                        f = this._vf[field];
+                        break;
+                    }
+                }
+
                 var pre = "set_";
-                if (field.indexOf(pre) == 0) {
+                if (f === undefined && field.indexOf(pre) == 0) {
                     var fieldName = field.substr(pre.length, field.length - 1);
                     if (this._vf[fieldName] !== undefined) {
                         field = fieldName;
@@ -32537,6 +33042,10 @@ x3dom.registerNodeType(
 		},
         
         initSetter: function (xmlNode, name) {
+            if (!xmlNode || !name)
+                return;
+
+            var nameLC = name.toLowerCase();
             if (xmlNode.__defineSetter__ && xmlNode.__defineGetter__) {
                 xmlNode.__defineSetter__(name, function(value) {
                     xmlNode.setAttribute(name, value);
@@ -32544,6 +33053,14 @@ x3dom.registerNodeType(
                 xmlNode.__defineGetter__(name, function() {
                     return xmlNode.getAttribute(name);
                 });
+                if (nameLC != name) {
+                    xmlNode.__defineSetter__(nameLC, function(value) {
+                        xmlNode.setAttribute(name, value);
+                    });
+                    xmlNode.__defineGetter__(nameLC, function() {
+                        return xmlNode.getAttribute(name);
+                    });
+                }
             }
             else {
                 // IE has no __define[G|S]etter__ !!!
@@ -32831,7 +33348,6 @@ x3dom.registerNodeType(
         function (ctx) {
             x3dom.nodeTypes.MetadataBoolean.superClass.call(this, ctx);
 
-            // TODO: implement parsing of MFBoolean in fields.js!
             this.addField_MFBoolean(ctx, 'value', []);
         }
     )
@@ -33046,7 +33562,8 @@ x3dom.registerNodeType(
                 volume:       new x3dom.fields.BoxVolume(),     // local bbox
                 worldVolume:  new x3dom.fields.BoxVolume(),     // global bbox
                 center:       new x3dom.fields.SFVec3f(0,0,0),  // center in eye coords
-                coverage:     -1       // currently approx. number of pixels on screen
+                coverage:     -1,       // currently approx. number of pixels on screen
+                needCulling:  true      // to be able to disable culling per node
             };
         },
         {
@@ -33351,13 +33868,15 @@ x3dom.registerNodeType(
         {
             tick: function (t)
             {
-                if (this._xmlNode && (this._xmlNode['ontransform'] ||
-                         this._xmlNode.hasAttribute('ontransform') ||
+                var dom = this._xmlNode;
+
+                if (dom && (dom['ontransform'] ||
+                         dom.hasAttribute('ontransform') ||
                          this._listeners['transform'])) {
                     var transMatrix = this.getCurrentTransform();
 
                     var event = {
-                        target: this._xmlNode,
+                        target: dom,
                         type: 'transform',
                         worldX: transMatrix._03,
                         worldY: transMatrix._13,
@@ -33372,9 +33891,11 @@ x3dom.registerNodeType(
                 }
 
                 // temporary per frame update method for CSS-Transform
-                if (this._needCssStyleUpdates) {
-                    var trans = x3dom.getStyle(this._xmlNode, "-webkit-transform") ||
-                                x3dom.getStyle(this._xmlNode, "-moz-transform");
+                if (this._needCssStyleUpdates && dom) {
+                    var trans = x3dom.getStyle(dom, "-webkit-transform") ||
+                                x3dom.getStyle(dom, "-moz-transform") ||
+                                x3dom.getStyle(dom, "-ms-transform") ||
+                                x3dom.getStyle(dom, "transform");
 
                     if (trans && (trans != 'none')) {
                         this._trafo.setValueByStr(trans);
@@ -34107,6 +34628,16 @@ x3dom.registerNodeType(
                 xhr.onload = function()
                 {
                     that._shadowIdMap = eval("(" + xhr.response + ")");
+
+                    if (!that._shadowIdMap || !that._shadowIdMap.mapping) {
+                        x3dom.debug.logWarning("Invalid ID map: " + that._vf.shadowObjectIdMapping);
+                    }
+                    else {
+                        x3dom.debug.assert(that._shadowIdMap.maxID <= that._shadowIdMap.mapping.length,
+                            "Too few ID map entries in " + that._vf.shadowObjectIdMapping + ", " +
+                            "length of mapping array is only " + that._shadowIdMap.mapping.length +
+                            " instead of " + that._shadowIdMap.ids.length + "!");
+                    }
                 };
             }
         }
@@ -34368,6 +34899,11 @@ x3dom.registerNodeType(
             // but one should be able to disable cache per geometry node.
             this.addField_SFBool(ctx, 'useGeoCache', true);
 
+            /**
+             * Specifies whether this geometry should be rendered with or without lighting.
+             */
+            this.addField_SFBool(ctx, 'lit', true);
+
             // mesh object also holds volume (_vol)
             this._mesh = new x3dom.Mesh(this);
         },
@@ -34417,6 +34953,11 @@ x3dom.registerNodeType(
                     parent.setAllDirty();
                     parent.invalidateVolume();
                 }
+            },
+
+            needLighting: function() {
+                var hasTris = this._mesh._primType.indexOf("TRIANGLE") == 0;
+                return (this._vf.lit && hasTris);
             }
         }
     )
@@ -34492,7 +35033,7 @@ x3dom.registerNodeType(
         function (ctx) {
             x3dom.nodeTypes.PointSet.superClass.call(this, ctx);
 
-            this.addField_SFNode('coord', x3dom.nodeTypes.Coordinate);
+            this.addField_SFNode('coord', x3dom.nodeTypes.X3DCoordinateNode);
             this.addField_SFNode('color', x3dom.nodeTypes.X3DColorNode);
 
             this._mesh._primType = 'POINTS';
@@ -34504,7 +35045,7 @@ x3dom.registerNodeType(
 
                 var coordNode = this._cf.coord.node;
                 x3dom.debug.assert(coordNode);
-                var positions = coordNode._vf.point;
+                var positions = coordNode.getPoints();
 
                 var numColComponents = 3;
                 var colorNode = this._cf.color.node;
@@ -34540,7 +35081,7 @@ x3dom.registerNodeType(
                 
                 if (fieldName == "coord")
                 {
-                    pnts = this._cf.coord.node._vf.point;
+                    pnts = this._cf.coord.node.getPoints();
                     
                     this._mesh._positions[0] = pnts.toGL();
 
@@ -34643,6 +35184,7 @@ x3dom.registerNodeType(
             this.addField_SFNode('color', x3dom.nodeTypes.X3DColorNode);
 
             this._mesh._primType = "LINES";
+            x3dom.Utils.needLineWidth = true;
         },
         {
             nodeChanged: function() {
@@ -34723,6 +35265,7 @@ x3dom.registerNodeType(
             this.addField_MFInt32(ctx, 'colorIndex', []);
 
             this._mesh._primType = 'LINES';
+            x3dom.Utils.needLineWidth = true;
         },
         {
             nodeChanged: function()
@@ -36408,6 +36951,10 @@ x3dom.registerNodeType(
                 if (this._cf.shaders.nodes.length) {
                     this._shader = this._cf.shaders.nodes[0];
                 }
+                
+                Array.forEach(this._parentNodes, function (shape) {
+                    shape.setAppDirty();
+                });
 				
 				this.checkSortType();
             },
@@ -36743,6 +37290,10 @@ x3dom.registerNodeType(
                     return this._tessellationProperties; // BVHRefiner-Patch
             },
 
+            isLit: function() {
+                return this._cf.geometry.node._vf.lit;
+            },
+
             isSolid: function() {
                 return this._cf.geometry.node._vf.solid;
             },
@@ -36828,9 +37379,11 @@ x3dom.registerNodeType(
                 this.invalidateVolume();
             },
 
-            getShaderProperties: function(viewarea) {
-                if (this._shaderProperties == null || this._dirty.shader == true ||
-                    (this._webgl !== undefined && this._webgl.dirtyLighting != x3dom.Utils.checkDirtyLighting(viewarea)))
+            getShaderProperties: function(viewarea)
+            {
+                if (this._shaderProperties == null ||
+                    this._dirty.shader == true     ||
+                    (this._webgl !== undefined && this._webgl.dirtyLighting != x3dom.Utils.checkDirtyLighting(viewarea)) )
                 {
                     this._shaderProperties = x3dom.Utils.generateProperties(viewarea, this);
                     this._dirty.shader = false;
@@ -39477,7 +40030,8 @@ x3dom.registerNodeType(
             this.addField_SFBool(ctx, 'load', true);
 			this.addField_MFString(ctx, 'nameSpaceName', []);
 			this.addField_SFBool(ctx, 'mapDEFToID', false);
-            
+
+            this.initDone = false;
 			this.count = 0;
             this.numRetries = x3dom.nodeTypes.Inline.MaximumRetries;
         },
@@ -39495,11 +40049,19 @@ x3dom.registerNodeType(
 							} 
 						}
 					}
-                    this.nodeChanged();
+                    this.loadInline();
                 }
                 else if (fieldName == "render") {
                     this.invalidateVolume();
                     //this.invalidateCache();
+                }
+            },
+
+            nodeChanged: function ()
+            {
+                if (!this.initDone) {
+                    this.initDone = true;
+                    this.loadInline();
                 }
             },
 
@@ -39543,7 +40105,7 @@ x3dom.registerNodeType(
                 }
             },
 
-            nodeChanged: function ()
+            loadInline: function ()
             {
 				var that = this;
 
@@ -39566,7 +40128,7 @@ x3dom.registerNodeType(
 
 						window.setTimeout(function() {
                             that._nameSpace.doc.downloadCount -= 1;
-                            that.nodeChanged();
+                            that.loadInline();
 							}, refreshTime * 1000);
                         return xhr;
 					}
@@ -39721,11 +40283,14 @@ x3dom.nodeTypes.Inline.MaximumRetries = 15;         // Parameterizable maximum n
 function setNamespace(prefix, childDomNode, mapDEFToID)
 {
 	if(childDomNode instanceof Element && childDomNode.__setAttribute !== undefined) {
-	
+
 		if(childDomNode.hasAttribute('id') )	{
 			childDomNode.__setAttribute('id', prefix.toString().replace(' ','') +'__'+ childDomNode.getAttribute('id'));	
 		} else if (childDomNode.hasAttribute('DEF') && mapDEFToID){
 			childDomNode.__setAttribute('id', prefix.toString().replace(' ','') +'__'+ childDomNode.getAttribute('DEF'));
+            // workaround for Safari
+            if (!childDomNode.id)
+                childDomNode.id = childDomNode.__getAttribute('id');
 		}
 	}
 	
@@ -39889,8 +40454,8 @@ x3dom.registerNodeType(
             // Transparent objects like glass do not throw much shadow, enable this IR convenience flag with TRUE
             this.addField_SFBool(ctx, 'shadowExcludeTransparentObjects', false);
             
-            // The gamma correction to apply by default, see lighting and gamma tutorial.
-            this.addField_SFString(ctx, 'gammaCorrectionDefault', "linear");
+            // The gamma correction to apply by default, see lighting and gamma tutorial
+            this.addField_SFString(ctx, 'gammaCorrectionDefault', "none"); //"linear");
 
             // boolean flags for feature (de)activation
             // If TRUE, objects outside the viewing frustum are ignored
@@ -39962,8 +40527,8 @@ x3dom.registerNodeType(
                         return field;
                     }
                     else {
-                        x3dom.debug.logWarning(field + " gammaCorrectionDefault may only be linear (default), fastLinear, or none");
-                        return "linear";
+                        x3dom.debug.logWarning(field + " gammaCorrectionDefault may only be linear, fastLinear, or none (default)");
+                        return that._validGammaCorrectionTypes[0];
                     }
                 };
                 
@@ -40044,6 +40609,10 @@ x3dom.registerNodeType(
 
             getCenterOfRotation: function() {
                 return new x3dom.fields.SFVec3f(0, 0, 0);
+            },
+
+            setCenterOfRotation: function(cor) {
+                this._vf.centerOfRotation.setValues(cor);   // method overwritten by Viewfrustum
             },
 
             getFieldOfView: function() {
@@ -40246,12 +40815,12 @@ x3dom.registerNodeType(
                 else if (this._lastAspect != aspect)
                 {
                     this._projMatrix._00 = (1 / Math.tan(fovy / 2)) / aspect;
+                    this._lastAspect = aspect;
                 }
 
                 // also needed for being able to ask for near and far
                 this._zNear = znear;
                 this._zFar = zfar;
-                this._lastAspect = aspect;
 
                 return this._projMatrix;
             }
@@ -40382,6 +40951,10 @@ x3dom.registerNodeType(
             getCenterOfRotation: function() {
                 return this._centerOfRotation;  // this field is only a little helper for examine mode
             },
+
+            setCenterOfRotation: function(cor) {
+                this._centerOfRotation.setValues(cor);   // update internal helper field
+            },
             
             getViewMatrix: function() {
                 return this._viewMatrix;
@@ -40467,6 +41040,10 @@ x3dom.registerNodeType(
                         case 'helicopter':
                             this._heliUpdated = false;
                             break;
+                        case "turntable":
+                            this._nameSpace.doc._viewarea.initMouseState();
+                            this._nameSpace.doc._viewarea.initTurnTable(this);
+                            break;
                         default:
                             break;
                     }
@@ -40492,6 +41069,18 @@ x3dom.registerNodeType(
                     case 'helicopter':
                         if (oldType !== navType) {
                             this._heliUpdated = false;
+                        }
+                        break;
+                    case "turntable":
+                        if (oldType !== navType) {
+                            if (viewarea) {
+                                viewarea.initMouseState();
+                                viewarea.initTurnTable(this);
+                            }
+                            else {
+                                this._nameSpace.doc._viewarea.initMouseState();
+                                this._nameSpace.doc._viewarea.initTurnTable(this);
+                            }
                         }
                         break;
                     default:
@@ -41160,7 +41749,6 @@ x3dom.registerNodeType(
                         <audio src='sound/spita.wav' loop='loop'></audio>
                     </sound>
                 */
-                var that = this;
                 try {
                     Array.forEach( this._xmlNode.childNodes, function (childDomNode) {
                         if (childDomNode.nodeType === 1)
@@ -41173,6 +41761,7 @@ x3dom.registerNodeType(
                                 var loop = childDomNode.getAttribute("loop");
                                 loop = loop ? (loop.toLowerCase() === "loop") : false;
 
+                                // TODO; check if crash still exists and clean-up code
                                 // work around strange crash in Chrome
                                 // by creating new audio element here
 
@@ -41316,6 +41905,17 @@ x3dom.registerNodeType(
                         this._audio.appendChild(src);
                     }
                 }
+            },
+
+            shutdown: function() {
+                if (this._audio) {
+                    this._audio.pause();
+                    while (this._audio.hasChildNodes()) {
+                        this._audio.removeChild(this._audio.firstChild);
+                    }
+                    document.body.removeChild(this._audio);
+                    this._audio = null;
+                }
             }
         }
     )
@@ -41458,10 +42058,19 @@ x3dom.registerNodeType(
             invalidateGLObject: function ()
             {
                 Array.forEach(this._parentNodes, function (app) {
-                        Array.forEach(app._parentNodes, function (shape) {
+                    Array.forEach(app._parentNodes, function (shape) {
+                        // THINKABOUTME: this is a bit ugly, cleanup more generically
+                        if (x3dom.isa(shape, x3dom.nodeTypes.X3DShapeNode)) {
                             shape._dirty.texture = true;
-                        });
+                        }
+                        else {
+                            // Texture maybe in MultiTexture or CommonSurfaceShader
+                            Array.forEach(shape._parentNodes, function (realShape) {
+                                realShape._dirty.texture = true;
+                            });
+                        }
                     });
+                });
 
                 this._nameSpace.doc.needRender = true;
             },
@@ -41469,14 +42078,32 @@ x3dom.registerNodeType(
             parentAdded: function(parent)
             {
                 Array.forEach(parent._parentNodes, function (shape) {
-                    shape._dirty.texture = true;
+                    // THINKABOUTME: this is a bit ugly, cleanup more generically
+                    if (x3dom.isa(shape, x3dom.nodeTypes.Shape)) {
+                        shape._dirty.texture = true;
+                    }
+                    else {
+                        // Texture maybe in MultiTexture or CommonSurfaceShader
+                        Array.forEach(shape._parentNodes, function (realShape) {
+                            realShape._dirty.texture = true;
+                        });
+                    }
                 });
             },
 
             parentRemoved: function(parent)
             {
                 Array.forEach(parent._parentNodes, function (shape) {
-                    shape._dirty.texture = true;
+                    // THINKABOUTME: this is a bit ugly, cleanup more generically
+                    if (x3dom.isa(shape, x3dom.nodeTypes.Shape)) {
+                        shape._dirty.texture = true;
+                    }
+                    else {
+                        // Texture maybe in MultiTexture or CommonSurfaceShader
+                        Array.forEach(shape._parentNodes, function (realShape) {
+                            realShape._dirty.texture = true;
+                        });
+                    }
                 });
             },
 
@@ -41500,6 +42127,19 @@ x3dom.registerNodeType(
                             if (that._xmlNode && that._xmlNode.hasAttribute('containerField')) {
                                 cf = that._xmlNode.getAttribute('containerField');
                                 app._dirty[cf] = true;
+                            }
+                        }
+                        else if (x3dom.nodeTypes.X3DVolumeDataNode !== undefined) {
+                            if (x3dom.isa(app, x3dom.nodeTypes.X3DVolumeRenderStyleNode)) {
+                                if (that._xmlNode && that._xmlNode.hasAttribute('containerField')) {
+                                    Array.forEach(app._parentNodes, function(shape){
+                                        shape._dirty.texture = true;
+                                    });
+                                }
+                            } else if (x3dom.isa(app, x3dom.nodeTypes.X3DVolumeDataNode)) {
+                                if (that._xmlNode && that._xmlNode.hasAttribute('containerField')) {
+                                    app._dirty.texture = true;
+                                }
                             }
                         }
                     });
@@ -41610,6 +42250,17 @@ x3dom.registerNodeType(
                 catch(e) {
                     x3dom.debug.logException(e);
                 }
+            },
+
+            shutdown: function() {
+                if (this._video) {
+                    this._video.pause();
+                    while (this._video.hasChildNodes()) {
+                        this._video.removeChild(this._video.firstChild);
+                    }
+                    document.body.removeChild(this._video);
+                    this._video = null;
+                }
             }
         }
     )
@@ -41627,15 +42278,18 @@ x3dom.registerNodeType(
             else
                 x3dom.debug.logWarning("RenderedTexture: No runtime context found!");
 
+            // Original proposal taken from:  http://www.xj3d.org/extensions/render_texture.html
+            // http://doc.instantreality.org/documentation/nodetype/RenderedTexture/?filter=None
+
             this.addField_SFNode('viewpoint', x3dom.nodeTypes.X3DViewpointNode);
             this.addField_SFNode('background', x3dom.nodeTypes.X3DBackgroundNode);
             this.addField_SFNode('fog', x3dom.nodeTypes.X3DFogNode);    //TODO
             this.addField_SFNode('scene', x3dom.nodeTypes.X3DNode);
             this.addField_MFNode('excludeNodes', x3dom.nodeTypes.X3DNode);
-            this.addField_MFInt32(ctx, 'dimensions', [128, 128, 4]);
+            this.addField_MFInt32(ctx, 'dimensions', [128, 128, 4]);    // w, h, color components (and numMRTs)
             this.addField_SFString(ctx, 'update', 'NONE');         // ("NONE"|"NEXT_FRAME_ONLY"|"ALWAYS")
-            this.addField_SFBool(ctx, 'showNormals', false);
 
+            this.addField_SFBool(ctx, 'showNormals', false);
             this.addField_SFString(ctx, 'stereoMode', 'NONE');     // ("NONE"|"LEFT_EYE"|"RIGHT_EYE")
             this.addField_SFFloat(ctx, 'interpupillaryDistance', 0.064);
 
@@ -41648,7 +42302,8 @@ x3dom.registerNodeType(
             //hRes, vRes = 1280 x 800
             this.lensCenter = 1 - 2 * this.lensSeparationDistance / this.hScreenSize;
 
-            x3dom.debug.assert(this._vf.dimensions.length >= 3);
+            x3dom.debug.assert(this._vf.dimensions.length >= 3,
+                               "RenderedTexture.dimensions requires at least 3 entries.");
             this._clearParents = true;
             this._needRenderUpdate = true;
         },
@@ -41699,16 +42354,22 @@ x3dom.registerNodeType(
                     this._clearParents = false;
                 }
 
-                var vbP = this._nameSpace.doc._scene.getViewpoint();
+                var locScene = this._cf.scene.node;
+                var scene = this._nameSpace.doc._scene;
+                var vbP = scene.getViewpoint();
                 var view = this._cf.viewpoint.node;
                 var ret_mat = null;
 
                 if (view === null || view === vbP) {
                     ret_mat = this._nameSpace.doc._viewarea.getViewMatrix();
                 }
+                else if (locScene && locScene !== scene) {
+                    // in case of completely local scene do not transform local viewpoint
+                    ret_mat = view.getViewMatrix()
+                }
                 else {
                     var mat_viewpoint = view.getCurrentTransform();
-                    ret_mat = mat_viewpoint.mult(view.getViewMatrix());
+                    ret_mat = view.getViewMatrix().mult(mat_viewpoint.inverse());
                 }
 
                 var stereoMode = this._vf.stereoMode.toUpperCase();
@@ -41795,10 +42456,61 @@ x3dom.registerNodeType(
                 if (this._cf.scene.node) {
                     this._cf.scene.node.parentRemoved(this);
                 }
+            },
+
+            requirePingPong: function()
+            {
+                return false;
             }
         }
     )
 );
+
+/* ### RefinementTexture ### */
+x3dom.registerNodeType(
+    "RefinementTexture",
+    "Texturing",
+    defineClass(x3dom.nodeTypes.RenderedTexture,
+        function (ctx) {
+            x3dom.nodeTypes.RefinementTexture.superClass.call(this, ctx);
+
+            // Specify first stamp texture
+            this.addField_SFString(ctx, 'stamp0', "gpuii/stamps/0.gif");
+            // Specifiy second stamp texture
+            this.addField_SFString(ctx, 'stamp1', "gpuii/stamps/1.gif");
+            // Defines if texture refinement should be managed by another component
+            this.addField_SFBool(ctx, 'autoRefinement', true);
+            // Format of the images of the dataset that should be loaded
+            this.addField_SFString(ctx, 'format', 'jpg');
+            // Maximum level that should be loaded (if GSM smaller than on DSL6000)
+            this.addField_SFInt32(ctx, 'maxLevel', 7);
+
+            this._vf.maxLevel = (this._vf.maxLevel > 7) ? 7 : this._vf.maxLevel;
+            this._vf.maxLevel = (this._vf.maxLevel < 1) ? 1 : this._vf.maxLevel;
+
+            // Additional parameters to control the refinement mechanism on shader
+            this._repeat = new x3dom.fields.SFVec2f(this._vf.dimensions[0] / 16,
+                                                    this._vf.dimensions[1] / 32);
+            this._renderedImage = 0;
+            this._currLoadLevel = 0;
+            this._loadLevel = 1;
+        },
+        {
+            nextLevel: function() {
+                if (this._loadLevel < this._vf.maxLevel) {
+                    this._loadLevel++;
+                    this._nameSpace.doc.needRender = true;
+                }
+            },
+
+            requirePingPong: function() {
+                return (this._currLoadLevel <= this._vf.maxLevel &&
+                        this._renderedImage < this._loadLevel);
+            }
+        }
+    )
+);
+
 
 /* ### PixelTexture ### */
 x3dom.registerNodeType(
@@ -41990,6 +42702,306 @@ x3dom.registerNodeType(
             x3dom.nodeTypes.MultiTextureCoordinate.superClass.call(this, ctx);
 
             this.addField_MFNode('texCoord', x3dom.nodeTypes.X3DTextureCoordinateNode);
+        }
+    )
+);
+
+
+// TODO; remove this node, use GeneratedCubeMapTexture instead!!!
+/* ### MirrorRenderedTexture ### */
+x3dom.registerNodeType(
+    "MirrorRenderedTexture",
+    "Texturing",
+    defineClass(x3dom.nodeTypes.RenderedTexture,
+        function (ctx) {
+            x3dom.nodeTypes.MirrorRenderedTexture.superClass.call(this, ctx);
+            
+            this.addField_SFVec3f(ctx, 'viewOffset', 0, 0, 0);
+        },
+        {
+            getViewMatrix: function ()
+            {
+                if (this._clearParents && this._cf.excludeNodes.nodes.length) {
+                    var that = this;
+
+                    Array.forEach(this._cf.excludeNodes.nodes, function(node) {
+                        for (var i=0, n=node._parentNodes.length; i < n; i++) {
+                            if (node._parentNodes[i] === that) {
+                                node._parentNodes.splice(i, 1);
+                                node.parentRemoved(that);
+                            }
+                        }
+                    });
+
+                    this._clearParents = false;
+                }
+
+                var vbP = this._nameSpace.doc._scene.getViewpoint();
+                var view = this._cf.viewpoint.node;
+                var ret_mat = null;
+
+                if (view === null || view === vbP) {
+                    ret_mat = this._nameSpace.doc._viewarea.getViewMatrix();    // viewOffset?!
+                }
+                else {
+                    // Grab only the translation to pass it to the final transform matrix
+                    var mat_transform = view.getCurrentTransform();
+                    var mat_translate = new x3dom.fields.SFMatrix4f(
+                        1, 0, 0, mat_transform._03 + this._vf.viewOffset.x,
+                        0, 1, 0, mat_transform._13 + this._vf.viewOffset.y,
+                        0, 0, 1, mat_transform._23 + this._vf.viewOffset.z,
+                        0, 0, 0, 1).inverse();
+                    ret_mat = view.getViewMatrix().mult(mat_translate);
+                }
+
+                return ret_mat;
+            }
+        }
+    )
+);
+
+
+// TODO; use GeneratedCubeMapTexture and move GLSL code to src/shader/ for integration!
+/* ### MirrorTexture ### */
+x3dom.registerNodeType(
+    "MirrorTexture",
+    "Texturing",
+    defineClass(x3dom.nodeTypes.MultiTexture,
+        function (ctx) {
+            x3dom.nodeTypes.MirrorTexture.superClass.call(this, ctx);
+
+            this.addField_SFNode('viewpoint', x3dom.nodeTypes.X3DViewpointNode);
+            this.addField_SFNode('background', x3dom.nodeTypes.X3DBackgroundNode);  
+            this.addField_SFVec3f(ctx, 'viewOffset', 0, 0, 0); 
+            this.addField_SFFloat(ctx, 'mirrorScale', 1.0);
+            
+            this._faceRTs = [
+                new x3dom.nodeTypes.MirrorRenderedTexture(ctx),
+                new x3dom.nodeTypes.MirrorRenderedTexture(ctx),
+                new x3dom.nodeTypes.MirrorRenderedTexture(ctx),
+                new x3dom.nodeTypes.MirrorRenderedTexture(ctx),
+                new x3dom.nodeTypes.MirrorRenderedTexture(ctx),
+                new x3dom.nodeTypes.MirrorRenderedTexture(ctx)
+            ];            
+            
+            this.samplerFields = [
+                new x3dom.nodeTypes.Field(ctx),
+                new x3dom.nodeTypes.Field(ctx),
+                new x3dom.nodeTypes.Field(ctx),
+                new x3dom.nodeTypes.Field(ctx),
+                new x3dom.nodeTypes.Field(ctx),
+                new x3dom.nodeTypes.Field(ctx)
+            ];
+            
+            this.scaleField = new x3dom.nodeTypes.Field(ctx);
+        },
+        {
+            // nodeChanged is called after subtree is parsed and attached in DOM
+            nodeChanged: function() {
+                if (!this.size())
+                {
+                    // Orientations for each direction of the cube map
+                    // 0 - front, 1 - left, 2 - back, 3 - right, 4 - up, 5 - down
+                    var orientations = [
+                        [0.0, 1.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0, Math.PI/2],
+                        [0.0, 1.0, 0.0, Math.PI],
+                        [0.0, 1.0, 0.0, 3*Math.PI/2],
+                        [1.0, 0.0, 0.0, Math.PI/2],
+                        [1.0, 0.0, 0.0, 3*Math.PI/2]
+                    ];
+
+                    // Initialize RenderedTextures for each face of the cube
+                    for (var i = 0; i < this._faceRTs.length; i++)
+                    {
+                        this._faceRTs[i]._nameSpace = this._nameSpace;
+                        this._faceRTs[i]._vf.update = 'always';
+                        this._faceRTs[i]._vf.dimensions = [1024, 1024, 2];  // make dynamic!
+                        this._faceRTs[i]._vf.repeatS = false;
+                        this._faceRTs[i]._vf.repeatT = false;
+                        this._faceRTs[i]._vf.viewOffset = this._vf.viewOffset;
+
+                        var vp = new x3dom.nodeTypes.Viewpoint();
+
+                        vp._nameSpace = this._nameSpace;
+                        vp._vf.position = new x3dom.fields.SFVec3f(0.0, 0.0, 0.0);
+                        vp.fieldChanged("position");
+                        vp._vf.orientation = x3dom.fields.Quaternion.axisAngle(
+                            new x3dom.fields.SFVec3f(
+                                orientations[i][0],
+                                orientations[i][1],
+                                orientations[i][2]
+                            ),
+                            orientations[i][3]
+                        );
+                        vp.fieldChanged("orientation");
+                        vp._vf.fieldOfView = 1.570796;
+                        vp.fieldChanged("fieldOfView");
+                        vp._vf.zNear = 0.1;         // make dynamic
+                        vp.fieldChanged("zNear");
+                        vp._vf.zFar = 5000.0;       // make dynamic
+                        vp.fieldChanged("zFar");
+
+                        this._faceRTs[i].addChild(vp, 'viewpoint');
+                        vp.nodeChanged();
+
+                        if(this._cf.background.node) {
+                            this._faceRTs[i].addChild(this._cf.background.node, 'background');
+                            this._cf.background.node.nodeChanged();
+                        }
+
+                        this.addChild(this._faceRTs[i], 'texture');
+                        this._faceRTs[i].nodeChanged();
+
+                        // Initialize the corresponding fields for the sampler2D shader-objects
+                        this.samplerFields[i]._nameSpace = this._nameSpace;
+                        this.samplerFields[i]._vf.name = 'mirror' + i;
+                        this.samplerFields[i]._vf.type = 'SFInt32';
+                        this.samplerFields[i]._vf.value = i;
+                    }
+
+                    this.scaleField._nameSpace = this._nameSpace;
+                    this.scaleField._vf.name = 'mirrorScale';
+                    this.scaleField._vf.type = 'SFFloat';
+                    this.scaleField._vf.value = 1.0;
+                    this.scaleField._vf.value = this._vf.mirrorScale;
+                    this.scaleField.nodeChanged();
+                }
+            },
+
+            // FIXME; shaders don't belong here as this either doesn't work together
+            // with general appearance settings as well as with Flash backend!
+            getVertexShaderCode : function()
+            {        
+                var shader =  
+                        'attribute vec3 position;\n' +
+                        'attribute vec3 normal;\n' +
+                        'uniform mat4 worldMatrix;\n' +
+                        'uniform mat4 viewMatrixInverse;\n' +
+                        'uniform mat4 worldInverseTranspose;\n' +
+                        'uniform mat4 modelViewProjectionMatrix;\n' +
+                        'varying vec3 norm;\n' +
+                        'varying vec3 eye;\n' +
+                        'varying float eyeLength;\n' +  
+                        'void main()\n' +
+                        '{\n' +
+                        '   vec4 vertex = vec4(position, 1.0);\n' +
+                        '   vec4 pos = worldMatrix * vertex;\n' +
+                        '   gl_Position = modelViewProjectionMatrix * vertex;\n' +
+                        '   eye = (viewMatrixInverse * vec4(0.0,0.0,0.0, 1.0)).xyz - pos.xyz;\n' +
+                        '   eyeLength = length(eye);\n' +
+                        '   eye = normalize(eye);\n' +
+                        '   norm = normalize((worldInverseTranspose * vec4(normal, 0.0)).xyz);\n' +
+                        '}\n';
+                
+                return shader;
+            },
+            
+            getFragmentShaderCode : function()
+            {                
+                var shader =
+                        "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+                        " precision highp float;\n" +
+                        "#else\n" +
+                        " precision mediump float;\n" +
+                        "#endif\n\n" +
+                        'varying vec3 norm;\n' +
+                        'varying vec3 eye;\n' +
+                        'varying float eyeLength;\n' +
+                        // 0 - front, 1 - left, 2 - back, 3 - right, 4 - up, 5 - down
+                        'uniform sampler2D mirror0;\n' +
+                        'uniform sampler2D mirror1;\n' +
+                        'uniform sampler2D mirror2;\n' +
+                        'uniform sampler2D mirror3;\n' +
+                        'uniform sampler2D mirror4;\n' +
+                        'uniform sampler2D mirror5;\n' +
+                        'uniform float mirrorScale;\n' +
+                        '\n' +
+                        'vec4 texCUBE(vec3 refl){\n' +
+                        '   vec3 reflAbs = abs(refl);\n' +
+                        '   vec4 color;\n' +
+                        '   float maximum = max(max(reflAbs.x, reflAbs.y),reflAbs.z);\n' +
+                        '   float scale = eyeLength / mirrorScale;\n' +
+                        '   if(maximum == reflAbs.x) {\n' +
+                        '       if(refl.x < 0.0) {\n' +
+                        '           color = texture2D(mirror1, 1.0 - (vec2(refl.z/abs(refl.x), (-refl.y) / abs(refl.x)) * scale + 1.0) * 0.5);\n' +
+                        '       } else {\n' +
+                        '           color = texture2D(mirror3, 1.0 - (vec2((-refl.z)/abs(refl.x), (-refl.y) / abs(refl.x)) * scale + 1.0) * 0.5);\n' +
+                        '       }\n' +
+                        '   }else if(maximum == reflAbs.y) {\n' +
+                        '       if(refl.y < 0.0) {\n' +
+                        '           color = texture2D(mirror5, (vec2(refl.x/abs(refl.y), (-refl.z) / abs(refl.y)) * scale + 1.0) * 0.5);\n' +
+                        '       } else {\n' +
+                        '           color = texture2D(mirror4, (vec2(refl.x/abs(refl.y), (refl.z) / abs(refl.y)) * scale + 1.0) * 0.5);\n' +
+                        '       }\n' +
+                        '   } else {;\n' +
+                        '       if(refl.z < 0.0) {\n' +
+                        '           color = texture2D(mirror0, 1.0 - (vec2((-refl.x)/abs(refl.z), (-refl.y) / abs(refl.z)) * scale + 1.0) * 0.5);\n' +
+                        '       } else {\n'+
+                        '           color = texture2D(mirror2, 1.0 - (vec2((refl.x)/abs(refl.z), (-refl.y) / abs(refl.z)) * scale + 1.0) * 0.5);\n' +
+                        '       }\n' +
+                        '   }\n' +
+                        '   return color;\n' +
+                        '}\n' +
+                        '\n' + 
+                        'void main(){\n' +
+                        '   vec3 normal = norm;\n' +
+                        '   vec3 surfaceToView = eye;\n' +
+                        '   vec3 refl = -reflect(surfaceToView, normal);\n' +
+                        '   gl_FragColor = texCUBE(refl);\n' +
+                        '}\n';
+                
+                return shader;
+            },
+
+            parentAdded: function(parent)
+            {
+                if (x3dom.isa(parent, x3dom.nodeTypes.Appearance)) {
+                    // Add a mirror shader if the parent node is an appearance.
+                    // Create shader
+                    var shader = new x3dom.nodeTypes.ComposedShader();
+                    shader._nameSpace = this._nameSpace;
+                    var vertexShader = new x3dom.nodeTypes.ShaderPart();
+                    vertexShader._nameSpace = this._nameSpace;
+                    var fragmentShader = new x3dom.nodeTypes.ShaderPart();
+                    fragmentShader._nameSpace = this._nameSpace;
+
+                    vertexShader._vf.type = 'vertex';
+                    vertexShader._vf.url[0] = this.getVertexShaderCode();
+                    shader.addChild(vertexShader, 'parts');
+                    vertexShader.nodeChanged();
+
+                    fragmentShader._vf.type = 'fragment';
+                    fragmentShader._vf.url[0] = this.getFragmentShaderCode();
+                    shader.addChild(fragmentShader, 'parts');
+                    fragmentShader.nodeChanged();
+
+                    // Add field for each sampler2D
+                    for (var i = 0; i < this.samplerFields.length; i++)
+                    {
+                        shader.addChild(this.samplerFields[i], 'fields');
+                        this.samplerFields[i].nodeChanged();
+                    }
+                    shader.addChild(this.scaleField);
+                    this.scaleField.nodeChanged();
+
+                    parent.addChild(shader, 'shaders');
+                    shader.nodeChanged();
+                }
+            },
+            
+            parentRemoved: function(parent)
+            {
+                if (this._parentNodes.length === 0) {
+                    var doc = this.findX3DDoc();
+
+                    for (var i=0, n=doc._nodeBag.renderTextures.length; i<n; i++) {
+                        if (doc._nodeBag.renderTextures[i] in this._faceRTs) {
+                            doc._nodeBag.renderTextures.splice(i, 1);
+                        }
+                    }
+                }
+            }
         }
     )
 );
@@ -42245,6 +43257,7 @@ x3dom.registerNodeType(
             // shortcut to shader parts
             this._vertex = null;
             this._fragment = null;
+            this._id = null;
 
             if (!x3dom.nodeTypes.ComposedShader.ShaderInfoMsgShown) {
                 x3dom.debug.logInfo("Current ComposedShader node implementation limitations:\n" +
@@ -42273,9 +43286,11 @@ x3dom.registerNodeType(
                 {
                     if (this._cf.parts.nodes[i]._vf.type.toLowerCase() == 'vertex') {
                         this._vertex = this._cf.parts.nodes[i];
+                        this._id = this._cf.parts.nodes[i]._id;
                     }
                     else if (this._cf.parts.nodes[i]._vf.type.toLowerCase() == 'fragment') {
                         this._fragment = this._cf.parts.nodes[i];
+                        this._id += " - " + this._cf.parts.nodes[i]._id;
                     }
                 }
 
@@ -42377,6 +43392,8 @@ x3dom.registerNodeType(
 
 x3dom.nodeTypes.ComposedShader.ShaderInfoMsgShown = false;
 
+/** Static class ID counter (needed for caching) */
+x3dom.nodeTypes.Shape.shaderPartID = 0;
 
 /* ### ShaderPart ### */
 x3dom.registerNodeType(
@@ -42388,6 +43405,9 @@ x3dom.registerNodeType(
 
             this.addField_MFString(ctx, 'url', []);
             this.addField_SFString(ctx, 'type', "VERTEX");
+            
+            this._id = (ctx && ctx.xmlNode && ctx.xmlNode.id != "") ?
+                        ctx.xmlNode.id : ++x3dom.nodeTypes.Shape.shaderPartID;
 
             x3dom.debug.assert(this._vf.type.toLowerCase() == 'vertex' ||
                                this._vf.type.toLowerCase() == 'fragment');
@@ -42743,7 +43763,8 @@ x3dom.registerNodeType(
 			}
         },
         {
-            fieldChanged: function(fieldName) {
+            fieldChanged: function (fieldName)
+            {
                 if (fieldName === "size") {
                     var sx = this._vf.size.x / 2,
                         sy = this._vf.size.y / 2,
@@ -44021,6 +45042,11 @@ x3dom.registerNodeType(
 
             getDiameter: function() {
                 return this._diameter;
+            },
+
+            needLighting: function() {
+                var hasTris = (this._vf.primType.length && this._vf.primType[0].indexOf("TRIANGLE") == 0);
+                return (this._vf.lit && hasTris);
             }
         }
     )
@@ -46401,17 +47427,21 @@ x3dom.registerNodeType(
               return false;
             },
 
-            getElipsoide: function(geoSystem)
+            getElipsoideCode: function(geoSystem)
             {
               for(var i=0; i<geoSystem.length; ++i)
               {
                 var code = geoSystem[i];
                 if(this.elipsoideParameters[code])
-                  return this.elipsoideParameters[code];
+                  return code;
               }
+              //default elipsoide code
+              return 'WE';
+            },
 
-              // default elipsoide
-              return this.elipsoideParameters['WE'];
+            getElipsoide: function(geoSystem)
+            {
+              return this.elipsoideParameters[this.getElipsoideCode(geoSystem)];
             },
 
             getReferenceFrame: function(geoSystem)
@@ -46431,12 +47461,128 @@ x3dom.registerNodeType(
                   x3dom.debug.logError('Unknown GEO system: [' + geoSystem + ']');
               }
 
-              // default elipsoide
-              return this.elipsoideParameters['WE'];
+              // default reference frame is GD WE
+              return 'GD';
             },
 
-            UTMtoGC: function(geoSystem, coords) {
-              x3dom.debug.logError('Not implemented GeoCoordinate: UTM');
+            getUTMZone: function(geoSystem)
+            {
+              for(var i=0; i<geoSystem.length; ++i)
+                {
+                  var code = geoSystem[i];
+
+                  if(code[0] == 'Z')
+                    return code.substring(1);
+                }
+              // no zone found
+              x3dom.debug.logError('no UTM zone but is required:' + geoSystem);
+            },
+
+            getUTMHemisphere: function(geoSystem)
+            {
+              for(var i=0; i<geoSystem.length; ++i)
+                {
+                  var code = geoSystem[i];
+
+                  if(code == 'S')
+                    return code;
+                }
+              // North by default according to spec
+              return 'N';
+            },
+
+            isUTMEastingFirst: function(geoSystem)
+            {
+              for(var i=0; i<geoSystem.length; ++i)
+                {
+                  var code = geoSystem[i];
+                  if(code == 'easting_first')
+                    return true;
+                }
+              // Northing first by default according to spec
+              return false;
+            },
+
+            UTMtoGC: function(geoSystem, coords)
+            {
+              //parse UTM projection parameters             
+              var utmzone = this.getUTMZone(geoSystem);
+              if(utmzone < 1 || utmzone > 60 || utmzone === undefined) 
+                return x3dom.debug.logError('invalid UTM zone: ' + utmzone + ' in geosystem ' + geoSystem);
+              var hemisphere = this.getUTMHemisphere(geoSystem);
+              var eastingFirst = this.isUTMEastingFirst(geoSystem);
+              var elipsoide = this.getElipsoide(geoSystem);
+              //below from U.W. Green Bay Prof. Dutch; returns coordinates in the input ell., not WGS84
+              var a = elipsoide[1];
+              var f = 1/elipsoide[2];
+              var k0 = 0.9996; //scale on central meridian
+              var b = a * (1 - f); //polar axis.
+              var esq = (1 - (b/a)*(b/a)); //e squared for use in expansions
+              var e = Math.sqrt(esq); //eccentricity
+              var e0 = e/Math.sqrt(1 - esq); //Called e prime in reference
+              var e0sq = esq/(1 - esq); // e0 squared - always even powers
+              var zcm = 3 + 6 * (utmzone - 1) - 180; //Central meridian of zone
+              var e1 = (1 - Math.sqrt(1 - esq))/(1 + Math.sqrt(1 - esq)); //Called e1 in USGS PP 1395 also
+              var e1sq = e1*e1;
+              //var M0 = 0; //In case origin other than zero lat - not needed for standard UTM
+              var output = new x3dom.fields.MFVec3f();
+              var rad2deg = 180/Math.PI;
+
+              var f3o64 = 3/64;
+              var f5o256 = 5/256;
+              var f27o32 = 27/32;
+              var f21o16 = 21/16;
+              var f55o32 = 55/32;
+              var f151o96 = 151/96;
+              var f1097o512 = 1097/512;
+              
+              
+              for(var i=0; i<coords.length; ++i)
+              {
+                var x = (eastingFirst ? coords[i].x : coords[i].y);
+                var y = (eastingFirst ? coords[i].y : coords[i].x);
+                var z = coords[i].z;
+                
+                var current = new x3dom.fields.SFVec3f();
+                //var M = M0 + y/k0; //Arc length along standard meridian. 
+                //var M = y/k0;
+                //if (hemisphere == "S"){ M = M0 + (y - 10000000)/k; }
+                var M = (hemisphere == "S" ? (y - 10000000) : y )/k0 ;
+                //TODO: compute constant factors outside
+                var mu = M/(a * (1 - esq*(0.25 + esq*(f3o64 + f5o256*esq))));
+                var phi1 = mu + e1*(1.5 - f27o32*e1sq)*Math.sin(2*mu) + e1sq*(f21o16 - f55o32*e1sq)*Math.sin(4*mu); //Footprint Latitude
+                phi1 = phi1 + e1*(e1sq*(Math.sin(6*mu)*f151o96 + Math.sin(8*mu)*f1097o512));
+                //
+                var cosphi1 = Math.cos(phi1);
+                var C1 = e0sq*cosphi1*cosphi1;
+                var tanphi1 = Math.tan(phi1);
+                var T1 = tanphi1*tanphi1;
+                var T1sq = T1*T1;
+                var esinphi1 = e*Math.sin(phi1);
+                var oneesinphi1 = 1 - esinphi1*esinphi1;
+                var N1 = a/Math.sqrt(oneesinphi1);
+                var R1 = N1*(1-e*e)/oneesinphi1;
+                var D = (x-500000)/(N1*k0);
+                var Dsq = D*D;
+                var C1sq = C1*C1;
+                var phi = Dsq*(0.5 - Dsq*(5 + 3*T1 + 10*C1 - 4*C1sq - 9*e0sq)/24);
+                phi = phi + Math.pow(D,6)*(61 + 90*T1 + 298*C1 + 45*T1sq -252*e0sq - 3*C1sq)/720;
+                phi = phi1 - (N1*tanphi1/R1)*phi;
+                var lng = D*(1 + Dsq*((-1 -2*T1 -C1)/6 + Dsq*(5 - 2*C1 + 28*T1 - 3*C1sq +8*e0sq + 24*T1sq)/120))/cosphi1;
+                current.x = zcm + rad2deg*lng;
+                current.y = rad2deg*phi;
+                current.z = coords[i].z;
+                output.push(current);
+              }
+              //x3dom.debug.logInfo('transformed coords ' + output);
+              
+              //GD to GC and return
+              var GDgeoSystem = new x3dom.fields.MFString();
+              // there may be a better way to construct this geoSystem
+              GDgeoSystem.push("GD");
+              GDgeoSystem.push(this.getElipsoideCode(geoSystem));
+              GDgeoSystem.push("longitude_first");
+              return this.GDtoGC(GDgeoSystem, output);             
             },
             
             GDtoGC: function(geoSystem, coords) {
@@ -46473,8 +47619,13 @@ x3dom.registerNodeType(
                 var clat = Math.cos(source_lat);
 
                 /* square root approximation for Rn */
+                /* replaced by real sqrt
                 var Rn = A / ( (0.25 - Eps25 * slat2 + 0.9999944354799/4.0) + 
-                         (0.25-Eps25 * slat2)/(0.25 - Eps25 * slat2 + 0.9999944354799/4.0));
+                        (0.25-Eps25 * slat2)/(0.25 - Eps25 * slat2 + 0.9999944354799/4.0));
+                */
+
+                // with real sqrt; really slower ?
+                var Rn = A / Math.sqrt(1.0 - Eps2 * slat2);
 
                 var RnPh = Rn + coords[i].z;
                 
@@ -46840,13 +47991,80 @@ x3dom.registerNodeType(
 x3dom.registerNodeType(
     "GeoLocation",
     "Geospatial",
-    defineClass(x3dom.nodeTypes.X3DGroupingNode,
+    //was X3DGroupingNode which is how the node is defined in the spec
+    defineClass(x3dom.nodeTypes.X3DTransformNode,
         function (ctx) {
             x3dom.nodeTypes.GeoLocation.superClass.call(this, ctx);
 
             this.addField_MFString(ctx, 'geoSystem', ['GD', 'WE']);
             this.addField_SFVec3d(ctx, 'geoCoords', 0, 0, 0);
             this.addField_SFNode('geoOrigin', x3dom.nodeTypes.X3DChildNode);
+
+            // similar to what transform in Grouping.js does
+            var position = this._vf.geoCoords;
+            var geoSystem = this._vf.geoSystem;
+            var geoOrigin = this._cf.geoOrigin;
+            
+	    this._trafo =  this.getGeoTransRotMat(geoSystem, geoOrigin, position);
+        },
+        {
+	    getGeoRotMat: function (positionGC)
+            {
+                //returns transformation matrix to align coordinate system with geoposition as required:
+                //2 rotations to get required orientation
+                //Up (Y) to skywards, and depth (-Z) to North
+                //1) around X to point up by
+                //angle between Z and new up plus 90
+                //(angle between Z and orig. up)
+                //2) around Z to get orig. up on longitude
+              
+                var newUp = positionGC.normalize();     
+                var Xaxis = new  x3dom.fields.SFVec3f(1,0,0);
+                // below uses geocentric latitude but only geodetic latitude would give exact tangential plane
+                // http://info.ogp.org.uk/geodesy/guides/docs/G7-2.pdf
+                // has formulas for deriving geodetic latitude, eg a GCtoGD function
+             
+                var rotlat = Math.PI - Math.asin(newUp.z); // latitude as asin of z; only valid for spheres
+                var rotUpQuat = new x3dom.fields.Quaternion.axisAngle(Xaxis, rotlat);
+                var rotlon = Math.PI/2 + Math.atan2(newUp.y, newUp.x);// 90 to get to prime meridian; atan2 gets the sign correct for longitude; is exact since in circular section
+                var Zaxis = new x3dom.fields.SFVec3f(0,0,1);
+                var rotZQuat = new x3dom.fields.Quaternion.axisAngle(Zaxis, rotlon);
+                //return rotZQuat.toMatrix().mult(rotUpQuat.toMatrix();
+                return rotZQuat.multiply(rotUpQuat).toMatrix();
+                
+            },
+            getGeoTransRotMat: function (geoSystem, geoOrigin, position)
+            {
+                //accept geocoords, returntranslation/rotation transform matrix
+		var coords = new x3dom.fields.MFVec3f();
+                coords.push(position);
+                    
+                var transformed = x3dom.nodeTypes.GeoCoordinate.prototype.GEOtoX3D(geoSystem, geoOrigin, coords)[0];
+                var rotMat = this.getGeoRotMat(transformed);
+                return x3dom.fields.SFMatrix4f.translation(transformed).mult(rotMat);
+                
+            },
+            //mimic what transform node does
+            fieldChanged: function (fieldName)
+            {
+                if (fieldName == "geoSystem" || fieldName == "geoCoords" ||
+                    fieldName == "geoOrigin")
+                {
+                    var position = this._vf.geoCoords;
+		    var geoSystem = this._vf.geoSystem;
+                    var geoOrigin = this._cf.geoOrigin;
+		    this._trafo =  this.getGeoTransRotMat(geoSystem, geoOrigin, position);
+          
+                    this.invalidateVolume();
+                    //this.invalidateCache();
+                }
+                else if (fieldName == "render") {
+                    this.invalidateVolume();
+                    //this.invalidateCache();
+                }
+            }
+           //deal with geolocation in geolocation here? behaviour is undefined in spec
+
         }
     )
 );
@@ -48053,6 +49271,9 @@ x3dom.registerNodeType(
             //this.addField_SFBool(ctx, 'swapped', false);
             //this.addField_SFVec3f(ctx, 'sliceThickness', 1, 1, 1);
 
+            //Neccesary for counting the textures which are added on each style, number of textures can be variable
+            this._textureID = 0;
+
             x3dom.debug.logWarning('VolumeRendering component NYI!!!');
         },
         {
@@ -48101,12 +49322,20 @@ x3dom.registerNodeType(
                 "attribute vec3 color;\n"+
                 "uniform mat4 modelViewProjectionMatrix;\n"+
                 "varying vec3 vertexColor;\n"+
-                "varying vec4 vertexPosition;\n"+
-                "\n" +
+                "varying vec4 vertexPosition;\n";
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    shader += "uniform mat4 modelViewMatrix;\n"+
+                    "varying vec4 position_eye;\n";
+                }
+                shader += "\n" +
                 "void main()\n"+
                 "{\n"+
                 "  vertexColor = color;\n"+
-                "  vertexPosition = modelViewProjectionMatrix * vec4(position, 1.0);\n"+
+                "  vertexPosition = modelViewProjectionMatrix * vec4(position, 1.0);\n";
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                   shader += "  position_eye = modelViewMatrix * vec4(position, 1.0);\n";
+                }
+                shader += 
                 "  gl_Position = vertexPosition;\n"+
                 "}";
                 return shader;
@@ -48116,7 +49345,6 @@ x3dom.registerNodeType(
                 var uniformsText = 
                 "uniform sampler2D uBackCoord;\n"+
                 "uniform sampler2D uVolData;\n"+
-                "uniform mat4 normalMatrix;\n"+
                 "varying vec3 vertexColor;\n"+
                 "varying vec4 vertexPosition;\n"+
                 "const float Steps = 60.0;\n"+
@@ -48146,7 +49374,8 @@ x3dom.registerNodeType(
                 "}\n"+
                 "\n",
 
-            lightEquationShaderText: "void lighting(in float lType, in vec3 lLocation, in vec3 lDirection, in vec3 lColor, in vec3 lAttenuation, " + 
+            lightEquationShaderText: function(){
+                return "void lighting(in float lType, in vec3 lLocation, in vec3 lDirection, in vec3 lColor, in vec3 lAttenuation, " + 
                 "in float lRadius, in float lIntensity, in float lAmbientIntensity, in float lBeamWidth, " +
                 "in float lCutOffAngle, in vec3 N, in vec3 V, inout vec3 ambient, inout vec3 diffuse, " +
                 "inout vec3 specular)\n" +
@@ -48171,7 +49400,7 @@ x3dom.registerNodeType(
                 "           else if(spotAngle <= lBeamWidth) spot = 1.0;\n" +
                 "           else spot = (spotAngle - lCutOffAngle ) / (lBeamWidth - lCutOffAngle);\n" +
                 "       }\n" +
-                "   }\n" +   
+                "   }\n" +
                 "   vec3  H = normalize( L + V );\n" +
                 "   float NdotL = max(0.0, dot(L, N));\n" +
                 "   float NdotH = max(0.0, dot(H, N));\n" +   
@@ -48181,38 +49410,34 @@ x3dom.registerNodeType(
                 "   ambient  += lColor * ambientFactor * attentuation * spot;\n" +
                 "   diffuse  += lColor * diffuseFactor * attentuation * spot;\n" +
                 "   specular += lColor * specularFactor * attentuation * spot;\n" +  
-                "}\n",
+                "}\n"+
+                "\n"
+            },
 
             normalFunctionShaderText: function(){
-                if (this._cf.surfaceNormals.node) {
-                    // The surface normals, are taken from the given texture, must be of the same size of the Volume Data
-                    return "vec4 getNormal(vec3 pos, float nS, float nX, float nY) {\n"+
-                    "   vec4 n = cTexture3D(uSurfaceNormals, pos, nS, nX, nY);\n"+
-                    "   n.xyz = (2.0*n.xyz)-1.0;\n"+
-                    "   n.xyz = (normalMatrix * vec4(n.xyz, 0.0)).xyz;\n"+
-                    "   n.a = length(n.xyz);\n"+
-                    "   n.xyz = normalize(n.xyz);\n"+
-                    "   return n;\n"+
-                    "}\n"+
-                    "\n";
-                }else{
-                    // No extra texture provided, the surface normals are obtained by calculating the gradient with the Central differences method on each sampled voxel
-                    return "vec4 getNormal(vec3 voxPos, float nS, float nX, float nY){\n"+
-                    "   float v0 = cTexture3D(uVolData, voxPos + vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
-                    "   float v1 = cTexture3D(uVolData, voxPos - vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
-                    "   float v2 = cTexture3D(uVolData, voxPos + vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
-                    "   float v3 = cTexture3D(uVolData, voxPos - vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
-                    "   float v4 = cTexture3D(uVolData, voxPos + vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
-                    "   float v5 = cTexture3D(uVolData, voxPos - vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
-                    "   vec3 grad = (normalMatrix * vec4((v0-v1)/2.0, (v2-v3)/2.0, (v4-v5)/2.0, 0.0)).xyz;\n"+
-                    "   return vec4(normalize(grad), length(grad));\n"+
-                    "}\n"+
-                    "\n";
-                }
+                return "vec4 getNormalFromTexture(sampler2D sampler, vec3 pos, float nS, float nX, float nY) {\n"+
+                "   vec4 n = (2.0*cTexture3D(sampler, pos, nS, nX, nY)-1.0);\n"+
+                "   n.a = length(n.xyz);\n"+
+                "   n.xyz = normalize(n.xyz);\n"+
+                "   return n;\n"+
+                "}\n"+
+                "\n"+
+                "vec4 getNormalOnTheFly(sampler2D sampler, vec3 voxPos, float nS, float nX, float nY){\n"+
+                "   float v0 = cTexture3D(sampler, voxPos + vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
+                "   float v1 = cTexture3D(sampler, voxPos - vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
+                "   float v2 = cTexture3D(sampler, voxPos + vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
+                "   float v3 = cTexture3D(sampler, voxPos - vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
+                "   float v4 = cTexture3D(sampler, voxPos + vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
+                "   float v5 = cTexture3D(sampler, voxPos - vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
+                "   vec3 grad = vec3((v0-v1)/2.0, (v2-v3)/2.0, (v4-v5)/2.0);\n"+
+                "   return vec4(normalize(grad), length(grad));\n"+
+                "}\n"+
+                "\n";
             },    
 
             //Takes an array as an argument which contains the calls that will be made inside the main loop
-            defaultLoopFragmentShaderText: function(inlineShaderText, inlineLightAssigment){
+            defaultLoopFragmentShaderText: function(inlineShaderText, inlineLightAssigment, initializeValues){
+                initializeValues = typeof initializeValues !== 'undefined' ? initializeValues : ""; //default value, empty string
                 var shaderLoop = "void main()\n"+
                 "{\n"+
                 "  vec2 texC = vertexPosition.xy/vertexPosition.w;\n"+
@@ -48220,31 +49445,36 @@ x3dom.registerNodeType(
                 "  vec4 backColor = texture2D(uBackCoord,texC);\n"+
                 "  vec3 dir = backColor.rgb - vertexColor.rgb;\n"+
                 "  vec3 pos = vertexColor;\n"+
+                "  vec3 cam_pos = vec3(modelViewMatrixInverse[3][0], modelViewMatrixInverse[3][1], modelViewMatrixInverse[3][2]);\n"+
                 "  vec4 accum  = vec4(0.0, 0.0, 0.0, 0.0);\n"+
                 "  vec4 sample = vec4(0.0, 0.0, 0.0, 0.0);\n"+
-                "  vec4 value  = vec4(0.0, 0.0, 0.0, 0.0);\n";
+                "  vec4 value  = vec4(0.0, 0.0, 0.0, 0.0);\n"+
+                "  float cont = 0.0;\n"+
+                "  vec3 step = dir/Steps;\n";
                 //Light init values
                 if(x3dom.nodeTypes.X3DLightNode.lightID>0){
                     shaderLoop +=
                     "  vec3 ambient = vec3(0.0, 0.0, 0.0);\n"+
                     "  vec3 diffuse = vec3(0.0, 0.0, 0.0);\n"+
-                    "  vec3 specular = vec3(0.0, 0.0, 0.0);\n";
-                }
-                shaderLoop +=
-                "  float cont = 0.0;\n"+
-                "  vec3 step = dir/Steps;\n";
-                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
-                    shaderLoop += "  float lightFactor = 1.0;\n";
+                    "  vec3 specular = vec3(0.0, 0.0, 0.0);\n"+
+                    "  vec4 step_eye = modelViewMatrix * vec4(step, 0.0);\n"+
+                    "  vec4 positionE = position_eye;\n"+
+                    "  float lightFactor = 1.0;\n"; 
                 }else{
                     shaderLoop += "  float lightFactor = 1.2;\n";
                 }
-                shaderLoop +=
-                "  float opacityFactor = 6.0;\n"+
+                shaderLoop += initializeValues+
+                "  float opacityFactor = 10.0;\n"+
                 "  for(float i = 0.0; i < Steps; i+=1.0)\n"+
                 "  {\n"+
-                "    value = cTexture3D(uVolData,pos,numberOfSlices,slicesOverX,slicesOverY);\n"+
-                "    value = vec4(value.rgb,(0.299*value.r)+(0.587*value.g)+(0.114*value.b));\n"+
-                "    vec4 grad = getNormal(pos,numberOfSlices,slicesOverX,slicesOverY);\n";
+                "    value = cTexture3D(uVolData, pos, numberOfSlices, slicesOverX, slicesOverY);\n"+
+                "    value = vec4(value.rgb,(0.299*value.r)+(0.587*value.g)+(0.114*value.b));\n";
+                if(this._cf.surfaceNormals.node){
+                    shaderLoop += "    vec4 gradEye = getNormalFromTexture(uSurfaceNormals, pos, numberOfSlices, slicesOverX, slicesOverY);\n";
+                }else{
+                    shaderLoop += "    vec4 gradEye = getNormalOnTheFly(uVolData, pos, numberOfSlices, slicesOverX, slicesOverY);\n";
+                }
+                shaderLoop += "    vec4 grad = vec4((modelViewMatrixInverse * vec4(gradEye.xyz, 0.0)).xyz, gradEye.a);\n";
                 for(var l=0; l<x3dom.nodeTypes.X3DLightNode.lightID; l++) {
                     shaderLoop += "    lighting(light"+l+"_Type, " +
                     "light"+l+"_Location, " +
@@ -48256,7 +49486,7 @@ x3dom.registerNodeType(
                     "light"+l+"_AmbientIntensity, " +
                     "light"+l+"_BeamWidth, " +
                     "light"+l+"_CutOffAngle, " +
-                    "grad.xyz, dir, ambient, diffuse, specular);\n";
+                    "gradEye.xyz, -positionE.xyz, ambient, diffuse, specular);\n";
                 }
                 shaderLoop += inlineShaderText;
                 if(x3dom.nodeTypes.X3DLightNode.lightID>0){
@@ -48269,12 +49499,16 @@ x3dom.registerNodeType(
                 "    accum.rgb += (1.0 - accum.a) * sample.rgb;\n"+
                 "    accum.a += (1.0 - accum.a) * sample.a;\n"+
                 "    //advance the current position\n"+
-                "    pos.xyz += step;\n"+
+                "    pos.xyz += step;\n";
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    shaderLoop +="    positionE += step_eye;\n";
+                }
+                shaderLoop +=
                 "    //break if the position is greater than <1, 1, 1>\n"+
                 "    if(pos.x > 1.0 || pos.y > 1.0 || pos.z > 1.0 || accum.a>=1.0)\n"+
                 "      break;\n"+
                 "  }\n"+
-                "  gl_FragColor = accum;\n"+
+                "   gl_FragColor = accum;\n"+
                 "}";
                 return shaderLoop;
             }
@@ -48293,22 +49527,24 @@ x3dom.registerNodeType(
             this.addField_SFNode('surfaceNormals', x3dom.nodeTypes.X3DTexture3DNode);
         },
         {
-            defaultUniformsShaderText: function(numberOfSlices, slicesOverX, slicesOverY, offset){
+            defaultUniformsShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
                var uniformsText = 
                 "uniform sampler2D uBackCoord;\n"+
                 "uniform sampler2D uVolData;\n"+
-                "uniform mat4 normalMatrix;\n";
-                if (!(this._cf.surfaceNormals.node==null)) {
-                    uniformsText += "uniform sampler2D uSurfaceNormals;\n";
+                "uniform vec3 offset;\n"+
+                "uniform mat4 modelViewMatrix;\n"+
+                "uniform mat4 modelViewMatrixInverse;\n"+
+                "uniform sampler2D uSurfaceNormals;\n"+ //Necessary for composed style, even it is not used in others
+                "varying vec3 vertexColor;\n"+
+                "varying vec4 vertexPosition;\n";
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    uniformsText += "varying vec4 position_eye;\n";
                 }
                 uniformsText +=
-                "varying vec3 vertexColor;\n"+
-                "varying vec4 vertexPosition;\n"+
                 "const float Steps = 60.0;\n"+
                 "const float numberOfSlices = "+ numberOfSlices.toPrecision(5)+";\n"+
                 "const float slicesOverX = " + slicesOverX.toPrecision(5) +";\n"+
-                "const float slicesOverY = " + slicesOverY.toPrecision(5) +";\n"+
-                "const vec3 offset = vec3(0.5/512.0, 0.5/512.0, 0.5/96.0);\n";
+                "const float slicesOverY = " + slicesOverY.toPrecision(5) +";\n";
                 //LIGHTS
                 var n_lights = x3dom.nodeTypes.X3DLightNode.lightID;
                 for(var l=0; l<n_lights; l++) {
@@ -48340,13 +49576,267 @@ x3dom.registerNodeType(
             x3dom.nodeTypes.BlendedVolumeStyle.superClass.call(this, ctx);
 
             this.addField_SFNode('renderStyle', x3dom.nodeTypes.X3DComposableVolumeRenderStyleNode);
-            this.addField_SFNode('voxels', x3dom.nodeTypes.X3DComposableVolumeRenderStyleNode);
+            this.addField_SFNode('voxels', x3dom.nodeTypes.X3DVolumeDataNode);
             this.addField_SFFloat(ctx, 'weightConstant1', 0.5);
             this.addField_SFFloat(ctx, 'weightConstant2', 0.5);
             this.addField_SFString(ctx, 'weightFunction1', "CONSTANT");
             this.addField_SFString(ctx, 'weightFunction2', "CONSTANT");
-            this.addField_SFNode('weightTransferFunction1', x3dom.nodeTypes.X3DComposableVolumeRenderStyleNode);
-            this.addField_SFNode('weightTransferFunction2', x3dom.nodeTypes.X3DComposableVolumeRenderStyleNode);
+            this.addField_SFNode('weightTransferFunction1', x3dom.nodeTypes.X3DTexture2DNode);
+            this.addField_SFNode('weightTransferFunction2', x3dom.nodeTypes.X3DTexture2DNode);
+
+            this.uniformFloatWeightConstant1 = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatWeightConstant2 = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DVoxels = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DWeightTransferFunction1 = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DWeightTransferFunction2 = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'weightConstant1':
+                        this.uniformFloatWeightConstant1._vf.value = this._vf.weightConstant1;
+                        this.uniformFloatWeightConstant1.fieldChanged("value");
+                        break;
+                    case 'weightConstant2':
+                        this.uniformFloatWeightConstant2._vf.value = this._vf.weightConstant2;
+                        this.uniformFloatWeightConstant2.fieldChanged("value");
+                        break;
+                    case 'weightFunction1':
+                        //TODO: Reload node
+                        break;
+                    case 'weightFunction2':
+                        //TODO: Reload node
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+                if (this._cf.voxels.node || this._cf.weightTransferFunction1.node || this._cf.weightTransferFunction2.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][BlendVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+
+                    this.uniformSampler2DVoxels._vf.name = 'uVolBlendData';
+                    this.uniformSampler2DVoxels._vf.type = 'SFInt32';
+                    this.uniformSampler2DVoxels._vf.value = volumeDataParent._textureID++;
+                    unis.push(this.uniformSampler2DVoxels);
+
+                    if(this._cf.weightTransferFunction1.node){
+                        this.uniformSampler2DWeightTransferFunction1._vf.name = 'uWeightTransferFunctionA';
+                        this.uniformSampler2DWeightTransferFunction1._vf.type = 'SFInt32';
+                        this.uniformSampler2DWeightTransferFunction1._vf.value = volumeDataParent._textureID++;
+                        unis.push(this.uniformSampler2DWeightTransferFunction1);
+                    }
+
+                    if(this._cf.weightTransferFunction2.node){
+                        this.uniformSampler2DWeightTransferFunction2._vf.name = 'uWeightTransferFunctionB';
+                        this.uniformSampler2DWeightTransferFunction2._vf.type = 'SFInt32';
+                        this.uniformSampler2DWeightTransferFunction2._vf.value = volumeDataParent._textureID++;
+                        unis.push(this.uniformSampler2DWeightTransferFunction2);
+                    }
+                }
+
+                this.uniformFloatWeightConstant1._vf.name = 'uWeightConstantA';
+                this.uniformFloatWeightConstant1._vf.type = 'SFFloat';
+                this.uniformFloatWeightConstant1._vf.value = this._vf.weightConstant1;
+                unis.push(this.uniformFloatWeightConstant1);
+
+                this.uniformFloatWeightConstant2._vf.name = 'uWeightConstantB';
+                this.uniformFloatWeightConstant2._vf.type = 'SFFloat';
+                this.uniformFloatWeightConstant2._vf.value = this._vf.weightConstant2;
+                unis.push(this.uniformFloatWeightConstant2);
+
+                //Also add the render style uniforms
+                if (this._cf.renderStyle.node) {
+                    var renderStyleUniforms = this._cf.renderStyle.node.uniforms();
+                    Array.forEach(renderStyleUniforms, function(uni){
+                        uni._vf.name = uni._vf.name.replace(/uSurfaceNormals/, "uBlendSurfaceNormals")
+                    });
+                    unis = unis.concat(renderStyleUniforms);       
+                }
+                return unis;
+            },
+
+            textures: function(){
+                var texs = [];
+                if (this._cf.voxels.node) {
+                    var tex = this._cf.voxels.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex);
+                }
+                if (this._cf.weightTransferFunction1.node) {
+                    var tex = this._cf.weightTransferFunction1.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex);
+                }
+                if (this._cf.weightTransferFunction2.node) {
+                    var tex = this._cf.weightTransferFunction2.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex);
+                }
+                //Also add the render style textures
+                if (this._cf.renderStyle.node) {
+                    var renderStyleTextures = this._cf.renderStyle.node.textures();
+                    texs = texs.concat(renderStyleTextures);       
+                }
+                return texs;
+            },
+
+            initializeValues: function(){
+                var initialValues = "";
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    initialValues += "  vec3 ambientBlend = vec3(0.0, 0.0, 0.0);\n"+
+                    "  vec3 diffuseBlend = vec3(0.0, 0.0, 0.0);\n"+
+                    "  vec3 specularBlend = vec3(0.0, 0.0, 0.0);\n";
+                }
+                return initialValues;
+            },
+
+            styleUniformsShaderText: function(){
+                var uniformsText = "uniform float uWeightConstantA;\n"+
+                    "uniform float uWeightConstantB;\n"+
+                    "uniform sampler2D uBlendSurfaceNormals;\n";
+                    if(this._cf.voxels.node){
+                        uniformsText += "uniform sampler2D uVolBlendData;\n";
+                    }
+                    if(this._cf.weightTransferFunction1.node){
+                        uniformsText += "uniform sampler2D uWeightTransferFunctionA;\n";
+                    }
+                    if(this._cf.weightTransferFunction2.node){
+                        uniformsText += "uniform sampler2D uWeightTransferFunctionB;\n";
+                    }
+                    //Also add the render style uniforms
+                    if(this._cf.renderStyle.node) {
+                        uniformsText += this._cf.renderStyle.node.styleUniformsShaderText();
+                    }
+                return uniformsText;
+            },
+
+            styleShaderText: function(){
+                var styleText = "";
+                if(this._cf.renderStyle.node && this._cf.renderStyle.node.styleShaderText!=undefined) {
+                    styleText += this._cf.renderStyle.node.styleShaderText();
+                }
+                return styleText;
+            },
+
+            inlineStyleShaderText: function(){
+                var nSlices = this._cf.voxels.node._vf.numberOfSlices.toPrecision(5);
+                var xSlices = this._cf.voxels.node._vf.slicesOverX.toPrecision(5);
+                var ySlices = this._cf.voxels.node._vf.slicesOverY.toPrecision(5);
+                var inlineText = "    vec4 blendValue = cTexture3D(uVolBlendData,pos, "+ nSlices +", "+ xSlices +", "+ ySlices +");\n"+
+                "    blendValue = vec4(blendValue.rgb,(0.299*blendValue.r)+(0.587*blendValue.g)+(0.114*blendValue.b));\n";
+                if(this._cf.renderStyle.node && this._cf.renderStyle.node._cf.surfaceNormals.node){
+                    inlineText += "    vec4 blendGradEye = getNormalFromTexture(uBlendSurfaceNormals, pos, "+ nSlices +", "+ xSlices +", "+ ySlices +");\n";
+                }else{
+                    inlineText += "    vec4 blendGradEye = getNormalOnTheFly(uVolBlendData, pos, "+ nSlices +", "+ xSlices +", "+ ySlices +");\n";
+                }
+                if (x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        inlineText += "    vec4 blendGrad = vec4((modelViewMatrixInverse * vec4(blendGradEye.xyz, 0.0)).xyz, blendGradEye.a);\n";
+                }
+                for(var l=0; l<x3dom.nodeTypes.X3DLightNode.lightID; l++) {
+                    inlineText += "    lighting(light"+l+"_Type, " +
+                    "light"+l+"_Location, " +
+                    "light"+l+"_Direction, " +
+                    "light"+l+"_Color, " + 
+                    "light"+l+"_Attenuation, " +
+                    "light"+l+"_Radius, " +
+                    "light"+l+"_Intensity, " + 
+                    "light"+l+"_AmbientIntensity, " +
+                    "light"+l+"_BeamWidth, " +
+                    "light"+l+"_CutOffAngle, " +
+                    "blendGradEye.xyz, -positionE.xyz, ambientBlend, diffuseBlend, specularBlend);\n";
+                }
+                if(this._cf.renderStyle.node){
+                    var tempText = this._cf.renderStyle.node.inlineStyleShaderText().replace(/value/gm, "blendValue").replace(/grad/gm, "blendGrad");
+                    inlineText += tempText.replace(/ambient/gm, "ambientBlend").replace(/diffuse/gm, "diffuseBlend").replace(/specular/gm, "specularBlend");
+                }
+                //obtain the first weight
+                switch(this._vf.weightFunction1.toUpperCase()){
+                    case "CONSTANT":
+                        inlineText += "    float wA = uWeightConstantA;\n";
+                        break;
+                    case "ALPHA0":
+                        inlineText += "    float wA = value.a;\n";
+                        break;
+                    case "ALPHA1":
+                        inlineText += "    float wA = blendValue.a;\n";
+                        break;
+                    case "ONE_MINUS_ALPHA0":
+                        inlineText += "    float wA = 1.0 - value.a;\n";
+                        break;
+                    case "ONE_MINUS_ALPHA1":
+                        inlineText += "    float wA = 1.0 - blendValue.a;\n";
+                        break;
+                    case "TABLE":
+                        if(this._cf.weightTransferFunction1){
+                            inlineText += "    float wA = texture2D(uWeightTransferFunctionA, vec2(value.a, blendValue.a));\n";
+                        }else{
+                            inlineText += "    float wA = value.a;\n";
+                            x3dom.debug.logWarning('[VolumeRendering][BlendedVolumeStyle] TABLE specified on weightFunction1 but not weightTrnafer function provided, using ALPHA0.');
+                        }
+                        break;
+                }
+                //obtain the second weight
+                switch(this._vf.weightFunction2.toUpperCase()){
+                    case "CONSTANT":
+                        inlineText += "    float wB = uWeightConstantB;\n";
+                        break;
+                    case "ALPHA0":
+                        inlineText += "    float wB = value.a;\n";
+                        break;
+                    case "ALPHA1":
+                        inlineText += "    float wB = blendValue.a;\n";
+                        break;
+                    case "ONE_MINUS_ALPHA0":
+                        inlineText += "    float wB = 1.0 - value.a;\n";
+                        break;
+                    case "ONE_MINUS_ALPHA1":
+                        inlineText += "    float wB = 1.0 - blendValue.a;\n";
+                        break;
+                    case "TABLE":
+                        if(this._cf.weightTransferFunction2){
+                            inlineText += "    float wB = texture2D(uWeightTransferFunctionB, vec2(value.a, blendValue.a));\n";
+                        }else{
+                            inlineText += "    float wB = value.a;\n";
+                            x3dom.debug.logWarning('[VolumeRendering][BlendedVolumeStyle] TABLE specified on weightFunction2 but not weightTrasnferFunction provided, using ALPHA0.');
+                        }
+                        break;
+                }
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    inlineText += "    value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+                }
+                inlineText += "    value.rgb = clamp(value.rgb * wA + blendValue.rgb * wB, 0.0, 1.0);\n"+
+                "    value.a = clamp(value.a * wA + blendValue.a * wB, 0.0, 1.0);\n";
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                return ""; //previously computed, empty string
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment(), this.initializeValues());
+                return shader;
+            }
         }
     )
 );
@@ -48362,6 +49852,118 @@ x3dom.registerNodeType(
             this.addField_SFFloat(ctx, 'retainedOpacity', 1);
             this.addField_SFFloat(ctx, 'boundaryOpacity', 0);
             this.addField_SFFloat(ctx, 'opacityFactor', 1);
+
+            this.uniformFloatRetainedOpacity = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatBoundaryOpacity = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatOpacityFactor = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DSurfaceNormals = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolEnableBoundary = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'retainedOpacity':
+                        this.uniformFloatRetainedOpacity._vf.value = this._vf.retainedOpacity;
+                        this.uniformFloatRetainedOpacity.fieldChanged("value");
+                        break;
+                    case 'boundaryOpacity':
+                        this.uniformFloatBoundaryOpacity._vf.value = this._vf.boundaryOpacity;
+                        this.uniformFloatBoundaryOpacity.fieldChanged("value");
+                        break;
+                    case 'opacityFactor':
+                        this.uniformFloatOpacityFactor._vf.value = this._vf.opacityFactor;
+                        this.uniformFloatOpacityFactor.fieldChanged("value");
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+                if (this._cf.surfaceNormals.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][BoundaryEnhancementVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+                    this.uniformSampler2DSurfaceNormals._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DSurfaceNormals._vf.type = 'SFInt32';
+                    this.uniformSampler2DSurfaceNormals._vf.value = volumeDataParent._textureID++;
+                    unis.push(this.uniformSampler2DSurfaceNormals);
+                }
+
+                this.uniformFloatRetainedOpacity._vf.name = 'uRetainedOpacity';
+                this.uniformFloatRetainedOpacity._vf.type = 'SFFloat';
+                this.uniformFloatRetainedOpacity._vf.value = this._vf.retainedOpacity;
+                unis.push(this.uniformFloatRetainedOpacity);
+
+                this.uniformFloatBoundaryOpacity._vf.name = 'uBoundaryOpacity';
+                this.uniformFloatBoundaryOpacity._vf.type = 'SFFloat';
+                this.uniformFloatBoundaryOpacity._vf.value = this._vf.boundaryOpacity;
+                unis.push(this.uniformFloatBoundaryOpacity);
+
+                this.uniformFloatOpacityFactor._vf.name = 'uOpacityFactor';
+                this.uniformFloatOpacityFactor._vf.type = 'SFFloat';
+                this.uniformFloatOpacityFactor._vf.value = this._vf.opacityFactor;
+                unis.push(this.uniformFloatOpacityFactor);
+
+                this.uniformBoolEnableBoundary._vf.name = 'uEnableBoundary';
+                this.uniformBoolEnableBoundary._vf.type = 'SFBool';
+                this.uniformBoolEnableBoundary._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEnableBoundary);
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                if (!(this._cf.surfaceNormals.node==null)) {
+                    var tex = this._cf.surfaceNormals.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex)
+                }
+                return texs;
+            },
+
+            styleUniformsShaderText: function(){
+                return "uniform float uRetainedOpacity;\n"+
+                    "uniform float uBoundaryOpacity;\n"+
+                    "uniform float uOpacityFactor;\n"+
+                    "uniform bool uEnableBoundary;\n";
+            },
+
+            styleShaderText: function(){
+                return "void boundaryEnhancement(inout vec4 original_color, float gradientMagnitude){\n"+
+                "   original_color.a = original_color.a * (uRetainedOpacity + (uBoundaryOpacity*pow(gradientMagnitude, uOpacityFactor)));\n"+
+                "}\n";
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "    if(uEnableBoundary){\n"+
+                "    boundaryEnhancement(value, grad.w);\n"+
+                "}\n";
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                return "    value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
+                return shader;
+            }
         }
     )
 );
@@ -48377,6 +49979,185 @@ x3dom.registerNodeType(
             this.addField_SFColor(ctx, 'parallelColor', 0, 0, 0);
             this.addField_SFColor(ctx, 'orthogonalColor', 1, 1, 1);
             this.addField_SFInt32(ctx, 'colorSteps', 4);
+
+            this.uniformParallelColor = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformOrthogonalColor = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformIntColorSteps = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DSurfaceNormals = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolEnableCartoon = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'parallelColor':
+                        this.uniformParallelColor._vf.value = this._vf.parallelColor;
+                        this.uniformParallelColor.fieldChanged("value");
+                        break;
+                    case 'orthogonalColor':
+                        this.uniformOrthogonalColor._vf.value = this._vf.orthogonalColor;
+                        this.uniformOrthogonalColor.fieldChanged("value");
+                        break;
+                    case 'colorSteps':
+                        this.uniformIntColorSteps._vf.value = this._vf.colorSteps;
+                        this.uniformIntColorSteps.fieldChanged("value");
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+
+                if (this._cf.surfaceNormals.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][CartoonVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+
+                    this.uniformSampler2DSurfaceNormals._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DSurfaceNormals._vf.type = 'SFInt32';
+                    this.uniformSampler2DSurfaceNormals._vf.value = volumeDataParent._textureID++; //FIXME: Number of textures could be variable
+                    unis.push(this.uniformSampler2DSurfaceNormals);
+                }
+
+                this.uniformParallelColor._vf.name = 'uParallelColor';
+                this.uniformParallelColor._vf.type = 'SFColor';
+                this.uniformParallelColor._vf.value = this._vf.parallelColor;
+                unis.push(this.uniformParallelColor);
+
+                this.uniformOrthogonalColor._vf.name = 'uOrthogonalColor';
+                this.uniformOrthogonalColor._vf.type = 'SFColor';
+                this.uniformOrthogonalColor._vf.value = this._vf.orthogonalColor;
+                unis.push(this.uniformOrthogonalColor);
+
+                this.uniformIntColorSteps._vf.name = 'uColorSteps';
+                this.uniformIntColorSteps._vf.type = 'SFInt32';
+                this.uniformIntColorSteps._vf.value = this._vf.colorSteps;
+                unis.push(this.uniformIntColorSteps);
+
+                this.uniformBoolEnableCartoon._vf.name = 'uEnableCartoon';
+                this.uniformBoolEnableCartoon._vf.type = 'SFBool';
+                this.uniformBoolEnableCartoon._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEnableCartoon);
+
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                if (this._cf.surfaceNormals.node) {
+                    var tex = this._cf.surfaceNormals.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex);
+                }
+                return texs;
+            },
+
+            styleShaderText: function(){
+                return "//Convert RGBA color to HSVA\n"+
+                "vec4 rgba2hsva(vec4 rgba){\n"+
+                "   float zat, izen;\n"+
+                "   float R = rgba.r, G = rgba.g, B = rgba.b;\n"+
+                "   float minim = min(R, min(G, B)), maxim = max(R, max(G, B));\n"+
+                "   float delta = maxim-minim;\n"+
+                "   if(minim == maxim){\n"+
+                "       return vec4(0.0, 0.0, maxim, rgba.a);\n"+
+                "   }else{\n"+
+                "       zat = (R == maxim) ? G - B : ((G == maxim) ? B - R : R - G);\n"+ 
+                "       izen = (R == maxim) ? ((G<B) ? 6.0 : 0.0) : ((G == maxim) ? 2.0 : 4.0);\n"+ 
+                "        return vec4((zat/delta + izen)/6.0, delta/maxim, maxim, rgba.a);\n"+ 
+                "    }\n"+
+                "}\n"+
+                "\n"+
+                "//Convert RGB color to HSV\n"+
+                "vec3 rgb2hsv(vec3 rgb){\n"+
+                "    return rgba2hsva(vec4(rgb, 1.0)).rgb;\n"+
+                "}\n"+
+                "\n"+
+                "//Convert HSVA color to RGBA\n"+
+                "vec4 hsva2rgba(vec4 hsva){\n"+
+                "   float r, g, b;\n"+
+                "   float h=hsva.x, s=hsva.y, v=hsva.z;\n"+
+                "   float i = floor(h * 6.0);\n"+
+                "   float f = h * 6.0 - i;\n"+
+                "   float p = v * (1.0 - s);\n"+
+                "   float q = v * (1.0 - f * s);\n"+
+                "   float t = v * (1.0 - (1.0 - f) * s);\n"+
+                "   i = mod(i,6.0);\n"+
+                "   if( i == 6.0 || i == 0.0 ) r = v, g = t, b = p;\n"+
+                "   else if( i == 1.0) r = q, g = v, b = p;\n"+
+                "   else if( i == 2.0) r = p, g = v, b = t;\n"+
+                "   else if( i == 3.0) r = p, g = q, b = v;\n"+
+                "   else if( i == 4.0) r = t, g = p, b = v;\n"+
+                "   else if( i == 5.0) r = v, g = p, b = q;\n"+
+                "   return vec4(r,g,b,hsva.w);\n"+
+                "}\n"+
+                "\n"+
+                "//Convert HSV color to RGB\n"+
+                "vec3 hsv2rgb(vec3 hsv){\n"+
+                "   return hsva2rgba(vec4(hsv, 1.0)).rgb;\n"+
+                "}\n"+
+                "void getCartoonStyle(inout vec4 outputColor, vec3 orthogonalColor, vec3 parallelColor, int colorSteps, vec3 surfNormal, vec3 V)\n"+
+                "{\n"+
+                "   if(colorSteps > 0 && colorSteps <= 64){\n"+
+                "       float cos_angle = dot(surfNormal, V);\n"+
+                "       if(cos_angle <= 0.0){\n"+
+                "           outputColor.rgb = parallelColor.rgb;\n"+
+                "       }else{\n"+
+                "           if(cos_angle < 1.0){\n"+
+                "               float range_size = pi_half / float(colorSteps);\n"+
+                "               float interval = floor(cos_angle / range_size);\n"+
+                "               float ang = interval * range_size;\n"+
+                "               if(interval >= float(colorSteps))\n"+
+                "                   interval = float(colorSteps) - 1.0;\n"+
+                "               outputColor.rgb = hsv2rgb(mix(orthogonalColor, parallelColor, ang));\n"+
+                "           }else{\n"+
+                "               outputColor.rgb = orthogonalColor.rgb;\n"+
+                "           }\n"+
+                "       }\n"+
+                "   }else{\n"+
+                "       outputColor.a = 0.0; //No color steps as input parameter\n"+
+                "   }\n"+
+                "}\n"+
+                "\n";
+            },
+
+            styleUniformsShaderText: function(){
+                return "uniform vec3 uParallelColor;\n"+
+                "uniform vec3 uOrthogonalColor;\n"+
+                "uniform int uColorSteps;\n"+
+                "uniform bool uEnableCartoon;\n"+
+                "const float pi_half = "+ (Math.PI/2.0).toPrecision(5) +";\n";
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "  if(uEnableCartoon){\n"+
+                "      getCartoonStyle(value, rgb2hsv(uOrthogonalColor), rgb2hsv(uParallelColor), uColorSteps, grad.xyz, normalize(dir));\n"+
+                "  }\n";   
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                return "    value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
+                return shader;
+            }
         }
     )
 );
@@ -48391,6 +50172,133 @@ x3dom.registerNodeType(
 
             this.addField_SFBool(ctx, 'ordered', false);
             this.addField_MFNode('renderStyle', x3dom.nodeTypes.X3DComposableVolumeRenderStyleNode);
+            //Using only one normal texture
+            this.normalTextureProvided = false;
+        },
+        {
+            uniforms: function(){
+                var unis = [];
+                var i, n = this._cf.renderStyle.nodes.length;
+                for (i=0; i<n; i++){
+                    //Not repeat common uniforms, TODO: Allow multiple surface normals
+                    var that = this;
+                    Array.forEach(this._cf.renderStyle.nodes[i].uniforms(), function(uniform){
+                        var contains_uniform = false;
+                        Array.forEach(unis, function(accum){
+                            if(accum._vf.name == uniform._vf.name){
+                                contains_uniform = true;
+                            }
+                        });
+                        if (contains_uniform == false){
+                            unis = unis.concat(uniform);
+                        }
+                    });
+                }
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                var i, n = this._cf.renderStyle.nodes.length;
+                for (i=0; i<n; i++){
+                    //Not repeat same textures, TODO: Allow multiply surface normals textures
+                    Array.forEach(this._cf.renderStyle.nodes[i].textures(), function(texture){
+                        var contains_texture = false;
+                        Array.forEach(texs, function(accum){
+                            if(accum._vf.url[0] == texture._vf.url[0]){
+                                contains_texture = true;
+                            }
+                        });
+                        if (contains_texture == false){
+                            texs = texs.concat(texture);
+                        }
+                    });
+                   
+                }
+                return texs;
+            },
+
+            initializeValues: function() {
+                var initialValues ="";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    if(this._cf.renderStyle.nodes[i].initializeValues != undefined){
+                        initialValues += this._cf.renderStyle.nodes[i].initializeValues() + "\n";
+                    }
+                }
+                return initialValues;
+            },
+
+            styleUniformsShaderText: function(){
+                var styleText = "";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    styleText += this._cf.renderStyle.nodes[i].styleUniformsShaderText() + "\n";
+                    if(this._cf.renderStyle.nodes[i]._cf.surfaceNormals && this._cf.renderStyle.nodes[i]._cf.surfaceNormals.node != null){
+                        this.normalTextureProvided = true;
+                        this._cf.surfaceNormals.node = this._cf.renderStyle.nodes[i]._cf.surfaceNormals.node;
+                    }
+                }
+                return styleText;
+            },
+
+            styleShaderText: function(){
+                var styleText = "";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    if(this._cf.renderStyle.nodes[i].styleShaderText != undefined){
+                        styleText += this._cf.renderStyle.nodes[i].styleShaderText() + "\n";
+                    }
+                }
+                return styleText;
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    inlineText += this._cf.renderStyle.nodes[i].inlineStyleShaderText();
+                }
+                /*if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    inlineText += this._cf.renderStyle.nodes[0].lightAssigment();
+                }*/
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                var isBlendedStyle = false;
+                //Check if there is a blendedStyle, not to use lightAssigment
+                Array.forEach(this._cf.renderStyle.nodes, function(style){
+                    if(x3dom.isa(style, x3dom.nodeTypes.BlendedVolumeStyle)){
+                        isBlendedStyle = true;
+                    }
+                });
+                if(!isBlendedStyle){
+                    return this._cf.renderStyle.nodes[0].lightAssigment();
+                }else{
+                    return "";
+                }
+            },
+
+            lightEquationShaderText: function(){
+                return this._cf.renderStyle.nodes[0].lightEquationShaderText();
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY, offset){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText();
+                if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                    //Only from the first render style
+                    shader += this.lightEquationShaderText();
+                }
+                shader += this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment(), this.initializeValues());
+                return shader;
+            }
         }
     )
 );
@@ -48405,6 +50313,110 @@ x3dom.registerNodeType(
 
             this.addField_SFColor(ctx, 'edgeColor', 0, 0, 0);
             this.addField_SFFloat(ctx, 'gradientThreshold', 0.4);
+
+            this.uniformColorEdgeColor = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatGradientThreshold = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DSurfaceNormals = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolEdgeEnable = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                if (fieldName == "edgeColor") {
+                    this.uniformColorEdgeColor._vf.value = this._vf.edgeColor;
+                    this.uniformColorEdgeColor.fieldChanged("value");
+                }else if (fieldName == "gradientThreshold") {
+                    this.uniformFloatGradientThreshold._vf.value = this._vf.gradientThreshold;
+                    this.uniformFloatGradientThreshold.fieldChanged("value");
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+                if (this._cf.surfaceNormals.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][EdgeEnhancementVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+                    this.uniformSampler2DSurfaceNormals._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DSurfaceNormals._vf.type = 'SFInt32';
+                    this.uniformSampler2DSurfaceNormals._vf.value = volumeDataParent._textureID++;
+                    unis.push(this.uniformSampler2DSurfaceNormals);
+                }
+
+                this.uniformColorEdgeColor._vf.name = 'uEdgeColor';
+                this.uniformColorEdgeColor._vf.type = 'SFColor';
+                this.uniformColorEdgeColor._vf.value = this._vf.edgeColor;
+                unis.push(this.uniformColorEdgeColor);
+
+                this.uniformFloatGradientThreshold._vf.name = 'uGradientThreshold';
+                this.uniformFloatGradientThreshold._vf.type = 'SFFloat';
+                this.uniformFloatGradientThreshold._vf.value = this._vf.gradientThreshold;
+                unis.push(this.uniformFloatGradientThreshold);
+
+                this.uniformBoolEdgeEnable._vf.name = 'uEnableEdge';
+                this.uniformBoolEdgeEnable._vf.type = 'SFBool';
+                this.uniformBoolEdgeEnable._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEdgeEnable);
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                if (this._cf.surfaceNormals.node) {
+                    var tex = this._cf.surfaceNormals.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex)
+                }
+                return texs;
+            },
+
+            styleUniformsShaderText: function(){
+                return "uniform vec3 uEdgeColor;\n"+
+                    "uniform float uGradientThreshold;\n"+
+                    "uniform bool uEnableEdge;\n";
+            },
+
+            styleShaderText: function(){
+                return "void edgeEnhancement(inout vec4 originalColor, vec4 gradient, vec3 V)\n"+
+                "{\n"+
+                "   if(gradient.w > 0.001){\n"+
+                "       float angle_dif = abs(dot(gradient.xyz,V));\n"+
+                "       if (angle_dif<=cos(uGradientThreshold)){\n"+
+                "           originalColor.rgb = mix(uEdgeColor, originalColor.rgb, angle_dif);\n"+
+                "       }\n"+
+                "   }\n"+
+                "}\n";
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "   if(uEnableEdge){\n"+
+                "       edgeEnhancement(value, grad, normalize(dir));\n"+
+                "   }\n";
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                return "    value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
+                return shader;
+            }
         }
     )
 );
@@ -48418,10 +50430,570 @@ x3dom.registerNodeType(
             x3dom.nodeTypes.ISOSurfaceVolumeData.superClass.call(this, ctx);
 
             this.addField_MFNode('renderStyle', x3dom.nodeTypes.X3DVolumeRenderStyleNode);
-            this.addField_SFNode('gradients', x3dom.nodeTypes.X3DTexture3DNode);
-            this.addField_MFFloat(ctx, 'surfaceValues', []);
+            this.addField_SFNode('gradients', x3dom.nodeTypes.Texture);
+            //this.addField_SFNode('gradients', x3dom.nodeTypes.X3DTexture3DNode);
+            this.addField_MFFloat(ctx, 'surfaceValues', [0.0]);
             this.addField_SFFloat(ctx, 'contourStepSize', 0);
             this.addField_SFFloat(ctx, 'surfaceTolerance', 0);
+
+            this.uniformSampler2DGradients = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatContourStepSize = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatSurfaceTolerance = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatArraySurfaceValues = new x3dom.nodeTypes.Uniform(ctx);
+            this.normalTextureProvided = false;
+
+            this.vrcMultiTexture = new x3dom.nodeTypes.MultiTexture(ctx);
+            this.vrcRenderTexture = new x3dom.nodeTypes.RenderedTexture(ctx);
+            this.vrcVolumeTexture = null;
+
+            this.vrcBackCubeShape = new x3dom.nodeTypes.Shape(ctx);
+            this.vrcBackCubeAppearance = new x3dom.nodeTypes.Appearance();
+            this.vrcBackCubeGeometry = new x3dom.nodeTypes.Box(ctx);
+            this.vrcBackCubeShader = new x3dom.nodeTypes.ComposedShader(ctx);
+            this.vrcBackCubeShaderVertex = new x3dom.nodeTypes.ShaderPart(ctx);
+            this.vrcBackCubeShaderFragment = new x3dom.nodeTypes.ShaderPart(ctx);
+
+            this.vrcFrontCubeShader = new x3dom.nodeTypes.ComposedShader(ctx);
+            this.vrcFrontCubeShaderVertex = new x3dom.nodeTypes.ShaderPart(ctx);
+            this.vrcFrontCubeShaderFragment = new x3dom.nodeTypes.ShaderPart(ctx);
+            this.vrcFrontCubeShaderFieldBackCoord = new x3dom.nodeTypes.Field(ctx);
+            this.vrcFrontCubeShaderFieldVolData = new x3dom.nodeTypes.Field(ctx);
+            this.vrcFrontCubeShaderFieldOffset = new x3dom.nodeTypes.Field(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'surfaceValues':
+                        this.uniformFloatArraySurfaceValues._vf.value = this._vf.surfaceValues;
+                        this.uniformFloatArraySurfaceValues.fieldChanged("value");
+                        //TODO: Reload node
+                        break;
+                    case 'surfaceTolerance':
+                        this.uniformFloatSurfaceTolerance._vf.value = this._vf.surfaceTolerance;
+                        this.uniformFloatSurfaceTolerance.fieldChanged("value");
+                        break;
+                    case 'contourStepSize':
+                        //TODO: Reload node
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+
+                if (this._cf.gradients.node){
+                    this.uniformSampler2DGradients._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DGradients._vf.type = 'SFInt32';
+                    this.uniformSampler2DGradients._vf.value = this._textureID++;
+                    unis.push(this.uniformSampler2DGradients);
+                }
+
+                this.uniformFloatArraySurfaceValues._vf.name = 'uSurfaceValues';
+                this.uniformFloatArraySurfaceValues._vf.type = 'MFFloat';
+                this.uniformFloatArraySurfaceValues._vf.value = this._vf.surfaceValues;
+                unis.push(this.uniformFloatArraySurfaceValues);
+
+                /*this.uniformFloatContourStepSize._vf.name = 'uContourStepSize';
+                this.uniformFloatContourStepSize._vf.type = 'SFFloat';
+                this.uniformFloatContourStepSize._vf.value = this._vf.contourStepSize;
+                unis.push(this.uniformFloatContourStepSize);*/
+
+                this.uniformFloatSurfaceTolerance._vf.name = 'uSurfaceTolerance';
+                this.uniformFloatSurfaceTolerance._vf.type = 'MFFloat';
+                this.uniformFloatSurfaceTolerance._vf.value = this._vf.surfaceTolerance;
+                unis.push(this.uniformFloatSurfaceTolerance);
+
+                if (this._cf.renderStyle.nodes) {
+                    var n = this._cf.renderStyle.nodes.length;
+                    for (var i=0; i<n; i++){
+                        //Not repeat common uniforms, TODO: Allow multiple surface normals
+                        Array.forEach(this._cf.renderStyle.nodes[i].uniforms(), function(uniform){
+                            var contains_uniform = false;
+                            Array.forEach(unis, function(accum){
+                                if(accum._vf.name == uniform._vf.name){
+                                    contains_uniform = true;
+                                }
+                            });
+                            if (contains_uniform == false){
+                                unis = unis.concat(uniform);
+                            }
+                        });
+                    }    
+                }
+                return unis;
+            },
+
+            textures: function(){
+                var texs = [];
+                if(this._cf.gradients.node){
+                    var tex = this._cf.gradients.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex);
+                }
+
+                var i, n = this._cf.renderStyle.nodes.length;
+                for (i=0; i<n; i++){
+                    //Not repeat same textures, TODO: Allow multiply surface normals textures
+                    Array.forEach(this._cf.renderStyle.nodes[i].textures(), function(texture){
+                        var contains_texture = false;
+                        Array.forEach(texs, function(accum){
+                            if(accum._vf.url[0] == texture._vf.url[0]){
+                                contains_texture = true;
+                            }
+                        });
+                        if (contains_texture == false){
+                            texs = texs.concat(texture);
+                        }
+                    });
+                }
+                return texs;
+            },
+
+            initializeValues: function() {
+                var initialValues ="  float previous_value = 0.0;\n";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    if(this._cf.renderStyle.nodes[i].initializeValues != undefined){
+                        initialValues += this._cf.renderStyle.nodes[i].initializeValues() + "\n";
+                    }
+                }
+                return initialValues;
+            },
+
+            styleUniformsShaderText: function(){
+                var styleText = "uniform float uSurfaceTolerance;\n"+
+                //"uniform float uContourStepSize;\n"+
+                "uniform float uSurfaceValues["+this._vf.surfaceValues.length+"];\n";
+                if(this._cf.gradients.node){
+                    styleText += "uniform sampler2D uSurfaceNormals;\n";
+                }
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    styleText += this._cf.renderStyle.nodes[i].styleUniformsShaderText() + "\n";
+                    if(this._cf.renderStyle.nodes[i]._cf.surfaceNormals && this._cf.renderStyle.nodes[i]._cf.surfaceNormals.node != null){
+                        this.normalTextureProvided = true;
+                        this.surfaceNormals = this._cf.renderStyle.nodes[i]._cf.surfaceNormals.node;
+                    }
+                }
+                return styleText;
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "    sample = value.r;\n";
+                if(this._vf.surfaceValues.length == 1) { //Only one surface value
+                    if(this._vf.contourStepSize == 0.0){
+                        inlineText += "   if((sample>=uSurfaceValues[0] && previous_value<uSurfaceValues[0])||(sample<uSurfaceValues[0] && previous_value>=uSurfaceValues[0]) && (grad.a>=uSurfaceTolerance)){\n"+
+                        "       value = vec4(uSurfaceValues[0]);\n";
+                        if(this._cf.renderStyle.nodes){
+                            inlineText += this._cf.renderStyle.nodes[0].inlineStyleShaderText();
+                        }
+                        inlineText += "       accum.rgb += (1.0 - accum.a) * (value.rgb * value.a);\n"+
+                        "       accum.a += value.a;\n"+
+                        "   }\n"; 
+                    }else{ //multiple iso values with the contour step size
+                        var tmp = this._vf.surfaceValues[0];
+                        var positive_range = [];
+                        var negative_range = [];
+                        while(tmp+this._vf.contourStepSize <= 1.0){
+                            tmp+=this._vf.contourStepSize;
+                            positive_range.push(tmp);
+                        }
+                        tmp = this._vf.surfaceValues[0];
+                        while(tmp-this._vf.contourStepSize >= 0.0){
+                            tmp-=this._vf.contourStepSize;
+                            positive_range.push(tmp);
+                        }
+                        var range = Array.concat(negative_range.reverse(), positive_range);
+                        for (var i = 0; i <= range.length - 1; i++) {
+                            var s_value = range[i].toPrecision(3);
+                            inlineText += " if((sample>="+s_value+" && previous_value<"+s_value+")||(sample<"+s_value+" && previous_value>="+s_value+") && (grad.a>=uSurfaceTolerance)){\n"+
+                            "       value = vec4("+s_value+");\n";
+                            if(this._cf.renderStyle.nodes){
+                                inlineText += this._cf.renderStyle.nodes[0].inlineStyleShaderText();
+                            }
+                            inlineText += "       accum.rgb += (1.0 - accum.a) * (value.rgb * value.a);\n"+
+                            "       accum.a += value.a;\n"+
+                            "   }\n"; 
+                        };
+                    }
+                }else{ //Multiple isosurface values had been specified by the user
+                    var n_styles = this._cf.renderStyle.nodes.length-1;
+                    var s_values = this._vf.surfaceValues.length;
+                    for(var i=0; i<s_values; i++){
+                        var index = Math.min(i, n_styles);
+                        inlineText += "   if((sample>=uSurfaceValues["+i+"] && previous_value<uSurfaceValues["+i+"])||(sample<uSurfaceValues["+i+"] && previous_value>=uSurfaceValues["+i+"]) && (grad.a>=uSurfaceTolerance)){\n"+
+                        "       value.rgb = vec3(uSurfaceValues["+i+"]);\n";
+                        if(this._cf.renderStyle.nodes){
+                            inlineText += this._cf.renderStyle.nodes[index].inlineStyleShaderText();
+                        }
+                        inlineText += "   accum.rgb += (1.0 - accum.a) * (value.rgb * value.a);\n"+
+                        "   accum.a += value.a;\n"+
+                        "   }\n"; 
+                    }
+                }
+                inlineText += "    previous_value = sample;\n";
+                return inlineText;
+            },
+
+            styleShaderText: function(){
+                var styleText = "";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    if(this._cf.renderStyle.nodes[i].styleShaderText != undefined){
+                        styleText += this._cf.renderStyle.nodes[i].styleShaderText()+"\n";
+                    }
+                }
+                return styleText;
+            },
+
+            lightAssigment: function(){
+                var isBlendedStyle = false;
+                //Check if there is a blendedStyle, not to use lightAssigment
+                Array.forEach(this._cf.renderStyle.nodes, function(style){
+                    if(x3dom.isa(style, x3dom.nodeTypes.BlendedVolumeStyle)){
+                        isBlendedStyle = true;
+                    }
+                });
+                if(!isBlendedStyle){
+                    return this._cf.renderStyle.nodes[0].lightAssigment();
+                }else{
+                    return "";
+                }
+            },
+
+            lightEquationShaderText: function(){ //TODO: ligth equation per isosurface?
+                return this._cf.renderStyle.nodes[0].lightEquationShaderText();
+            },
+
+            nodeChanged: function()
+            {
+                if (!this._cf.appearance.node) 
+                {
+                    var that = this;
+                    var i;
+
+                    this.addChild(x3dom.nodeTypes.Appearance.defaultNode());
+                    
+                    // second texture, ray direction and length
+                    this.vrcBackCubeShaderVertex._vf.type = 'vertex';
+                    this.vrcBackCubeShaderVertex._vf.url[0] =
+                        "attribute vec3 position;\n" +
+                        "attribute vec3 color;\n" +
+                        "varying vec3 fragColor;\n" +
+                        "uniform mat4 modelViewProjectionMatrix;\n" +
+                        "\n" +
+                        "void main(void) {\n" +
+                        "    fragColor = color;\n" +
+                        "    gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);\n" +
+                        "}\n";
+
+                    this.vrcBackCubeShaderFragment._vf.type = 'fragment';
+                    this.vrcBackCubeShaderFragment._vf.url[0] =
+                        "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+                        "  precision highp float;\n" +
+                        "#else\n" +
+                        "  precision mediump float;\n" +
+                        "#endif\n" +
+                        "\n" +
+                        "varying vec3 fragColor;\n" +
+                        "\n" +
+                        "void main(void) {\n" +
+                        "    gl_FragColor = vec4(fragColor, 1.0);\n" +
+                        "}\n";
+                    
+                    this.vrcBackCubeShader.addChild(this.vrcBackCubeShaderFragment, 'parts');
+                    this.vrcBackCubeShaderFragment.nodeChanged();
+                    
+                    this.vrcBackCubeShader.addChild(this.vrcBackCubeShaderVertex, 'parts');
+                    this.vrcBackCubeShaderVertex.nodeChanged();
+                    
+                    this.vrcBackCubeAppearance.addChild(this.vrcBackCubeShader);
+                    this.vrcBackCubeShader.nodeChanged();
+                    
+                    // initialize fbo - note that internally the datatypes must fit!
+                    this.vrcRenderTexture._vf.update = 'always';
+                    this.vrcRenderTexture._vf.dimensions = [500, 500, 4];
+                    this.vrcRenderTexture._vf.repeatS = false;
+                    this.vrcRenderTexture._vf.repeatT = false;
+                    this.vrcRenderTexture._nameSpace = this._nameSpace;
+                    this._textureID++;
+
+                    this.vrcBackCubeGeometry._vf.size = new x3dom.fields.SFVec3f(
+                        this._vf.dimensions.x, this._vf.dimensions.y, this._vf.dimensions.z);
+                    this.vrcBackCubeGeometry._vf.ccw = false;
+                    this.vrcBackCubeGeometry._vf.solid = true;
+                    // manually trigger size update
+                    this.vrcBackCubeGeometry.fieldChanged("size");
+                    
+                    this.vrcBackCubeShape.addChild(this.vrcBackCubeGeometry);
+                    this.vrcBackCubeGeometry.nodeChanged();
+                    
+                    this.vrcBackCubeShape.addChild(this.vrcBackCubeAppearance);
+                    this.vrcBackCubeAppearance.nodeChanged();
+                    
+                    this.vrcRenderTexture.addChild(this.vrcBackCubeShape, 'scene');
+                    this.vrcBackCubeShape.nodeChanged();
+                    
+                    // create shortcut to volume data set
+                    this.vrcVolumeTexture = this._cf.voxels.node;
+                    this.vrcVolumeTexture._vf.repeatS = false;
+                    this.vrcVolumeTexture._vf.repeatT = false;
+                    this._textureID++;
+
+                    this.vrcMultiTexture._nameSpace = this._nameSpace;
+                    
+                    this.vrcMultiTexture.addChild(this.vrcRenderTexture, 'texture');
+                    this.vrcRenderTexture.nodeChanged();
+                    
+                    this.vrcMultiTexture.addChild(this.vrcVolumeTexture, 'texture');
+                    this.vrcVolumeTexture.nodeChanged();
+                    
+                    // textures from styles
+                    var styleTextures = this.textures();
+                    for (i = 0; i<styleTextures.length; i++)
+                    {
+                        this.vrcMultiTexture.addChild(styleTextures[i], 'texture');
+                        this.vrcVolumeTexture.nodeChanged();
+                    }
+                    
+                    this._cf.appearance.node.addChild(this.vrcMultiTexture);
+                    this.vrcMultiTexture.nodeChanged();
+                    
+                    // here goes the volume shader
+                    this.vrcFrontCubeShaderVertex._vf.type = 'vertex';
+                    var shaderText=
+                    "attribute vec3 position;\n"+
+                    "attribute vec3 color;\n"+
+                    "uniform mat4 modelViewProjectionMatrix;\n"+
+                    "varying vec3 vertexColor;\n"+
+                    "varying vec4 vertexPosition;\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText += "uniform mat4 modelViewMatrix;\n"+
+                        "varying vec4 position_eye;\n";
+                    }
+                    shaderText += "\n" +
+                    "void main()\n"+
+                    "{\n"+
+                    "  vertexColor = color;\n"+
+                    "  vertexPosition = modelViewProjectionMatrix * vec4(position, 1.0);\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                       shaderText += "  position_eye = modelViewMatrix * vec4(position, 1.0);\n";
+                    }
+                    shaderText += 
+                    "  gl_Position = vertexPosition;\n"+
+                    "}";
+                    this.vrcFrontCubeShaderVertex._vf.url[0] = shaderText;
+
+                    this.vrcFrontCubeShaderFragment._vf.type = 'fragment';
+                    shaderText =
+                    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+                    "  precision highp float;\n" +
+                    "#else\n" +
+                    "  precision mediump float;\n" +
+                    "#endif\n\n"+
+                    "uniform sampler2D uBackCoord;\n"+
+                    "uniform sampler2D uVolData;\n"+
+                    "uniform vec3 offset;\n"+
+                    "uniform mat4 modelViewMatrixInverse;\n"+
+                    "uniform mat4 modelViewMatrix;\n"+
+                    //"uniform sampler2D uSurfaceNormals;\n"+
+                    "varying vec3 vertexColor;\n"+
+                    "varying vec4 vertexPosition;\n"+
+                    "varying vec4 position_eye;\n"+
+                    "const float Steps = 60.0;\n"+
+                    "const float numberOfSlices = "+ this.vrcVolumeTexture._vf.numberOfSlices.toPrecision(5)+";\n"+
+                    "const float slicesOverX = " + this.vrcVolumeTexture._vf.slicesOverX.toPrecision(5) +";\n"+
+                    "const float slicesOverY = " + this.vrcVolumeTexture._vf.slicesOverY.toPrecision(5) +";\n";
+                    //LIGHTS
+                    var n_lights = x3dom.nodeTypes.X3DLightNode.lightID;
+                    for(var l=0; l<n_lights; l++) {
+                        shaderText +=   "uniform float light"+l+"_On;\n" +
+                        "uniform float light"+l+"_Type;\n" +
+                        "uniform vec3  light"+l+"_Location;\n" +
+                        "uniform vec3  light"+l+"_Direction;\n" +
+                        "uniform vec3  light"+l+"_Color;\n" +
+                        "uniform vec3  light"+l+"_Attenuation;\n" +
+                        "uniform float light"+l+"_Radius;\n" +
+                        "uniform float light"+l+"_Intensity;\n" +
+                        "uniform float light"+l+"_AmbientIntensity;\n" +
+                        "uniform float light"+l+"_BeamWidth;\n" +
+                        "uniform float light"+l+"_CutOffAngle;\n" +
+                        "uniform float light"+l+"_ShadowIntensity;\n";
+                    }
+                    shaderText += this.styleUniformsShaderText()+
+                    this.styleShaderText()+
+                    "vec4 cTexture3D(sampler2D vol, vec3 volpos, float nS, float nX, float nY)\n"+
+                    "{\n"+
+                    "  float s1,s2;\n"+
+                    "  float dx1,dy1;\n"+
+                    "  float dx2,dy2;\n"+
+                    "  vec2 texpos1,texpos2;\n"+
+                    "  s1 = floor(volpos.z*nS);\n"+
+                    "  s2 = s1+1.0;\n"+
+                    "  dx1 = fract(s1/nX);\n"+
+                    "  dy1 = floor(s1/nY)/nY;\n"+
+                    "  dx2 = fract(s2/nX);\n"+
+                    "  dy2 = floor(s2/nY)/nY;\n"+
+                    "  texpos1.x = dx1+(volpos.x/nX);\n"+
+                    "  texpos1.y = dy1+(volpos.y/nY);\n"+
+                    "  texpos2.x = dx2+(volpos.x/nX);\n"+
+                    "  texpos2.y = dy2+(volpos.y/nY);\n"+
+                    "  return mix( texture2D(vol,texpos1), texture2D(vol,texpos2), (volpos.z*nS)-s1);\n"+
+                    "}\n"+
+                    "\n"+
+                    "vec4 getNormalFromTexture(sampler2D sampler, vec3 pos, float nS, float nX, float nY) {\n"+
+                    "   vec4 n = (2.0*cTexture3D(sampler, pos, nS, nX, nY)-1.0);\n"+
+                    "   n.a = length(n.xyz);\n"+
+                    "   n.xyz = normalize(n.xyz);\n"+
+                    "   return n;\n"+
+                    "}\n"+
+                    "\n"+
+                    "vec4 getNormalOnTheFly(sampler2D sampler, vec3 voxPos, float nS, float nX, float nY){\n"+
+                    "   float v0 = cTexture3D(sampler, voxPos + vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
+                    "   float v1 = cTexture3D(sampler, voxPos - vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
+                    "   float v2 = cTexture3D(sampler, voxPos + vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
+                    "   float v3 = cTexture3D(sampler, voxPos - vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
+                    "   float v4 = cTexture3D(sampler, voxPos + vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
+                    "   float v5 = cTexture3D(sampler, voxPos - vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
+                    "   vec3 grad = vec3((v0-v1)/2.0, (v2-v3)/2.0, (v4-v5)/2.0);\n"+
+                    "   return vec4(normalize(grad), length(grad));\n"+
+                    "}\n"+
+                    "\n"+
+                    this.lightEquationShaderText();
+                    shaderText += "void main()\n"+
+                    "{\n"+
+                    "  vec2 texC = vertexPosition.xy/vertexPosition.w;\n"+
+                    "  texC = 0.5*texC + 0.5;\n"+
+                    "  vec4 backColor = texture2D(uBackCoord,texC);\n"+
+                    "  vec3 dir = backColor.rgb - vertexColor.rgb;\n"+
+                    "  vec3 pos = vertexColor;\n"+
+                    "  vec4 accum  = vec4(0.0, 0.0, 0.0, 0.0);\n"+
+                    "  float sample = 0.0;\n"+
+                    "  vec4 value  = vec4(0.0, 0.0, 0.0, 0.0);\n"+
+                    "  float cont = 0.0;\n"+
+                    "  vec3 step = dir/Steps;\n";
+                    //Light init values
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText +=
+                        "  vec3 ambient = vec3(0.0, 0.0, 0.0);\n"+
+                        "  vec3 diffuse = vec3(0.0, 0.0, 0.0);\n"+
+                        "  vec3 specular = vec3(0.0, 0.0, 0.0);\n"+
+                        "  vec4 step_eye = modelViewMatrix * vec4(step, 0.0);\n"+
+                        "  vec4 positionE = position_eye;\n"+
+                        "  float lightFactor = 1.0;\n"; 
+                    }else{
+                        shaderText += "  float lightFactor = 1.2;\n";
+                    }
+                    shaderText += this.initializeValues()+
+                    "  float opacityFactor = 6.0;\n"+
+                    "  for(float i = 0.0; i < Steps; i+=1.0)\n"+
+                    "  {\n"+
+                    "    value = cTexture3D(uVolData, pos, numberOfSlices, slicesOverX, slicesOverY);\n"+
+                    "    value = vec4(value.rgb,(0.299*value.r)+(0.587*value.g)+(0.114*value.b));\n";
+                    if(this._cf.gradients.node){
+                        shaderText += "    vec4 gradEye = getNormalFromTexture(uSurfaceNormals, pos, numberOfSlices, slicesOverX, slicesOverY);\n";
+                    }else{
+                        shaderText += "    vec4 gradEye = getNormalOnTheFly(uVolData, pos, numberOfSlices, slicesOverX, slicesOverY);\n";
+                    }
+                    shaderText += "    vec4 grad = vec4((modelViewMatrixInverse * vec4(gradEye.xyz, 0.0)).xyz, gradEye.a);\n";
+                    for(var l=0; l<x3dom.nodeTypes.X3DLightNode.lightID; l++) {
+                        shaderText += "    lighting(light"+l+"_Type, " +
+                        "light"+l+"_Location, " +
+                        "light"+l+"_Direction, " +
+                        "light"+l+"_Color, " + 
+                        "light"+l+"_Attenuation, " +
+                        "light"+l+"_Radius, " +
+                        "light"+l+"_Intensity, " + 
+                        "light"+l+"_AmbientIntensity, " +
+                        "light"+l+"_BeamWidth, " +
+                        "light"+l+"_CutOffAngle, " +
+                        "grad.xyz, -positionE.xyz, ambient, diffuse, specular);\n";
+                    }
+                    shaderText += this.inlineStyleShaderText();
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText += this.inlineLightAssigment();
+                    }
+                    shaderText +=
+                    "    //advance the current position\n"+
+                    "    pos.xyz += step;\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText +="    positionE += step_eye;\n";
+                    }
+                    shaderText +=
+                    "    //break if the position is greater than <1, 1, 1>\n"+
+                    "    if(pos.x > 1.0 || pos.y > 1.0 || pos.z > 1.0 || accum.a>=1.0)\n"+
+                    "      break;\n"+
+                    "  }\n"+
+                    "  gl_FragColor = accum;\n"+
+                    "}";
+
+                    this.vrcFrontCubeShaderFragment._vf.url[0] = shaderText;
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderVertex, 'parts');
+                    this.vrcFrontCubeShaderVertex.nodeChanged();
+                    
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFragment, 'parts');
+                    this.vrcFrontCubeShaderFragment.nodeChanged();
+                    
+                    this.vrcFrontCubeShaderFieldBackCoord._vf.name = 'uBackCoord';
+                    this.vrcFrontCubeShaderFieldBackCoord._vf.type = 'SFInt32';
+                    this.vrcFrontCubeShaderFieldBackCoord._vf.value = 0;
+
+                    this.vrcFrontCubeShaderFieldVolData._vf.name = 'uVolData';
+                    this.vrcFrontCubeShaderFieldVolData._vf.type = 'SFInt32';
+                    this.vrcFrontCubeShaderFieldVolData._vf.value = 1;
+
+                    this.vrcFrontCubeShaderFieldOffset._vf.name = 'offset';
+                    this.vrcFrontCubeShaderFieldOffset._vf.type = 'SFVec3f';
+                    this.vrcFrontCubeShaderFieldOffset._vf.value = "0.01 0.01 0.01"; //Default initial value
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldBackCoord, 'fields');
+                    this.vrcFrontCubeShaderFieldBackCoord.nodeChanged();
+                    
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldVolData, 'fields');
+                    this.vrcFrontCubeShaderFieldVolData.nodeChanged();
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldOffset, 'fields');
+ 
+                    //Take volume texture size for the ComposableRenderStyles offset parameter
+                    this.offsetInterval = window.setInterval((function(aTex) {
+                        return function() {
+                            x3dom.debug.logInfo('[VolumeRendering][ISOSurfaceVolumeData] Looking for Volume Texture size...');
+                            var s = that.getTextureSize(aTex);
+                            if(s.valid){
+                                clearInterval(that.offsetInterval);
+                                that.vrcFrontCubeShaderFieldOffset._vf.value = new x3dom.fields.SFVec3f(1.0/s.w, 1.0/s.h, 1.0/aTex._vf.numberOfSlices);
+                                that.vrcFrontCubeShader.nodeChanged();
+                                x3dom.debug.logInfo('[VolumeRendering][ISOSurfaceVolumeData] Volume Texture size obtained');
+                            }
+                        }
+                    })(this.vrcVolumeTexture), 1000);
+                    
+                    var ShaderUniforms = this.uniforms();
+                    for (i = 0; i<ShaderUniforms.length; i++)
+                    {
+                        this.vrcFrontCubeShader.addChild(ShaderUniforms[i], 'fields');
+                    }
+                
+                    this._cf.appearance.node.addChild(this.vrcFrontCubeShader);
+                    this.vrcFrontCubeShader.nodeChanged();
+                    
+                    this._cf.appearance.node.nodeChanged();
+                }
+
+                if (!this._cf.geometry.node) {
+                    this.addChild(new x3dom.nodeTypes.Box());
+
+                    this._cf.geometry.node._vf.hasHelperColors = true;
+                    this._cf.geometry.node._vf.size = new x3dom.fields.SFVec3f(
+                        this._vf.dimensions.x, this._vf.dimensions.y, this._vf.dimensions.z);
+
+                    // workaround to trigger field change...
+                    this._cf.geometry.node.fieldChanged("hasHelperColors");
+                    this._cf.geometry.node.fieldChanged("size");
+                }
+            }
         }
     )
 );
@@ -48444,15 +51016,20 @@ x3dom.registerNodeType(
          },
          {
             fieldChanged: function(fieldName) {
-                 if (fieldName == "originLine" || fieldName == "finalLine" ||
-                     fieldName == "positionLine") {
-                      //var that = this;
-                      //Array.forEach(this._parentNodes, function (vol) {
-                      //  vol.updateFields("positionLine", that._vf.positionLine);
-                      //});
-                     this.uniformFloatPosition._vf.value = this._vf.positionLine;
-                     this.uniformFloatPosition.fieldChanged("value");
-                 }
+                 switch(fieldName){
+                    case 'positionLine':
+                        this.uniformFloatPosition._vf.value = this._vf.positionLine;
+                        this.uniformFloatPosition.fieldChanged("value");
+                        break;
+                    case 'originLine':
+                        this.uniformVec3fOriginLine._vf.value = this._vf.originLine;
+                        this.uniformVec3fOriginLine.fieldChanged("value");
+                        break;
+                    case 'finalLine':
+                        this.uniformVec3fFinalLine._vf.value = this._vf.finalLine;
+                        this.uniformVec3fFinalLine.fieldChanged("value");
+                        break;
+                }
             },
 
             uniforms: function() {
@@ -48524,15 +51101,38 @@ x3dom.registerNodeType(
             this.uniformFloatOpacityFactor = new x3dom.nodeTypes.Uniform(ctx);
             this.uniformFloatLightFactor = new x3dom.nodeTypes.Uniform(ctx);
             this.uniformSampler2DTransferFunction = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolEnableOpacityMap = new x3dom.nodeTypes.Uniform(ctx);
         },
         {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'opacityFactor':
+                        this.uniformFloatOpacityFactor._vf.value = this._vf.opacityFactor;
+                        this.uniformFloatOpacityFactor.fieldChanged("value");
+                        break;
+                    case 'lightFactor':
+                        this.uniformFloatLightFactor._vf.value = this._vf.lightFactor;
+                        this.uniformFloatLightFactor.fieldChanged("value");
+                        break;
+                }
+            },
+
             uniforms: function() {
                 var unis = [];
                 
                 if (this._cf.transferFunction.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][OpacityMapVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
                     this.uniformSampler2DTransferFunction._vf.name = 'uTransferFunction';
                     this.uniformSampler2DTransferFunction._vf.type = 'SFInt32';
-                    this.uniformSampler2DTransferFunction._vf.value = 2; //FIXME: Number of textures could be variable
+                    this.uniformSampler2DTransferFunction._vf.value = volumeDataParent._textureID++;
                     unis.push(this.uniformSampler2DTransferFunction);
                 }
 
@@ -48546,6 +51146,11 @@ x3dom.registerNodeType(
                 this.uniformFloatLightFactor._vf.value = this._vf.lightFactor;
                 unis.push(this.uniformFloatLightFactor);
 
+                this.uniformBoolEnableOpacityMap._vf.name = 'uEnableOpacityMap';
+                this.uniformBoolEnableOpacityMap._vf.type = 'SFBool';
+                this.uniformBoolEnableOpacityMap._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEnableOpacityMap);
+
                 return unis;
             },
 
@@ -48555,14 +51160,15 @@ x3dom.registerNodeType(
                 if (tex) {
                     tex._vf.repeatS = false;
                     tex._vf.repeatT = false;
-                    texs.push(tex)
+                    texs.push(tex);
                 }
                 return texs;
             },
 
             styleUniformsShaderText: function() {
                 var uniformsText = "uniform float uOpacityFactor;\n"+
-                "uniform float uLightFactor;\n";
+                "uniform float uLightFactor;\n"+
+                "uniform bool uEnableOpacityMap;\n";
                 if (this._cf.transferFunction.node) {
                         uniformsText += "uniform sampler2D uTransferFunction;\n";
                 }
@@ -48570,17 +51176,21 @@ x3dom.registerNodeType(
             },
 
             inlineStyleShaderText: function(){
-                var shaderText =
-                "    opacityFactor = uOpacityFactor;\n"+
-                "    lightFactor = uLightFactor;\n";
+                var shaderText = "    if(uEnableOpacityMap){\n"+
+                "       opacityFactor = uOpacityFactor;\n"+
+                "       lightFactor = uLightFactor;\n";
                 if (this._cf.transferFunction.node){
-                        shaderText += "    value = texture2D(uTransferFunction,vec2(value.r,0.5));\n";
+                        shaderText += "     value = texture2D(uTransferFunction,vec2(value.r,0.5));\n";
                 }
+                shaderText += "    }\n";
                 return shaderText;
             },
 
             lightAssigment: function(){
-                return "value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+                var inlineText = "  if(uEnableOpacityMap){\n"+
+                    "         value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n"+
+                    "   }\n";
+                return inlineText;
             },
 
             fragmentShaderText : function (numberOfSlices, slicesOverX, slicesOverY) {
@@ -48590,7 +51200,7 @@ x3dom.registerNodeType(
                 this.styleUniformsShaderText()+
                 this.texture3DFunctionShaderText+
                 this.normalFunctionShaderText()+
-                this.lightEquationShaderText+
+                this.lightEquationShaderText()+
                 this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
                 return shader;
             }
@@ -48610,22 +51220,31 @@ x3dom.registerNodeType(
             this.addField_SFString(ctx, 'type', "MAX");
 
             this.uniformIntensityThreshold = new x3dom.nodeTypes.Uniform(ctx);
-            this.uniformType = new x3dom.nodeTypes.Uniform(ctx);
+            //this.uniformType = new x3dom.nodeTypes.Uniform(ctx);
         },
         {
+            fieldChanged: function(fieldName){
+                if (fieldName === 'intensityThreshold') {
+                    this.uniformIntensityThreshold._vf.value = this._vf.intensityThreshold;
+                    this.uniformIntensityThreshold.fieldChanged("value");
+                }else if(fieldName === 'type'){
+                    //TODO: Reload node
+                }
+            },
+
             uniforms: function(){
                 var unis = [];
-                var type_map = {'max':0,'min':1,'average':2};
+                //var type_map = {'max':0,'min':1,'average':2};
 
                 this.uniformIntensityThreshold._vf.name = 'uIntensityThreshold';
                 this.uniformIntensityThreshold._vf.type = 'SFFloat';
                 this.uniformIntensityThreshold._vf.value = this._vf.intensityThreshold;
                 unis.push(this.uniformIntensityThreshold);
 
-                this.uniformType._vf.name = 'uType';
+                /*this.uniformType._vf.name = 'uType';
                 this.uniformType._vf.type = 'SFInt32';
                 this.uniformType._vf.value = type_map[this._vf.type.toLowerCase()];
-                unis.push(this.uniformType);
+                unis.push(this.uniformType);*/
 
                 return unis;
             },
@@ -48669,7 +51288,8 @@ x3dom.registerNodeType(
                 "    sample.a = value.a * opacityFactor * (1.0/Steps);\n"+
                 "    sample.rgb = value.rgb * sample.a * lightFactor;\n"+
                 "    accum.a += (1.0-accum.a)*sample.a;\n";
-                switch (this._vf.type.toLowerCase()) {
+                if(this._vf.enabled){
+                    switch (this._vf.type.toLowerCase()) {
                     case "max":
                         shader += "if(value.r > uIntensityThreshold && value.r <= previous_value.x){\n"+
                         "   break;\n"+
@@ -48688,6 +51308,7 @@ x3dom.registerNodeType(
                         shader+= "color.rgb += (1.0 - accum.a) * sample.rgb;\n"+
                         "color.a = accum.a;\n";
                         break;
+                    }
                 }
                 shader += 
                 "    //update the previous value and keeping the accumulated alpha\n"+
@@ -48697,7 +51318,7 @@ x3dom.registerNodeType(
                 "    pos.xyz += step;\n"+
                 "    //break if the position is greater than <1, 1, 1>\n"+
                 "    if(pos.x > 1.0 || pos.y > 1.0 || pos.z > 1.0 || accum.a>=1.0){\n";
-                if(this._vf.type.toLowerCase() == "average"){
+                if(this._vf.type.toLowerCase() == "average" && this._vf.enabled){
                     shader += "     if((i > 0.0) && (i < Steps-1.0)){\n"+
                     "color.rgb = color.rgb/i;\n"+
                     "}\n";
@@ -48722,9 +51343,509 @@ x3dom.registerNodeType(
         function (ctx) {
             x3dom.nodeTypes.SegmentedVolumeData.superClass.call(this, ctx);
 
-            this.addField_MFNode('renderStyle', x3dom.nodeTypes.X3DVolumeDataNode);
-            this.addField_SFNode('segmentIdentifiers', x3dom.nodeTypes.X3DVolumeDataNode);
-            this.addField_MFBoolean(ctx, 'segmentEnabled', []); // TODO: impl. parsing of MFBoolean in fields.js
+            this.addField_MFNode('renderStyle', x3dom.nodeTypes.X3DComposableVolumeRenderStyleNode);
+            //this.addField_MFBool(ctx, 'segmentEnabled', []);  // MFBool NYI!!!
+            //this.addField_SFNode('segmentIdentifiers', x3dom.nodeTypes.X3DVolumeDataNode);
+            this.addField_SFNode('segmentIdentifiers', x3dom.nodeTypes.Texture);
+            this.addField_SFFloat(ctx, 'numberOfMaxSegments', 10.0);
+
+            this.uniformSampler2DSegmentIdentifiers = new x3dom.nodeTypes.Uniform(ctx);
+            this.normalTextureProvided = false;
+
+            this.vrcMultiTexture = new x3dom.nodeTypes.MultiTexture(ctx);
+            this.vrcRenderTexture = new x3dom.nodeTypes.RenderedTexture(ctx);
+            this.vrcVolumeTexture = null;
+
+            this.vrcBackCubeShape = new x3dom.nodeTypes.Shape(ctx);
+            this.vrcBackCubeAppearance = new x3dom.nodeTypes.Appearance();
+            this.vrcBackCubeGeometry = new x3dom.nodeTypes.Box(ctx);
+            this.vrcBackCubeShader = new x3dom.nodeTypes.ComposedShader(ctx);
+            this.vrcBackCubeShaderVertex = new x3dom.nodeTypes.ShaderPart(ctx);
+            this.vrcBackCubeShaderFragment = new x3dom.nodeTypes.ShaderPart(ctx);
+
+            this.vrcFrontCubeShader = new x3dom.nodeTypes.ComposedShader(ctx);
+            this.vrcFrontCubeShaderVertex = new x3dom.nodeTypes.ShaderPart(ctx);
+            this.vrcFrontCubeShaderFragment = new x3dom.nodeTypes.ShaderPart(ctx);
+            this.vrcFrontCubeShaderFieldBackCoord = new x3dom.nodeTypes.Field(ctx);
+            this.vrcFrontCubeShaderFieldVolData = new x3dom.nodeTypes.Field(ctx);
+            this.vrcFrontCubeShaderFieldOffset = new x3dom.nodeTypes.Field(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                if (fieldName === "numberOfMaxSegments" || fieldname === "segmentIdentifiers") {
+                    //TODO: Reload node   
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+
+                if (this._cf.segmentIdentifiers.node) {
+                    this.uniformSampler2DSegmentIdentifiers._vf.name = 'uSegmentIdentifiers';
+                    this.uniformSampler2DSegmentIdentifiers._vf.type = 'SFInt32';
+                    this.uniformSampler2DSegmentIdentifiers._vf.value = this._textureID++;
+                    unis.push(this.uniformSampler2DSegmentIdentifiers);
+                }
+
+                //Also add the render style uniforms
+                if (this._cf.renderStyle.nodes) {
+                    var i, n = this._cf.renderStyle.nodes.length;
+                    for (i=0; i<n; i++){
+                        //Not repeat common uniforms, TODO: Allow multiple surface normals
+                        var that = this;
+                        Array.forEach(this._cf.renderStyle.nodes[i].uniforms(), function(uniform){
+                            var contains_uniform = false;
+                            Array.forEach(unis, function(accum){
+                                if(accum._vf.name == uniform._vf.name){
+                                    contains_uniform = true;
+                                }
+                            });
+                            if (contains_uniform == false){
+                                unis = unis.concat(uniform);
+                            }
+                        });
+                    }    
+                }
+                return unis;
+            },
+
+            textures: function(){
+                var texs = [];
+                if(this._cf.segmentIdentifiers.node){
+                    var tex = this._cf.segmentIdentifiers.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex);
+                }
+
+                //Also add the render style textures
+                var i, n = this._cf.renderStyle.nodes.length;
+                for (i=0; i<n; i++){
+                    //Not repeat same textures, TODO: Allow multiply surface normals textures
+                    Array.forEach(this._cf.renderStyle.nodes[i].textures(), function(texture){
+                        var contains_texture = false;
+                        Array.forEach(texs, function(accum){
+                            if(accum._vf.url[0] == texture._vf.url[0]){
+                                contains_texture = true;
+                            }
+                        });
+                        if (contains_texture == false){
+                            texs = texs.concat(texture);
+                        }
+                    });
+                }
+                return texs;
+            },
+
+            initializeValues: function() {
+                var initialValues ="";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    if(this._cf.renderStyle.nodes[i].initializeValues != undefined){
+                        initialValues += this._cf.renderStyle.nodes[i].initializeValues() + "\n";
+                    }
+                }
+                return initialValues;
+            },
+
+            styleUniformsShaderText: function(){
+                var styleText = "uniform sampler2D uSegmentIdentifiers;\n"; //TODO: Segment enabled
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    styleText += this._cf.renderStyle.nodes[i].styleUniformsShaderText() + "\n";
+                    if(this._cf.renderStyle.nodes[i]._cf.surfaceNormals && this._cf.renderStyle.nodes[i]._cf.surfaceNormals.node != null){
+                        this.normalTextureProvided = true;
+                        this.surfaceNormals = this._cf.renderStyle.nodes[i]._cf.surfaceNormals.node;
+                    }
+                }
+                return styleText;
+            },
+
+            styleShaderText: function(){
+                var styleText = "";
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){
+                    if(this._cf.renderStyle.nodes[i].styleShaderText != undefined){
+                        styleText += this._cf.renderStyle.nodes[i].styleShaderText()+"\n";
+                    }
+                }
+                return styleText;
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "";
+                if(this._cf.segmentIdentifiers.node){
+                    inlineText += "float t_id = cTexture3D(uSegmentIdentifiers, pos, numberOfSlices, slicesOverX, slicesOverY).r;\n"+
+                    "int s_id = int(floor((t_id-offset_s)*maxSegments));\n";
+                }else{
+                    inlineText += "int s_id = 0;\n";
+                }
+                //TODO Check if the segment identifier is going to be rendered or not. NYI!!
+                var n = this._cf.renderStyle.nodes.length;
+                for (var i=0; i<n; i++){ //TODO Check identifier and add the style
+                    inlineText += "if (s_id == "+i+"){\n"+
+                    this._cf.renderStyle.nodes[i].inlineStyleShaderText()+
+                    "}\n";
+                }
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                var isBlendedStyle = false;
+                //Check if there is a blendedStyle, not to use lightAssigment
+                Array.forEach(this._cf.renderStyle.nodes, function(style){
+                    if(x3dom.isa(style, x3dom.nodeTypes.BlendedVolumeStyle)){
+                        isBlendedStyle = true;
+                    }
+                });
+                if(!isBlendedStyle){
+                    return this._cf.renderStyle.nodes[0].lightAssigment();
+                }else{
+                    return "";
+                }
+            },
+
+            lightEquationShaderText: function(){ //TODO: ligth equation per segment
+                return this._cf.renderStyle.nodes[0].lightEquationShaderText();
+            },
+
+            nodeChanged: function()
+            {
+                if (!this._cf.appearance.node) 
+                {
+                    var that = this;
+                    var i;
+
+                    this.addChild(x3dom.nodeTypes.Appearance.defaultNode());
+                    
+                    // second texture, ray direction and length
+                    this.vrcBackCubeShaderVertex._vf.type = 'vertex';
+                    this.vrcBackCubeShaderVertex._vf.url[0] =
+                        "attribute vec3 position;\n" +
+                        "attribute vec3 color;\n" +
+                        "varying vec3 fragColor;\n" +
+                        "uniform mat4 modelViewProjectionMatrix;\n" +
+                        "\n" +
+                        "void main(void) {\n" +
+                        "    fragColor = color;\n" +
+                        "    gl_Position = modelViewProjectionMatrix * vec4(position, 1.0);\n" +
+                        "}\n";
+
+                    this.vrcBackCubeShaderFragment._vf.type = 'fragment';
+                    this.vrcBackCubeShaderFragment._vf.url[0] =
+                        "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+                        "  precision highp float;\n" +
+                        "#else\n" +
+                        "  precision mediump float;\n" +
+                        "#endif\n" +
+                        "\n" +
+                        "varying vec3 fragColor;\n" +
+                        "\n" +
+                        "void main(void) {\n" +
+                        "    gl_FragColor = vec4(fragColor, 1.0);\n" +
+                        "}\n";
+                    
+                    this.vrcBackCubeShader.addChild(this.vrcBackCubeShaderFragment, 'parts');
+                    this.vrcBackCubeShaderFragment.nodeChanged();
+                    
+                    this.vrcBackCubeShader.addChild(this.vrcBackCubeShaderVertex, 'parts');
+                    this.vrcBackCubeShaderVertex.nodeChanged();
+                    
+                    this.vrcBackCubeAppearance.addChild(this.vrcBackCubeShader);
+                    this.vrcBackCubeShader.nodeChanged();
+                    
+                    // initialize fbo - note that internally the datatypes must fit!
+                    this.vrcRenderTexture._vf.update = 'always';
+                    this.vrcRenderTexture._vf.dimensions = [500, 500, 4];
+                    this.vrcRenderTexture._vf.repeatS = false;
+                    this.vrcRenderTexture._vf.repeatT = false;
+                    this.vrcRenderTexture._nameSpace = this._nameSpace;
+                    this._textureID++;
+
+                    this.vrcBackCubeGeometry._vf.size = new x3dom.fields.SFVec3f(
+                        this._vf.dimensions.x, this._vf.dimensions.y, this._vf.dimensions.z);
+                    this.vrcBackCubeGeometry._vf.ccw = false;
+                    this.vrcBackCubeGeometry._vf.solid = true;
+                    // manually trigger size update
+                    this.vrcBackCubeGeometry.fieldChanged("size");
+                    
+                    this.vrcBackCubeShape.addChild(this.vrcBackCubeGeometry);
+                    this.vrcBackCubeGeometry.nodeChanged();
+                    
+                    this.vrcBackCubeShape.addChild(this.vrcBackCubeAppearance);
+                    this.vrcBackCubeAppearance.nodeChanged();
+                    
+                    this.vrcRenderTexture.addChild(this.vrcBackCubeShape, 'scene');
+                    this.vrcBackCubeShape.nodeChanged();
+                    
+                    // create shortcut to volume data set
+                    this.vrcVolumeTexture = this._cf.voxels.node;
+                    this.vrcVolumeTexture._vf.repeatS = false;
+                    this.vrcVolumeTexture._vf.repeatT = false;
+                    this._textureID++;
+
+                    this.vrcMultiTexture._nameSpace = this._nameSpace;
+                    
+                    this.vrcMultiTexture.addChild(this.vrcRenderTexture, 'texture');
+                    this.vrcRenderTexture.nodeChanged();
+                    
+                    this.vrcMultiTexture.addChild(this.vrcVolumeTexture, 'texture');
+                    this.vrcVolumeTexture.nodeChanged();
+                    
+                    // textures from styles
+                    var styleTextures = this.textures();
+                    for (i = 0; i<styleTextures.length; i++)
+                    {
+                        this.vrcMultiTexture.addChild(styleTextures[i], 'texture');
+                        this.vrcVolumeTexture.nodeChanged();
+                    }
+                    
+                    this._cf.appearance.node.addChild(this.vrcMultiTexture);
+                    this.vrcMultiTexture.nodeChanged();
+                    
+                    // here goes the volume shader
+                    this.vrcFrontCubeShaderVertex._vf.type = 'vertex';
+                    var shaderText=
+                    "attribute vec3 position;\n"+
+                    "attribute vec3 color;\n"+
+                    "uniform mat4 modelViewProjectionMatrix;\n"+
+                    "varying vec3 vertexColor;\n"+
+                    "varying vec4 vertexPosition;\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText += "uniform mat4 modelViewMatrix;\n"+
+                        "varying vec4 position_eye;\n";
+                    }
+                    shaderText += "\n" +
+                    "void main()\n"+
+                    "{\n"+
+                    "  vertexColor = color;\n"+
+                    "  vertexPosition = modelViewProjectionMatrix * vec4(position, 1.0);\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                       shaderText += "  position_eye = modelViewMatrix * vec4(position, 1.0);\n";
+                    }
+                    shaderText += 
+                    "  gl_Position = vertexPosition;\n"+
+                    "}";
+                    this.vrcFrontCubeShaderVertex._vf.url[0] = shaderText;
+
+                    this.vrcFrontCubeShaderFragment._vf.type = 'fragment';
+                    shaderText =
+                    "#ifdef GL_FRAGMENT_PRECISION_HIGH\n" +
+                    "  precision highp float;\n" +
+                    "#else\n" +
+                    "  precision mediump float;\n" +
+                    "#endif\n\n"+
+                    "uniform sampler2D uBackCoord;\n"+
+                    "uniform sampler2D uVolData;\n"+
+                    "uniform vec3 offset;\n"+
+                    "uniform mat4 modelViewMatrixInverse;\n"+
+                    "uniform sampler2D uSurfaceNormals;\n"+
+                    "varying vec3 vertexColor;\n"+
+                    "varying vec4 vertexPosition;\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText += "varying vec4 position_eye;\n";
+                    }
+                    shaderText +=
+                    "const float Steps = 60.0;\n"+
+                    "const float numberOfSlices = "+ this.vrcVolumeTexture._vf.numberOfSlices.toPrecision(5)+";\n"+
+                    "const float slicesOverX = " + this.vrcVolumeTexture._vf.slicesOverX.toPrecision(5) +";\n"+
+                    "const float slicesOverY = " + this.vrcVolumeTexture._vf.slicesOverY.toPrecision(5) +";\n"+
+                    "const float maxSegments = " + this._vf.numberOfMaxSegments.toPrecision(3) + ";\n";
+                    //LIGHTS
+                    var n_lights = x3dom.nodeTypes.X3DLightNode.lightID;
+                    for(var l=0; l<n_lights; l++) {
+                        shaderText +=   "uniform float light"+l+"_On;\n" +
+                        "uniform float light"+l+"_Type;\n" +
+                        "uniform vec3  light"+l+"_Location;\n" +
+                        "uniform vec3  light"+l+"_Direction;\n" +
+                        "uniform vec3  light"+l+"_Color;\n" +
+                        "uniform vec3  light"+l+"_Attenuation;\n" +
+                        "uniform float light"+l+"_Radius;\n" +
+                        "uniform float light"+l+"_Intensity;\n" +
+                        "uniform float light"+l+"_AmbientIntensity;\n" +
+                        "uniform float light"+l+"_BeamWidth;\n" +
+                        "uniform float light"+l+"_CutOffAngle;\n" +
+                        "uniform float light"+l+"_ShadowIntensity;\n";
+                    }
+                    shaderText += this.styleUniformsShaderText()+
+                    this.styleShaderText()+
+                    "vec4 cTexture3D(sampler2D vol, vec3 volpos, float nS, float nX, float nY)\n"+
+                    "{\n"+
+                    "  float s1,s2;\n"+
+                    "  float dx1,dy1;\n"+
+                    "  float dx2,dy2;\n"+
+                    "  vec2 texpos1,texpos2;\n"+
+                    "  s1 = floor(volpos.z*nS);\n"+
+                    "  s2 = s1+1.0;\n"+
+                    "  dx1 = fract(s1/nX);\n"+
+                    "  dy1 = floor(s1/nY)/nY;\n"+
+                    "  dx2 = fract(s2/nX);\n"+
+                    "  dy2 = floor(s2/nY)/nY;\n"+
+                    "  texpos1.x = dx1+(volpos.x/nX);\n"+
+                    "  texpos1.y = dy1+(volpos.y/nY);\n"+
+                    "  texpos2.x = dx2+(volpos.x/nX);\n"+
+                    "  texpos2.y = dy2+(volpos.y/nY);\n"+
+                    "  return mix( texture2D(vol,texpos1), texture2D(vol,texpos2), (volpos.z*nS)-s1);\n"+
+                    "}\n"+
+                    "\n"+
+                    "vec4 getNormalFromTexture(sampler2D sampler, vec3 pos, float nS, float nX, float nY) {\n"+
+                    "   vec4 n = (2.0*cTexture3D(sampler, pos, nS, nX, nY)-1.0);\n"+
+                    "   n.a = length(n.xyz);\n"+
+                    "   n.xyz = normalize(n.xyz);\n"+
+                    "   return n;\n"+
+                    "}\n"+
+                    "\n"+
+                    "vec4 getNormalOnTheFly(sampler2D sampler, vec3 voxPos, float nS, float nX, float nY){\n"+
+                    "   float v0 = cTexture3D(sampler, voxPos + vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
+                    "   float v1 = cTexture3D(sampler, voxPos - vec3(offset.x, 0, 0), nS, nX, nY).r;\n"+
+                    "   float v2 = cTexture3D(sampler, voxPos + vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
+                    "   float v3 = cTexture3D(sampler, voxPos - vec3(0, offset.y, 0), nS, nX, nY).r;\n"+
+                    "   float v4 = cTexture3D(sampler, voxPos + vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
+                    "   float v5 = cTexture3D(sampler, voxPos - vec3(0, 0, offset.z), nS, nX, nY).r;\n"+
+                    "   vec3 grad = vec3((v0-v1)/2.0, (v2-v3)/2.0, (v4-v5)/2.0);\n"+
+                    "   return vec4(normalize(grad), length(grad));\n"+
+                    "}\n"+
+                    "\n"+
+                    this.lightEquationShaderText();
+                    shaderText += "void main()\n"+
+                    "{\n"+
+                    "  vec2 texC = vertexPosition.xy/vertexPosition.w;\n"+
+                    "  texC = 0.5*texC + 0.5;\n"+
+                    "  vec4 backColor = texture2D(uBackCoord,texC);\n"+
+                    "  vec3 dir = backColor.rgb - vertexColor.rgb;\n"+
+                    "  vec3 pos = vertexColor;\n"+
+                    "  vec4 accum  = vec4(0.0, 0.0, 0.0, 0.0);\n"+
+                    "  vec4 sample = vec4(0.0, 0.0, 0.0, 0.0);\n"+
+                    "  vec4 value  = vec4(0.0, 0.0, 0.0, 0.0);\n"+
+                    "  float offset_s = 1.0/(2.0*maxSegments);\n"+
+                    "  float cont = 0.0;\n"+
+                    "  vec3 step = dir/Steps;\n";
+                    //Light init values
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText +=
+                        "  vec3 ambient = vec3(0.0, 0.0, 0.0);\n"+
+                        "  vec3 diffuse = vec3(0.0, 0.0, 0.0);\n"+
+                        "  vec3 specular = vec3(0.0, 0.0, 0.0);\n"+
+                        "  vec4 step_eye = modelViewMatrix * vec4(step, 0.0);\n"+
+                        "  vec4 positionE = position_eye;\n"+
+                        "  float lightFactor = 1.0;\n"; 
+                    }else{
+                        shaderText += "  float lightFactor = 1.2;\n";
+                    }
+                    shaderText += this.initializeValues()+
+                    "  float opacityFactor = 6.0;\n"+
+                    "  for(float i = 0.0; i < Steps; i+=1.0)\n"+
+                    "  {\n"+
+                    "    value = cTexture3D(uVolData, pos, numberOfSlices, slicesOverX, slicesOverY);\n"+
+                    "    value = vec4(value.rgb,(0.299*value.r)+(0.587*value.g)+(0.114*value.b));\n";
+                    if(this.normalTextureProvided){
+                        shaderText += "    vec4 gradEye = getNormalFromTexture(uSurfaceNormals, pos, numberOfSlices, slicesOverX, slicesOverY);\n";
+                    }else{
+                        shaderText += "    vec4 gradEye = getNormalOnTheFly(uVolData, pos, numberOfSlices, slicesOverX, slicesOverY);\n";
+                    }
+                    shaderText += "    vec4 grad = vec4((modelViewMatrixInverse * vec4(gradEye.xyz, 0.0)).xyz, gradEye.a);\n";
+                    for(var l=0; l<x3dom.nodeTypes.X3DLightNode.lightID; l++) {
+                        shaderText +="    lighting(light"+l+"_Type, " +
+                        "light"+l+"_Location, " +
+                        "light"+l+"_Direction, " +
+                        "light"+l+"_Color, " + 
+                        "light"+l+"_Attenuation, " +
+                        "light"+l+"_Radius, " +
+                        "light"+l+"_Intensity, " + 
+                        "light"+l+"_AmbientIntensity, " +
+                        "light"+l+"_BeamWidth, " +
+                        "light"+l+"_CutOffAngle, " +
+                        "grad.xyz, -positionE.xyz, ambient, diffuse, specular);\n";
+                    }
+                    shaderText += this.inlineStyleShaderText();
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderText += this.inlineLightAssigment();
+                    }
+                    shaderText +=
+                    "    //Process the volume sample\n"+
+                    "    sample.a = value.a * opacityFactor * (1.0/Steps);\n"+
+                    "    sample.rgb = value.rgb * sample.a * lightFactor ;\n"+
+                    "    accum.rgb += (1.0 - accum.a) * sample.rgb;\n"+
+                    "    accum.a += (1.0 - accum.a) * sample.a;\n"+
+                    "    //advance the current position\n"+
+                    "    pos.xyz += step;\n";
+                    if(x3dom.nodeTypes.X3DLightNode.lightID>0){
+                        shaderLoop +="    positionE += step_eye;\n";
+                    }
+                    shaderText +=
+                    "    //break if the position is greater than <1, 1, 1>\n"+
+                    "    if(pos.x > 1.0 || pos.y > 1.0 || pos.z > 1.0 || accum.a>=1.0)\n"+
+                    "      break;\n"+
+                    "  }\n"+
+                    "  gl_FragColor = accum;\n"+
+                    "}";
+
+                    this.vrcFrontCubeShaderFragment._vf.url[0] = shaderText;
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderVertex, 'parts');
+                    this.vrcFrontCubeShaderVertex.nodeChanged();
+                    
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFragment, 'parts');
+                    this.vrcFrontCubeShaderFragment.nodeChanged();
+                    
+                    this.vrcFrontCubeShaderFieldBackCoord._vf.name = 'uBackCoord';
+                    this.vrcFrontCubeShaderFieldBackCoord._vf.type = 'SFInt32';
+                    this.vrcFrontCubeShaderFieldBackCoord._vf.value = 0;
+
+                    this.vrcFrontCubeShaderFieldVolData._vf.name = 'uVolData';
+                    this.vrcFrontCubeShaderFieldVolData._vf.type = 'SFInt32';
+                    this.vrcFrontCubeShaderFieldVolData._vf.value = 1;
+
+                    this.vrcFrontCubeShaderFieldOffset._vf.name = 'offset';
+                    this.vrcFrontCubeShaderFieldOffset._vf.type = 'SFVec3f';
+                    this.vrcFrontCubeShaderFieldOffset._vf.value = "0.01 0.01 0.01"; //Default initial value
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldBackCoord, 'fields');
+                    this.vrcFrontCubeShaderFieldBackCoord.nodeChanged();
+                    
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldVolData, 'fields');
+                    this.vrcFrontCubeShaderFieldVolData.nodeChanged();
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldOffset, 'fields');
+ 
+                    //Take volume texture size for the ComposableRenderStyles offset parameter
+                    this.offsetInterval = window.setInterval((function(aTex) {
+                        return function() {
+                            x3dom.debug.logInfo('[VolumeRendering][SegmentedVolumeData] Looking for Volume Texture size...');
+                            var s = that.getTextureSize(aTex);
+                            if(s.valid){
+                                clearInterval(that.offsetInterval);
+                                that.vrcFrontCubeShaderFieldOffset._vf.value = new x3dom.fields.SFVec3f(1.0/s.w, 1.0/s.h, 1.0/aTex._vf.numberOfSlices);
+                                that.vrcFrontCubeShader.nodeChanged();
+                                x3dom.debug.logInfo('[VolumeRendering][SegmentedVolumeData] Volume Texture size obtained');
+                            }
+                        }
+                    })(this.vrcVolumeTexture), 1000);
+                    
+                    var ShaderUniforms = this.uniforms();
+                    for (i = 0; i<ShaderUniforms.length; i++)
+                    {
+                        this.vrcFrontCubeShader.addChild(ShaderUniforms[i], 'fields');
+                    }
+                
+                    this._cf.appearance.node.addChild(this.vrcFrontCubeShader);
+                    this.vrcFrontCubeShader.nodeChanged();
+                    
+                    this._cf.appearance.node.nodeChanged();
+                }
+
+                if (!this._cf.geometry.node) {
+                    this.addChild(new x3dom.nodeTypes.Box());
+
+                    this._cf.geometry.node._vf.hasHelperColors = true;
+                    this._cf.geometry.node._vf.size = new x3dom.fields.SFVec3f(
+                        this._vf.dimensions.x, this._vf.dimensions.y, this._vf.dimensions.z);
+
+                    // workaround to trigger field change...
+                    this._cf.geometry.node.fieldChanged("hasHelperColors");
+                    this._cf.geometry.node.fieldChanged("size");
+                }
+            }
         }
     )
 );
@@ -48741,6 +51862,226 @@ x3dom.registerNodeType(
             this.addField_SFBool(ctx, 'lighting', false);
             this.addField_SFBool(ctx, 'shadows', false);
             this.addField_SFString(ctx, 'phaseFunction', "Henyey-Greenstein");
+
+            this.uniformBoolLigthning = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolShadows = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DSurfaceNormals = new x3dom.nodeTypes.Uniform(ctx);
+            //Material uniforms
+            this.uniformColorSpecular = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatAmbientIntensity = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatShininess = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatTransparency = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformColorEmissive = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformColorDiffuse = new x3dom.nodeTypes.Uniform(ctx);
+            //Enable/Disable style
+            this.uniformBoolEnableShaded = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'lightning':
+                        this.uniformBoolLightning._vf.value = this._vf.lightning;
+                        this.uniformBoolLightning.fieldChanged("value");
+                        break;
+                    case 'shadows':
+                        this.uniformBoolShadows._vf.value = this._vf.shadows;
+                        this.uniformBoolShadows.fieldChanged("value");
+                        break;
+                    default:
+                        //TODO: Reload node
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+                if (this._cf.surfaceNormals.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][ShadedVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+                    this.uniformSampler2DSurfaceNormals._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DSurfaceNormals._vf.type = 'SFInt32';
+                    this.uniformSampler2DSurfaceNormals._vf.value = volumeDataParent._textureID++;
+                    unis.push(this.uniformSampler2DSurfaceNormals);
+                }
+
+                this.uniformBoolLigthning._vf.name = 'uLightning';
+                this.uniformBoolLigthning._vf.type = 'SFBool';
+                this.uniformBoolLigthning._vf.value = this._vf.lighting;
+                unis.push(this.uniformBoolLigthning);
+
+                this.uniformBoolShadows._vf.name = 'uShadows';
+                this.uniformBoolShadows._vf.type = 'SFBool';
+                this.uniformBoolShadows._vf.value = this._vf.shadows;
+                unis.push(this.uniformBoolShadows);
+
+                //Material uniform parameters
+                if(this._cf.material.node != null){
+                    this.uniformColorSpecular._vf.name = 'specularColor';
+                    this.uniformColorSpecular._vf.type = 'SFColor';
+                    this.uniformColorSpecular._vf.value = this._cf.material.node._vf.specularColor;
+                    unis.push(this.uniformColorSpecular);
+
+                    this.uniformColorDiffuse._vf.name = 'diffuseColor';
+                    this.uniformColorDiffuse._vf.type = 'SFColor';
+                    this.uniformColorDiffuse._vf.value = this._cf.material.node._vf.diffuseColor;
+                    unis.push(this.uniformColorDiffuse);
+
+                    this.uniformColorEmissive._vf.name = 'emissiveColor';
+                    this.uniformColorEmissive._vf.type = 'SFColor';
+                    this.uniformColorEmissive._vf.value = this._cf.material.node._vf.emissiveColor;
+                    unis.push(this.uniformColorEmissive);
+
+                    this.uniformFloatAmbientIntensity._vf.name = 'ambientIntensity';
+                    this.uniformFloatAmbientIntensity._vf.type = 'SFFloat';
+                    this.uniformFloatAmbientIntensity._vf.value = this._cf.material.node._vf.ambientIntensity;
+                    unis.push(this.uniformFloatAmbientIntensity);
+
+                    this.uniformFloatShininess._vf.name = 'shininess';
+                    this.uniformFloatShininess._vf.type = 'SFFloat';
+                    this.uniformFloatShininess._vf.value = this._cf.material.node._vf.shininess;
+                    unis.push(this.uniformFloatShininess);
+
+                    this.uniformFloatTransparency._vf.name = 'transparency';
+                    this.uniformFloatTransparency._vf.type = 'SFFloat';
+                    this.uniformFloatTransparency._vf.value = this._cf.material.node._vf.transperency;
+                    unis.push(this.uniformFloatTransparency);
+                }
+
+                this.uniformBoolEnableShaded._vf.name = 'uEnableShaded';
+                this.uniformBoolEnableShaded._vf.type = 'SFBool';
+                this.uniformBoolEnableShaded._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEnableShaded);
+
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                if (this._cf.surfaceNormals.node) {
+                    var tex = this._cf.surfaceNormals.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex)
+                }
+                return texs;
+            },
+
+            styleUniformsShaderText: function(){
+                var uniformText = "uniform bool uLightning;\n"+
+                "uniform bool uShadows;\n"+
+                //Fog uniforms
+                "uniform float fogRange;\n"+
+                "uniform vec3 fogColor;\n"+
+                "uniform float fogType;\n"+
+                "uniform bool uEnableShaded;\n";
+                //Material uniforms
+                if(this._cf.material.node){
+                    uniformText += "uniform vec3  diffuseColor;\n" +
+                    "uniform vec3  specularColor;\n" +
+                    "uniform vec3  emissiveColor;\n" +
+                    "uniform float shininess;\n" +
+                    "uniform float transparency;\n" +
+                    "uniform float ambientIntensity;\n";
+                }
+                return uniformText;
+            },
+
+            styleShaderText: function(){
+                var styleText = "float computeFogInterpolant(float distanceFromPoint)\n"+
+                "{\n"+
+                "  if (distanceFromPoint > fogRange){\n"+
+                "    return 0.0;\n"+
+                "  }else if (fogType == 0.0){\n"+
+                "    return clamp((fogRange-distanceFromPoint) / fogRange, 0.0, 1.0);\n"+
+                "  }else{\n"+
+                "    return clamp(exp(-distanceFromPoint / (fogRange-distanceFromPoint)), 0.0, 1.0);\n"+
+                "  }\n"+
+                "}\n";
+                return styleText;
+            },
+
+            lightEquationShaderText: function(){
+                return "void lighting(in float lType, in vec3 lLocation, in vec3 lDirection, in vec3 lColor, in vec3 lAttenuation, " + 
+                    "in float lRadius, in float lIntensity, in float lAmbientIntensity, in float lBeamWidth, " +
+                    "in float lCutOffAngle, in vec3 N, in vec3 V, inout vec3 ambient, inout vec3 diffuse, " +
+                    "inout vec3 specular)\n" +
+                    "{\n" +
+                    "   if(uEnableShaded){\n"+
+                    "      vec3 L;\n" +
+                    "      float spot = 1.0, attentuation = 0.0;\n" +
+                    "       if(lType == 0.0) {\n" +
+                    "           L = -normalize(lDirection);\n" +
+                    "           V = normalize(V);\n" +
+                    "           attentuation = 1.0;\n" +
+                    "       } else{\n" +
+                    "           L = (lLocation - (-V));\n" +
+                    "           float d = length(L);\n" +
+                    "           L = normalize(L);\n" +
+                    "           V = normalize(V);\n" +
+                    "           if(lRadius == 0.0 || d <= lRadius) {\n" +
+                    "               attentuation = 1.0 / max(lAttenuation.x + lAttenuation.y * d + lAttenuation.z * (d * d), 1.0);\n" +
+                    "           }\n" +
+                    "           if(lType == 2.0) {\n" +
+                    "               float spotAngle = acos(max(0.0, dot(-L, normalize(lDirection))));\n" +
+                    "               if(spotAngle >= lCutOffAngle) spot = 0.0;\n" +
+                    "               else if(spotAngle <= lBeamWidth) spot = 1.0;\n" +
+                    "               else spot = (spotAngle - lCutOffAngle ) / (lBeamWidth - lCutOffAngle);\n" +
+                    "           }\n" +
+                    "       }\n" +
+                    "       vec3 H = normalize( L + V );\n" +
+                    "       float NdotL = max(0.0, dot(L, N));\n" +
+                    "       float NdotH = max(0.0, dot(H, N));\n" +
+                    "       float ambientFactor = lAmbientIntensity * ambientIntensity;\n" +
+                    "       float diffuseFactor = lIntensity * NdotL;\n" +
+                    "       float specularFactor = lIntensity * pow(NdotH, shininess*128.0);\n" +
+                    "       ambient += lColor * ambientFactor * attentuation * spot;\n" +
+                    "       diffuse += lColor * diffuseFactor * attentuation * spot;\n" +
+                    "       specular += lColor * specularFactor * attentuation * spot;\n" +
+                    "   }\n"+  
+                    "}\n"
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "    float fogFactor = 1.0;\n"+
+                    "    if(uEnableShaded){\n"+
+                    "       fogFactor = computeFogInterpolant(length(cam_pos-pos));\n"+
+                    "    }\n";
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                var shaderText = "    if(uEnableShaded){\n";
+                if(this._vf.lighting == true){
+                    if(this._cf.material.node){
+                        shaderText += "      value.rgb = (fogColor*(1.0-fogFactor))+fogFactor*(emissiveColor + ambient*value.rgb + diffuse*diffuseColor*value.rgb + specular*specularColor);\n"+
+                        "      value.a = value.a*(1.0-transparency);\n";
+                    }else{
+                        shaderText += "      value.rgb = (fogColor*(1.0-fogFactor))+fogFactor*(ambient*value.rgb + diffuse*value.rgb + specular);\n";
+                    }
+                }
+                shaderText += "    }\n";
+                return shaderText;
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
+                return shader;
+            }
         }
     )
 );
@@ -48756,6 +52097,121 @@ x3dom.registerNodeType(
             this.addField_SFFloat(ctx, 'silhouetteBoundaryOpacity', 0);
             this.addField_SFFloat(ctx, 'silhouetteRetainedOpacity', 1);
             this.addField_SFFloat(ctx, 'silhouetteSharpness', 0.5);
+
+            this.uniformFloatBoundaryOpacity = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatRetainedOpacity = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformFloatSilhouetteSharpness = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DSurfaceNormals = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolEnableSilhouette = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'silhouetteBoundaryOpacity':
+                        this.uniformFloatBoundaryOpacity._vf.value = this._vf.silhouetteBoundaryOpacity;
+                        this.uniformFloatBoundaryOpacity.fieldChanged("value");
+                        break;
+                    case 'silhouetteRetainedOpacity':
+                        this.uniformFloatRetainedOpacity._vf.value = this._vf.silhouetteRetainedOpacity;
+                        this.uniformFloatRetainedOpacity.fieldChanged("value");
+                        break;
+                    case 'silhouetteSharpness':
+                        this.uniformFloatSilhouetteSharpness._vf.value = this._vf.silhouetteSharpness;
+                        this.uniformFloatSilhouetteSharpness.fieldChanged("value");
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+                if (this._cf.surfaceNormals.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][SilhouetteEnhancementVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+                    this.uniformSampler2DSurfaceNormals._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DSurfaceNormals._vf.type = 'SFInt32';
+                    this.uniformSampler2DSurfaceNormals._vf.value = volumeDataParent._textureID++;
+                    unis.push(this.uniformSampler2DSurfaceNormals);
+                }
+
+                this.uniformFloatBoundaryOpacity._vf.name = 'uSilhouetteBoundaryOpacity';
+                this.uniformFloatBoundaryOpacity._vf.type = 'SFFloat';
+                this.uniformFloatBoundaryOpacity._vf.value = this._vf.silhouetteBoundaryOpacity;
+                unis.push(this.uniformFloatBoundaryOpacity);
+
+                this.uniformFloatRetainedOpacity._vf.name = 'uSilhouetteRetainedOpacity';
+                this.uniformFloatRetainedOpacity._vf.type = 'SFFloat';
+                this.uniformFloatRetainedOpacity._vf.value = this._vf.silhouetteRetainedOpacity;
+                unis.push(this.uniformFloatRetainedOpacity);
+
+                this.uniformFloatSilhouetteSharpness._vf.name = 'uSilhouetteSharpness';
+                this.uniformFloatSilhouetteSharpness._vf.type = 'SFFloat';
+                this.uniformFloatSilhouetteSharpness._vf.value = this._vf.silhouetteSharpness;
+                unis.push(this.uniformFloatSilhouetteSharpness);
+
+                this.uniformBoolEnableSilhouette._vf.name = 'uEnableSilhouette';
+                this.uniformBoolEnableSilhouette._vf.type = 'SFBool';
+                this.uniformBoolEnableSilhouette._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEnableSilhouette);
+
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                if (!(this._cf.surfaceNormals.node==null)) {
+                    var tex = this._cf.surfaceNormals.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex)
+                }
+                return texs;
+            },
+
+            styleUniformsShaderText: function(){
+                return "uniform float uSilhouetteBoundaryOpacity;\n"+
+                    "uniform float uSilhouetteRetainedOpacity;\n"+
+                    "uniform float uSilhouetteSharpness;\n"+
+                    "uniform bool uEnableSilhouette;\n";
+            },
+
+            styleShaderText: function(){
+                return "void silhouetteEnhancement(inout vec4 orig_color, vec4 normal, vec3 V)\n"+
+                "{\n"+
+                "   orig_color.a = orig_color.a * (uSilhouetteRetainedOpacity + uSilhouetteBoundaryOpacity * pow((1.0-abs(dot(normal.xyz, V))), uSilhouetteSharpness));\n"+
+                "}\n"+
+                "\n";
+            },
+
+            inlineStyleShaderText: function(){
+                var inlineText = "  if(uEnableSilhouette){\n"+
+                "       silhouetteEnhancement(value, grad, normalize(dir));\n"+
+                "   }\n";
+                return inlineText;
+            },
+
+            lightAssigment: function(){
+                return "    value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
+                return shader;
+            }
         }
     )
 );
@@ -48793,6 +52249,117 @@ x3dom.registerNodeType(
 
             this.addField_SFColor(ctx, 'coolColor', 0, 0, 1);
             this.addField_SFColor(ctx, 'warmColor', 1, 1, 0);
+
+            this.uniformCoolColor = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformWarmColor = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformSampler2DSurfaceNormals = new x3dom.nodeTypes.Uniform(ctx);
+            this.uniformBoolEnableToneMapped = new x3dom.nodeTypes.Uniform(ctx);
+        },
+        {
+            fieldChanged: function(fieldName){
+                switch(fieldName){
+                    case 'coolColor':
+                        this.uniformCoolColor._vf.value = this._vf.coolColor;
+                        this.uniformCoolColor.fieldChanged("value");
+                        break;
+                    case 'warmColor':
+                        this.uniformWarmColor._vf.value = this._vf.warmColor;
+                        this.uniformWarmColor.fieldChanged("value");
+                        break;
+                }
+            },
+
+            uniforms: function(){
+                var unis = [];
+                if (this._cf.surfaceNormals.node) {
+                    //Lookup for the parent VolumeData
+                    var volumeDataParent = this._parentNodes[0];
+                    while(!x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) || !x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DNode)){
+                        volumeDataParent = volumeDataParent._parentNodes[0];
+                    }
+                    if(x3dom.isa(volumeDataParent, x3dom.nodeTypes.X3DVolumeDataNode) == false){
+                        x3dom.debug.logError("[VolumeRendering][ToneMappedVolumeStyle] Not VolumeData parent found!");
+                        volumeDataParent = null;
+                    }
+                    this.uniformSampler2DSurfaceNormals._vf.name = 'uSurfaceNormals';
+                    this.uniformSampler2DSurfaceNormals._vf.type = 'SFInt32';
+                    this.uniformSampler2DSurfaceNormals._vf.value = volumeDataParent._textureID++;
+                    unis.push(this.uniformSampler2DSurfaceNormals);
+                }
+
+                this.uniformCoolColor._vf.name = 'uCoolColor';
+                this.uniformCoolColor._vf.type = 'SFColor';
+                this.uniformCoolColor._vf.value = this._vf.coolColor;
+                unis.push(this.uniformCoolColor);
+
+                this.uniformWarmColor._vf.name = 'uWarmColor';
+                this.uniformWarmColor._vf.type = 'SFColor';
+                this.uniformWarmColor._vf.value = this._vf.warmColor;
+                unis.push(this.uniformWarmColor);
+
+                this.uniformBoolEnableToneMapped._vf.name = 'uEnableToneMapped';
+                this.uniformBoolEnableToneMapped._vf.type = 'SFBool';
+                this.uniformBoolEnableToneMapped._vf.value = this._vf.enabled;
+                unis.push(this.uniformBoolEnableToneMapped);
+
+                return unis;
+            },
+
+            textures: function() {
+                var texs = [];
+                if (this._cf.surfaceNormals.node) {
+                    var tex = this._cf.surfaceNormals.node;
+                    tex._vf.repeatS = false;
+                    tex._vf.repeatT = false;
+                    texs.push(tex)
+                }
+                return texs;
+            },
+
+            styleUniformsShaderText: function(){
+                return "uniform vec3 uCoolColor;\n"+
+                "uniform vec3 uWarmColor;\n"+
+                "uniform bool uEnableToneMapped;\n";
+            },
+
+            styleShaderText: function(){
+                var styleText = "void toneMapped(inout vec4 original_color, inout vec3 accum_color, vec3 surfNormal, vec3 lightDir)\n"+
+                "{\n"+
+                "   float color_factor = (1.0 + dot(lightDir, surfNormal))*0.5;\n"+
+                "   accum_color += mix(uCoolColor, uWarmColor, color_factor);\n"+
+                "   original_color.rgb = accum_color;\n"+
+                "}\n";
+                return styleText;
+            },
+
+            inlineStyleShaderText: function(){
+                var shaderText = "    if(uEnableToneMapped){\n"+
+                "       vec3 toneColor = vec3(0.0, 0.0, 0.0);\n"+
+                "       vec3 L = vec3(0.0, 0.0, 0.0);\n";
+                for(var l=0; l<x3dom.nodeTypes.X3DLightNode.lightID; l++) {
+                    shaderText += "       L = (light"+l+"_Type == 1.0) ? normalize(light"+l+"_Location - positionE.xyz) : -light"+l+"_Direction;\n"+
+                    "       toneMapped(value, toneColor, gradEye.xyz, L);\n";
+                }
+                shaderText += "    }\n";
+                return shaderText;
+            },
+
+            lightAssigment: function(){
+                return "    value.rgb = ambient*value.rgb + diffuse*value.rgb + specular;\n";
+            },
+
+            fragmentShaderText: function(numberOfSlices, slicesOverX, slicesOverY){
+                var shader =
+                this.preamble+
+                this.defaultUniformsShaderText(numberOfSlices, slicesOverX, slicesOverY)+
+                this.styleUniformsShaderText()+
+                this.styleShaderText()+
+                this.texture3DFunctionShaderText+
+                this.normalFunctionShaderText()+
+                this.lightEquationShaderText()+
+                this.defaultLoopFragmentShaderText(this.inlineStyleShaderText(), this.lightAssigment());
+                return shader;
+            }
         }
     )
 );
@@ -48823,6 +52390,7 @@ x3dom.registerNodeType(
             this.vrcFrontCubeShaderFragment = new x3dom.nodeTypes.ShaderPart(ctx);
             this.vrcFrontCubeShaderFieldBackCoord = new x3dom.nodeTypes.Field(ctx);
             this.vrcFrontCubeShaderFieldVolData = new x3dom.nodeTypes.Field(ctx);
+            this.vrcFrontCubeShaderFieldOffset = new x3dom.nodeTypes.Field(ctx);
         },
         {
             // nodeChanged is called after subtree is parsed and attached in DOM
@@ -48879,7 +52447,8 @@ x3dom.registerNodeType(
                     this.vrcRenderTexture._vf.repeatS = false;
                     this.vrcRenderTexture._vf.repeatT = false;
                     this.vrcRenderTexture._nameSpace = this._nameSpace;
-                    
+                    this._textureID++;
+
                     this.vrcBackCubeGeometry._vf.size = new x3dom.fields.SFVec3f(
                         this._vf.dimensions.x, this._vf.dimensions.y, this._vf.dimensions.z);
                     this.vrcBackCubeGeometry._vf.ccw = false;
@@ -48900,7 +52469,7 @@ x3dom.registerNodeType(
                     this.vrcVolumeTexture = this._cf.voxels.node;
                     this.vrcVolumeTexture._vf.repeatS = false;
                     this.vrcVolumeTexture._vf.repeatT = false;
-                    
+                    this._textureID++;
                     this.vrcMultiTexture._nameSpace = this._nameSpace;
                     
                     this.vrcMultiTexture.addChild(this.vrcRenderTexture, 'texture');
@@ -48916,16 +52485,6 @@ x3dom.registerNodeType(
                         {
                             this.vrcMultiTexture.addChild(styleTextures[i], 'texture');
                             this.vrcVolumeTexture.nodeChanged();
-
-                            /* TODO: Take texture size for the ComposableRenderStyles offset parameter
-                            // check for texture size (test)
-                            window.setInterval((function(aTex) {
-                                return function() {
-                                    var s = that.getTextureSize(aTex);
-                                    console.log(s);
-                                }
-                            })(styleTextures[i]), 100);
-                            */
                         }
                     }
                     
@@ -48939,7 +52498,8 @@ x3dom.registerNodeType(
                     this.vrcFrontCubeShaderFragment._vf.type = 'fragment';
                     this.vrcFrontCubeShaderFragment._vf.url[0]=this._cf.renderStyle.node.fragmentShaderText(
                             this.vrcVolumeTexture._vf.numberOfSlices,
-                            this.vrcVolumeTexture._vf.slicesOverX, this.vrcVolumeTexture._vf.slicesOverY);
+                            this.vrcVolumeTexture._vf.slicesOverX, 
+                            this.vrcVolumeTexture._vf.slicesOverY);
 
                     this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderVertex, 'parts');
                     this.vrcFrontCubeShaderVertex.nodeChanged();
@@ -48955,11 +52515,31 @@ x3dom.registerNodeType(
                     this.vrcFrontCubeShaderFieldVolData._vf.type = 'SFInt32';
                     this.vrcFrontCubeShaderFieldVolData._vf.value = 1;
 
+                    this.vrcFrontCubeShaderFieldOffset._vf.name = 'offset';
+                    this.vrcFrontCubeShaderFieldOffset._vf.type = 'SFVec3f';
+                    this.vrcFrontCubeShaderFieldOffset._vf.value = "0.01 0.01 0.01"; //Default initial value
+
                     this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldBackCoord, 'fields');
                     this.vrcFrontCubeShaderFieldBackCoord.nodeChanged();
                     
                     this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldVolData, 'fields');
                     this.vrcFrontCubeShaderFieldVolData.nodeChanged();
+
+                    this.vrcFrontCubeShader.addChild(this.vrcFrontCubeShaderFieldOffset, 'fields');
+ 
+                    //Take volume texture size for the ComposableRenderStyles offset parameter
+                    this.offsetInterval = window.setInterval((function(aTex) {
+                        return function() {
+                            x3dom.debug.logInfo('[VolumeRendering][VolumeData] Looking for Volume Texture size...');
+                            var s = that.getTextureSize(aTex);
+                            if(s.valid){
+                                clearInterval(that.offsetInterval);
+                                that.vrcFrontCubeShaderFieldOffset._vf.value = new x3dom.fields.SFVec3f(1.0/s.w, 1.0/s.h, 1.0/aTex._vf.numberOfSlices);
+                                that.vrcFrontCubeShader.nodeChanged();
+                                x3dom.debug.logInfo('[VolumeRendering][VolumeData] Volume Texture size obtained');
+                            }
+                        }
+                    })(this.vrcVolumeTexture), 1000);
                     
                     var ShaderUniforms = this._cf.renderStyle.node.uniforms();
                     for (i = 0; i<ShaderUniforms.length; i++)
@@ -53166,10 +56746,8 @@ x3dom.registerNodeType(
                         x = Math.sin(beta);
                         z = -Math.cos(beta);
 
-                        if (topRadius > x3dom.fields.Eps) {
-                            px = x * topRadius + this._vf.xoff;
-                            pz = z * topRadius + this._vf.yoff;
-                        }
+                        px = x * topRadius + this._vf.xoff;
+                        pz = z * topRadius + this._vf.yoff;
 
                         this._mesh._positions[0].push(px, height / 2, pz);
                         this._mesh._normals[0].push(x / nlen, incl / nlen, z / nlen);
@@ -55767,8 +59345,8 @@ x3dom.docs.getComponentInfo = function() {
 
 x3dom.versionInfo = {
     version:  '1.6.0-dev',
-    revision: 'fa599b611f4a3dc0d32ecf6dd20fad6bf3390fee',
-    date:     'Tue Dec 10 16:10:30 2013 +0100'
+    revision: '64279d5485abed8b5f3e22955e54553c67c7cb72',
+    date:     'Tue Feb 25 16:40:43 2014 +0100'
 };
 
 

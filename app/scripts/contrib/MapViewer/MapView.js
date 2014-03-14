@@ -87,14 +87,20 @@ define(['backbone.marionette',
 
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
-					this.map.addLayer(this.createLayer(baselayer));
+					var layer = this.createLayer(baselayer);
+					if (layer) {
+						this.map.addLayer(layer);
+					}
 				}, this);
 
 				// Go through all products and add them to the map
 				globals.products.each(function(product) {
 					// FIXXME: quick hack to not include W3DS layers:
 					//if (this.isModelCompatible(product)) {
-						this.map.addLayer(this.createLayer(product));
+						var layer = this.createLayer(product);
+						if (layer) {
+							this.map.addLayer(layer);
+						}
 					//}
 				}, this);
 
@@ -102,8 +108,11 @@ define(['backbone.marionette',
                 globals.overlays.each(function(overlay){
 					// FIXXME: quick hack to not include W3DS layers:
 					//if (this.isModelCompatible(overlay)) {
-						console.log('protocol: ' + overlay.get('view').protocol);
-						this.map.addLayer(this.createLayer(overlay));
+						// console.log('protocol: ' + overlay.get('view').protocol);
+						var layer = this.createLayer(overlay);
+						if (layer) {
+							this.map.addLayer(layer);
+						}
 					//}
                 }, this);
 
@@ -165,6 +174,7 @@ define(['backbone.marionette',
 	                		}else{
 	                			// Something was defined wrong in the config
 	                			view = null;
+	                			return null;
 	                		}
 	                	}
 	                }
@@ -228,6 +238,11 @@ define(['backbone.marionette',
                         );
                     break;
 
+                    default:
+                    	// No supported view available
+                    	return null;
+                    break;
+
                 };
 
                 return_layer.events.register("loadstart", this, function() {
@@ -252,10 +267,15 @@ define(['backbone.marionette',
 			onSortProducts: function(productLayers) {
 				globals.products.each(function(product) {
 					//if (this.isModelCompatible(product)) {
+					// Another quick hack to exclude 'W3DS' layers. We should use the isModelCompatible() function!
+					if (product.get('views')[0].protocol !== 'W3DS' &&
+						product.get('views')[0].protocol !== 'DEM' &&
+						product.get('views')[0].protocol !== 'WIREFRAME') {
 						var productLayer = this.map.getLayersByName(product.get("name"))[0];
 						var index = globals.products.indexOf(productLayer);
 						this.map.setLayerIndex(productLayer, index);
 					//}
+					}
 				}, this);
 				console.log("Map products sorted");
 			},
