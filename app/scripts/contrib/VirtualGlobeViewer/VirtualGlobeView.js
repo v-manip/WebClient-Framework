@@ -130,7 +130,11 @@ define([
 
         _onTimeChange: function(time) {
             this.currentToI = time;
-            this.getViewer.setToI(time);
+
+            var starttime = new Date(time.start);
+            var endtime = new Date(time.end);
+
+            this.getViewer().setToI(starttime.toISOString() + '/' + endtime.toISOString());
 
             // FIXXME: currently all overlay layers are destroyed and recreated with the new time set. This
             // should be changed to set the new time on existing layers in the Globe's layerChache.
