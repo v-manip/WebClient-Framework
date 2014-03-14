@@ -112,6 +112,14 @@
             ],
             "style": "default",
             "format": "image/png"
+          }, {
+            "id": "vrvis_demo_outlines",
+            "protocol": "WMS",
+            "urls": [
+                "http://demo.v-manip.eox.at/browse/ows?"
+            ],
+            "style": "default",
+            "format": "image/png"
           }
         ],
         "download": {}

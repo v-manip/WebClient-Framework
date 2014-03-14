@@ -92,7 +92,6 @@ define([
                 }
             }.bind(this));
 
-            console.log('initlayers: ', this._initialLayers);
             this._initLayers();
         },
 

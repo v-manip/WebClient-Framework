@@ -161,28 +161,23 @@ define(['backbone.marionette',
 	            	if (views.length == 1){
 	                	view = views[0];
 	                } else {
-	                	
-	                	// Filter out 3d layers:
-	                	var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
-	                	if(!w3ds) {
-	                		// FIXXME: this whole logic has to be replaced by a more robust method, i.e. a viewer
-	                		// defines, which protocols to support and get's the corresponding views from the
-	                		// config then.
+                		// FIXXME: this whole logic has to be replaced by a more robust method, i.e. a viewer
+                		// defines, which protocols to support and get's the corresponding views from the
+                		// config then.
 
-	                		// For now: prefer WMTS over WMS, if available:
-	                		var wmts = _.find(views, function(view){ return view.protocol == "WMTS"; });
-	                		if(wmts){
-	                			view = wmts;
+                		// For now: prefer WMTS over WMS, if available:
+                		var wmts = _.find(views, function(view){ return view.protocol == "WMTS"; });
+                		if(wmts){
+                			view = wmts;
+                		} else {
+                			var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
+                			if (wms) {
+	                			view = wms;
 	                		} else {
-	                			var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
-	                			if (wms) {
-		                			view = wms;
-		                		} else {
-	                				// No supported protocol defined in config.json!
-	                				return null;
-		                		}
+                				// No supported protocol defined in config.json!
+                				return null;
 	                		}
-	                	}
+                		}
 	                }
 	            }
                 
