@@ -129,7 +129,7 @@ RBV.Context.prototype.legacyCreateLayersFromGlobalContext = function() {
 				// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
 				ordinal: (desc.type === 'baselayer') ? 10000 : model.get('ordinal'), // A base layer is always the most bottom layer.
 				opacity: (desc.type === 'baselayer') ? 1 : model.get('opacity'),
-				baselayer: desc.type === 'baselayer'
+				baselayer: (desc.type === 'baselayer') ? true : false
 			});
 			
 			layers['imagery'].push(layer);
@@ -468,6 +468,8 @@ RBV.Models.DemWithOverlays = function() {
     this.context = null;
     this.terrainLayer = null;
     this.imageryLayers = [];
+    // There is none or exactly one base layer in this model:
+    this.baseLayer = null;
 
     this.terrain = null;
 };
@@ -494,6 +496,11 @@ RBV.Models.DemWithOverlays.prototype.applyContext = function(context) {
     // Take the first available terrain layer:
     this.terrainLayer = terrainLayers[0];
     this.imageryLayers = this.context.getSelectedLayersByType('imagery', this.supportsLayer);
+
+    // FIXXME: Currently it is necessary here to split out an eventual base layer manually:
+    this.baseLayer = _.find(this.imageryLayers, function(layer) {
+        return layer.get('baselayer') === true;
+    })
 
     //Register to context relevant changes: 
     _.forEach(this.imageryLayers, function(layer) {
@@ -560,6 +567,15 @@ RBV.Models.DemWithOverlays.prototype.addTerrainLayer = function(layer) {
  */
 RBV.Models.DemWithOverlays.prototype.addImageLayer = function(layer) {
     this.imageryLayers.push(layer);
+
+    if (layer.get('baselayer')) {
+        // If a base layer already exists, remove it first. There can only be
+        // a single base layer at a time:
+        if (this.baseLayer) {
+            this.removeImageLayerById(this.baseLayer.get('id'));
+        }
+        this.baseLayer = layer;
+    }
 
     // Connect to transparency change events:
     layer.on('change:opacity', function(layer, value) {
