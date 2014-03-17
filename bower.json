@@ -1,6 +1,6 @@
 {
-  "name": "client",
-  "version": "0.0.0",
+  "name": "WebClient Framework",
+  "version": "0.1.0",
   "dependencies": {
     "jquery": "~1.10.0",
     "jquery-ui": "~1.10.3",
