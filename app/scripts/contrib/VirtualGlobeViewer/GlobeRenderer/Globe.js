@@ -5,7 +5,7 @@ define([
     'virtualglobeviewer/SceneGraph/Renderer',
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
-    './glTFLoader',
+    'virtualglobeviewer/Loader/glTF/glTFLoader',
     'openlayers' // FIXXME: replace OpenLayers with generic format!
 ], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, OpenLayers) {
 
