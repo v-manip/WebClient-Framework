@@ -18,7 +18,7 @@ define([
         // },
 
         initialize: function(opts) {
-            // Initialize parent upfront to have this.context() initialized:
+            // Initialize parent upfront to have this.legacyContext() initialized:
             BaseView.prototype.initialize.call(this, opts);
             this.enableEmptyView(true); // this is the default
 
@@ -27,13 +27,14 @@ define([
             this.currentAoI = [17.6726953125, 56.8705859375, 19.3865625, 58.12302734375];
             this.currentLayer = 'h2o_vol_demo'; // FIXXME!
 
-            var backend = this.context().backendConfig['MeshFactory'];
+            // FIXXME: read from config!
+            var backend = this.legacyContext().backendConfig['MeshFactory'];
             this.baseURL = backend.url + 'service=W3DS&request=GetScene&crs=EPSG:4326&format=model/nii-gz&version=' + backend.version;
         },
 
         didInsertElement: function() {
-            this.listenTo(this.context(), 'selection:changed', this._setCurrentAoI);
-            this.listenTo(this.context(), 'time:change', this._onTimeChange);
+            this.listenTo(this.legacyContext(), 'selection:changed', this._setCurrentAoI);
+            this.listenTo(this.legacyContext(), 'time:change', this._onTimeChange);
         },
 
         didRemoveElement: function() {
@@ -69,8 +70,8 @@ define([
                 // In case no ToI was set during the lifecycle of this viewer we can access
                 // the time of interest from the global context:
                 if (!toi) {
-                    var starttime = new Date(this.context().timeOfInterest.start);
-                    var endtime = new Date(this.context().timeOfInterest.end);
+                    var starttime = new Date(this.legacyContext().timeOfInterest.start);
+                    var endtime = new Date(this.legacyContext().timeOfInterest.end);
 
                     toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
                 }
@@ -101,12 +102,12 @@ define([
             });
         },
 
-        _addVolume: function(aoi, toi, layer) {
+        _addVolume: function(toi, aoi, layer) {
             this.enableEmptyView(false);
             this.onShow();
 
             var url = this.baseURL;
-            url += '&bbox=' + aoi;
+            url += '&boundingBox=' + aoi;
             url += '&time=' + toi;
             url += '&layer=' + layer;
 
