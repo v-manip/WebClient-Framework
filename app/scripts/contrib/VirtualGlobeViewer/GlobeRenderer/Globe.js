@@ -401,6 +401,14 @@ define([
 
     Globe.prototype.setToI = function(time) {
         this.currentToI = time;
+
+        _.each(this.overlayLayers, function(desc) {
+            if (desc.layer.setTime) {
+                desc.layer.setTime(time);
+                this.globe.removeLayer(desc.layer);
+                this.globe.addLayer(desc.layer);
+            }
+        }.bind(this));
     };
 
     Globe.prototype.onOpacityChange = function(layer_name, opacity) {
