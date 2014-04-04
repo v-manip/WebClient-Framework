@@ -83,30 +83,30 @@ define([
             // level 0 tiles only:
             keypressListener.simple_combo("1", function() {
                 controller.zoomTo({
-                    center: [0, 0],
+                    center: [45, 0],
                     distance: 20000000,
                     duration: 1,
-                    tilt: 0
+                    tilt: 30
                 });
             });
 
             // level 2 tiles only:
             keypressListener.simple_combo("2", function() {
                 controller.zoomTo({
-                    center: [0, 0],
-                    distance: 10000000,
+                    center: [45, 0],
+                    distance: 15000000,
                     duration: 1,
-                    tilt: 0
+                    tilt: 30
                 });
             });
 
             // level 3 tiles only:
             keypressListener.simple_combo("3", function() {
                 controller.zoomTo({
-                    center: [0, 0],
-                    distance: 5000000,
+                    center: [45, 0],
+                    distance: 10000000,
                     duration: 1,
-                    tilt: 0
+                    tilt: 30
                 });
             });
         };
