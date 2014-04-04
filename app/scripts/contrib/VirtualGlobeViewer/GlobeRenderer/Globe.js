@@ -405,8 +405,6 @@ define([
         _.each(this.overlayLayers, function(desc) {
             if (desc.layer.setTime) {
                 desc.layer.setTime(time);
-                this.globe.removeLayer(desc.layer);
-                this.globe.addLayer(desc.layer);
             }
         }.bind(this));
     };
