@@ -408,6 +408,7 @@ define([
         if (typeof layerDesc !== 'undefined') {
             layerDesc.layer.opacity(opacity);
         }
+        this.requestFrame();
     };
 
     Globe.prototype.dumpLayerConfig = function() {
@@ -417,6 +418,10 @@ define([
             console.log('   ordinal: ' + desc.model.get('ordinal'));
             console.log('   opacity: ' + desc.layer.opacity());
         }.bind(this));
+    };
+
+    Globe.prototype.requestFrame = function() {
+        this.globe.renderContext.requestFrame();
     };
 
     return Globe;
