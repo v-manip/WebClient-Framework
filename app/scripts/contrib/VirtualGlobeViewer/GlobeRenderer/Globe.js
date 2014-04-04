@@ -401,6 +401,14 @@ define([
 
     Globe.prototype.setToI = function(time) {
         this.currentToI = time;
+
+        _.each(this.overlayLayers, function(desc) {
+            if (desc.layer.setTime) {
+                desc.layer.setTime(time);
+                this.globe.removeLayer(desc.layer);
+                this.globe.addLayer(desc.layer);
+            }
+        }.bind(this));
     };
 
     Globe.prototype.onOpacityChange = function(layer_name, opacity) {
@@ -408,6 +416,7 @@ define([
         if (typeof layerDesc !== 'undefined') {
             layerDesc.layer.opacity(opacity);
         }
+        this.requestFrame();
     };
 
     Globe.prototype.dumpLayerConfig = function() {
@@ -417,6 +426,10 @@ define([
             console.log('   ordinal: ' + desc.model.get('ordinal'));
             console.log('   opacity: ' + desc.layer.opacity());
         }.bind(this));
+    };
+
+    Globe.prototype.requestFrame = function() {
+        this.globe.renderContext.requestFrame();
     };
 
     return Globe;
