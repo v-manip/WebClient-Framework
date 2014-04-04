@@ -15,8 +15,8 @@ define([
             }
         };
 
-        this.volumes = {};
         this.mainGUI = null;
+        this.idx = 0;
         this.cameraPosition = opts.cameraPosition || [120, 80, 160];
         this.backgroundColor = opts.backgroundColor || [1, 1, 1];
 
@@ -26,35 +26,10 @@ define([
         r.bgColor = this.backgroundColor;
         r.init();
 
-        // the onShowtime method gets executed after all files were fully loaded and
-        // just before the first rendering attempt
-        r.onShowtime = function() {
-            if (this.baseInitDone) {
-                return;
-            }
-
-            // (we need to create the GUI during onShowtime(..) since we do not know the
-            // volume dimensions before the loading was completed)
-            var gui = this.mainGUI = new dat.GUI({
-                autoPlace: true
-            });
-
-            //var customContainer = document.getElementById('my-gui-container');
-            r.container.appendChild(gui.domElement);
-
-            _.forEach(this.volumes, function(value, key) {
-                this.addVolumeToGUI(key, value, gui);
-            }.bind(this));
-
-            this.baseInitDone = true;
-        }.bind(this);
+        this.volumes = {};
 
         // adjust the camera position a little bit, just for visualization purposes
         r.camera.position = this.cameraPosition;
-
-        // showtime! this triggers the loading of the volume and executes
-        // r.onShowtime() once done
-        r.render();
     };
 
     XTKViewer.prototype.onResize = function() {
@@ -77,14 +52,40 @@ define([
         this.volumes[label] = volume;
         this.renderer.add(volume);
 
-        this.addVolumeToGUI(label, volume, this.mainGUI);
+        // The onShowtime method gets executed after all files were fully loaded and
+        // just before the first rendering attempt. To ensure that the callback gets called
+        // when volumes are added the internal '_onShowtime' flag is set to 'false' here
+        // so that the callback gets called on the next render tick.
+        this.renderer._onShowtime = false;
+
+        this.renderer.onShowtime = function() {
+            if (!this.baseInitDone) {
+                var gui = this.mainGUI = new dat.GUI({
+                    autoPlace: true
+                });
+                this.renderer.container.appendChild(gui.domElement);
+                this.baseInitDone = true;
+            }
+
+            // (we need to create the GUI during onShowtime(..) since we do not know the
+            // volume dimensions before the loading was completed)
+            _.forEach(this.volumes, function(value, key) {
+                this.addVolumeToGUI(key, value, gui);
+            }.bind(this));
+        }.bind(this);
+
+        // NOTE: This triggers the loading of the volume and executes
+        // r.onShowtime() once done. Be sure to call render AFTER you
+        // added a volume. Otherwise values on the volume like min, max.
+        // range are not yet calculated!
+        this.renderer.render();
     };
 
     XTKViewer.prototype.addVolumeToGUI = function(label, volume) {
-        this.mainGUI.removeFolder(label);
+        // this.mainGUI.removeFolder(label);
 
         // the following configures the gui for interacting with the X.volume
-        var volumegui = this.mainGUI.addFolder(label);
+        var volumegui = this.mainGUI.addFolder(label + this.idx++);
         // now we can configure controllers which..
         // .. switch between slicing and volume rendering
         var vrController = volumegui.add(volume, 'volumeRendering');
@@ -94,21 +95,16 @@ define([
         // .. configure the volume rendering opacity
         var opacityController = volumegui.add(volume, 'opacity', 0, 1).listen();
         // .. and the threshold in the min..max range
-        // FIXXME: volume.min and volume.max return undefined!
-        //// var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max);
-        //// var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max);
-        //// var lowerWindowController = volumegui.add(volume, 'windowLow', volume.min, volume.max);
-        //// var upperWindowController = volumegui.add(volume, 'windowHigh', volume.min, volume.max);
+        var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max);
+        var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max);
+        var lowerWindowController = volumegui.add(volume, 'windowLow', volume.min, volume.max);
+        var upperWindowController = volumegui.add(volume, 'windowHigh', volume.min, volume.max);
         // the indexX,Y,Z are the currently displayed slice indices in the range
         // 0..dimensions-1
+        var sliceXController = volumegui.add(volume, 'indexX', 0, volume.range[0] - 1);
+        var sliceYController = volumegui.add(volume, 'indexY', 0, volume.range[1] - 1);
+        var sliceZController = volumegui.add(volume, 'indexZ', 0, volume.range[2] - 1);
 
-        // FIXXME: for some reason the range is also not computed correctly anymore. Why?!
-        // var sliceXController = volumegui.add(volume, 'indexX', 0, volume.range[0] - 1);
-        // var sliceYController = volumegui.add(volume, 'indexY', 0, volume.range[1] - 1);
-        // var sliceZController = volumegui.add(volume, 'indexZ', 0, volume.range[2] - 1);
-        var sliceXController = volumegui.add(volume, 'indexX', 0, 59);
-        var sliceYController = volumegui.add(volume, 'indexY', 0, 29);
-        var sliceZController = volumegui.add(volume, 'indexZ', 0, 20);
         volumegui.open();
     };
 

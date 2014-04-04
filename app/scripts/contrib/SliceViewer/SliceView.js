@@ -118,7 +118,7 @@ define([
             this.getViewer().addVolume({
                 // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
                 // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                filename: url + '&dummy.nii.gz',
+                filename: url + '&dummy.nii.gz', //'http://x.babymri.org/?vol.nrrd',
                 label: layer,
                 volumeRendering: true,
                 upperThreshold: 219,
