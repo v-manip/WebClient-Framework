@@ -9,6 +9,7 @@
 			'regions/DialogRegion', 'regions/UIRegion',
 			'layouts/LayerControlLayout',
 			'layouts/ToolControlLayout',
+			'layouts/OptionsLayout',
 			'core/SplitView/WindowView',
 			'communicator',
 			'jquery', 'backbone.marionette',
@@ -19,7 +20,7 @@
 		],
 
 		function(Backbone, globals, DialogRegion,
-			UIRegion, LayerControlLayout, ToolControlLayout, WindowView, Communicator) {
+			UIRegion, LayerControlLayout, ToolControlLayout, OptionsLayout, WindowView, Communicator) {
 
 		var Application = Backbone.Marionette.Application.extend({
 			initialize: function(options) {
@@ -318,13 +319,13 @@
                     })
                 });
 
-
-
                 // Create layout to hold collection views
                 this.toolLayout = new ToolControlLayout();
+                this.optionsLayout = new OptionsLayout();
 
                 // Instance timeslider view
-                this.timeSliderView = new v.TimeSliderView(config.timeSlider);			
+                this.timeSliderView = new v.TimeSliderView(config.timeSlider);
+                this.colorRampView = new v.ColorRampView(config.colorRamp);
 			},
 
 			// The GUI is setup after the application is started. Therefore all modules

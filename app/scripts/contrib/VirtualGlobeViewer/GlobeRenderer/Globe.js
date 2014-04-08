@@ -151,22 +151,26 @@ define([
         var views = model.get('views');
         var view = undefined;
 
-        if( typeof(views) == 'undefined'){
+        if (typeof(views) == 'undefined') {
             view = model.get('view');
-        }else{
-            
-            if (views.length == 1){
+        } else {
+
+            if (views.length == 1) {
                 view = views[0];
-            }else{
-                
+            } else {
+
                 // Check if it is a 3d layer
-                var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
-                var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
-                if(w3ds){
+                var w3ds = _.find(views, function(view) {
+                    return view.protocol == "W3DS";
+                });
+                var wms = _.find(views, function(view) {
+                    return view.protocol == "WMS";
+                });
+                if (w3ds) {
                     view = w3ds;
-                }else if(wms){
+                } else if (wms) {
                     view = wms;
-                }else{
+                } else {
                     // Something was defined wrong in the config
                     view = null;
                 }
@@ -195,6 +199,17 @@ define([
         return opts;
     };
 
+    Globe.prototype.setColorRamp = function(config) {
+        this.colorRamp = config;
+
+        var sgRenderer = this.globe.sceneGraphOverlayRenderer;
+        if (sgRenderer) {
+            sgRenderer.setColorRamp(config);
+        }
+
+        this.requestFrame();
+    };
+
     Globe.prototype.addLayer = function(model, isBaseLayer) {
         var layerDesc = this.layerCache[model.get('name')];
         var layer = undefined;
@@ -208,22 +223,26 @@ define([
             var views = model.get('views');
             var view = undefined;
 
-            if( typeof(views) == 'undefined'){
+            if (typeof(views) == 'undefined') {
                 view = model.get('view');
-            }else{
-                
-                if (views.length == 1){
+            } else {
+
+                if (views.length == 1) {
                     view = views[0];
-                }else{
-                    
+                } else {
+
                     // Check if it is a 3d layer
-                    var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
-                    var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
-                    if(w3ds){
+                    var w3ds = _.find(views, function(view) {
+                        return view.protocol == "W3DS";
+                    });
+                    var wms = _.find(views, function(view) {
+                        return view.protocol == "WMS";
+                    });
+                    if (w3ds) {
                         view = w3ds;
-                    }else if(wms){
+                    } else if (wms) {
                         view = wms;
-                    }else{
+                    } else {
                         // Something was defined wrong in the config
                         view = null;
                     }
@@ -238,7 +257,14 @@ define([
             } else if (view.protocol === 'WMS') {
                 layer = new GlobWeb.WMSLayer(opts);
             } else if (view.protocol === 'W3DS') {
-                layer = new W3DSLayer(opts);
+                // FIXXME: think on where to set the color ramp! This place
+                // might not be the best one...
+                var o = _.extend(opts, {
+                    renderOptions: {
+                        colorRamp: this.colorRamp
+                    }
+                });
+                layer = new W3DSLayer(o);
                 // console.log('[Globe::addLayer] added W3DS layer. ', layer);
             } else if (view.protocol === 'WIREFRAME') {
                 layer = new TileWireframeLayer({
@@ -318,22 +344,26 @@ define([
         var view = undefined;
 
         // FIXXME: use this.getSupportedViews()!
-        if( typeof(views) == 'undefined'){
+        if (typeof(views) == 'undefined') {
             view = model.get('view');
-        }else{
-            
-            if (views.length == 1){
+        } else {
+
+            if (views.length == 1) {
                 view = views[0];
-            }else{
-                
+            } else {
+
                 // Check if it is a 3d layer
-                var w3ds = _.find(views, function(view){ return view.protocol == "W3DS"; });
-                var wms = _.find(views, function(view){ return view.protocol == "WMS"; });
-                if(w3ds){
+                var w3ds = _.find(views, function(view) {
+                    return view.protocol == "W3DS";
+                });
+                var wms = _.find(views, function(view) {
+                    return view.protocol == "WMS";
+                });
+                if (w3ds) {
                     view = w3ds;
-                }else if(wms){
+                } else if (wms) {
                     view = wms;
-                }else{
+                } else {
                     // Something was defined wrong in the config
                     view = null;
                 }
@@ -353,7 +383,7 @@ define([
                 var idx = _.indexOf(this.overlayLayers, layerDesc);
                 this.overlayLayers.splice(idx, 1);
             }
-        } 
+        }
     };
 
     Globe.prototype.clearCache = function() {

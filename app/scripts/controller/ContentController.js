@@ -16,6 +16,7 @@
             	this.listenTo(Communicator.mediator, "dialog:open:about", this.onDialogOpenAbout);
             	this.listenTo(Communicator.mediator, "ui:open:layercontrol", this.onLayerControlOpen);
             	this.listenTo(Communicator.mediator, "ui:open:toolselection", this.onToolSelectionOpen);
+				this.listenTo(Communicator.mediator, "ui:open:options", this.onOptionsOpen);
 			},
 
 			onDialogOpenAbout: function(event){
@@ -42,6 +43,14 @@
 					App.toolLayout.mapmode.show(App.visualizationModesView);
 				} else {
 					App.toolLayout.close();
+				}
+			},
+			onOptionsOpen: function(event){
+				if (_.isUndefined(App.optionsLayout.isClosed) || App.optionsLayout.isClosed) {
+					App.optionsBar.show(App.optionsLayout);
+					App.optionsLayout.colorramp.show(App.colorRampView);
+				} else {
+					App.optionsLayout.close();
 				}
 			}
 		});

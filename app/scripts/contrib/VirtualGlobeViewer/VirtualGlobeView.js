@@ -47,6 +47,7 @@ define([
             this.listenTo(Communicator.mediator, 'time:change', this._onTimeChange);
             this.listenTo(Communicator.mediator, 'productCollection:updateOpacity', this._onOpacityChange);
             this.listenTo(Communicator.mediator, 'productCollection:sortUpdated', this._sortOverlayLayers);
+            this.listenTo(Communicator.mediator, 'options:colorramp:change', this._colorRampChange);
         },
 
         didRemoveElement: function() {
@@ -227,9 +228,18 @@ define([
         },
 
         _createGlobe: function() {
-            return new Globe({
+            var globe = new Globe({
                 canvas: this.el
             });
+
+            // Sets the initial colorramp defined in 'config.json':
+            globe.setColorRamp(Communicator.mediator.colorRamp);
+
+            return globe;
+        },
+
+        _colorRampChange: function(config) {
+            this.getViewer().setColorRamp(config);
         },
 
         _dumpLayerConfig: function() {

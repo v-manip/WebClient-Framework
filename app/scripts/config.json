@@ -276,6 +276,10 @@
       "class": ""
     },
     {
+      "name": "optionsBar",
+      "class": ""
+    },
+    {
       "name": "topBar",
       "class": ""
     },
@@ -304,6 +308,12 @@
         "icon" : "fa-wrench",
         "eventToRaise" : "ui:open:toolselection",
         "template" : "ToolSelection"
+      },
+      {
+        "name" : "Options",
+        "icon" : "fa-tasks",
+        "eventToRaise" : "ui:open:options",
+        "template" : "OptionsControl"
       },
       {
         "name" : "About",
@@ -346,6 +356,7 @@
     "views/ContentView",
     "views/TimeSliderView",
     "views/ToolSelectionView",
+    "core/ColorRamp/ColorRampView",
     "views/ToolItemView",
     "views/DownloadView"
   ],
@@ -482,6 +493,74 @@
       "url": "http://localhost:9000/ows?",
       "version": "1.0.0"
     }
-  }
+  },
 
+  "colorRamp": {
+    "alphaThreshold": 0.05,
+    "steps": [{
+      "start": 0.0,
+      "stop": 0.063,
+      "color": [0.043,0.059,0.000,1.0]
+    },{
+      "start": 0.063,
+      "stop": 0.125,
+      "color": [0.227,0.102,0.004,1.0]
+    },{
+      "start": 0.125,
+      "stop": 0.188,
+      "color": [0.388,0.153,0.000,1.0]
+    },{
+      "start": 0.188,
+      "stop": 0.250,
+      "color": [0.420,0.549,0.000,1.0]
+    },{
+      "start": 0.250,
+      "stop": 0.313,
+      "color": [0.000,0.718,0.047,1.0]
+    },{
+      "start": 0.313,
+      "stop": 0.375,
+      "color": [0.000,0.878,0.788,1.0]
+    },{
+      "start": 0.375,
+      "stop": 0.438,
+      "color": [0.000,0.263,1.000,1.0]
+    },{
+      "start": 0.438,
+      "stop": 0.500,
+      "color": [0.565,0.000,1.000,1.0]
+    },{
+      "start": 0.500,
+      "stop": 0.563,
+      "color": [1.000,0.000,0.596,1.0]
+    },{
+      "start": 0.563,
+      "stop": 0.625,
+      "color": [1.000,0.231,0.000,1.0]
+    },{
+      "start": 0.625,
+      "stop": 0.688,
+      "color": [0.933,1.000,0.027,1.0]
+    },{
+      "start": 0.688,
+      "stop": 0.750,
+      "color": [0.286,1.000,0.208,1.0]
+    },{
+      "start": 0.750,
+      "stop": 0.813,
+      "color": [0.376,1.000,0.831,1.0]
+    },{
+      "start": 0.813,
+      "stop": 0.875,
+      "color": [0.529,0.733,1.000,1.0]
+    },{
+      "start": 0.850,
+      "stop": 0.938,
+      "color": [0.820,0.698,1.000,1.0]
+    },{
+      "start": 0.938,
+      "stop": 1.0,
+      "color": [1.000,0.867,0.969,1.0]
+    }]
+  }
 }
