@@ -485,7 +485,7 @@ define('layers/layer-wms',[
 			'style': 'default',
 			'crs': 'EPSG:4326',
 			'format': 'image/png',
-			'version': '1.0.0',
+			'version': '1.1.0',
 			'transparent': true
 		})
 	});
