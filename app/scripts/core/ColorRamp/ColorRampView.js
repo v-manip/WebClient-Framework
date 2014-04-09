@@ -110,6 +110,8 @@
                         } : null;
                     }
 
+                    var that = this;
+
                     function recalculate() {
                         var steps = [];
 
@@ -149,11 +151,13 @@
                             }
                         }
 
-                        var config = {
+                        that.config = {
                             alphaThreshold: alphaThreshold,
                             steps: steps
                         };
-                        Communicator.mediator.trigger("options:colorramp:change", config);
+
+
+                        Communicator.mediator.trigger("options:colorramp:change", that.config);
 
                         //update labels
                         $('#labelHV').innerHTML = hVal;
@@ -230,6 +234,7 @@
                                 h: undefined,
                                 s: 0,
                                 v: val * 100
+
                             });
                         }
                         f = (red == x) ? grn - blu : ((grn == x) ? blu - red : red - grn);
@@ -267,7 +272,7 @@
                     });
 
                     $("#slider").slider({
-                        value: 360,
+                        value: 0,
                         min: 0,
                         max: 360,
                         step: 1,
@@ -289,6 +294,12 @@
                             $("#labelAlpha").val(ui.value);
                         }
                     });
+
+                    recalculate();
+                },
+
+                dumpValues: function() {
+                    console.log(JSON.stringify(this.config));
                 }
             });
 

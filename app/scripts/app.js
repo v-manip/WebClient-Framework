@@ -325,7 +325,8 @@
 
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
-                this.colorRampView = new v.ColorRampView(config.colorRamp);
+                // FIXXME: quick hack to access colorRamp for dumping values:
+                window.colorRampView = this.colorRampView = new v.ColorRampView(config.colorRamp);
 			},
 
 			// The GUI is setup after the application is started. Therefore all modules
