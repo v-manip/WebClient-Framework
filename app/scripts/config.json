@@ -107,23 +107,22 @@
             "id": "Cloudsat",
             "protocol": "W3DS",
             "urls": [
-                    "http://localhost:9000/ows?",
-                    "http://demo.v-manip.eox.at/browse/ows"
+                "https://192.168.122.191/browse/ows"
             ],
             "style": "default",
             "format": "image/png"
           }, {
-            "id": "vrvis_demo_outlines",
+            "id": "Cloudsat_outlines",
             "protocol": "WMS",
             "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
+                "https://192.168.122.191/browse/ows"
             ],
             "style": "default",
             "format": "image/png"
           }
         ],
         "download": {
-          "id": "vrvis_demo",
+          "id": "Cloudsat",
           "protocol": "EOWCS",
           "url": "http://demo.v-manip.eox.at/browse/ows"
         }
@@ -337,8 +336,8 @@
 
   "timeSlider": {
     "domain": {
-      "start": "2013-05-17T10:15:00Z",
-      "end": "2013-05-17T11:45:00Z"
+      "start": "2012-05-17T10:15:00Z",
+      "end": "2013-08-17T11:45:00Z"
     },
     "brush": {
        "start": "2013-05-17T11:00:00Z",
@@ -490,7 +489,7 @@
   "backendConfig": {
     "MeshFactory": {
       "protocol": "W3DS",
-      "url": "http://localhost:9000/ows?",
+      "url": "https://192.168.122.191/browse/ows",
       "version": "1.0.0"
     }
   },
