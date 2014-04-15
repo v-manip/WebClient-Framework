@@ -24,6 +24,13 @@
       },
       onShow: function(view){
 
+        this.$('.close').on("click", _.bind(this.onClose, this));
+        this.$el.draggable({ 
+          containment: "#content",
+          scroll: false,
+          handle: '.panel-heading'
+        });
+
         this.loadcounter = 0;
 
         $('#authiframe').load(function(){
@@ -35,18 +42,13 @@
           }
         }.bind(this));
 
-        this.$('.close').on("click", _.bind(this.onClose, this));
-        this.$el.draggable({ 
-          containment: "#content",
-          scroll: false,
-          handle: '.panel-heading'
-        });
+        
       },
 
-      /*onClose: function() {
+      onClose: function() {
         
         this.close();
-      },*/
+      },
 
       onLoadiFrame: function(){
         console.log("iframe loaded");
