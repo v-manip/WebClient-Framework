@@ -30,7 +30,7 @@
       onShow: function(view){
 
         // Bind scroll event of parent element
-        $("#storyView").bind( "scroll", this.onScroll.bind(this) );
+        $("#storyView").bind( "scroll", this.onScroll.bind(this));
 
         // Array of story section elements.
         this.sections = $('section');
@@ -80,44 +80,47 @@
         document.body.className = 'section-' + index;
 
         // Do we need to zoom?
-        /*zoom = map.getZoom;
-        doZoom = false;
-        if(this.sections[index].hasAttribute('data-zoom') && zoom != this.sections[index].getAttribute('data-zoom')) {
+        var doZoom = false;
+        if(this.sections[index].hasAttribute('data-zoom')) {
             doZoom = true;
-            zoom = this.sections[index].getAttribute('data-zoom');
+            var zoom = this.sections[index].getAttribute('data-zoom');
         }
 
+        var center={};
         // Get the new center?
-        center = map.getCenter();
-        doPan = false;
+        var doPan = false;
         if(this.sections[index].hasAttribute('data-longitude')) {
-            longitude = this.sections[index].getAttribute('data-longitude');
-            if(center.lon != longitude) {
-                center.lon = longitude;
-                doPan = true;
-            }
+            center.lon = this.sections[index].getAttribute('data-longitude');
+            doPan = true;
         }
         if(this.sections[index].hasAttribute('data-latitude')) {
-            latitude = this.sections[index].getAttribute('data-latitude');
-            if(center.lat != latitude) {
-                center.lat = latitude;
-                doPan = true;
-            }
+            center.lat = this.sections[index].getAttribute('data-latitude');
+            doPan = true;
         }
 
         // Zoom / Pan
         if(doZoom) {
             if(!doPan) {
-                map.zoomTo(zoom);
+                //map.zoomTo(zoom);
             } else {
-                map.setCenter(center, zoom);
+                Communicator.mediator.trigger("map:center", {
+                  x: center.lon, y: center.lat, l: zoom
+                });
             }
         } else {
-            map.panTo(center);
+           // map.panTo(center);
+        }
+
+        // Events to fire
+        if(this.sections[index].hasAttribute('data-events')) {
+          var events = this.sections[index].getAttribute('data-events').split(";");
+          _.each(events, function(event){
+            Communicator.mediator.trigger(event);
+          }, this);
         }
 
         // Time selection
-        if( slider && this.sections[index].hasAttribute('data-time')){
+       /* if( slider && this.sections[index].hasAttribute('data-time')){
             dates = this.sections[index].getAttribute('data-time').split('/');
             start = new Date(dates[0]);
             end = new Date(dates[1]);
