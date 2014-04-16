@@ -13,7 +13,7 @@
     font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;
     font-weight: normal;
     font-size: 1em;
-    z-index: $layer-gui;
+    z-index: 990;
 }
 #storyView::-webkit-scrollbar {
     display: none;

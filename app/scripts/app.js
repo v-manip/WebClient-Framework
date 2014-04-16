@@ -352,7 +352,7 @@
 				this.bottomBar.show(this.timeSliderView);
 
 				// Show storybanner
-				if(config.storyTemplate){
+				if(this.storyBanner){
 					this.storyView.show(this.storyBanner);
 				}
 

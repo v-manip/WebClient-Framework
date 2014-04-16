@@ -16,7 +16,7 @@
       id: "story",
 
       events: {
-        'scroll': 'onScroll'
+        //'scroll': 'onScroll'
         /*"click #btn-select-all-coverages": "onSelectAllCoveragesClicked",
         "click #btn-invert-coverage-selection": "onInvertCoverageSelectionClicked",
         'change input[type="checkbox"]': "onCoverageSelected",
@@ -28,69 +28,77 @@
       },
 
       onShow: function(view){
+
+        // Bind scroll event of parent element
+        $("#storyView").bind( "scroll", this.onScroll.bind(this) );
+
         // Array of story section elements.
-        var sections = $('section');
-        console.log(sections);
+        this.sections = $('section');
+
+        // Set first element as active
+        this.setActive(0);
       },
 
       onScroll: function(evt){
-        var story = document.getElementById('story');
+
+        var story = document.getElementById('storyView');
 
         // All Browsers, might not work on IE8
         var y = story.scrollTop;
         var h = story.offsetHeight;
 
         // If scrolled to the very top of the page set the first section active.
-        if (y === 0) return setActive(0);
+        if (y === 0) return this.setActive(0);
 
         // Otherwise, conditionally determine the extent to which page must be
         // scrolled for each section. The first section that matches the current
         // scroll position wins and exits the loop early.
         var memo = 0;
         var buffer = (h * 0.2);
-        var active = _(sections).any(function(el, index) {
+        var active = _(this.sections).any(function(el, index) {
             memo += el.offsetHeight;
-            return y < (memo-buffer) ? setActive(index) : false;
-        });
+            return y < (memo-buffer) ? this.setActive(index) : false;
+        }, this);
 
         // If no section was set active the user has scrolled past the last section.
         // Set the last section active.
-        if (!active) setActive(sections.length - 1);
+        if (!active) this.setActive(this.sections.length - 1);
       },
 
-          // Helper to set the active section.
+      // Helper to set the active section.
       setActive: function(index) {
+
         // Cache the active section and only run, when it changes
-        /*if (document.getElementById('story').dataset.active == index) return true;
+        if (document.getElementById('story').dataset.active == index) return true;
         document.getElementById('story').dataset.active = index;
 
-        // Set active class on sections, markers.
-        _(sections).each(function(s) { s.className = s.className.replace(' active', '') });
-        sections[index].className += ' active';
+        // Set active class on this.sections, markers.
+        _(this.sections).each(function(s) { s.className = s.className.replace(' active', '') });
+        this.sections[index].className += ' active';
 
         // Set a body class for the active section.
         document.body.className = 'section-' + index;
 
         // Do we need to zoom?
-        zoom = map.getZoom;
+        /*zoom = map.getZoom;
         doZoom = false;
-        if(sections[index].hasAttribute('data-zoom') && zoom != sections[index].getAttribute('data-zoom')) {
+        if(this.sections[index].hasAttribute('data-zoom') && zoom != this.sections[index].getAttribute('data-zoom')) {
             doZoom = true;
-            zoom = sections[index].getAttribute('data-zoom');
+            zoom = this.sections[index].getAttribute('data-zoom');
         }
 
         // Get the new center?
         center = map.getCenter();
         doPan = false;
-        if(sections[index].hasAttribute('data-longitude')) {
-            longitude = sections[index].getAttribute('data-longitude');
+        if(this.sections[index].hasAttribute('data-longitude')) {
+            longitude = this.sections[index].getAttribute('data-longitude');
             if(center.lon != longitude) {
                 center.lon = longitude;
                 doPan = true;
             }
         }
-        if(sections[index].hasAttribute('data-latitude')) {
-            latitude = sections[index].getAttribute('data-latitude');
+        if(this.sections[index].hasAttribute('data-latitude')) {
+            latitude = this.sections[index].getAttribute('data-latitude');
             if(center.lat != latitude) {
                 center.lat = latitude;
                 doPan = true;
@@ -109,8 +117,8 @@
         }
 
         // Time selection
-        if( slider && sections[index].hasAttribute('data-time')){
-            dates = sections[index].getAttribute('data-time').split('/');
+        if( slider && this.sections[index].hasAttribute('data-time')){
+            dates = this.sections[index].getAttribute('data-time').split('/');
             start = new Date(dates[0]);
             end = new Date(dates[1]);
 
@@ -120,8 +128,8 @@
         }
 
         // Activate / Deactivate layers
-        if(sections[index].hasAttribute('data-layers')) {
-            activeLayers = sections[index].getAttribute('data-layers').split(',')
+        if(this.sections[index].hasAttribute('data-layers')) {
+            activeLayers = this.sections[index].getAttribute('data-layers').split(',')
             _(map.layers).each(function(layer) {
                 if(!layer.isBaseLayer){
                     shouldBeVisible = _.contains(activeLayers, layer.layer);
@@ -130,9 +138,9 @@
                     }
                 }
             });
-        }
+        }*/
 
-        return true;*/
+        return true;
       }
 
     });
