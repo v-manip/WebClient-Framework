@@ -10,6 +10,8 @@
     "contrib/AnalyticsViewer/AnalyticsViewModule"
   ],
 
+  "storyTemplate":"UseCaseTestTemplate",
+
   "mapConfig": {
     "model": "models/MapModel",
     "visualizationLibs": [
@@ -290,6 +292,10 @@
     {
       "name": "viewContent",
       "class": ""
+    },
+    {
+      "name": "storyView",
+      "class": ""
     }
   ],
 
@@ -358,7 +364,8 @@
     "views/ToolSelectionView",
     "core/ColorRamp/ColorRampView",
     "views/ToolItemView",
-    "views/DownloadView"
+    "views/DownloadView",
+    "views/StoryBannerView"
   ],
 
   "models":[
@@ -414,6 +421,11 @@
     {
       "id":"CheckBoxOverlayLayer",
       "template":"hbs!tmpl/CheckBoxOverlayLayer"
+    }
+    ,
+    {
+      "id":"UseCaseTestTemplate",
+      "template":"hbs!tmpl/UseCaseTestTemplate"
     }
   ],
 
