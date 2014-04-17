@@ -118,64 +118,8 @@ define([
         }
     };
 
-    // Globe.prototype.createCommonLayerOptionsFromModel = function(model) {
-    //     var opts = {};
-
-    //     opts.baseUrl = model.get('view').urls[0];
-
-    //     opts.style = ''; // MapProxy needs a style argument, even if its empty
-    //     if (model.get('view').style) {
-    //         opts.style = model.get('view').style;
-    //     }
-
-    //     var layer = model.get('view').id;
-
-    //     if (model.get('view').protocol === 'WMS') {
-    //         opts.layers = layer;
-    //     } else {
-    //         opts.layer = layer;
-    //     }
-
-    //     opts.format = model.get('view').format || 'image/jpeg';
-
-    //     if (opts.format === 'image/png') {
-    //         opts.transparent = true;
-    //     }
-
-    //     return opts;
-    // };
-
-    Globe.prototype.createCommonLayerOptionsFromModel = function(model) {
+    Globe.prototype.createCommonLayerOptionsFromView = function(view) {
         var opts = {};
-
-        var views = model.get('views');
-        var view = undefined;
-
-        if (typeof(views) == 'undefined') {
-            view = model.get('view');
-        } else {
-
-            if (views.length == 1) {
-                view = views[0];
-            } else {
-
-                // Check if it is a 3d layer
-                var w3ds = _.find(views, function(view) {
-                    return view.protocol == "W3DS";
-                });
-                var wms = _.find(views, function(view) {
-                    return view.protocol == "WMS";
-                });
-                if (w3ds) {
-                    view = w3ds;
-                } else if (wms) {
-                    view = wms;
-                } else {
-                    // Something was defined wrong in the config
-                    view = null;
-                }
-            }
-        }
 
         opts.baseUrl = view.urls[0];
 
@@ -210,108 +154,213 @@ define([
         this.requestFrame();
     };
 
+    Globe.prototype.getSupportedViews = function(model) {
+        var supported_views = [];
+
+        var views = model.get('views');
+        var wmtsIsAvailable = false;
+
+        if (typeof(views) == 'undefined') {
+            views = [];
+            views.push(model.get('view'));
+        }
+
+        var w3ds = _.find(views, function(view) {
+            return view.protocol === "W3DS";
+        });
+
+        var wmts = _.find(views, function(view) {
+            if (view.protocol === "WMTS") {
+                wmtsIsAvailable = true; // A WMTS layer is prefered compared to a WMS layer
+                return true;
+            }
+
+            return false;
+        });
+
+        if (!wmtsIsAvailable) {
+            var wms = _.find(views, function(view) {
+                return view.protocol === "WMS";
+            });
+
+            if (wms) {
+                supported_views.push(wms);
+            }
+        }
+
+        var dem = _.find(views, function(view) {
+            return view.protocol === "DEM";
+        });
+
+        var wireframe = _.find(views, function(view) {
+            return view.protocol === "WIREFRAME";
+        });
+
+        if (w3ds) {
+            supported_views.push(w3ds);
+        }
+
+        if (wmts) {
+            supported_views.push(wmts);
+        }
+
+        if (dem) {
+            supported_views.push(dem);
+        }
+
+        if (wireframe) {
+            supported_views.push(wireframe);
+        }
+
+        return supported_views;
+    }
+
     Globe.prototype.addLayer = function(model, isBaseLayer) {
-        var layerDesc = this.layerCache[model.get('name')];
         var layer = undefined;
         var isElevationLayer = false;
 
-        if (typeof layerDesc === 'undefined') {
-            var opts = this.createCommonLayerOptionsFromModel(model);
+        var views = this.getSupportedViews(model);
+
+        _.each(views, function(view) {
+            var cacheId = model.get('name') + '-' + view.protocol;
+            var opts = this.createCommonLayerOptionsFromView(view);
             opts.time = this.currentToI;
 
-            // FIXXME: use this.getSupportedViews()!
-            var views = model.get('views');
-            var view = undefined;
+            // NOTE: Within the layerCache the key is a concatenated string with 'name-protocol' structure.
+            var layerDesc = this.layerCache[cacheId];
 
-            if (typeof(views) == 'undefined') {
-                view = model.get('view');
-            } else {
+            if (typeof layerDesc === 'undefined') {
 
-                if (views.length == 1) {
-                    view = views[0];
+                if (view.protocol === 'WMTS') {
+                    var layer_opts = _.extend(opts, {
+                        matrixSet: view.matrixSet,
+                    });
+
+                    layer = new GlobWeb.WMTSLayer(layer_opts);
+                } else if (view.protocol === 'WMS') {
+                    layer = new GlobWeb.WMSLayer(opts);
+                } else if (view.protocol === 'W3DS') {
+                    // FIXXME: think on where to set the color ramp! This place
+                    // might not be the best one...
+                    var o = _.extend(opts, {
+                        renderOptions: {
+                            colorRamp: this.colorRamp
+                        }
+                    });
+
+                    layer = new W3DSLayer(o);
+                    // console.log('[Globe::addLayer] added W3DS layer. ', layer);
+                } else if (view.protocol === 'WIREFRAME') {
+                    layer = new TileWireframeLayer({
+                        outline: true
+                    });
+                } else if (view.protocol === 'DEM') {
+                    layer = new GlobWeb.WCSElevationLayer({
+                        baseUrl: "http://data.eox.at/elevation?",
+                        coverage: "ACE2",
+                        version: "2.0.0"
+                    });
+                    this.globe.setBaseElevation(layer);
                 } else {
-
-                    // Check if it is a 3d layer
-                    var w3ds = _.find(views, function(view) {
-                        return view.protocol == "W3DS";
-                    });
-                    var wms = _.find(views, function(view) {
-                        return view.protocol == "WMS";
-                    });
-                    if (w3ds) {
-                        view = w3ds;
-                    } else if (wms) {
-                        view = wms;
-                    } else {
-                        // Something was defined wrong in the config
-                        view = null;
-                    }
+                    console.log('[Globe::addLayer] protocol "' + view.protocol + '" is not supported');
                 }
-            }
-
-            if (view.protocol === 'WMTS') {
-                var layer_opts = _.extend(opts, {
-                    matrixSet: view.matrixSet,
-                });
-                layer = new GlobWeb.WMTSLayer(layer_opts);
-            } else if (view.protocol === 'WMS') {
-                layer = new GlobWeb.WMSLayer(opts);
-            } else if (view.protocol === 'W3DS') {
-                // FIXXME: think on where to set the color ramp! This place
-                // might not be the best one...
-                var o = _.extend(opts, {
-                    renderOptions: {
-                        colorRamp: this.colorRamp
-                    }
-                });
-                layer = new W3DSLayer(o);
-                // console.log('[Globe::addLayer] added W3DS layer. ', layer);
-            } else if (view.protocol === 'WIREFRAME') {
-                layer = new TileWireframeLayer({
-                    outline: true
-                });
-            } else if (view.protocol === 'DEM') {
-                layer = new GlobWeb.WCSElevationLayer({
-                    baseUrl: "http://data.eox.at/elevation?",
-                    coverage: "ACE2",
-                    version: "2.0.0"
-                });
-                isElevationLayer = true;
             } else {
-                console.log('[Globe::addLayer] protocol "' + view.protocol + '" is not supported');
+                layer = layerDesc.layer;
+                // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
             }
 
-            if (!isElevationLayer) {
-                // set initial opacity:
+            if (isBaseLayer) {
+                this.globe.setBaseImagery(layer);
+            } else if (isElevationLayer) {
+                this.globe.setBaseElevation(layer);
+            } else {
+                // FIXXME: when adding a layer the 'ordinal' has to be considered!
+                // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
+                // therefore we have to remove all layers and readd the in the correct order.
+                // This results in flickering when adding a layer and should be fixed within GlobWeb.
+                this.globe.addLayer(layer);
                 layer.opacity(model.get('opacity'));
 
-                // Register the layer to the internal cache for removal or for changing the timespan later on:
                 layerDesc = {
                     model: model,
                     layer: layer,
                     isBaseLayer: isBaseLayer
                 };
-                this.layerCache[model.get('name')] = layerDesc;
+
+                this.layerCache[cacheId] = layerDesc;
+                this.overlayLayers.push(layerDesc);
             }
 
-            // console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
-        } else {
-            layer = layerDesc.layer;
-            // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
-        }
+            // if (isBaseLayer) {
+            //     this.globe.setBaseImagery(layer);
+            // } else {
+            //     // FIXXME: when adding a layer the 'ordinal' has to be considered!
+            //     // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
+            //     // therefore we have to remove all layers and readd the in the correct order.
+            //     // This results in flickering when adding a layer and should be fixed within GlobWeb.
+            //     this.globe.addLayer(layer);
 
-        if (isBaseLayer) {
-            this.globe.setBaseImagery(layer);
-        } else if (isElevationLayer) {
-            this.globe.setBaseElevation(layer);
-        } else {
-            // FIXXME: when adding a layer the 'ordinal' has to be considered!
-            // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
-            // therefore we have to remove all layers and readd the in the correct order.
-            // This results in flickering when adding a layer and should be fixed within GlobWeb.
-            this.globe.addLayer(layer);
-            this.overlayLayers.push(layerDesc);
-        }
+            //     // Register the layer to the internal cache for removal or for changing the timespan later on:
+            //     layerDesc = {
+            //         model: model,
+            //         layer: layer,
+            //         isBaseLayer: isBaseLayer
+            //     };
+            //     this.layerCache[cacheId] = layerDesc;
+            //     this.overlayLayers.push(layerDesc);
+            //     layer.opacity(model.get('opacity'));
+            // }
+
+        }.bind(this));
+
+        // // FIXXME: use this.getSupportedViews()!
+        // var views = model.get('views');
+        // var view = undefined;
+
+        // if (typeof(views) == 'undefined') {
+        //     view = model.get('view');
+        // } else {
+
+        //     if (views.length == 1) {
+        //         view = views[0];
+        //     } else {
+
+        //         // Check if it is a 3d layer
+        //         var w3ds = _.find(views, function(view) {
+        //             return view.protocol == "W3DS";
+        //         });
+        //         var wms = _.find(views, function(view) {
+        //             return view.protocol == "WMS";
+        //         });
+        //         if (w3ds) {
+        //             view = w3ds;
+        //         } else if (wms) {
+        //             view = wms;
+        //         } else {
+        //             // Something was defined wrong in the config
+        //             view = null;
+        //         }
+        //     }
+        // }
+
+        // console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
+        // } else {
+        //     layer = layerDesc.layer;
+        //     // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
+        // }
+
+        // if (isBaseLayer) {
+        //     this.globe.setBaseImagery(layer);
+        // } else if (isElevationLayer) {
+        //     this.globe.setBaseElevation(layer);
+        // } else {
+        //     // FIXXME: when adding a layer the 'ordinal' has to be considered!
+        //     // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
+        //     // therefore we have to remove all layers and readd the in the correct order.
+        //     // This results in flickering when adding a layer and should be fixed within GlobWeb.
+        //     this.globe.addLayer(layer);
+        //     this.overlayLayers.push(layerDesc);
+        // }
     };
 
     Globe.prototype.sortOverlayLayers = function() {
