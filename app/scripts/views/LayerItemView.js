@@ -28,6 +28,8 @@
 			},
 			onShow: function(view){
 
+				this.listenTo(Communicator.mediator, "layer:activate", this.layerActivate);
+
 				$( ".sortable" ).sortable({
 					revert: true,
 					delay: 90,
@@ -84,6 +86,14 @@
 		    onOpacityAdjust: function(evt, ui) {
 		    	this.model.set("opacity", ui.value/100);
 		    	Communicator.mediator.trigger('productCollection:updateOpacity', {model:this.model, value:ui.value/100});
+		    },
+
+		    layerActivate: function(layer){
+		    	if(this.model.get('views') && this.model.get('views')[0].id == layer){
+		    		this.model.set("visible", true);
+		    		var checkbox = $( "input[type$='checkbox']", this.$el);
+		    		checkbox.click();
+		    	}
 		    }
 
 		});

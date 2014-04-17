@@ -30,7 +30,9 @@
       onShow: function(view){
 
         // Bind scroll event of parent element
-        $("#storyView").bind( "scroll", this.onScroll.bind(this));
+        $("#storyView").bind("scroll", this.onScroll.bind(this));
+
+        $(".close").bind("click", this.onClose.bind(this));
 
         // Array of story section elements.
         this.sections = $('section');
@@ -120,30 +122,38 @@
         }
 
         // Time selection
-       /* if( slider && this.sections[index].hasAttribute('data-time')){
-            dates = this.sections[index].getAttribute('data-time').split('/');
-            start = new Date(dates[0]);
-            end = new Date(dates[1]);
+        if( this.sections[index].hasAttribute('data-time')){
+            var dates = this.sections[index].getAttribute('data-time').split('/');
+            var opt = {};
+            opt.start = new Date(dates[0]);
+            opt.end = new Date(dates[1]);
 
-            if(!(start.getTime() == selectedTimes.start.getTime() && end.getTime() == selectedTimes.end.getTime())) {
-                slider.select(start, end);
-            }
+            Communicator.mediator.trigger("date:selection:change", opt);
+            
         }
 
         // Activate / Deactivate layers
         if(this.sections[index].hasAttribute('data-layers')) {
-            activeLayers = this.sections[index].getAttribute('data-layers').split(',')
-            _(map.layers).each(function(layer) {
+            var activeLayers = this.sections[index].getAttribute('data-layers').split(';');
+            
+            _.each(activeLayers, function(layer){
+              Communicator.mediator.trigger("layer:activate", layer);
+            }, this);
+            /*_(map.layers).each(function(layer) {
                 if(!layer.isBaseLayer){
                     shouldBeVisible = _.contains(activeLayers, layer.layer);
                     if(layer.visibility != shouldBeVisible) {
                         layer.setVisibility(shouldBeVisible);
                     }
                 }
-            });
-        }*/
+            });*/
+        }
 
         return true;
+      },
+
+      onClose: function(){
+        this.close();
       }
 
     });

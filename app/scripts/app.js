@@ -16,7 +16,8 @@
 			'controller/ContentController',
 			'controller/DownloadController',
 			'controller/SelectionManagerController',
-			'controller/LoadingController'
+			'controller/LoadingController',
+			'controller/LayerController'
 		],
 
 		function(Backbone, globals, DialogRegion,
