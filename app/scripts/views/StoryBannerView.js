@@ -30,7 +30,7 @@
       onShow: function(view){
 
         // Bind scroll event of parent element
-        $("#storyView").bind("scroll", this.onScroll.bind(this));
+        $("#story").bind("scroll", this.onScroll.bind(this));
 
         $(".close").bind("click", this.onClose.bind(this));
 
@@ -43,7 +43,7 @@
 
       onScroll: function(evt){
 
-        var story = document.getElementById('storyView');
+        var story = document.getElementById('story');
 
         // All Browsers, might not work on IE8
         var y = story.scrollTop;
@@ -149,17 +149,26 @@
             });*/
         }
 
+        // Setup which visualization widget is displayed in which region
         if(this.sections[index].hasAttribute('data-tl')){
           Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-tl'));
         }
         if(this.sections[index].hasAttribute('data-tr')){
-          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-tr'));
+          Communicator.mediator.trigger("region:show:view", 'tr', this.sections[index].getAttribute('data-tr'));
         }
         if(this.sections[index].hasAttribute('data-bl')){
-          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-bl'));
+          Communicator.mediator.trigger("region:show:view", 'bl', this.sections[index].getAttribute('data-bl'));
         }
         if(this.sections[index].hasAttribute('data-br')){
-          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-br'));
+          Communicator.mediator.trigger("region:show:view", 'br', this.sections[index].getAttribute('data-br'));
+        }
+
+        // Load a selection specified by a json file
+        if(this.sections[index].hasAttribute('data-selection')){
+          $.get(this.sections[index].getAttribute('data-selection'), function(values) {
+            Communicator.mediator.trigger("map:load:geojson", values);
+          });
+          
         }
 
         return true;

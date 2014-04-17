@@ -2,22 +2,31 @@
 @import "defaults";
 
 
-#storyView  {
+#storyView{
     position: relative;
+    overflow: hidden;
     left: 10em;
     width: 20em;
     height: 100%;
+    z-index: 1200;
+}
+
+#story{
+    
+    width: 21em;
+    height: 100%;
     padding: 1em;
     color: white;
-    overflow: scroll;
+    overflow: auto;
     font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;
     font-weight: normal;
     font-size: 1em;
-    z-index: 1200;
+    
 }
-#storyView::-webkit-scrollbar {
+#story::-webkit-scrollbar {
     display: none;
 }
+
 #story #cover {
     margin-top: 50%;
     padding-bottom: 2em;
