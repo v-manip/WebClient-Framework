@@ -149,6 +149,19 @@
             });*/
         }
 
+        if(this.sections[index].hasAttribute('data-tl')){
+          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-tl'));
+        }
+        if(this.sections[index].hasAttribute('data-tr')){
+          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-tr'));
+        }
+        if(this.sections[index].hasAttribute('data-bl')){
+          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-bl'));
+        }
+        if(this.sections[index].hasAttribute('data-br')){
+          Communicator.mediator.trigger("region:show:view", 'tl', this.sections[index].getAttribute('data-br'));
+        }
+
         return true;
       },
 
