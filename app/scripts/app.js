@@ -16,7 +16,8 @@
 			'controller/ContentController',
 			'controller/DownloadController',
 			'controller/SelectionManagerController',
-			'controller/LoadingController'
+			'controller/LoadingController',
+			'controller/LayerController'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -326,6 +327,14 @@
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
                 this.colorRampView = new v.ColorRampView(config.colorRamp);
+
+                // Instance StoryBanner view
+                if(config.storyTemplate){
+                	this.storyBanner = new v.StoryBannerView({
+	                	template: t[config.storyTemplate]
+	                });
+                }
+
 			},
 
 			// The GUI is setup after the application is started. Therefore all modules
@@ -342,6 +351,11 @@
 				// Show Timsliderview after creating modules to
 				// set the selected time correctly to the products
 				this.bottomBar.show(this.timeSliderView);
+
+				// Show storybanner
+				/*if(this.storyBanner){
+					this.storyView.show(this.storyBanner);
+				}*/
 
 			    // Add a trigger for ajax calls in order to display loading state
                 // in mouse cursor to give feedback to the user the client is busy
