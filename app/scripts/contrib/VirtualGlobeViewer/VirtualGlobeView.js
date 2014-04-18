@@ -3,12 +3,12 @@ define([
     'app',
     'communicator',
     'globals',
-    './GlobeRenderer/Globe'
-], function(BaseView, App, Communicator, globals, Globe) {
+    './VirtualGlobeViewer/app'
+], function(BaseView, App, Communicator, globals, VGV) {
 
     'use strict';
 
-    var GlobeView = BaseView.extend({
+    var VGVView = BaseView.extend({
 
         tagName: 'canvas',
 
@@ -34,7 +34,7 @@ define([
 
         didInsertElement: function() {
             if (!this.getViewer()) {
-                this.setViewer(this._createGlobe());
+                this.setViewer(this._createVGV());
                 this.getViewer().setToI(this.toi());
                 this._setLayersFromAppContext();
                 this.zoomTo(this._startPosition);
@@ -74,7 +74,7 @@ define([
             globals.baseLayers.each(function(model) {
                 if (model.get('visible')) {
                     this._addInitialLayer(model, true);
-                    console.log('[VirtualGlobeViewController::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
+                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
                 };
             }.bind(this));
 
@@ -82,14 +82,14 @@ define([
                 if (model.get('visible')) {
                     console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
                     this._addInitialLayer(model, false);
-                    console.log('[VirtualGlobeViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
+                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
                 }
             }.bind(this));
 
             globals.overlays.each(function(model) {
                 if (model.get('visible')) {
                     this._addInitialLayer(model, false);
-                    console.log('[VirtualGlobeViewController::setLayersFromAppContext] added overlays "' + model.get('name') + '"');
+                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added overlays "' + model.get('name') + '"');
                 }
             }.bind(this));
 
@@ -118,10 +118,10 @@ define([
 
             if (options.visible) {
                 this._addLayer(model, options.isBaseLayer);
-                console.log('[GlobeView::onLayerChange] selected ' + model.get('name'));
+                console.log('[VGVView::onLayerChange] selected ' + model.get('name'));
             } else {
                 this._removeLayer(model, options.isBaseLayer);
-                console.log('[GlobeView::onLayerChange] deselected ' + model.get('name'));
+                console.log('[VGVView::onLayerChange] deselected ' + model.get('name'));
             }
         },
 
@@ -227,15 +227,18 @@ define([
             this.getViewer().zoomTo(position);
         },
 
-        _createGlobe: function() {
-            var globe = new Globe({
-                canvas: this.el
+        _createVGV: function() {
+            var vgv = new VGV({
+                canvas: this.el,
+                w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
 
-            // Sets the initial colorramp defined in 'config.json':
-            globe.setColorRamp(Communicator.mediator.colorRamp);
+            // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 
-            return globe;
+            // Sets the initial colorramp defined in 'config.json':
+            vgv.setColorRamp(Communicator.mediator.colorRamp);
+
+            return vgv;
         },
 
         _colorRampChange: function(config) {
@@ -247,6 +250,6 @@ define([
         }
     });
 
-    return GlobeView;
+    return VGVView;
 
 }); // end module definition
