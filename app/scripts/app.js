@@ -353,9 +353,9 @@
 				this.bottomBar.show(this.timeSliderView);
 
 				// Show storybanner
-				if(this.storyBanner){
+				/*if(this.storyBanner){
 					this.storyView.show(this.storyBanner);
-				}
+				}*/
 
 			    // Add a trigger for ajax calls in order to display loading state
                 // in mouse cursor to give feedback to the user the client is busy

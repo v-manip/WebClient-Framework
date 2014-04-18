@@ -322,6 +322,12 @@
         "template" : "OptionsControl"
       },
       {
+        "name" : "Tutorial",
+        "icon" : "fa-book",
+        "eventToRaise" : "ui:open:storybanner",
+        "template" : "UseCaseTestTemplate"
+      },
+      {
         "name" : "About",
         "icon" : "fa-info-circle",
         "eventToRaise" : "dialog:open:about",

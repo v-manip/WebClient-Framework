@@ -29,6 +29,11 @@
 
       onShow: function(view){
 
+        $("#storyView").css({
+          display: "block",
+          visibility: "visible"
+        });
+
         // Bind scroll event of parent element
         $("#story").bind("scroll", this.onScroll.bind(this));
 
@@ -175,6 +180,10 @@
       },
 
       onClose: function(){
+        $("#storyView").css({
+          display: "none",
+          visibility: "hidden"
+        });
         this.close();
       }
 
