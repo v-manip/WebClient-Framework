@@ -11,11 +11,11 @@ define([
 
     'use strict';
 
-    function Globe(options) {
+    function VGV(options) {
         this.canvas = $(options.canvas);
 
         if (!this.canvas) {
-            alert('[Globe::constructor] Please define a canvas element!. Aborting Globe construction...')
+            alert('[VGV::constructor] Please define a canvas element!. Aborting VGV construction...')
             return;
         }
 
@@ -84,7 +84,7 @@ define([
         return coordinates;
     };
 
-    Globe.prototype.addAreaOfInterest = function(geojson) {
+    VGV.prototype.addAreaOfInterest = function(geojson) {
         if (!this.aoiLayer) {
             this.aoiLayer = new GlobWeb.VectorLayer({
                 style: style,
@@ -118,7 +118,7 @@ define([
         }
     };
 
-    Globe.prototype.createCommonLayerOptionsFromView = function(view) {
+    VGV.prototype.createCommonLayerOptionsFromView = function(view) {
         var opts = {};
 
         opts.baseUrl = view.urls[0];
@@ -143,7 +143,7 @@ define([
         return opts;
     };
 
-    Globe.prototype.setColorRamp = function(config) {
+    VGV.prototype.setColorRamp = function(config) {
         this.colorRamp = config;
 
         var sgRenderer = this.globe.sceneGraphOverlayRenderer;
@@ -154,7 +154,7 @@ define([
         this.requestFrame();
     };
 
-    Globe.prototype.getSupportedViews = function(model) {
+    VGV.prototype.getSupportedViews = function(model) {
         var supported_views = [];
 
         var views = model.get('views');
@@ -215,7 +215,7 @@ define([
         return supported_views;
     }
 
-    Globe.prototype.addLayer = function(model, isBaseLayer) {
+    VGV.prototype.addLayer = function(model, isBaseLayer) {
         var layer = undefined;
         var isElevationLayer = false;
 
@@ -249,7 +249,7 @@ define([
                     });
 
                     layer = new W3DSLayer(o);
-                    // console.log('[Globe::addLayer] added W3DS layer. ', layer);
+                    // console.log('[VGV::addLayer] added W3DS layer. ', layer);
                 } else if (view.protocol === 'WIREFRAME') {
                     layer = new TileWireframeLayer({
                         outline: true
@@ -262,11 +262,11 @@ define([
                     });
                     this.globe.setBaseElevation(layer);
                 } else {
-                    console.log('[Globe::addLayer] protocol "' + view.protocol + '" is not supported');
+                    console.log('[VGV::addLayer] protocol "' + view.protocol + '" is not supported');
                 }
             } else {
                 layer = layerDesc.layer;
-                // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
+                // console.log('[VGV.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
             }
 
             if (isBaseLayer) {
@@ -343,10 +343,10 @@ define([
         //     }
         // }
 
-        // console.log('[Globe.addLayer] added layer "' + model.get('name') + '" to the cache.');
+        // console.log('[VGV.addLayer] added layer "' + model.get('name') + '" to the cache.');
         // } else {
         //     layer = layerDesc.layer;
-        //     // console.log('[Globe.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
+        //     // console.log('[VGV.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
         // }
 
         // if (isBaseLayer) {
@@ -363,7 +363,7 @@ define([
         // }
     };
 
-    Globe.prototype.sortOverlayLayers = function() {
+    VGV.prototype.sortOverlayLayers = function() {
         // Copy the current overlay layers into an array, sorted by the ordinal parameter:
         var sortedOverlayLayers = _.sortBy(this.overlayLayers, function(desc) {
             return desc.model.get('ordinal');
@@ -378,7 +378,7 @@ define([
         }.bind(this));
     };
 
-    Globe.prototype.removeAllOverlays = function() {
+    VGV.prototype.removeAllOverlays = function() {
         _.each(this.overlayLayers, function(desc, idx) {
             this.globe.removeLayer(desc.layer);
         }.bind(this));
@@ -386,7 +386,7 @@ define([
         this.overlayLayers.length = 0;
     };
 
-    Globe.prototype.removeLayer = function(model, isBaseLayer) {
+    VGV.prototype.removeLayer = function(model, isBaseLayer) {
         console.log('removeLayer: ' + model.get('name') + " (baseLayer: " + isBaseLayer + ")");
 
         var views = model.get('views');
@@ -435,12 +435,12 @@ define([
         }
     };
 
-    Globe.prototype.clearCache = function() {
+    VGV.prototype.clearCache = function() {
         this.layerCache = {};
     };
 
     // FIXXME: Implement GlobWeb::BaseLayer::setTime() for that to work
-    // Globe.prototype.setTimeSpanOnLayers = function(newTimeSpan) {
+    // VGV.prototype.setTimeSpanOnLayers = function(newTimeSpan) {
     //     var updated_layer_descs = [];
 
     //     _.each(this.layerCache, function(layerDesc, name) {
@@ -448,7 +448,7 @@ define([
     //             var isotimespan = getISODateTimeString(newTimeSpan.start) + '/' + getISODateTimeString(newTimeSpan.end);
     //             layerDesc.layer.setTime(isotimespan);
     //             updated_layer_descs.push(layerDesc);
-    //             //console.log('[Globe.setTimeSpanOnLayers] setting new timespan on "' + layerDesc.productName + '": ' + isotimespan);
+    //             //console.log('[VGV.setTimeSpanOnLayers] setting new timespan on "' + layerDesc.productName + '": ' + isotimespan);
     //         }
     //     });
 
@@ -463,7 +463,7 @@ define([
     //     }.bind(this));
     // };
 
-    Globe.prototype.updateViewport = function() {
+    VGV.prototype.updateViewport = function() {
         // FIXXME: the height/width has to be set explicitly after setting the
         // the new css class. Why?
         this.globe.renderContext.canvas.width = this.canvas.width();
@@ -474,11 +474,11 @@ define([
         this.globe.refresh();
     };
 
-    Globe.prototype.zoomTo = function(pos) {
+    VGV.prototype.zoomTo = function(pos) {
         this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
     };
 
-    Globe.prototype.setToI = function(time) {
+    VGV.prototype.setToI = function(time) {
         this.currentToI = time;
 
         _.each(this.overlayLayers, function(desc) {
@@ -490,7 +490,7 @@ define([
         }.bind(this));
     };
 
-    Globe.prototype.onOpacityChange = function(layer_name, opacity) {
+    VGV.prototype.onOpacityChange = function(layer_name, opacity) {
         var layerDesc = this.layerCache[layer_name];
         if (typeof layerDesc !== 'undefined') {
             layerDesc.layer.opacity(opacity);
@@ -498,7 +498,7 @@ define([
         this.requestFrame();
     };
 
-    Globe.prototype.dumpLayerConfig = function() {
+    VGV.prototype.dumpLayerConfig = function() {
         _.each(this.overlayLayers, function(desc) {
             console.log('-------------------------------------------------');
             console.log('Layer: ' + desc.model.get('name'));
@@ -507,11 +507,11 @@ define([
         }.bind(this));
     };
 
-    Globe.prototype.requestFrame = function() {
+    VGV.prototype.requestFrame = function() {
         this.globe.renderContext.requestFrame();
     };
 
-    return Globe;
+    return VGV;
 });
 
 
