@@ -290,77 +290,33 @@ define([
                 this.layerCache[cacheId] = layerDesc;
                 this.overlayLayers.push(layerDesc);
             }
-
-            // if (isBaseLayer) {
-            //     this.globe.setBaseImagery(layer);
-            // } else {
-            //     // FIXXME: when adding a layer the 'ordinal' has to be considered!
-            //     // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
-            //     // therefore we have to remove all layers and readd the in the correct order.
-            //     // This results in flickering when adding a layer and should be fixed within GlobWeb.
-            //     this.globe.addLayer(layer);
-
-            //     // Register the layer to the internal cache for removal or for changing the timespan later on:
-            //     layerDesc = {
-            //         model: model,
-            //         layer: layer,
-            //         isBaseLayer: isBaseLayer
-            //     };
-            //     this.layerCache[cacheId] = layerDesc;
-            //     this.overlayLayers.push(layerDesc);
-            //     layer.opacity(model.get('opacity'));
-            // }
-
         }.bind(this));
+    };
 
-        // // FIXXME: use this.getSupportedViews()!
-        // var views = model.get('views');
-        // var view = undefined;
+    VGV.prototype.removeLayer = function(model, isBaseLayer) {
+        console.log('removeLayer: ' + model.get('name') + " (baseLayer: " + isBaseLayer + ")");
 
-        // if (typeof(views) == 'undefined') {
-        //     view = model.get('view');
-        // } else {
+        var layer = undefined,
+            isElevationLayer = false,
+            views = this.getSupportedViews(model);
 
-        //     if (views.length == 1) {
-        //         view = views[0];
-        //     } else {
+        _.each(views, function(view) {
+            isElevationLayer = (view.protocol === 'DEM');
 
-        //         // Check if it is a 3d layer
-        //         var w3ds = _.find(views, function(view) {
-        //             return view.protocol == "W3DS";
-        //         });
-        //         var wms = _.find(views, function(view) {
-        //             return view.protocol == "WMS";
-        //         });
-        //         if (w3ds) {
-        //             view = w3ds;
-        //         } else if (wms) {
-        //             view = wms;
-        //         } else {
-        //             // Something was defined wrong in the config
-        //             view = null;
-        //         }
-        //     }
-        // }
-
-        // console.log('[VGV.addLayer] added layer "' + model.get('name') + '" to the cache.');
-        // } else {
-        //     layer = layerDesc.layer;
-        //     // console.log('[VGV.addLayer] retrieved layer "' + model.get('name') + '" from the cache.');
-        // }
-
-        // if (isBaseLayer) {
-        //     this.globe.setBaseImagery(layer);
-        // } else if (isElevationLayer) {
-        //     this.globe.setBaseElevation(layer);
-        // } else {
-        //     // FIXXME: when adding a layer the 'ordinal' has to be considered!
-        //     // Unfortunately GlobWeb does not seem to have a layer ordering mechanism,
-        //     // therefore we have to remove all layers and readd the in the correct order.
-        //     // This results in flickering when adding a layer and should be fixed within GlobWeb.
-        //     this.globe.addLayer(layer);
-        //     this.overlayLayers.push(layerDesc);
-        // }
+            if (isBaseLayer) {
+                this.globe.setBaseImagery(null);
+            } else if (isElevationLayer) {
+                this.globe.setBaseElevation(null);
+            } else {
+                var cacheId = model.get('name') + '-' + view.protocol;
+                var layerDesc = this.layerCache[cacheId];
+                if (typeof layerDesc !== 'undefined') {
+                    this.globe.removeLayer(layerDesc.layer);
+                    var idx = _.indexOf(this.overlayLayers, layerDesc);
+                    this.overlayLayers.splice(idx, 1);
+                }
+            }
+        }.bind(this));
     };
 
     VGV.prototype.sortOverlayLayers = function() {
@@ -384,55 +340,6 @@ define([
         }.bind(this));
 
         this.overlayLayers.length = 0;
-    };
-
-    VGV.prototype.removeLayer = function(model, isBaseLayer) {
-        console.log('removeLayer: ' + model.get('name') + " (baseLayer: " + isBaseLayer + ")");
-
-        var views = model.get('views');
-        var view = undefined;
-
-        // FIXXME: use this.getSupportedViews()!
-        if (typeof(views) == 'undefined') {
-            view = model.get('view');
-        } else {
-
-            if (views.length == 1) {
-                view = views[0];
-            } else {
-
-                // Check if it is a 3d layer
-                var w3ds = _.find(views, function(view) {
-                    return view.protocol == "W3DS";
-                });
-                var wms = _.find(views, function(view) {
-                    return view.protocol == "WMS";
-                });
-                if (w3ds) {
-                    view = w3ds;
-                } else if (wms) {
-                    view = wms;
-                } else {
-                    // Something was defined wrong in the config
-                    view = null;
-                }
-            }
-        }
-
-        var isElevationLayer = view.protocol === 'DEM';
-
-        if (isBaseLayer) {
-            this.globe.setBaseImagery(null);
-        } else if (isElevationLayer) {
-            this.globe.setBaseElevation(null);
-        } else {
-            var layerDesc = this.layerCache[model.get('name')];
-            if (typeof layerDesc !== 'undefined') {
-                this.globe.removeLayer(layerDesc.layer);
-                var idx = _.indexOf(this.overlayLayers, layerDesc);
-                this.overlayLayers.splice(idx, 1);
-            }
-        }
     };
 
     VGV.prototype.clearCache = function() {
