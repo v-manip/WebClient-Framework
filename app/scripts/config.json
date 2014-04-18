@@ -111,7 +111,7 @@
                     "http://demo.v-manip.eox.at/browse/ows"
             ],
             "style": "default",
-            "format": "image/png"
+            "format": "model/gltf"
           }, {
             "id": "vrvis_demo_outlines",
             "protocol": "WMS",
