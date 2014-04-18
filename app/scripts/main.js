@@ -66,6 +66,7 @@
 			// FIXXME: Communicator.mediator is the global context...
 			Communicator.mediator.backendConfig = values.backendConfig;
 			Communicator.mediator.colorRamp = values.colorRamp;
+			Communicator.mediator.config = values;
 
 			_.each(values.modules, function(module) {
 				modules.push(module);

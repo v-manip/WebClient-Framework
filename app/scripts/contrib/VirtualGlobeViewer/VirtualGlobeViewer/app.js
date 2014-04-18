@@ -39,6 +39,8 @@ define([
             inertia: true
         });
 
+        this.w3dsBaseUrl = options.w3dsBaseUrl;
+
         // // glTF loader test:
         // var sgRenderer;
         // var renderContext = this.globe.renderContext;
@@ -244,7 +246,8 @@ define([
                     // might not be the best one...
                     var o = _.extend(opts, {
                         renderOptions: {
-                            colorRamp: this.colorRamp
+                            colorRamp: this.colorRamp,
+                            w3dsBaseUrl: this.w3dsBaseUrl
                         }
                     });
 

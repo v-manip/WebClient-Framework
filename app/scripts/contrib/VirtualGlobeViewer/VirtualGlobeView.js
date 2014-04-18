@@ -229,8 +229,11 @@ define([
 
         _createVGV: function() {
             var vgv = new VGV({
-                canvas: this.el
+                canvas: this.el,
+                w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
+
+            // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 
             // Sets the initial colorramp defined in 'config.json':
             vgv.setColorRamp(Communicator.mediator.colorRamp);

@@ -107,13 +107,12 @@
             "id": "Cloudsat",
             "protocol": "W3DS",
             "urls": [
-                    "http://localhost:9000/ows?",
-                    "http://demo.v-manip.eox.at/browse/ows"
+                    "http://localhost:9000/ows"
             ],
             "style": "default",
             "format": "model/gltf"
           }, {
-            "id": "vrvis_demo_outlines",
+            "id": "Cloudsat_outlines",
             "protocol": "WMS",
             "urls": [
                 "http://demo.v-manip.eox.at/browse/ows"
@@ -492,7 +491,8 @@
       "protocol": "W3DS",
       "url": "http://localhost:9000/ows?",
       "version": "1.0.0"
-    }
+    },
+    "W3DSDataUrl": "http://localhost:9000/gltf/"
   },
 
   "colorRamp": {
