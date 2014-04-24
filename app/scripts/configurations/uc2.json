@@ -99,37 +99,6 @@
     ],
     "products": [
       {
-        "name": "Cloudsat",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"purple",
-        "views": [
-          {
-            "id": "Cloudsat",
-            "protocol": "W3DS",
-            "urls": [
-                    "http://localhost:9000/ows"
-            ],
-            "style": "default",
-            "format": "model/gltf"
-          }, {
-            "id": "Cloudsat_outlines",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "vrvis_demo",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
-        }
-      },
-      {
         "name": "SPOT 4 View",
         "visible": false,
         "timeSlider": true,
@@ -174,62 +143,6 @@
           "protocol": "EOWCS",
           "url": "http://neso.cryoland.enveo.at/cryoland/ows"
         }
-      },
-      {
-        "name": "PanEuropean Snow Water Equivalent",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"red",
-        "views": [
-          {
-            "id": "daily_SWE_PanEuropean_Microwave",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_SWE_PanEuropean_Microwave",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      },
-      {
-          "name": "Digital Elevation Model",
-          "visible": true,
-          "timeSlider": false,
-          "color": "lightgray",
-          "views": [{
-              "id": "Wireframe",
-              "protocol": "DEM",
-              "urls": [
-                  "http://data.eox.at/elevation?"
-              ],
-              "style": "default",
-              "format": "image/png"
-            }
-          ],
-          "download": {}
-      }, {
-          "name": "Wireframe",
-          "visible": true,
-          "timeSlider": false,
-          "color": "lightgray",
-          "views": [{
-              "id": "Wireframe",
-              "protocol": "WIREFRAME",
-              "urls": [
-                  "http://localhost:9000/ows?"
-              ],
-              "style": "default",
-              "format": "image/png"
-            }
-          ],
-          "download": {}
       }
     ],
     "overlays": [
@@ -439,21 +352,6 @@
       "id":"pointSelection",
       "description": "Allows selection of Points in Map",
       "icon":"icon-large icon-screenshot"
-    },
-    {
-      "id":"lineSelection",
-      "description": "Allows selection of Lines in Map",
-      "icon":"icon-large icon-vector-path-line"
-    },
-    {
-      "id":"polygonSelection",
-      "description": "Allows selection of Polygons in Map",
-      "icon":"icon-large icon-vector-path-polygon"
-    },
-    {
-      "id":"bboxSelection",
-      "description": "Allows drawing a bounding box selection in Map",
-      "icon":"icon-large icon-vector-path-square"
     }
   ],
 

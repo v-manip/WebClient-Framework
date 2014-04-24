@@ -380,7 +380,8 @@ module.exports = function (grunt) {
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
                         'scripts/vendor/rectangularboxviewer/*.js',
-                        'data/**'
+                        'data/**',
+                        'configurations/**'
                     ]
                 },{
                     expand: true,

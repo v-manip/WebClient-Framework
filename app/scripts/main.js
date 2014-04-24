@@ -27,7 +27,6 @@
 		'regionManager',
 		'jquery',
 		'jqueryui',
-		"text!config.json",
 		"util",
 		"libcoverage",
 		'core/SplitView/SplitViewModule'
@@ -51,7 +50,9 @@
 		// 	console.log("link: " + nodes.item(i).href);
 		// }
 
-		$.get("scripts/config.json", function(values) {
+		var configuration_file = $("#configuration").data("config");
+
+		$.get(configuration_file, function(values) {
 			
 			// Configure Debug options
 			setuplogging(values.debug);
