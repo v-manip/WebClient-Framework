@@ -29,7 +29,7 @@ define([
 
             // FIXXME: read from config!
             var backend = this.legacyContext().backendConfig['MeshFactory'];
-            this.baseURL = backend.url + 'service=W3DS&request=GetScene&crs=EPSG:4326&format=model/nii-gz&version=' + backend.version;
+            this.baseURL = backend.url + 'service=W3DS&request=GetScene&crs=EPSG:4326&version=' + backend.version;
         },
 
         didInsertElement: function() {
@@ -110,6 +110,7 @@ define([
             url += '&boundingBox=' + aoi;
             url += '&time=' + toi;
             url += '&layer=' + layer;
+            url += '&format=model/nii-gz';
 
             if (!this.getViewer()) {
                 this.setViewer(this._createViewer());
@@ -118,7 +119,7 @@ define([
             this.getViewer().addVolume({
                 // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
                 // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                filename: url + '&dummy.nii.gz', //'http://x.babymri.org/?vol.nrrd',
+                filename: url + '&dummy.nii.gz',
                 label: layer,
                 volumeRendering: true,
                 upperThreshold: 219,
@@ -126,6 +127,27 @@ define([
                 minColor: [0.4, 0.4, 0.4],
                 maxColor: [0, 0, 0],
                 reslicing: false
+            });
+
+            layer = "Cloudsat";
+            var model_url = this.baseURL;
+            model_url += '&boundingBox=' + aoi;
+            model_url += '&time=' + toi;
+            model_url += '&layer=' + layer;
+            model_url += '&format=model/obj';
+
+            var tex_url = this.baseURL;
+            tex_url += '&boundingBox=' + aoi;
+            tex_url += '&time=' + toi;
+            tex_url += '&layer=' + layer;
+            tex_url  += '&format=image/png';
+
+            this.getViewer().addMesh({
+                // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+                // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+                model_filename: model_url + '&dummy.obj',
+                texture_filename: tex_url + '&dummy.png',
+                label: layer
             });
         }
     });
