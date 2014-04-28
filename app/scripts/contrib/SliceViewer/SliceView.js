@@ -13,8 +13,8 @@ define([
         cacheViewerInstance: true, // this is the default
 
         // template: {
-        // 	type: 'handlebars',
-        // 	template: VirtualSliceViewTmpl
+        //  type: 'handlebars',
+        //  template: VirtualSliceViewTmpl
         // },
 
         initialize: function(opts) {
@@ -98,7 +98,8 @@ define([
             return new XTKViewer({
                 elem: this.el,
                 backgroundColor: [0.005, 0.005, 0.005],
-                cameraPosition: [120, 80, 160]
+                // cameraPosition: [120, 80, 160]
+                cameraPosition: [2, 10, 10]
             });
         },
 
@@ -116,18 +117,24 @@ define([
                 this.setViewer(this._createViewer());
             }
 
-            this.getViewer().addVolume({
-                // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-                // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                filename: url + '&dummy.nii.gz',
-                label: layer,
-                volumeRendering: true,
-                upperThreshold: 219,
-                opacity: 0.3,
-                minColor: [0.4, 0.4, 0.4],
-                maxColor: [0, 0, 0],
-                reslicing: false
-            });
+            // this.getViewer().addVolume({
+            //     // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+            //     // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+            //     filename: url + '&dummy.nii.gz',
+            //     label: layer,
+            //     volumeRendering: true,
+            //     upperThreshold: 219,
+            //     opacity: 0.3,
+            //     minColor: [0.4, 0.4, 0.4],
+            //     maxColor: [0, 0, 0],
+            //     reslicing: false
+            // });
+
+            var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3-scaled';
+            // var model_base = 'data/curtain-obj/curtain';
+            // var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3';
+            // var model_base = 'data/curtain-obj/box-tex';
+            // var model_base = 'data/curtain-obj/bmw';
 
             layer = "Cloudsat";
             var model_url = this.baseURL;
@@ -140,15 +147,55 @@ define([
             tex_url += '&boundingBox=' + aoi;
             tex_url += '&time=' + toi;
             tex_url += '&layer=' + layer;
-            tex_url  += '&format=image/png';
+            tex_url += '&format=image/png';
 
-            this.getViewer().addMesh({
-                // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-                // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                model_filename: model_url + '&dummy.obj',
-                texture_filename: tex_url + '&dummy.png',
-                label: layer
-            });
+            var request = new XMLHttpRequest(),
+                request2 = new XMLHttpRequest(),
+                that = this;
+
+            request.onload = function(evt) {
+                console.log('data: ' + this.response);
+                var objdata = this.response;
+
+
+                request2.onload = function(evt) {
+                    console.log('data: ' + this.response);
+                    var mtldata = this.response;
+
+                    that.getViewer().addMesh({
+                        // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+                        // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+                        // model_filename: model_url + '&dummy.obj',
+                        model_filename: 'dummy.obj',
+                        filedata: objdata,
+                        mtldata: mtldata
+                    });
+                }
+
+                // model_url = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3.obj';
+                model_url = model_base + '.mtl';
+                // model_url = 'data/curtain-obj/test-groups1.obj';
+                // model_url = 'data/curtain-obj/box.mtl';
+                // configure the URL
+                request2.open('GET', model_url, true);
+                request2.responseType = 'arraybuffer';
+                // request.responseType = 'text/plain';
+
+                // .. and GO!
+                request2.send(null);
+            }
+
+            model_url = model_base + '.obj';
+            // model_url = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3.mtl';
+            // model_url = 'data/curtain-obj/test-groups1.obj';
+            // model_url = 'data/curtain-obj/box.obj';
+            // configure the URL
+            request.open('GET', model_url, true);
+            request.responseType = 'arraybuffer';
+            // request.responseType = 'text/plain';
+
+            // .. and GO!
+            request.send(null);
         }
     });
 
