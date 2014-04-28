@@ -107,34 +107,40 @@ define([
             this.enableEmptyView(false);
             this.onShow();
 
-            var url = this.baseURL;
-            url += '&boundingBox=' + aoi;
-            url += '&time=' + toi;
-            url += '&layer=' + layer;
-            url += '&format=model/nii-gz';
+            var volume_url = this.baseURL;
+            volume_url += '&boundingBox=' + aoi;
+            volume_url += '&time=' + toi;
+            volume_url += '&layer=' + layer;
+            volume_url += '&format=model/nii-gz';
 
             if (!this.getViewer()) {
                 this.setViewer(this._createViewer());
             }
 
-            // this.getViewer().addVolume({
-            //     // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-            //     // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-            //     filename: url + '&dummy.nii.gz',
-            //     label: layer,
-            //     volumeRendering: true,
-            //     upperThreshold: 219,
-            //     opacity: 0.3,
-            //     minColor: [0.4, 0.4, 0.4],
-            //     maxColor: [0, 0, 0],
-            //     reslicing: false
-            // });
+            //
+            // Add a volume to the viewer:
+            //
+
+            this.getViewer().addVolume({
+                // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+                // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+                filename: volume_url + '&dummy.nii',
+                label: layer,
+                volumeRendering: true,
+                upperThreshold: 219,
+                opacity: 0.3,
+                minColor: [0.4, 0.4, 0.4],
+                maxColor: [0, 0, 0],
+                reslicing: false
+            });
+
+            //
+            // Add a an eventual mesh to the viewer:
+            //
 
             var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3-scaled';
-            // var model_base = 'data/curtain-obj/curtain';
             // var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3';
             // var model_base = 'data/curtain-obj/box-tex';
-            // var model_base = 'data/curtain-obj/bmw';
 
             layer = "Cloudsat";
             var model_url = this.baseURL;
@@ -163,7 +169,7 @@ define([
                     var mtldata = this.response;
 
                     that.getViewer().addMesh({
-                        // FIXXME: creative hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+                        // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
                         // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
                         // model_filename: model_url + '&dummy.obj',
                         model_filename: 'dummy.obj',
@@ -172,29 +178,17 @@ define([
                     });
                 }
 
-                // model_url = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3.obj';
                 model_url = model_base + '.mtl';
-                // model_url = 'data/curtain-obj/test-groups1.obj';
-                // model_url = 'data/curtain-obj/box.mtl';
-                // configure the URL
                 request2.open('GET', model_url, true);
                 request2.responseType = 'arraybuffer';
                 // request.responseType = 'text/plain';
-
-                // .. and GO!
                 request2.send(null);
             }
 
             model_url = model_base + '.obj';
-            // model_url = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3.mtl';
-            // model_url = 'data/curtain-obj/test-groups1.obj';
-            // model_url = 'data/curtain-obj/box.obj';
-            // configure the URL
             request.open('GET', model_url, true);
             request.responseType = 'arraybuffer';
             // request.responseType = 'text/plain';
-
-            // .. and GO!
             request.send(null);
         }
     });
