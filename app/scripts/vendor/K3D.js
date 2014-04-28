@@ -215,7 +215,7 @@ K3D.parse.fromOBJ = function(buff) {
 
     // console.log('line: ' + line);
 
-    if (cds[0] == "g") {
+    if (cds[0] == "g" || cds[0] == "o") {
       cg.to = res.i_verts.length;
       if (res.groups[cds[1]] == null) res.groups[cds[1]] = {
         from: res.i_verts.length,
