@@ -381,7 +381,8 @@ module.exports = function (grunt) {
                         'bower_components/virtualglobeviewer/src/**',
                         'scripts/vendor/rectangularboxviewer/*.js',
                         'data/**',
-                        'configurations/**'
+                        'scripts/configurations/**',
+                        'scripts/core/ColorRamp/*.hbs'
                     ]
                 },{
                     expand: true,
