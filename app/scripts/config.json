@@ -130,6 +130,37 @@
         }
       },
       {
+        "name": "Cris",
+        "visible": false,
+        "timeSlider": true,
+        "timeSliderProtocol": "WPS",
+        "color":"blue",
+        "views": [
+          {
+            "id": "Cris",
+            "protocol": "W3DS",
+            "urls": [
+                    "http://localhost:3080/browse/ows"
+            ],
+            "style": "default",
+            "format": "model/gltf"
+          }, {
+            "id": "Cris_outlines",
+            "protocol": "WMS",
+            "urls": [
+                "http://localhost:3080/browse/ows"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
+        "download": {
+          "id": "Cris",
+          "protocol": "EOWCS",
+          "url": "http://localhost:3080/browse/ows"
+        }
+      },
+      {
         "name": "SPOT 4 View",
         "visible": false,
         "timeSlider": true,
@@ -507,7 +538,7 @@
   "backendConfig": {
     "MeshFactory": {
       "protocol": "W3DS",
-      "url": "http://localhost:9000/ows?",
+      "url": "http://localhost:3080/browse/ows?",
       "version": "1.0.0"
     },
     "W3DSDataUrl": "http://localhost:9000/gltf/"

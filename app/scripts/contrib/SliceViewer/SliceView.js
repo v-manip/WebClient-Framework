@@ -25,7 +25,7 @@ define([
             this.currentToI = null;
             // Set a default AoI and Layer  as the timeline can be changed even if no AoI and Layer is selected in the WebClient:
             this.currentAoI = [17.6726953125, 56.8705859375, 19.3865625, 58.12302734375];
-            this.currentLayer = 'h2o_vol_demo'; // FIXXME!
+            this.currentLayer = 'Cris'; // FIXXME!
 
             // FIXXME: read from config!
             var backend = this.legacyContext().backendConfig['MeshFactory'];
@@ -78,7 +78,7 @@ define([
 
                 // 3. store the current layer
                 // FIXXME: integrate with context!
-                this.currentLayer = 'h2o_vol_demo';
+                this.currentLayer = 'Cris';
 
                 // 4. add the data to the viewer
                 this._addVolume(this.currentToI, this.currentAoI, this.currentLayer);
