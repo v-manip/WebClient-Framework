@@ -17,6 +17,7 @@
             	this.listenTo(Communicator.mediator, "ui:open:layercontrol", this.onLayerControlOpen);
             	this.listenTo(Communicator.mediator, "ui:open:toolselection", this.onToolSelectionOpen);
 				this.listenTo(Communicator.mediator, "ui:open:options", this.onOptionsOpen);
+				this.listenTo(Communicator.mediator, "ui:open:storybanner", this.StoryBannerOpen);
 			},
 
 			onDialogOpenAbout: function(event){
@@ -51,6 +52,17 @@
 					App.optionsLayout.colorramp.show(App.colorRampView);
 				} else {
 					App.optionsLayout.close();
+				}
+			},
+
+			StoryBannerOpen: function(event){
+				if(App.storyBanner){
+					//$( "body" ).append( "<div id="storyView"></div>" );
+					if (_.isUndefined(App.storyView.isClosed) || App.storyView.isClosed) {
+						App.storyView.show(App.storyBanner);
+					} else {
+						App.storyView.close();
+					}
 				}
 			}
 		});

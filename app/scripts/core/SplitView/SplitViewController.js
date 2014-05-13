@@ -36,13 +36,11 @@ define([
 			this.listenTo(Communicator.mediator, "layout:switch:splitview", this.setSplitscreen);
 			this.listenTo(Communicator.mediator, "layout:switch:quadview", this.setQuadscreen);
 			this.listenTo(Communicator.mediator, "window:view:change", this.onChangeView);
+			this.listenTo(Communicator.mediator, "region:show:view", this.onShowView);
 		},
 
-		showViewInRegion: function(viewid, regionid) {
-			/*this.ulview.showView(App.module('VirtualGlobeViewer').createController().getView());
-
-			this.view.showViewInRegion('ul','left');
-			this.view.setFullscreen('left');*/
+		onShowView: function(regionid, viewid) {
+			this.windowViews[regionid].showView(App.module(viewid).createController().getView());
 		},
 
 		setSinglescreen: function() {

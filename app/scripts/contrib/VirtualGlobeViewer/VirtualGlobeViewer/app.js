@@ -36,7 +36,7 @@ define([
         this.overlayLayers = [];
 
         this.navigation = new GlobWeb.Navigation(this.globe, {
-            inertia: true
+            inertia: false
         });
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;

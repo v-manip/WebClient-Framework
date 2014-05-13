@@ -10,6 +10,8 @@
     "contrib/AnalyticsViewer/AnalyticsViewModule"
   ],
 
+  "storyTemplate":"UseCaseTestTemplate",
+
   "mapConfig": {
     "model": "models/MapModel",
     "visualizationLibs": [
@@ -125,6 +127,37 @@
           "id": "vrvis_demo",
           "protocol": "EOWCS",
           "url": "http://demo.v-manip.eox.at/browse/ows"
+        }
+      },
+      {
+        "name": "Cris",
+        "visible": false,
+        "timeSlider": true,
+        "timeSliderProtocol": "WPS",
+        "color":"blue",
+        "views": [
+          {
+            "id": "Cris",
+            "protocol": "W3DS",
+            "urls": [
+                    "http://localhost:9000/browse/ows"
+            ],
+            "style": "default",
+            "format": "model/gltf"
+          }, {
+            "id": "Cris_outlines",
+            "protocol": "WMS",
+            "urls": [
+                "http://localhost:9000/browse/ows"
+            ],
+            "style": "default",
+            "format": "image/png"
+          }
+        ],
+        "download": {
+          "id": "Cris",
+          "protocol": "EOWCS",
+          "url": "http://localhost:9000/browse/ows"
         }
       },
       {
@@ -289,6 +322,10 @@
     {
       "name": "viewContent",
       "class": ""
+    },
+    {
+      "name": "storyView",
+      "class": ""
     }
   ],
 
@@ -315,6 +352,12 @@
         "template" : "OptionsControl"
       },
       {
+        "name" : "Tutorial",
+        "icon" : "fa-book",
+        "eventToRaise" : "ui:open:storybanner",
+        "template" : "UseCaseTestTemplate"
+      },
+      {
         "name" : "About",
         "icon" : "fa-info-circle",
         "eventToRaise" : "dialog:open:about",
@@ -336,8 +379,8 @@
 
   "timeSlider": {
     "domain": {
-      "start": "2013-05-17T10:15:00Z",
-      "end": "2013-05-17T11:45:00Z"
+      "start": "2012-05-17T10:15:00Z",
+      "end": "2013-09-17T11:45:00Z"
     },
     "brush": {
        "start": "2013-05-17T11:00:00Z",
@@ -357,7 +400,8 @@
     "views/ToolSelectionView",
     "core/ColorRamp/ColorRampView",
     "views/ToolItemView",
-    "views/DownloadView"
+    "views/DownloadView",
+    "views/StoryBannerView"
   ],
 
   "models":[
@@ -413,6 +457,11 @@
     {
       "id":"CheckBoxOverlayLayer",
       "template":"hbs!tmpl/CheckBoxOverlayLayer"
+    }
+    ,
+    {
+      "id":"UseCaseTestTemplate",
+      "template":"hbs!tmpl/UseCaseTestTemplate"
     }
   ],
 
