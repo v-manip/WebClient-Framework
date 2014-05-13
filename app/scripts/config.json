@@ -140,7 +140,7 @@
             "id": "Cris",
             "protocol": "W3DS",
             "urls": [
-                    "http://localhost:3080/browse/ows"
+                    "http://localhost:9000/browse/ows"
             ],
             "style": "default",
             "format": "model/gltf"
@@ -148,7 +148,7 @@
             "id": "Cris_outlines",
             "protocol": "WMS",
             "urls": [
-                "http://localhost:3080/browse/ows"
+                "http://localhost:9000/browse/ows"
             ],
             "style": "default",
             "format": "image/png"
@@ -157,7 +157,7 @@
         "download": {
           "id": "Cris",
           "protocol": "EOWCS",
-          "url": "http://localhost:3080/browse/ows"
+          "url": "http://localhost:9000/browse/ows"
         }
       },
       {
@@ -538,7 +538,7 @@
   "backendConfig": {
     "MeshFactory": {
       "protocol": "W3DS",
-      "url": "http://localhost:3080/browse/ows?",
+      "url": "http://localhost:9000/ows?",
       "version": "1.0.0"
     },
     "W3DSDataUrl": "http://localhost:9000/gltf/"
