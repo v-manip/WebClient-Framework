@@ -1,0 +1,84 @@
+--sample_boundary
+Content-Type: text/css; charset=utf-8
+Content-Location: http://localhost:2080/file.css
+
+body
+{
+ background-color: yellow;
+}
+--sample_boundary
+Content-Type: model/obj; charset=utf-8
+Content-Location: http://localhost:2080/file.js
+
+alert("Hello from a javascript!!!");
+
+--sample_boundary
+Content-Type: application/x-javascript; charset=utf-8
+Content-Location: http://localhost:2080/file.js
+
+alert("Hello from a javascript!!!");
+
+--sample_boundary
+Content-Type: text/plain; charset=utf-8
+Content-Base: http://localhost:2080/
+
+<html>
+<head>
+    <link rel="stylesheet" href="http://localhost:2080/file.css">
+</head>
+<body>
+ Hello from a html
+    <script type="text/javascript" src="http://localhost:2080/file.js"></script>
+</body>
+</html>
+--sample_boundary--
+Content-Type: image/png; charset=utf-8
+Content-Base: http://localhost:2080/
+
+<html>
+<head>
+    <link rel="stylesheet" href="http://localhost:2080/file.css">
+</head>
+<body>
+ Hello from a html
+    <script type="text/javascript" src="http://localhost:2080/file.js"></script>
+</body>
+</html>
+--sample_boundary--
+Content-Type: image/png; charset=utf-8
+Content-Base: http://localhost:2080/
+
+<html>
+<head>
+    <link rel="stylesheet" href="http://localhost:2080/file.css">
+</head>
+<body>
+ Hello from a html
+    <script type="text/javascript" src="http://localhost:2080/file.js"></script>
+</body>
+</html>
+--sample_boundary--
+Content-Type: model/nii-gz; charset=utf-8
+Content-Base: http://localhost:2080/
+Content-ID: volume0.nii.gz
+
+%VOLUMEDATA0%
+--sample_boundary--
+Content-Type: model/nii-gz; charset=utf-8
+Content-Base: http://localhost:2080/
+Content-ID: volume1.nii.gz
+
+%VOLUMEDATA1%
+--sample_boundary--
+Content-Type: model/nii-gz; charset=utf-8
+Content-Base: http://localhost:2080/
+Content-ID: volume2.nii.gz
+
+%VOLUMEDATA2%
+--sample_boundary--
+Content-Type: model/nii-gz; charset=utf-8
+Content-Base: http://localhost:2080/
+Content-ID: volume3.nii.gz
+
+%VOLUMEDATA3%
+--sample_boundary--

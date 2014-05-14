@@ -7,31 +7,55 @@ function ab2str(buf) {
 
 K3D.load = function(path, resp, responseType) {
     var request = new XMLHttpRequest();
+
     request.open("GET", path, true);
     request.responseType = responseType || "arraybuffer";
+
     request.onload = function(e) {
-        var contenttype = e.target.getResponseHeader('Content-Type');
+        var contenttype = e.target.getResponseHeader('Content-Type'),
+            res = null;
 
-        //// Check if the response is a 'Multipart' response. If not,
-        // simply return the response itself:
-        // if (!contenttype.indexOf('Multipart') !== 0) {
-        //   resp(e.target.response, false);
-        // }
-
-        res = K3D.parseMultiPartResponse(e.target)
-        resp(res, true);
+        // Check if the response is a 'Multipart' response. If not,
+        // simply return the response wrapped into a map where the key
+        // is the mimetype ...
+        if (!contenttype.indexOf('Multipart') !== 0) {
+            res = K3D.parseSinglePartResponse(e.target, contenttype);
+            resp(res, false);
+        } else { // ... else return multipart equivalent:
+            res = K3D.parseMultiPartResponse(e.target, contenttype)
+            resp(res, true);
+        }
     };
     request.send();
+}
+
+K3D.parseSinglePartResponse = function(target, contenttype) {
+    var type = contenttype;
+    if (!type) {
+        type = 'text/plain';
+    }
+
+    var res = {};
+    res[type] = [target.response];
+    return res;
 }
 
 K3D.parseMultiPartResponse = function(target) {
     // Determine boundary string:
     // var boundary = contenttype.split('; ')[1];
     var boundary = 'sample_boundary';
-    console.log('Boundary: ' + boundary);
+    // console.log('Boundary: ' + boundary);
+
+    // FIXXME: detect arraybuffer in a robust way!
+    var multipartdata = null;
+    if (typeof target.response !== 'string') {
+        multipartdata = ab2str(target.response);
+    } else {
+        multipartdata = target.response;
+    }
 
     // Separate the different parts into an array:
-    var multiparts = target.response.split('--' + boundary);
+    var multiparts = multipartdata.split('--' + boundary);
     // Cleanup: remove first and last entry:
     multiparts.splice(0, 1);
     multiparts.splice(multiparts.length - 1, 1);

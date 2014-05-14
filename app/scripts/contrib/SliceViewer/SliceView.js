@@ -121,46 +121,60 @@ define([
             // Add a volume to the viewer:
             //
 
-            // this.getViewer().addVolume({
-            //     // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-            //     // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-            //     filename: volume_url + '&dummy.nii',
-            //     label: layer,
-            //     volumeRendering: true,
-            //     upperThreshold: 219,
-            //     opacity: 0.3,
-            //     minColor: [0.4, 0.4, 0.4],
-            //     maxColor: [0, 0, 0],
-            //     reslicing: false
-            // });
+            // TESTDATA:
+            // volume_url = './data/mptest.response';
 
-            //
-            // Add a an eventual mesh to the viewer:
-            //
+            K3D.load(volume_url, function(data, isMultiPart) {
+                this.getViewer().addVolume({
+                    // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+                    // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+                    filename: volume_url + '&dummy.nii',
+                    data: data,
+                    isMultiPart: isMultiPart,
+                    label: layer,
+                    volumeRendering: true,
+                    upperThreshold: 219,
+                    opacity: 0.3,
+                    minColor: [0.4, 0.4, 0.4],
+                    maxColor: [0, 0, 0],
+                    reslicing: false
+                });
+            }.bind(this));
+            // }.bind(this), 'text/plain');
 
-            var model_url = this.baseURL;
-            model_url += '&boundingBox=' + aoi;
-            model_url += '&time=' + toi;
-            model_url += '&layer=' + layer;
-            model_url += '&format=model/obj';
+            // DISABLED for testing now:
+            if (false) {
+                //
+                // Add a an eventual mesh to the viewer:
+                //
 
-            model_url = './data/mptest.response';
-            console.log('requesting: ' + model_url);
-            K3D.load(model_url, function(data, isMultiPart) {
-                if (!isMultiPart) {
-                    // For now we only support multipart responses
-                    return;
-                } else {
-                    // FIXXME: no error handling at the moment, the data has
-                    // to be in the expected format, otherwise the code will
-                    // fail!
-                    this.getViewer().addMesh({
-                        models: data['model/obj'],
-                        mtls: data['text/plain'],
-                        textures: data['image/png']
-                    });
-                }
-            }.bind(this), 'text/plain');
+                var model_url = this.baseURL;
+                model_url += '&boundingBox=' + aoi;
+                model_url += '&time=' + toi;
+                model_url += '&layer=' + layer;
+                model_url += '&format=model/obj';
+
+                // TESTDATA:
+                model_url = './data/mptest.response';
+
+                console.log('requesting: ' + model_url);
+                K3D.load(model_url, function(data, isMultiPart) {
+                    if (!isMultiPart) {
+                        // For now we only support multipart responses
+                        return;
+                    } else {
+                        // FIXXME: no error handling at the moment, the data has
+                        // to be in the expected format, otherwise the code will
+                        // fail!
+                        this.getViewer().addMesh({
+                            models: data['model/obj'],
+                            mtls: data['text/plain'],
+                            textures: data['image/png']
+                        });
+                    }
+                }.bind(this));
+                // }.bind(this), 'text/plain');
+            }
 
             // STATIC TEST VERSION:
 
