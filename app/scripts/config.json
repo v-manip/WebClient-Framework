@@ -541,7 +541,7 @@
       "url": "http://demo.v-manip.eox.at/browse/ows?",
       "version": "1.0.0"
     },
-    "W3DSDataUrl": "http://localhost:9000/gltf/"
+    "W3DSDataUrl": "http://demo.v-manip.eox.at/gltf/"
   },
 
   "colorRamp": {

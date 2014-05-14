@@ -164,8 +164,12 @@ define([
             var volume = new X.volume();
             volume.file = opts.filename;
             // volume.filedata = opts.data; 
-            // volume.filedata = str2ab(volume_item[volume_info[0]]);
-            volume.filedata = volume_item[volume_info[0]];
+            var data = volume_item[volume_info[0]];
+            if (typeof data === 'string') {
+                volume.filedata = str2ab(volume_item[volume_info[0]]);
+            } else {
+                volume.filedata = volume_item[volume_info[0]];
+            }
 
             volume.volumeRendering = opts.volumeRendering || undefined;
             volume.upperThreshold = opts.upperThreshold || undefined;

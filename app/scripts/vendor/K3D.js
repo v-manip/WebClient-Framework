@@ -86,7 +86,11 @@ K3D.parseMultiPartResponse = function(target, contenttype) {
     for (var idx = 0; idx < multiparts.length; idx++) {
         var part = multiparts[idx];
 
-        var d = K3D.extractHeaderAndData(part);
+        // FIXXME: If the newline_divider differs in the response the
+        // following code will NOT work, e.g. if the newline divider
+        // is a single '\n'!
+        var newline_divider = '\r\n';
+        var d = K3D.extractHeaderAndData(part, newline_divider);
 
         var cid = d.header['Content-ID'];
 
@@ -117,77 +121,22 @@ String.prototype.regexIndexOf = function(regex, startpos) {
     return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
 }
 
-// FIXXME: this is not very efficient...
-K3D.extractHeaderAndData = function(part) {
-    // var header_seperator_idx;
-    // var lines = part.split(/\r\n|\r|\n/);
-    // Remove the first line divider:
-    // lines.splice(0, 1);
+K3D.extractHeaderAndData = function(part, newline_divider) {
+    // Search for the index of the first empty line, which serves as separator
+    // between header and content for multipart responses:
+    var idx = part.regexIndexOf(newline_divider + newline_divider);
 
-    var divider = '\r\n\r\n';
-    var i = part.regexIndexOf(divider);
-    console.log("asdfasdfasdf: " + divider.length);
-
-    var header_block = part.slice(0, i);
-    var content_block = part.slice(i + divider.length);
-
-    // for (var idx = 0; idx < lines.length; idx++) {
-    //     console.log('length: ' + lines[idx].length);
-    //     console.log('line: ' + lines[idx]);
-    //     if (!lines[idx].length) {
-    //         header_seperator_idx = idx;
-    //         break;
-    //     }
-    // }
+    var header_block = part.slice(0, idx);
+    // "Trim" content_block out of multipart envelope in removing the first
+    // two newline divider, as well as the closing newline divider:
+    var content_block = part.slice(idx + newline_divider.length*2, -newline_divider.length);
 
     var res = {};
     res['header'] = {};
-    // res['content'] = '';
     res['content'] = content_block;
 
-    var bla = 0;
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
-
-    var test = new Int32Array(content_block, 0, 1);
-    console.log('test: ' + test[0]);
-    console.log('test: ' + String.fromCharCode(test[0]));
-
-    test = new Int32Array(content_block, 1, 1);
-    console.log('test: ' + test[0]);
-    console.log('test: ' + String.fromCharCode(test[0]));
-
-    test = new Int32Array(content_block, 2, 1);
-    console.log('test: ' + test[0]);
-    console.log('test: ' + String.fromCharCode(test[0]));
-
-    test = new Int32Array(content_block, 3, 1);
-    console.log('test: ' + test[0]);
-    console.log('test: ' + String.fromCharCode(test[0]));
-
-    test = new Int32Array(content_block, 4, 1);
-    console.log('test: ' + test[0]);
-    console.log('test: ' + String.fromCharCode(test[0]));
-
-    test = new Int32Array(content_block, 5, 1);
-    console.log('test: ' + test[0]);
-    console.log('test: ' + String.fromCharCode(test[0]));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-    // console.log('BLA: ' + content_block[bla++].toString(16));
-
-    var lines = header_block.split(/\r\n|\r|\n/);
+    // var lines = header_block.split(/\r\n|\r|\n/);
+    var lines = header_block.split(newline_divider);
     // Remove the first line divider:
     lines.splice(0, 1);
 
@@ -196,11 +145,6 @@ K3D.extractHeaderAndData = function(part) {
         var header = lines[idx].split(': ');
         res['header'][header[0]] = header[1];
     };
-
-    // for (var idx = header_seperator_idx + 1; idx < lines.length; idx++) {
-    //     // res['content'] += lines[idx] + '\n';
-    //     res['content'] += lines[idx];
-    // };
 
     return res;
 }
