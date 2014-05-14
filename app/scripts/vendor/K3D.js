@@ -5,6 +5,15 @@ function ab2str(buf) {
     return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
+function str2ab(str) {
+    var buf = new ArrayBuffer(str.length);
+    var bufView = new Uint8Array(buf);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
 K3D.load = function(path, resp, responseType) {
     var request = new XMLHttpRequest();
 
@@ -103,36 +112,95 @@ K3D.parseMultiPartResponse = function(target, contenttype) {
     return res;
 }
 
+String.prototype.regexIndexOf = function(regex, startpos) {
+    var indexOf = this.substring(startpos || 0).search(regex);
+    return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
+}
+
 // FIXXME: this is not very efficient...
 K3D.extractHeaderAndData = function(part) {
-    var header_seperator_idx;
-    var lines = part.split(/\r\n|\r|\n/g);
+    // var header_seperator_idx;
+    // var lines = part.split(/\r\n|\r|\n/);
+    // Remove the first line divider:
+    // lines.splice(0, 1);
+
+    var divider = '\r\n\r\n';
+    var i = part.regexIndexOf(divider);
+    console.log("asdfasdfasdf: " + divider.length);
+
+    var header_block = part.slice(0, i);
+    var content_block = part.slice(i + divider.length);
+
+    // for (var idx = 0; idx < lines.length; idx++) {
+    //     console.log('length: ' + lines[idx].length);
+    //     console.log('line: ' + lines[idx]);
+    //     if (!lines[idx].length) {
+    //         header_seperator_idx = idx;
+    //         break;
+    //     }
+    // }
+
+    var res = {};
+    res['header'] = {};
+    // res['content'] = '';
+    res['content'] = content_block;
+
+    var bla = 0;
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+    // console.log('BLA: ' + String.fromCharCode(content_block[bla++]));
+
+    var test = new Int32Array(content_block, 0, 1);
+    console.log('test: ' + test[0]);
+    console.log('test: ' + String.fromCharCode(test[0]));
+
+    test = new Int32Array(content_block, 1, 1);
+    console.log('test: ' + test[0]);
+    console.log('test: ' + String.fromCharCode(test[0]));
+
+    test = new Int32Array(content_block, 2, 1);
+    console.log('test: ' + test[0]);
+    console.log('test: ' + String.fromCharCode(test[0]));
+
+    test = new Int32Array(content_block, 3, 1);
+    console.log('test: ' + test[0]);
+    console.log('test: ' + String.fromCharCode(test[0]));
+
+    test = new Int32Array(content_block, 4, 1);
+    console.log('test: ' + test[0]);
+    console.log('test: ' + String.fromCharCode(test[0]));
+
+    test = new Int32Array(content_block, 5, 1);
+    console.log('test: ' + test[0]);
+    console.log('test: ' + String.fromCharCode(test[0]));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+    // console.log('BLA: ' + content_block[bla++].toString(16));
+
+    var lines = header_block.split(/\r\n|\r|\n/);
     // Remove the first line divider:
     lines.splice(0, 1);
 
     for (var idx = 0; idx < lines.length; idx++) {
-        console.log('length: ' + lines[idx].length);
-        console.log('line: ' + lines[idx]);
-        if (!lines[idx].length) {
-            header_seperator_idx = idx;
-            break;
-        }
-    }
-
-    var res = {};
-    res['header'] = {};
-    res['content'] = '';
-
-    for (var idx = 0; idx < header_seperator_idx; idx++) {
         // console.log('header: ' + lines[idx]);
         var header = lines[idx].split(': ');
         res['header'][header[0]] = header[1];
     };
 
-    for (var idx = header_seperator_idx + 1; idx < lines.length; idx++) {
-        // res['content'] += lines[idx] + '\n';
-        res['content'] += lines[idx];
-    };
+    // for (var idx = header_seperator_idx + 1; idx < lines.length; idx++) {
+    //     // res['content'] += lines[idx] + '\n';
+    //     res['content'] += lines[idx];
+    // };
 
     return res;
 }

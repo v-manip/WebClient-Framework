@@ -148,20 +148,23 @@ define([
     XTKViewer.prototype.addVolume = function(opts) {
         // FIXXME: define an array with supported mimetypes to not have to hardcode
         // the mimetypes here and below!
-        var volume_items = Object.keys(opts.data['application/x-nifti']).length;
-        // var volume_items = 1;
+        var volumes = null;
+        if (opts.data['application/x-nifti']) {
+            volumes = opts.data['application/x-nifti'];
+        } else { // For loading testdata from a local file 'octet-stream' is the correct mimetype:
+            volumes = opts.data['application/octet-stream'];
+        }
+        var num_volumes = Object.keys(volumes).length;
+        // var num_volumes = 1;
 
-        for (var idx = 0; idx < volume_items; idx++) {
-            var volume_item = opts.data['application/x-nifti'][idx],
+        for (var idx = 0; idx < num_volumes; idx++) {
+            var volume_item = volumes[idx],
                 volume_info = Object.keys(volume_item);
 
             var volume = new X.volume();
-            // NOTE: Do NOT specify the 'file' attribute, if you provide the 'filedata'
-            // directly. Otherwise the file (interpreted as URL) will be loaded and the
-            // 'filedata' property afterwards is not taken into account!
-            // volume.file = opts.filename;
-
-            // volume.filedata = opts.data;
+            volume.file = opts.filename;
+            // volume.filedata = opts.data; 
+            // volume.filedata = str2ab(volume_item[volume_info[0]]);
             volume.filedata = volume_item[volume_info[0]];
 
             volume.volumeRendering = opts.volumeRendering || undefined;
