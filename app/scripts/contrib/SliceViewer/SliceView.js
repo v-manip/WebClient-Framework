@@ -121,46 +121,64 @@ define([
             // Add a volume to the viewer:
             //
 
-            // this.getViewer().addVolume({
-            //     // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-            //     // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-            //     filename: volume_url + '&dummy.nii',
-            //     label: layer,
-            //     volumeRendering: true,
-            //     upperThreshold: 219,
-            //     opacity: 0.3,
-            //     minColor: [0.4, 0.4, 0.4],
-            //     maxColor: [0, 0, 0],
-            //     reslicing: false
-            // });
+            // TESTDATA:
+            // volume_url = './data/mptest.response';
+            // volume_url = 'http://demo.v-manip.eox.at/browse/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
+            // volume_url = 'http://localhost:9000/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
 
-            //
-            // Add a an eventual mesh to the viewer:
-            //
+            // volume_url = './data/Temperature.nii.gz';
 
-            var model_url = this.baseURL;
-            model_url += '&boundingBox=' + aoi;
-            model_url += '&time=' + toi;
-            model_url += '&layer=' + layer;
-            model_url += '&format=model/obj';
+            K3D.load(volume_url, function(data, isMultiPart) {
+                this.getViewer().addVolume({
+                    // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+                    // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+                    filename: volume_url + '&dummy.nii',
+                    data: data,
+                    isMultiPart: isMultiPart,
+                    label: layer,
+                    volumeRendering: true,
+                    upperThreshold: 219,
+                    opacity: 0.3,
+                    minColor: [0.4, 0.4, 0.4],
+                    maxColor: [0, 0, 0],
+                    reslicing: false
+                });
+            }.bind(this));
+            // }.bind(this), 'text/plain');
 
-            model_url = './data/mptest.response';
-            console.log('requesting: ' + model_url);
-            K3D.load(model_url, function(data, isMultiPart) {
-                if (!isMultiPart) {
-                    // For now we only support multipart responses
-                    return;
-                } else {
-                    // FIXXME: no error handling at the moment, the data has
-                    // to be in the expected format, otherwise the code will
-                    // fail!
-                    this.getViewer().addMesh({
-                        models: data['model/obj'],
-                        mtls: data['text/plain'],
-                        textures: data['image/png']
-                    });
-                }
-            }.bind(this), 'text/plain');
+            // DISABLED for testing now:
+            if (false) {
+                //
+                // Add a an eventual mesh to the viewer:
+                //
+
+                var model_url = this.baseURL;
+                model_url += '&boundingBox=' + aoi;
+                model_url += '&time=' + toi;
+                model_url += '&layer=' + layer;
+                model_url += '&format=model/obj';
+
+                // TESTDATA:
+                model_url = './data/mptest.response';
+
+                console.log('requesting: ' + model_url);
+                K3D.load(model_url, function(data, isMultiPart) {
+                    if (!isMultiPart) {
+                        // For now we only support multipart responses
+                        return;
+                    } else {
+                        // FIXXME: no error handling at the moment, the data has
+                        // to be in the expected format, otherwise the code will
+                        // fail!
+                        this.getViewer().addMesh({
+                            models: data['model/obj'],
+                            mtls: data['text/plain'],
+                            textures: data['image/png']
+                        });
+                    }
+                    // }.bind(this));
+                }.bind(this), 'text/plain');
+            }
 
             // STATIC TEST VERSION:
 

@@ -5,33 +5,77 @@ function ab2str(buf) {
     return String.fromCharCode.apply(null, new Uint8Array(buf));
 }
 
+function str2ab(str) {
+    var buf = new ArrayBuffer(str.length);
+    var bufView = new Uint8Array(buf);
+    for (var i = 0, strLen = str.length; i < strLen; i++) {
+        bufView[i] = str.charCodeAt(i);
+    }
+    return buf;
+}
+
 K3D.load = function(path, resp, responseType) {
     var request = new XMLHttpRequest();
+
     request.open("GET", path, true);
     request.responseType = responseType || "arraybuffer";
+
     request.onload = function(e) {
-        var contenttype = e.target.getResponseHeader('Content-Type');
+        // resp(e.target.response, false);
 
-        //// Check if the response is a 'Multipart' response. If not,
-        // simply return the response itself:
-        // if (!contenttype.indexOf('Multipart') !== 0) {
-        //   resp(e.target.response, false);
-        // }
+        var contenttype = e.target.getResponseHeader('Content-Type'),
+            res = null;
 
-        res = K3D.parseMultiPartResponse(e.target)
-        resp(res, true);
+        // Check if the response is a 'Multipart' response. If not,
+        // simply return the response wrapped into a map where the key
+        // is the mimetype ...
+        if (contenttype.toLowerCase().indexOf('multipart') !== 0) {
+            res = K3D.parseSinglePartResponse(e.target, contenttype);
+            resp(res, false);
+        } else { // ... else return multipart equivalent:
+            res = K3D.parseMultiPartResponse(e.target, contenttype)
+            resp(res, true);
+        }
     };
     request.send();
 }
 
-K3D.parseMultiPartResponse = function(target) {
+K3D.parseSinglePartResponse = function(target, contenttype) {
+    var type = contenttype;
+    if (!type) {
+        type = 'text/plain';
+    }
+
+    var cid = target.getResponseHeader('Content-ID');
+    if (!cid) {
+        cid = 'entry-0';
+    }
+
+    var entry = {},
+        res = {};
+
+    entry[cid] = target.response;
+    res[type] = [entry];
+
+    return res;
+}
+
+K3D.parseMultiPartResponse = function(target, contenttype) {
     // Determine boundary string:
-    // var boundary = contenttype.split('; ')[1];
-    var boundary = 'sample_boundary';
-    console.log('Boundary: ' + boundary);
+    var boundary = contenttype.split('; ')[1].split('=')[1];
+    // var boundary = 'sample_boundary';
+    // console.log('Boundary: ' + boundary);
+
+    // FIXXME: detect arraybuffer in a robust way!
+    var multipartdata = null;
+    if (typeof target.response !== 'string') {
+        multipartdata = ab2str(target.response);
+    } else {
+        multipartdata = target.response;
+    }
 
     // Separate the different parts into an array:
-    var multiparts = target.response.split('--' + boundary);
+    var multiparts = multipartdata.split('--' + boundary);
     // Cleanup: remove first and last entry:
     multiparts.splice(0, 1);
     multiparts.splice(multiparts.length - 1, 1);
@@ -42,7 +86,11 @@ K3D.parseMultiPartResponse = function(target) {
     for (var idx = 0; idx < multiparts.length; idx++) {
         var part = multiparts[idx];
 
-        var d = K3D.extractHeaderAndData(part);
+        // FIXXME: If the newline_divider differs in the response the
+        // following code will NOT work, e.g. if the newline divider
+        // is a single '\n'!
+        var newline_divider = '\r\n';
+        var d = K3D.extractHeaderAndData(part, newline_divider);
 
         var cid = d.header['Content-ID'];
 
@@ -68,32 +116,34 @@ K3D.parseMultiPartResponse = function(target) {
     return res;
 }
 
-// FIXXME: this is not very efficient...
-K3D.extractHeaderAndData = function(part) {
-    var header_seperator_idx;
-    var lines = part.split('\n');
+String.prototype.regexIndexOf = function(regex, startpos) {
+    var indexOf = this.substring(startpos || 0).search(regex);
+    return (indexOf >= 0) ? (indexOf + (startpos || 0)) : indexOf;
+}
+
+K3D.extractHeaderAndData = function(part, newline_divider) {
+    // Search for the index of the first empty line, which serves as separator
+    // between header and content for multipart responses:
+    var idx = part.regexIndexOf(newline_divider + newline_divider);
+
+    var header_block = part.slice(0, idx);
+    // "Trim" content_block out of multipart envelope in removing the first
+    // two newline divider, as well as the closing newline divider:
+    var content_block = part.slice(idx + newline_divider.length*2, -newline_divider.length);
+
+    var res = {};
+    res['header'] = {};
+    res['content'] = content_block;
+
+    // var lines = header_block.split(/\r\n|\r|\n/);
+    var lines = header_block.split(newline_divider);
     // Remove the first line divider:
     lines.splice(0, 1);
 
     for (var idx = 0; idx < lines.length; idx++) {
-        if (!lines[idx].length) {
-            header_seperator_idx = idx;
-            break;
-        }
-    }
-
-    var res = {};
-    res['header'] = {};
-    res['content'] = '';
-
-    for (var idx = 0; idx < header_seperator_idx; idx++) {
         // console.log('header: ' + lines[idx]);
         var header = lines[idx].split(': ');
         res['header'][header[0]] = header[1];
-    };
-
-    for (var idx = header_seperator_idx + 1; idx < lines.length; idx++) {
-        res['content'] += lines[idx] + '\n';
     };
 
     return res;
