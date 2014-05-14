@@ -47,8 +47,16 @@ define([
         return buf;
     }
 
+    // Takes (multiple) obj/mtl pairs with textures and adds them to the viewer.
+    // NOTE: Currently only the first obj/mtl pair is displayed!
     XTKViewer.prototype.addMesh = function(opts) {
-        var obj = K3D.parse.fromOBJ(opts.filedata);
+        var modelnames = Object.keys(opts.models[0]),
+            modeldata = opts.models[0][modelnames[0]],
+            mtldata = opts.mtls[0][modelnames[0]];
+
+        console.log('[XTKViewer.addMesh] adding obj/mtl pair: ' + modelnames[0]);
+
+        var obj = K3D.parse.fromOBJ(modeldata);
 
         console.log('OBJ (K3D) stats:');
         console.log(' * objects: ' + Object.keys(obj.groups).length);

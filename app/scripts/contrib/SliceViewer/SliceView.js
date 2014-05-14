@@ -121,75 +121,101 @@ define([
             // Add a volume to the viewer:
             //
 
-            this.getViewer().addVolume({
-                // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-                // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                filename: volume_url + '&dummy.nii',
-                label: layer,
-                volumeRendering: true,
-                upperThreshold: 219,
-                opacity: 0.3,
-                minColor: [0.4, 0.4, 0.4],
-                maxColor: [0, 0, 0],
-                reslicing: false
-            });
+            // this.getViewer().addVolume({
+            //     // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+            //     // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+            //     filename: volume_url + '&dummy.nii',
+            //     label: layer,
+            //     volumeRendering: true,
+            //     upperThreshold: 219,
+            //     opacity: 0.3,
+            //     minColor: [0.4, 0.4, 0.4],
+            //     maxColor: [0, 0, 0],
+            //     reslicing: false
+            // });
 
             //
             // Add a an eventual mesh to the viewer:
             //
 
-            var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3-scaled';
-            // var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3';
-            // var model_base = 'data/curtain-obj/box-tex';
-
-            layer = "Cloudsat";
             var model_url = this.baseURL;
             model_url += '&boundingBox=' + aoi;
             model_url += '&time=' + toi;
             model_url += '&layer=' + layer;
             model_url += '&format=model/obj';
 
-            var tex_url = this.baseURL;
-            tex_url += '&boundingBox=' + aoi;
-            tex_url += '&time=' + toi;
-            tex_url += '&layer=' + layer;
-            tex_url += '&format=image/png';
-
-            var request = new XMLHttpRequest(),
-                request2 = new XMLHttpRequest(),
-                that = this;
-
-            request.onload = function(evt) {
-                console.log('data: ' + this.response);
-                var objdata = this.response;
-
-
-                request2.onload = function(evt) {
-                    console.log('data: ' + this.response);
-                    var mtldata = this.response;
-
-                    that.getViewer().addMesh({
-                        // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-                        // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                        // model_filename: model_url + '&dummy.obj',
-                        model_filename: 'dummy.obj',
-                        filedata: objdata,
-                        mtldata: mtldata
+            model_url = './data/mptest.response';
+            console.log('requesting: ' + model_url);
+            K3D.load(model_url, function(data, isMultiPart) {
+                if (!isMultiPart) {
+                    // For now we only support multipart responses
+                    return;
+                } else {
+                    // FIXXME: no error handling at the moment, the data has
+                    // to be in the expected format, otherwise the code will
+                    // fail!
+                    this.getViewer().addMesh({
+                        models: data['model/obj'],
+                        mtls: data['text/plain'],
+                        textures: data['image/png']
                     });
                 }
+            }.bind(this), 'text/plain');
 
-                model_url = model_base + '.mtl';
-                request2.open('GET', model_url, true);
-                request2.responseType = 'arraybuffer';
-                // request.responseType = 'text/plain';
-                request2.send(null);
-            }
+            // STATIC TEST VERSION:
 
-            model_url = model_base + '.obj';
-            request.open('GET', model_url, true);
-            request.responseType = 'arraybuffer';
-            // request.responseType = 'text/plain';
-            request.send(null);
+            // var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3-scaled';
+            // // var model_base = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3';
+            // // var model_base = 'data/curtain-obj/box-tex';
+
+            // layer = "Cloudsat";
+            // var model_url = this.baseURL;
+            // model_url += '&boundingBox=' + aoi;
+            // model_url += '&time=' + toi;
+            // model_url += '&layer=' + layer;
+            // model_url += '&format=model/obj';
+
+            // var tex_url = this.baseURL;
+            // tex_url += '&boundingBox=' + aoi;
+            // tex_url += '&time=' + toi;
+            // tex_url += '&layer=' + layer;
+            // tex_url += '&format=image/png';
+
+            // var request = new XMLHttpRequest(),
+            //     request2 = new XMLHttpRequest(),
+            //     that = this;
+
+            // request.onload = function(evt) {
+            //     console.log('data: ' + this.response);
+            //     var objdata = this.response;
+
+
+            //     request2.onload = function(evt) {
+            //         console.log('data: ' + this.response);
+            //         var mtldata = this.response;
+
+            //         that.getViewer().addMesh({
+            //             // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+            //             // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+            //             // model_filename: model_url + '&dummy.obj',
+            //             model_filename: 'dummy.obj',
+            //             filedata: objdata,
+            //             mtldata: mtldata
+            //         });
+            //     }
+
+            //     model_url = model_base + '.mtl';
+            //     request2.open('GET', model_url, true);
+            //     request2.responseType = 'arraybuffer';
+            //     // request.responseType = 'text/plain';
+            //     request2.send(null);
+            // }
+
+            // model_url = model_base + '.obj';
+            // request.open('GET', model_url, true);
+            // request.responseType = 'arraybuffer';
+            // // request.responseType = 'text/plain';
+            // request.send(null);
         }
     });
 
