@@ -179,6 +179,7 @@ define([
             volume.reslicing = opts.reslicing || undefined;
 
             var label = opts.label || 'Volume';
+            label += idx;
             this.volumes[label] = volume;
             this.renderer.add(volume);
 
