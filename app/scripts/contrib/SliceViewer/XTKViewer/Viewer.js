@@ -146,18 +146,23 @@ define([
     };
 
     XTKViewer.prototype.addVolume = function(opts) {
-        var volume_items = Object.keys(opts.data['model/nii-gz']).length;
+        // FIXXME: define an array with supported mimetypes to not have to hardcode
+        // the mimetypes here and below!
+        var volume_items = Object.keys(opts.data['application/x-nifti']).length;
+        // var volume_items = 1;
 
         for (var idx = 0; idx < volume_items; idx++) {
-            var volume_item = opts.data['model/nii-gz'][idx],
+            var volume_item = opts.data['application/x-nifti'][idx],
                 volume_info = Object.keys(volume_item);
 
             var volume = new X.volume();
-            volume.file = volume_info[0];
-            volume.filedata = volume_item[volume_info[0]];
+            // NOTE: Do NOT specify the 'file' attribute, if you provide the 'filedata'
+            // directly. Otherwise the file (interpreted as URL) will be loaded and the
+            // 'filedata' property afterwards is not taken into account!
+            // volume.file = opts.filename;
 
-            // volume.file = 'data/curtain-obj/smallvolume.nii';
-            // volume.file = 'data/curtain-obj/test.nii';
+            // volume.filedata = opts.data;
+            volume.filedata = volume_item[volume_info[0]];
 
             volume.volumeRendering = opts.volumeRendering || undefined;
             volume.upperThreshold = opts.upperThreshold || undefined;

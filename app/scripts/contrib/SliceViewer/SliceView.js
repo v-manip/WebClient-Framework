@@ -123,7 +123,8 @@ define([
 
             // TESTDATA:
             // volume_url = './data/mptest.response';
-
+            // volume_url = 'http://localhost:9000/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-18.3624609375,63.956767578125,-16.71451171875,65.011455078125&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
+            
             K3D.load(volume_url, function(data, isMultiPart) {
                 this.getViewer().addVolume({
                     // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.

@@ -538,7 +538,7 @@
   "backendConfig": {
     "MeshFactory": {
       "protocol": "W3DS",
-      "url": "http://localhost:9000/ows?",
+      "url": "http://demo.v-manip.eox.at/browse/ows?",
       "version": "1.0.0"
     },
     "W3DSDataUrl": "http://localhost:9000/gltf/"

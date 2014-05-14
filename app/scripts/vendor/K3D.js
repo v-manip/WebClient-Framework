@@ -12,13 +12,15 @@ K3D.load = function(path, resp, responseType) {
     request.responseType = responseType || "arraybuffer";
 
     request.onload = function(e) {
+        // resp(e.target.response, false);
+
         var contenttype = e.target.getResponseHeader('Content-Type'),
             res = null;
 
         // Check if the response is a 'Multipart' response. If not,
         // simply return the response wrapped into a map where the key
         // is the mimetype ...
-        if (!contenttype.indexOf('Multipart') !== 0) {
+        if (contenttype.toLowerCase().indexOf('multipart') !== 0) {
             res = K3D.parseSinglePartResponse(e.target, contenttype);
             resp(res, false);
         } else { // ... else return multipart equivalent:
@@ -35,15 +37,24 @@ K3D.parseSinglePartResponse = function(target, contenttype) {
         type = 'text/plain';
     }
 
-    var res = {};
-    res[type] = [target.response];
+    var cid = target.getResponseHeader('Content-ID');
+    if (!cid) {
+        cid = 'entry-0';
+    }
+
+    var entry = {},
+        res = {};
+
+    entry[cid] = target.response;
+    res[type] = [entry];
+
     return res;
 }
 
-K3D.parseMultiPartResponse = function(target) {
+K3D.parseMultiPartResponse = function(target, contenttype) {
     // Determine boundary string:
-    // var boundary = contenttype.split('; ')[1];
-    var boundary = 'sample_boundary';
+    var boundary = contenttype.split('; ')[1].split('=')[1];
+    // var boundary = 'sample_boundary';
     // console.log('Boundary: ' + boundary);
 
     // FIXXME: detect arraybuffer in a robust way!
@@ -95,11 +106,13 @@ K3D.parseMultiPartResponse = function(target) {
 // FIXXME: this is not very efficient...
 K3D.extractHeaderAndData = function(part) {
     var header_seperator_idx;
-    var lines = part.split('\n');
+    var lines = part.split(/\r\n|\r|\n/g);
     // Remove the first line divider:
     lines.splice(0, 1);
 
     for (var idx = 0; idx < lines.length; idx++) {
+        console.log('length: ' + lines[idx].length);
+        console.log('line: ' + lines[idx]);
         if (!lines[idx].length) {
             header_seperator_idx = idx;
             break;
@@ -117,7 +130,8 @@ K3D.extractHeaderAndData = function(part) {
     };
 
     for (var idx = header_seperator_idx + 1; idx < lines.length; idx++) {
-        res['content'] += lines[idx] + '\n';
+        // res['content'] += lines[idx] + '\n';
+        res['content'] += lines[idx];
     };
 
     return res;
