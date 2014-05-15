@@ -168,8 +168,11 @@ define([
                 volume_info = Object.keys(volume_item);
 
             var volume = new X.volume();
-            volume.file = opts.filename;
-            // volume.filedata = opts.data; 
+
+            // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
+            // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
+            volume.file = opts.filename + '&dummy.nii';
+
             var data = volume_item[volume_info[0]];
             if (typeof data === 'string') {
                 volume.filedata = str2ab(volume_item[volume_info[0]]);
@@ -185,8 +188,22 @@ define([
             volume.reslicing = opts.reslicing || undefined;
 
             var label = opts.label || 'Volume';
-            label += idx;
-            this.volumes[label] = volume;
+
+            // Cache the volume for later removal:
+            var entries = this.volumes[opts.filename];
+            if (!entries) {
+                entries = this.volumes[opts.filename] = [];
+            } else {
+                entries = this.volumes[opts.filename];
+                label += ' ' + entries.length + 1;
+            }
+
+            var volume_info = {
+                label: label,
+                volume: volume
+            };
+            entries.push(volume_info);
+
             this.renderer.add(volume);
 
             // The onShowtime method gets executed after all files were fully loaded and
@@ -195,7 +212,7 @@ define([
             // so that the callback gets called on the next render tick.
             this.renderer._onShowtime = false;
 
-            this.renderer.onShowtime = function() {
+            this.renderer.onShowtime = function(volume_info) {
                 if (!this.baseInitDone) {
                     var gui = this.mainGUI = new dat.GUI({
                         autoPlace: true
@@ -206,10 +223,10 @@ define([
 
                 // (we need to create the GUI during onShowtime(..) since we do not know the
                 // volume dimensions before the loading was completed)
-                _.forEach(this.volumes, function(value, key) {
-                    this.addVolumeToGUI(key, value);
-                }.bind(this));
-            }.bind(this);
+                var gui = this.addVolumeToGUI(volume_info.label, volume_info.volume);
+                volume_info['gui'] = gui;
+                
+            }.bind(this, volume_info);
 
             // NOTE: This triggers the loading of the volume and executes
             // r.onShowtime() once done. Be sure to call render AFTER you
@@ -219,15 +236,24 @@ define([
         }
     };
 
-    XTKViewer.prototype.removeObject = function(name) {
-        
+    XTKViewer.prototype.removeObject = function(layer_name) {
+        var volume_set = this.volumes[layer_name];
+
+        if (volume_set) {
+            _.forEach(volume_set, function(info) {
+                this.renderer.remove(info.volume);
+                if (info.gui) {
+                    this.removeGui(info.gui);
+                }
+            }.bind(this));
+        }
     };
 
     XTKViewer.prototype.addVolumeToGUI = function(label, volume) {
         // this.mainGUI.removeFolder(label);
 
         // the following configures the gui for interacting with the X.volume
-        var volumegui = this.mainGUI.addFolder(label + this.idx++);
+        var volumegui = this.mainGUI.addFolder(label);
         // now we can configure controllers which..
         // .. switch between slicing and volume rendering
         var vrController = volumegui.add(volume, 'volumeRendering');
@@ -248,6 +274,8 @@ define([
         var sliceZController = volumegui.add(volume, 'indexZ', 0, volume.range[2] - 1);
 
         volumegui.open();
+
+        return volumegui;
     };
 
     XTKViewer.prototype.addMeshToGUI = function(label, mesh) {

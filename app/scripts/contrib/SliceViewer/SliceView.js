@@ -25,7 +25,6 @@ define([
             this.currentToI = null;
             // Set a default AoI and Layer  as the timeline can be changed even if no AoI and Layer is selected in the WebClient:
             this.currentAoI = [17.6726953125, 56.8705859375, 19.3865625, 58.12302734375];
-            this.currentLayer = 'Cris'; // FIXXME!
 
             // FIXXME: read from config!
             var backend = this.legacyContext().backendConfig['MeshFactory'];
@@ -36,7 +35,7 @@ define([
         },
 
         onStartup: function(selected_layers) {
-            console.log('blalbu');
+            // console.log('blalbu');
         },
 
         // FIXXME: this method should be put into the BaseView to do a basic setup of
@@ -153,6 +152,16 @@ define([
             }
         },
 
+        _onTimeChange: function(time) {
+            var starttime = new Date(time.start);
+            var endtime = new Date(time.end);
+
+            this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
+
+            // Remove all currently shown volumes and request the new data to update the view:
+            this._update();
+        },
+
         _update: function() {
             // if (this.getViewer()) {
             //     this.getViewer().reset();
@@ -165,15 +174,6 @@ define([
                     console.log('[SliceView::_udpate] added layer: ' + view.id);
                 }
             }.bind(this));
-        },
-
-        _onTimeChange: function(time) {
-            var starttime = new Date(time.start);
-            var endtime = new Date(time.end);
-
-            this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
-
-            this._addVolume(this.currentLayer);
         },
 
         _createViewer: function() {
@@ -214,9 +214,7 @@ define([
 
             K3D.load(volume_url, function(data, isMultiPart) {
                 this.getViewer().addVolume({
-                    // FIXXME: hack to satisfy xtk, which obviously determines the format of the volume data by the ending of the url it gets.
-                    // I appended a dummy file here, so xtk gets the format, the backend W3DS server will simply discard the extra parameter...
-                    filename: volume_url + '&dummy.nii',
+                    filename: layer,
                     data: data,
                     isMultiPart: isMultiPart,
                     label: layer,
