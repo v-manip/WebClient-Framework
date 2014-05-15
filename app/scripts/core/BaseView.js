@@ -24,6 +24,15 @@ define([
 		 * this results in possible memory leaks!
 		 */
 		cacheViewerInstance: true,
+		_initialLayers: {},
+
+		//--------------------------//
+		// IMPLEMENTATION INTERFACE //
+		//--------------------------//
+
+        initLayersOnStartup: function() {
+        	console.error('[BaseView::initLayersOnStartup] IMPLEMENT IN DERIVED OBJECT!');
+        },
 
 		/* Stores the 'context' (accessible in the child object via 'this.legacyContext()') and sets up
 		 * the base configuration.
@@ -48,6 +57,18 @@ define([
 				return opts.context;
 			}
 		},
+
+		//------------------//
+		// PUBLIC INTERFACE //
+		//------------------//
+
+		initialLayers: function() {
+			return this._initialLayers;
+		},
+
+		//-------------------//
+		// PRIVATE INTERFACE //
+		//-------------------//
 
 		/*
 		 * Connects the default VMANIP context events if a corresponding method property exists in the
@@ -261,6 +282,44 @@ define([
 
 			return layerModel;
 		},
+
+        _addInitialLayer: function(model, isBaseLayer) {
+            this._initialLayers[model.get('name')] = {
+                model: model,
+                isBaseLayer: isBaseLayer
+            };
+        },
+
+        /** Adds the layers selected in the GUI and performs their setup (opacity, sorting oder, etc.).
+         *  Layers are either baselayers, products or overlays.
+         */
+        _setLayersFromAppContext: function() {
+            this._initialLayers = {};
+
+            globals.baseLayers.each(function(model) {
+                if (model.get('visible')) {
+                    this._addInitialLayer(model, true);
+                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
+                };
+            }.bind(this));
+
+            globals.products.each(function(model) {
+                if (model.get('visible')) {
+                    console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
+                    this._addInitialLayer(model, false);
+                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
+                }
+            }.bind(this));
+
+            globals.overlays.each(function(model) {
+                if (model.get('visible')) {
+                    this._addInitialLayer(model, false);
+                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added overlays "' + model.get('name') + '"');
+                }
+            }.bind(this));
+
+            this.initLayersOnStartup();
+        }		
 	});
 
 	return BaseView;

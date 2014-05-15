@@ -8,7 +8,7 @@ define([
 
     'use strict';
 
-    var VGVView = BaseView.extend({
+    var VirtualGlobeView = BaseView.extend({
 
         tagName: 'canvas',
 
@@ -28,7 +28,6 @@ define([
                 }
             };
 
-            this._initialLayers = {};
             this.currentToI = this.toi();
         },
 
@@ -58,44 +57,6 @@ define([
             this.getViewer().updateViewport();
         },
 
-        _addInitialLayer: function(model, isBaseLayer) {
-            this._initialLayers[model.get('name')] = {
-                model: model,
-                isBaseLayer: isBaseLayer
-            };
-        },
-
-        /** Adds the layers selected in the GUI and performs their setup (opacity, sorting oder, etc.).
-         *  Layers are either baselayers, products or overlays.
-         */
-        _setLayersFromAppContext: function() {
-            this._initialLayers = {};
-
-            globals.baseLayers.each(function(model) {
-                if (model.get('visible')) {
-                    this._addInitialLayer(model, true);
-                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
-                };
-            }.bind(this));
-
-            globals.products.each(function(model) {
-                if (model.get('visible')) {
-                    console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
-                    this._addInitialLayer(model, false);
-                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
-                }
-            }.bind(this));
-
-            globals.overlays.each(function(model) {
-                if (model.get('visible')) {
-                    this._addInitialLayer(model, false);
-                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added overlays "' + model.get('name') + '"');
-                }
-            }.bind(this));
-
-            this._initLayers();
-        },
-
         _addAreaOfInterest: function(geojson) {
             this.getViewer().addAreaOfInterest(geojson);
         },
@@ -118,10 +79,10 @@ define([
 
             if (options.visible) {
                 this._addLayer(model, options.isBaseLayer);
-                console.log('[VGVView::onLayerChange] selected ' + model.get('name'));
+                console.log('[VirtualGlobeView::onLayerChange] selected ' + model.get('name'));
             } else {
                 this._removeLayer(model, options.isBaseLayer);
-                console.log('[VGVView::onLayerChange] deselected ' + model.get('name'));
+                console.log('[VirtualGlobeView::onLayerChange] deselected ' + model.get('name'));
             }
         },
 
@@ -156,9 +117,9 @@ define([
             this.getViewer().sortOverlayLayers();
         },
 
-        _initLayers: function() {
+        initLayersOnStartup: function() {
             this.getViewer().clearCache();
-            _.each(this._initialLayers, function(desc, name) {
+            _.each(this.initialLayers(), function(desc, name) {
                 this.getViewer().addLayer(desc.model, desc.isBaseLayer);
             }.bind(this));
             this._sortOverlayLayers();
@@ -250,6 +211,6 @@ define([
         }
     });
 
-    return VGVView;
+    return VirtualGlobeView;
 
 }); // end module definition
