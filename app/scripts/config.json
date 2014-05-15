@@ -1,81 +1,350 @@
 {
 
-  "debug": true,
+    "debug": true,
 
-  "modules": [
-    "contrib/MapViewer/MapViewModule",
-    "contrib/VirtualGlobeViewer/VirtualGlobeViewModule",
-    "contrib/RectangularBoxViewer/RectangularBoxViewModule",
-    "contrib/SliceViewer/SliceViewModule",
-    "contrib/AnalyticsViewer/AnalyticsViewModule"
-  ],
-
-  "storyTemplate":"UseCaseTestTemplate",
-
-  "mapConfig": {
-    "model": "models/MapModel",
-    "visualizationLibs": [
-      "openlayers"
+    "modules": [
+        "contrib/MapViewer/MapViewModule",
+        "contrib/VirtualGlobeViewer/VirtualGlobeViewModule",
+        "contrib/RectangularBoxViewer/RectangularBoxViewModule",
+        "contrib/SliceViewer/SliceViewModule",
+        "contrib/AnalyticsViewer/AnalyticsViewModule"
     ],
-    "center": [13.41,52.52],
-    "zoom": 5,
-    "baseLayers": [
-      {
-        "name": "Terrain",
-        "visible": true,
-        "views": [{
-          "id": "terrain",
-          "protocol": "WMTS",
-            "urls": [
-              "http://a.tiles.maps.eox.at/wmts/",
-              "http://b.tiles.maps.eox.at/wmts/",
-              "http://c.tiles.maps.eox.at/wmts/",
-              "http://d.tiles.maps.eox.at/wmts/",
-              "http://e.tiles.maps.eox.at/wmts/"
-            ],
-            "matrixSet": "WGS84",
-            "style": "default",
-            "format": "image/png",
-            "maxExtent": [-180.000000,-90.000000,180.000000,90.000000],
-            "resolutions": [ 0.70312500000000000000,0.35156250000000000000,0.17578125000000000000,0.08789062500000000000,0.04394531250000000000,0.02197265625000000000,0.01098632812500000000,0.00549316406250000000,0.00274658203125000000,0.00137329101562500000,0.00068664550781250000,0.00034332275390625000,0.00017166137695312500,0.00008583068847656250,0.00004291534423828120,0.00002145767211914060,0.00001072883605957030,0.00000536441802978516 ],
-            "projection": "EPSG:4326",
-            "gutter": 0,
-            "buffer": 0,
-            "units": "dd",
-            "transitionEffect": "resize",
-            "isphericalMercator": false,
-            "wrapDateLine": true,
-            "zoomOffset": 0
-          }, {
-            "id": "terrain",
-            "protocol": "WMS",
-            "urls": [
-                "http://tiles.maps.eox.at/wms"
-            ],
-            "style": "default",
-            "format": "image/jpeg",
-            "crs": "EPSG:4326"
-          }
-        ]
-      },
-      {
-        "name": "Blue Marble",
-        "visible": false,
-        "views": [{
-            "id": "bluemarble",
+
+    "storyTemplate": "UseCaseTestTemplate",
+
+    "mapConfig": {
+        "model": "models/MapModel",
+        "visualizationLibs": [
+            "openlayers"
+        ],
+        "center": [13.41, 52.52],
+        "zoom": 5,
+        "baseLayers": [{
+            "name": "Terrain",
+            "visible": true,
+            "views": [{
+                "id": "terrain",
+                "protocol": "WMTS",
+                "urls": [
+                    "http://a.tiles.maps.eox.at/wmts/",
+                    "http://b.tiles.maps.eox.at/wmts/",
+                    "http://c.tiles.maps.eox.at/wmts/",
+                    "http://d.tiles.maps.eox.at/wmts/",
+                    "http://e.tiles.maps.eox.at/wmts/"
+                ],
+                "matrixSet": "WGS84",
+                "style": "default",
+                "format": "image/png",
+                "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+                "resolutions": [0.70312500000000000000, 0.35156250000000000000, 0.17578125000000000000, 0.08789062500000000000, 0.04394531250000000000, 0.02197265625000000000, 0.01098632812500000000, 0.00549316406250000000, 0.00274658203125000000, 0.00137329101562500000, 0.00068664550781250000, 0.00034332275390625000, 0.00017166137695312500, 0.00008583068847656250, 0.00004291534423828120, 0.00002145767211914060, 0.00001072883605957030, 0.00000536441802978516],
+                "projection": "EPSG:4326",
+                "gutter": 0,
+                "buffer": 0,
+                "units": "dd",
+                "transitionEffect": "resize",
+                "isphericalMercator": false,
+                "wrapDateLine": true,
+                "zoomOffset": 0
+            }, {
+                "id": "terrain",
+                "protocol": "WMS",
+                "urls": [
+                    "http://tiles.maps.eox.at/wms"
+                ],
+                "style": "default",
+                "format": "image/jpeg",
+                "crs": "EPSG:4326"
+            }]
+        }, {
+            "name": "Blue Marble",
+            "visible": false,
+            "views": [{
+                "id": "bluemarble",
+                "protocol": "WMTS",
+                "urls": [
+                    "http://a.tiles.maps.eox.at/wmts/",
+                    "http://b.tiles.maps.eox.at/wmts/",
+                    "http://c.tiles.maps.eox.at/wmts/",
+                    "http://d.tiles.maps.eox.at/wmts/",
+                    "http://e.tiles.maps.eox.at/wmts/"
+                ],
+                "matrixSet": "WGS84",
+                "style": "default",
+                "format": "image/png",
+                "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+                "resolutions": [0.70312500000000000000, 0.35156250000000000000, 0.17578125000000000000, 0.08789062500000000000, 0.04394531250000000000, 0.02197265625000000000, 0.01098632812500000000, 0.00549316406250000000, 0.00274658203125000000, 0.00137329101562500000, 0.00068664550781250000, 0.00034332275390625000, 0.00017166137695312500, 0.00008583068847656250, 0.00004291534423828120, 0.00002145767211914060, 0.00001072883605957030, 0.00000536441802978516],
+                "projection": "EPSG:4326",
+                "gutter": 0,
+                "buffer": 0,
+                "units": "dd",
+                "transitionEffect": "resize",
+                "isphericalMercator": false,
+                "wrapDateLine": true,
+                "zoomOffset": 0
+            }, {
+                "id": "bluemarble",
+                "protocol": "WMS",
+                "urls": [
+                    "http://tiles.maps.eox.at/wms"
+                ],
+                "style": "default",
+                "format": "image/jpeg",
+                "crs": "EPSG:4326"
+            }]
+        }],
+        "products": [{
+            "name": "Cloudsat",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "purple",
+            "views": [{
+                "id": "Cloudsat",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "Cloudsat_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "vrvis_demo",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        }, {
+            "name": "SWARM-L1b",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "green",
+            "views": [{
+                "id": "SWARM-L1b",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "SWARM-L1b_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SWARM-L1b",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        }, {
+            "name": "Cris",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "Cris",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "Cris_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "Cris",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        }, {
+            "name": "ALARO Temperature isobaric",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "ALARO_Temperature_isobaric",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "ALARO_Temperature_isobaric_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "Cris",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        }, {
+            "name": "ALARO Specific Humidity",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "ALARO_Specific_Humidity",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "LARO_Specific_Humidity_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "Cris",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        }, {
+            "name": "SPOT 4 View",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "SPOT4_View",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SPOT4_View",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        }, {
+            "name": "PanEuropean Fractional Snow Cover",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "EOWCS",
+            "color": "green",
+            "views": [{
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "WMS",
+                "urls": [
+                    "http://neso.cryoland.enveo.at/cryoland/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "EOWCS",
+                "url": "http://neso.cryoland.enveo.at/cryoland/ows"
+            }
+        }, {
+            "name": "PanEuropean Snow Water Equivalent",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "EOWCS",
+            "color": "red",
+            "views": [{
+                "id": "daily_SWE_PanEuropean_Microwave",
+                "protocol": "WMS",
+                "urls": [
+                    "http://neso.cryoland.enveo.at/cryoland/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "daily_SWE_PanEuropean_Microwave",
+                "protocol": "EOWCS",
+                "url": "http://neso.cryoland.enveo.at/cryoland/ows"
+            }
+        }, {
+            "name": "Digital Elevation Model",
+            "visible": true,
+            "timeSlider": false,
+            "color": "lightgray",
+            "views": [{
+                "id": "Wireframe",
+                "protocol": "DEM",
+                "urls": [
+                    "http://data.eox.at/elevation?"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {}
+        }, {
+            "name": "Wireframe",
+            "visible": true,
+            "timeSlider": false,
+            "color": "lightgray",
+            "views": [{
+                "id": "Wireframe",
+                "protocol": "WIREFRAME",
+                "urls": [
+                    "http://localhost:9000/ows?"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {}
+        }],
+        "overlays": [{
+            "name": "Streets",
+            "id": "overlay",
             "protocol": "WMTS",
+            "visible": true,
             "urls": [
-              "http://a.tiles.maps.eox.at/wmts/",
-              "http://b.tiles.maps.eox.at/wmts/",
-              "http://c.tiles.maps.eox.at/wmts/",
-              "http://d.tiles.maps.eox.at/wmts/",
-              "http://e.tiles.maps.eox.at/wmts/"
+                "http://a.tiles.maps.eox.at/wmts/",
+                "http://b.tiles.maps.eox.at/wmts/",
+                "http://c.tiles.maps.eox.at/wmts/",
+                "http://d.tiles.maps.eox.at/wmts/",
+                "http://e.tiles.maps.eox.at/wmts/"
             ],
             "matrixSet": "WGS84",
             "style": "default",
             "format": "image/png",
-            "maxExtent": [-180.000000,-90.000000,180.000000,90.000000],
-            "resolutions": [ 0.70312500000000000000,0.35156250000000000000,0.17578125000000000000,0.08789062500000000000,0.04394531250000000000,0.02197265625000000000,0.01098632812500000000,0.00549316406250000000,0.00274658203125000000,0.00137329101562500000,0.00068664550781250000,0.00034332275390625000,0.00017166137695312500,0.00008583068847656250,0.00004291534423828120,0.00002145767211914060,0.00001072883605957030,0.00000536441802978516 ],
+            "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+            "resolutions": [0.70312500000000000000, 0.35156250000000000000, 0.17578125000000000000, 0.08789062500000000000, 0.04394531250000000000, 0.02197265625000000000, 0.01098632812500000000, 0.00549316406250000000, 0.00274658203125000000, 0.00137329101562500000, 0.00068664550781250000, 0.00034332275390625000, 0.00017166137695312500, 0.00008583068847656250, 0.00004291534423828120, 0.00002145767211914060, 0.00001072883605957030, 0.00000536441802978516],
             "projection": "EPSG:4326",
             "gutter": 0,
             "buffer": 0,
@@ -84,532 +353,285 @@
             "isphericalMercator": false,
             "wrapDateLine": true,
             "zoomOffset": 0
-          }, {
-            "id": "bluemarble",
-            "protocol": "WMS",
-            "urls": [
-                "http://tiles.maps.eox.at/wms"
-            ],
-            "style": "default",
-            "format": "image/jpeg",
-            "crs": "EPSG:4326"
-          }
-        ]
-      }
-    ],
-    "products": [
-      {
-        "name": "Cloudsat",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"purple",
-        "views": [
-          {
-            "id": "Cloudsat",
-            "protocol": "W3DS",
-            "urls": [
-                    "http://localhost:9000/ows"
-            ],
-            "style": "default",
-            "format": "model/gltf"
-          }, {
-            "id": "Cloudsat_outlines",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "vrvis_demo",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
-        }
-      },
-      {
-        "name": "Cris",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"blue",
-        "views": [
-          {
-            "id": "Cris",
-            "protocol": "W3DS",
-            "urls": [
-                    "http://localhost:9000/browse/ows"
-            ],
-            "style": "default",
-            "format": "model/gltf"
-          }, {
-            "id": "Cris_outlines",
-            "protocol": "WMS",
-            "urls": [
-                "http://localhost:9000/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "Cris",
-          "protocol": "EOWCS",
-          "url": "http://localhost:9000/browse/ows"
-        }
-      },
-      {
-        "name": "SPOT 4 View",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"blue",
-        "views": [
-          {
-            "id": "SPOT4_View",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "SPOT4_View",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
-        }
-      },
-      {
-        "name": "PanEuropean Fractional Snow Cover",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"green",
-        "views": [
-          {
-            "id": "daily_FSC_PanEuropean_Optical",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_FSC_PanEuropean_Optical",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      },
-      {
-        "name": "PanEuropean Snow Water Equivalent",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"red",
-        "views": [
-          {
-            "id": "daily_SWE_PanEuropean_Microwave",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_SWE_PanEuropean_Microwave",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      },
-      {
-          "name": "Digital Elevation Model",
-          "visible": true,
-          "timeSlider": false,
-          "color": "lightgray",
-          "views": [{
-              "id": "Wireframe",
-              "protocol": "DEM",
-              "urls": [
-                  "http://data.eox.at/elevation?"
-              ],
-              "style": "default",
-              "format": "image/png"
-            }
-          ],
-          "download": {}
-      }, {
-          "name": "Wireframe",
-          "visible": true,
-          "timeSlider": false,
-          "color": "lightgray",
-          "views": [{
-              "id": "Wireframe",
-              "protocol": "WIREFRAME",
-              "urls": [
-                  "http://localhost:9000/ows?"
-              ],
-              "style": "default",
-              "format": "image/png"
-            }
-          ],
-          "download": {}
-      }
-    ],
-    "overlays": [
-       {
-        "name": "Streets",
-        "id": "overlay",
-        "protocol": "WMTS",
-        "visible": true,
-        "urls": [
-          "http://a.tiles.maps.eox.at/wmts/",
-          "http://b.tiles.maps.eox.at/wmts/",
-          "http://c.tiles.maps.eox.at/wmts/",
-          "http://d.tiles.maps.eox.at/wmts/",
-          "http://e.tiles.maps.eox.at/wmts/"
-        ],
-        "matrixSet": "WGS84",
-        "style": "default",
-        "format": "image/png",
-        "maxExtent": [-180.000000,-90.000000,180.000000,90.000000],
-        "resolutions": [ 0.70312500000000000000,0.35156250000000000000,0.17578125000000000000,0.08789062500000000000,0.04394531250000000000,0.02197265625000000000,0.01098632812500000000,0.00549316406250000000,0.00274658203125000000,0.00137329101562500000,0.00068664550781250000,0.00034332275390625000,0.00017166137695312500,0.00008583068847656250,0.00004291534423828120,0.00002145767211914060,0.00001072883605957030,0.00000536441802978516 ],
-        "projection": "EPSG:4326",
-        "gutter": 0,
-        "buffer": 0,
-        "units": "dd",
-        "transitionEffect": "resize",
-        "isphericalMercator": false,
-        "wrapDateLine": true,
-        "zoomOffset": 0
-      }
-    ]
-  },
+        }]
+    },
 
 
-  "regions": [
-    {
-      "name": "main",
-      "class": ""
-    },
-    {
-      "name": "leftSideBar",
-      "class": ""
-    },
-    {
-      "name": "rightSideBar",
-      "class": ""
-    },
-    {
-      "name": "optionsBar",
-      "class": ""
-    },
-    {
-      "name": "topBar",
-      "class": ""
-    },
-    {
-      "name": "bottomBar",
-      "class": ""
-    },
-    {
-      "name": "viewContent",
-      "class": ""
-    },
-    {
-      "name": "storyView",
-      "class": ""
-    }
-  ],
-
-  "navBarConfig": {
-    "title" : "V-MANIP",
-    "url" : "http://www.v-manip.eox.at",
-    "items" : [
-      {
-        "name" : "Layers",
-        "icon" : "fa-globe",
-        "eventToRaise" : "ui:open:layercontrol",
-        "template" : "LayerControl"
-      },
-      {
-        "name" : "Tools",
-        "icon" : "fa-wrench",
-        "eventToRaise" : "ui:open:toolselection",
-        "template" : "ToolSelection"
-      },
-      {
-        "name" : "Options",
-        "icon" : "fa-tasks",
-        "eventToRaise" : "ui:open:options",
-        "template" : "OptionsControl"
-      },
-      {
-        "name" : "Tutorial",
-        "icon" : "fa-book",
-        "eventToRaise" : "ui:open:storybanner",
-        "template" : "UseCaseTestTemplate"
-      },
-      {
-        "name" : "About",
-        "icon" : "fa-info-circle",
-        "eventToRaise" : "dialog:open:about",
-        "subitems" : [
-          {
-          "name" : "Info",
-          "eventToRaise" : "dialog:open:info",
-          "template" : "info"
-          },
-          {
-          "name" : "Help",
-          "eventToRaise" : "dialog:open:help",
-          "template" : "help"
-          }
-        ]
-      }
-    ]
-  },
-
-  "timeSlider": {
-    "domain": {
-      "start": "2012-05-17T10:15:00Z",
-      "end": "2013-09-17T11:45:00Z"
-    },
-    "brush": {
-       "start": "2013-05-17T11:00:00Z",
-      "end": "2013-05-17T11:17:00Z"
-    }
-  },
-
-
-  "views": [
-    "views/NavBarCollectionView",
-    "views/NavBarItemView",
-    "views/BaseLayerSelectionView",
-    "views/LayerSelectionView",
-    "views/LayerItemView",
-    "views/ContentView",
-    "views/TimeSliderView",
-    "views/ToolSelectionView",
-    "core/ColorRamp/ColorRampView",
-    "views/ToolItemView",
-    "views/DownloadView",
-    "views/StoryBannerView"
-  ],
-
-  "models":[
-    "models/LayerModel",
-    "models/MapModel",
-    "models/NavBarCollection",
-    "models/NavBarItemModel",
-    "models/ToolModel",
-    "models/ToolCollection"
-  ],
-
-  "templates":[
-    {
-      "id":"BulletLayer",
-      "template":"hbs!tmpl/BulletLayer"
-    },
-    {
-      "id":"CheckBoxLayer",
-      "template":"hbs!tmpl/CheckBoxLayer"
-    },
-    {
-      "id":"Info",
-      "template":"hbs!tmpl/Info"
-    },
-    {
-      "id":"LayerControl",
-      "template":"hbs!tmpl/LayerControl"
-    },
-    {
-      "id":"NavBar",
-      "template":"hbs!tmpl/NavBar"
-    },
-    {
-      "id":"NavBarItem",
-      "template":"hbs!tmpl/NavBarItem"
-    },
-    {
-      "id":"NavBarItemList",
-      "template":"hbs!tmpl/NavBarItemList"
-    },
-    {
-      "id":"UIElement",
-      "template":"hbs!tmpl/UIElement"
-    },
-    {
-      "id":"ToolControl",
-      "template":"hbs!tmpl/ToolControl"
-    },
-    {
-      "id":"ToolIcon",
-      "template":"hbs!tmpl/ToolIcon"
-    },
-    {
-      "id":"CheckBoxOverlayLayer",
-      "template":"hbs!tmpl/CheckBoxOverlayLayer"
-    }
-    ,
-    {
-      "id":"UseCaseTestTemplate",
-      "template":"hbs!tmpl/UseCaseTestTemplate"
-    }
-  ],
-
-  "selectionTools":[
-    {
-      "id":"pointSelection",
-      "description": "Allows selection of Points in Map",
-      "icon":"icon-large icon-screenshot"
-    },
-    {
-      "id":"lineSelection",
-      "description": "Allows selection of Lines in Map",
-      "icon":"icon-large icon-vector-path-line"
-    },
-    {
-      "id":"polygonSelection",
-      "description": "Allows selection of Polygons in Map",
-      "icon":"icon-large icon-vector-path-polygon"
-    },
-    {
-      "id":"bboxSelection",
-      "description": "Allows drawing a bounding box selection in Map",
-      "icon":"icon-large icon-vector-path-square"
-    }
-  ],
-
-  "visualizationTools":[
-    {
-      "id":"download",
-      "eventToRaise":"dialog:open:download",
-      "description": "WCS Download Tool for specific selections",
-      "icon":"fa fa-download fa-2x",
-      "enabled":false,
-      "active":false
+    "regions": [{
+        "name": "main",
+        "class": ""
     }, {
-      "id":"selectionManager",
-      "eventToRaise":"ui:open:selectionManager",
-      "description": "Allows importing, exporting and saving selections",
-      "icon":"fa fa-edit fa-2x",
-      "enabled":true,
-      "active":false
+        "name": "leftSideBar",
+        "class": ""
+    }, {
+        "name": "rightSideBar",
+        "class": ""
+    }, {
+        "name": "optionsBar",
+        "class": ""
+    }, {
+        "name": "topBar",
+        "class": ""
+    }, {
+        "name": "bottomBar",
+        "class": ""
+    }, {
+        "name": "viewContent",
+        "class": ""
+    }, {
+        "name": "storyView",
+        "class": ""
+    }],
+
+    "navBarConfig": {
+        "title": "V-MANIP",
+        "url": "http://www.v-manip.eox.at",
+        "items": [{
+            "name": "Layers",
+            "icon": "fa-globe",
+            "eventToRaise": "ui:open:layercontrol",
+            "template": "LayerControl"
+        }, {
+            "name": "Tools",
+            "icon": "fa-wrench",
+            "eventToRaise": "ui:open:toolselection",
+            "template": "ToolSelection"
+        }, {
+            "name": "Options",
+            "icon": "fa-tasks",
+            "eventToRaise": "ui:open:options",
+            "template": "OptionsControl"
+        }, {
+            "name": "Tutorial",
+            "icon": "fa-book",
+            "eventToRaise": "ui:open:storybanner",
+            "template": "UseCaseTestTemplate"
+        }, {
+            "name": "About",
+            "icon": "fa-info-circle",
+            "eventToRaise": "dialog:open:about",
+            "subitems": [{
+                "name": "Info",
+                "eventToRaise": "dialog:open:info",
+                "template": "info"
+            }, {
+                "name": "Help",
+                "eventToRaise": "dialog:open:help",
+                "template": "help"
+            }]
+        }]
+    },
+
+    "timeSlider": {
+        "domain": {
+            "start": "2012-05-17T10:15:00Z",
+            "end": "2013-09-17T11:45:00Z"
+        },
+        "brush": {
+            "start": "2013-05-17T11:00:00Z",
+            "end": "2013-05-17T11:17:00Z"
+        }
+    },
+
+
+    "views": [
+        "views/NavBarCollectionView",
+        "views/NavBarItemView",
+        "views/BaseLayerSelectionView",
+        "views/LayerSelectionView",
+        "views/LayerItemView",
+        "views/ContentView",
+        "views/TimeSliderView",
+        "views/ToolSelectionView",
+        "core/ColorRamp/ColorRampView",
+        "views/ToolItemView",
+        "views/DownloadView",
+        "views/StoryBannerView"
+    ],
+
+    "models": [
+        "models/LayerModel",
+        "models/MapModel",
+        "models/NavBarCollection",
+        "models/NavBarItemModel",
+        "models/ToolModel",
+        "models/ToolCollection"
+    ],
+
+    "templates": [{
+        "id": "BulletLayer",
+        "template": "hbs!tmpl/BulletLayer"
+    }, {
+        "id": "CheckBoxLayer",
+        "template": "hbs!tmpl/CheckBoxLayer"
+    }, {
+        "id": "Info",
+        "template": "hbs!tmpl/Info"
+    }, {
+        "id": "LayerControl",
+        "template": "hbs!tmpl/LayerControl"
+    }, {
+        "id": "NavBar",
+        "template": "hbs!tmpl/NavBar"
+    }, {
+        "id": "NavBarItem",
+        "template": "hbs!tmpl/NavBarItem"
+    }, {
+        "id": "NavBarItemList",
+        "template": "hbs!tmpl/NavBarItemList"
+    }, {
+        "id": "UIElement",
+        "template": "hbs!tmpl/UIElement"
+    }, {
+        "id": "ToolControl",
+        "template": "hbs!tmpl/ToolControl"
+    }, {
+        "id": "ToolIcon",
+        "template": "hbs!tmpl/ToolIcon"
+    }, {
+        "id": "CheckBoxOverlayLayer",
+        "template": "hbs!tmpl/CheckBoxOverlayLayer"
+    }, {
+        "id": "UseCaseTestTemplate",
+        "template": "hbs!tmpl/UseCaseTestTemplate"
+    }],
+
+    "selectionTools": [{
+        "id": "pointSelection",
+        "description": "Allows selection of Points in Map",
+        "icon": "icon-large icon-screenshot"
+    }, {
+        "id": "lineSelection",
+        "description": "Allows selection of Lines in Map",
+        "icon": "icon-large icon-vector-path-line"
+    }, {
+        "id": "polygonSelection",
+        "description": "Allows selection of Polygons in Map",
+        "icon": "icon-large icon-vector-path-polygon"
+    }, {
+        "id": "bboxSelection",
+        "description": "Allows drawing a bounding box selection in Map",
+        "icon": "icon-large icon-vector-path-square"
+    }],
+
+    "visualizationTools": [{
+            "id": "download",
+            "eventToRaise": "dialog:open:download",
+            "description": "WCS Download Tool for specific selections",
+            "icon": "fa fa-download fa-2x",
+            "enabled": false,
+            "active": false
+        }, {
+            "id": "selectionManager",
+            "eventToRaise": "ui:open:selectionManager",
+            "description": "Allows importing, exporting and saving selections",
+            "icon": "fa fa-edit fa-2x",
+            "enabled": true,
+            "active": false
+        }
+
+    ],
+
+    "visualizationModes": [{
+            "id": "SingleView",
+            "eventToRaise": "layout:switch:singleview",
+            "description": "Single view of map",
+            "icon": "fa fa-stop fa-2x",
+            "enabled": true,
+            "active": true
+        }, {
+            "id": "SplitView",
+            "eventToRaise": "layout:switch:splitview",
+            "description": "Splits screen to visualize two maps side by side",
+            "icon": "fa fa-pause fa-2x",
+            "enabled": true,
+            "active": false
+        }, {
+            "id": "QuadView",
+            "eventToRaise": "layout:switch:quadview",
+            "description": "Splits screen into four windows displaying one map on each corner",
+            "icon": "fa fa-th-large fa-2x",
+            "enabled": true,
+            "active": false
+        }
+
+    ],
+
+    "backendConfig": {
+        "MeshFactory": {
+            "protocol": "W3DS",
+            "url": "http://demo.v-manip.eox.at/browse/ows?",
+            "version": "1.0.0"
+        },
+        "W3DSDataUrl": "http://demo.v-manip.eox.at/gltf/"
+    },
+
+    "colorRamp": {
+        "alphaThreshold": 0.05,
+        "steps": [{
+            "start": 0.0,
+            "stop": 0.063,
+            "color": [0.043, 0.059, 0.000, 1.0]
+        }, {
+            "start": 0.063,
+            "stop": 0.125,
+            "color": [0.227, 0.102, 0.004, 1.0]
+        }, {
+            "start": 0.125,
+            "stop": 0.188,
+            "color": [0.388, 0.153, 0.000, 1.0]
+        }, {
+            "start": 0.188,
+            "stop": 0.250,
+            "color": [0.420, 0.549, 0.000, 1.0]
+        }, {
+            "start": 0.250,
+            "stop": 0.313,
+            "color": [0.000, 0.718, 0.047, 1.0]
+        }, {
+            "start": 0.313,
+            "stop": 0.375,
+            "color": [0.000, 0.878, 0.788, 1.0]
+        }, {
+            "start": 0.375,
+            "stop": 0.438,
+            "color": [0.000, 0.263, 1.000, 1.0]
+        }, {
+            "start": 0.438,
+            "stop": 0.500,
+            "color": [0.565, 0.000, 1.000, 1.0]
+        }, {
+            "start": 0.500,
+            "stop": 0.563,
+            "color": [1.000, 0.000, 0.596, 1.0]
+        }, {
+            "start": 0.563,
+            "stop": 0.625,
+            "color": [1.000, 0.231, 0.000, 1.0]
+        }, {
+            "start": 0.625,
+            "stop": 0.688,
+            "color": [0.933, 1.000, 0.027, 1.0]
+        }, {
+            "start": 0.688,
+            "stop": 0.750,
+            "color": [0.286, 1.000, 0.208, 1.0]
+        }, {
+            "start": 0.750,
+            "stop": 0.813,
+            "color": [0.376, 1.000, 0.831, 1.0]
+        }, {
+            "start": 0.813,
+            "stop": 0.875,
+            "color": [0.529, 0.733, 1.000, 1.0]
+        }, {
+            "start": 0.850,
+            "stop": 0.938,
+            "color": [0.820, 0.698, 1.000, 1.0]
+        }, {
+            "start": 0.938,
+            "stop": 1.0,
+            "color": [1.000, 0.867, 0.969, 1.0]
+        }]
     }
-
-  ],
-
-  "visualizationModes":[
-    {
-      "id":"SingleView",
-      "eventToRaise":"layout:switch:singleview",
-      "description": "Single view of map",
-      "icon":"fa fa-stop fa-2x",
-      "enabled":true,
-      "active":true
-    },
-    {
-      "id":"SplitView",
-      "eventToRaise":"layout:switch:splitview",
-      "description": "Splits screen to visualize two maps side by side",
-      "icon":"fa fa-pause fa-2x",
-      "enabled":true,
-      "active":false
-    },
-    {
-      "id":"QuadView",
-      "eventToRaise":"layout:switch:quadview",
-      "description": "Splits screen into four windows displaying one map on each corner",
-      "icon":"fa fa-th-large fa-2x",
-      "enabled":true,
-      "active":false
-    }
-
-  ],
-
-  "backendConfig": {
-    "MeshFactory": {
-      "protocol": "W3DS",
-      "url": "http://demo.v-manip.eox.at/browse/ows?",
-      "version": "1.0.0"
-    },
-    "W3DSDataUrl": "http://demo.v-manip.eox.at/gltf/"
-  },
-
-  "colorRamp": {
-    "alphaThreshold": 0.05,
-    "steps": [{
-      "start": 0.0,
-      "stop": 0.063,
-      "color": [0.043,0.059,0.000,1.0]
-    },{
-      "start": 0.063,
-      "stop": 0.125,
-      "color": [0.227,0.102,0.004,1.0]
-    },{
-      "start": 0.125,
-      "stop": 0.188,
-      "color": [0.388,0.153,0.000,1.0]
-    },{
-      "start": 0.188,
-      "stop": 0.250,
-      "color": [0.420,0.549,0.000,1.0]
-    },{
-      "start": 0.250,
-      "stop": 0.313,
-      "color": [0.000,0.718,0.047,1.0]
-    },{
-      "start": 0.313,
-      "stop": 0.375,
-      "color": [0.000,0.878,0.788,1.0]
-    },{
-      "start": 0.375,
-      "stop": 0.438,
-      "color": [0.000,0.263,1.000,1.0]
-    },{
-      "start": 0.438,
-      "stop": 0.500,
-      "color": [0.565,0.000,1.000,1.0]
-    },{
-      "start": 0.500,
-      "stop": 0.563,
-      "color": [1.000,0.000,0.596,1.0]
-    },{
-      "start": 0.563,
-      "stop": 0.625,
-      "color": [1.000,0.231,0.000,1.0]
-    },{
-      "start": 0.625,
-      "stop": 0.688,
-      "color": [0.933,1.000,0.027,1.0]
-    },{
-      "start": 0.688,
-      "stop": 0.750,
-      "color": [0.286,1.000,0.208,1.0]
-    },{
-      "start": 0.750,
-      "stop": 0.813,
-      "color": [0.376,1.000,0.831,1.0]
-    },{
-      "start": 0.813,
-      "stop": 0.875,
-      "color": [0.529,0.733,1.000,1.0]
-    },{
-      "start": 0.850,
-      "stop": 0.938,
-      "color": [0.820,0.698,1.000,1.0]
-    },{
-      "start": 0.938,
-      "stop": 1.0,
-      "color": [1.000,0.867,0.969,1.0]
-    }]
-  }
 }
