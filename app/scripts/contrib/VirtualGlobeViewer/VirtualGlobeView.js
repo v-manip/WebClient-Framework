@@ -64,6 +64,20 @@ define([
             // NOTE: The 'listenTo' bindings are automatically unbound by marionette
         },
 
+        supportsLayer: function(model) {
+            // NOTE: Currently we only take into account 'WMS' layers for the RBV:
+            var view = _.find(model.get('views'), function(view) {
+                return view.protocol.toLowerCase() === 'w3ds' &&
+                    view.type.toLowerCase() === 'vertical_curtain';
+            });
+
+            if (view) {
+                return view;
+            }
+
+            return null;
+        },
+
         //----------------//
         // VMANIP ACTIONS //
         //----------------//

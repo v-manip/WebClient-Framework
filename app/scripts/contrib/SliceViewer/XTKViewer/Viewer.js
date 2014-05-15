@@ -154,6 +154,12 @@ define([
         } else { // For loading testdata from a local file 'octet-stream' is the correct mimetype:
             volumes = opts.data['application/octet-stream'];
         }
+
+        if (!volumes) {
+            console.log('[XTKViewer::addVolume] AoI contains no volume data, skipping...');
+            return;
+        }
+
         var num_volumes = Object.keys(volumes).length;
         // var num_volumes = 1;
 
@@ -213,6 +219,10 @@ define([
         }
     };
 
+    XTKViewer.prototype.removeObject = function(name) {
+        
+    };
+
     XTKViewer.prototype.addVolumeToGUI = function(label, volume) {
         // this.mainGUI.removeFolder(label);
 
@@ -247,9 +257,11 @@ define([
         meshgui.open();
     };
 
-    XTKViewer.prototype.destroy = function() {
+    XTKViewer.prototype.reset = function() {
         this.renderer.destroy();
-        this.removeGui(this.mainGUI);
+        if (this.mainGUI) {
+            this.removeGui(this.mainGUI);
+        }
     };
 
     XTKViewer.prototype.removeGui = function(gui) {

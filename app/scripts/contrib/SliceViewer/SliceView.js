@@ -30,15 +30,93 @@ define([
             // FIXXME: read from config!
             var backend = this.legacyContext().backendConfig['MeshFactory'];
             this.baseURL = backend.url + 'service=W3DS&request=GetScene&crs=EPSG:4326&version=' + backend.version;
+
+            // FIXXME: this should be triggered by the BaseView!
+            this._setLayersFromAppContext();
         },
 
+        onStartup: function(selected_layers) {
+            console.log('blalbu');
+        },
+
+        // FIXXME: this method should be put into the BaseView to do a basic setup of
+        // the component. Developers can then hook to the 'didInsertElement' function
+        // in using VMANIP 'actions' (via an 'afterDOMInsert' action). 'Actions' have
+        // to be implemented first ;-)
         didInsertElement: function() {
+            if (!this.getViewer()) {
+                // FIXXME: Necessary to trigger 'onStartup()'. This has to be triggered
+                // directly in the BaseView!
+                this._setLayersFromAppContext();
+            }
+
+            // FIXXME: After implementing VMANIP 'actions' most of the 'listenTo' calls
+            // can be done implicitly in reading the 'actions' has and wiring up the
+            // onXXXHandler() actions there to the corresponding mediator event. This will
+            // help to do a cleanup of this repetitive code.
+            this.listenTo(this.legacyContext(), 'map:layer:change', this._onLayerChange);
             this.listenTo(this.legacyContext(), 'selection:changed', this._setCurrentAoI);
             this.listenTo(this.legacyContext(), 'time:change', this._onTimeChange);
         },
 
         didRemoveElement: function() {
             // NOTE: The 'listenTo' bindings are automatically unbound by marionette
+        },
+
+        supportsLayer: function(model) {
+            // NOTE: Currently we only take into account 'WMS' layers for the RBV:
+            var view = _.find(model.get('views'), function(view) {
+                return view.protocol.toLowerCase() === 'w3ds' &&
+                    view.type.toLowerCase() === 'volumetric';
+            });
+
+            if (view) {
+                return view;
+            }
+
+            return null;
+        },
+
+        //----------------//
+        // VMANIP ACTIONS //
+        //----------------//
+
+        // FIXXME: create a distinct hash for that, e.g.:
+        // actions: {
+        //     onResize: function() {},
+        //     onLayerAdd: function() {},
+        //     onLayerRemove: function() {}
+        //     // ...
+        // }
+        // This way we can provide a defined interface for all
+        // default actions VMANIP is providing us, which is encapsulated
+        // clearly within the 'actions' hash. This is basically the 
+        // concrete interface implementation for the specific view.
+        //
+        // Note: This approach is inspired by Ember's 'actions' hash.
+
+        onResize: function() {
+            if (this.getViewer()) {
+                this.getViewer().onResize();
+            }
+        },
+
+        onLayerAdd: function(model, isBaseLayer, views) {
+            _.forEach(views, function(view) {
+                // var layer = this.context.getLayerById(view.id, 'imagery');
+                // this.context.trigger('change:layer:visibility', layer, true);
+                console.log('[SliceView::onLayerAdd] adding: ' + view.id);
+                this._addVolume(view.id);
+            }.bind(this));
+        },
+
+        onLayerRemove: function(model, isBaseLayer, views) {
+            _.forEach(views, function(view) {
+                // var layer = this.context.getLayerById(view.id, 'imagery');
+                // this.context.trigger('change:layer:visibility', layer, true);
+                console.log('[SliceView::onLayerRemove] removing: ' + view.id);
+                this._removeVolume(view.id);
+            }.bind(this));
         },
 
         showEmptyView: function() {
@@ -48,14 +126,8 @@ define([
 
         hideEmptyView: function() {
             // CAUTION: simply removing the content of the view's div can have sideeffects. Be cautious not
-            // to accidently remove previousle created elements!
+            // to accidently remove previously created elements!
             this.$el.html('');
-        },
-
-        onResize: function() {
-            if (this.getViewer()) {
-                this.getViewer().onResize();
-            }
         },
 
         _setCurrentAoI: function(area) {
@@ -76,13 +148,23 @@ define([
                     toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
                 }
 
-                // 3. store the current layer
-                // FIXXME: integrate with context!
-                this.currentLayer = 'Cris';
-
-                // 4. add the data to the viewer
-                this._addVolume(this.currentToI, this.currentAoI, this.currentLayer);
+                // Remove all currently shown volumes and request the new data to update the view:
+                this._update();
             }
+        },
+
+        _update: function() {
+            // if (this.getViewer()) {
+            //     this.getViewer().reset();
+            // }
+
+            _.forEach(this.selectedLayers(), function(layer_info, key) {
+                var view = this.supportsLayer(layer_info.model);
+                if (view) {
+                    this._addVolume(view.id);
+                    console.log('[SliceView::_udpate] added layer: ' + view.id);
+                }
+            }.bind(this));
         },
 
         _onTimeChange: function(time) {
@@ -91,7 +173,7 @@ define([
 
             this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 
-            this._addVolume(this.currentToI, this.currentAoI, this.currentLayer);
+            this._addVolume(this.currentLayer);
         },
 
         _createViewer: function() {
@@ -103,16 +185,18 @@ define([
             });
         },
 
-        _addVolume: function(toi, aoi, layer) {
+        _addVolume: function(layer) {
             this.enableEmptyView(false);
             this.onShow();
 
             var volume_url = this.baseURL;
-            volume_url += '&boundingBox=' + aoi;
-            volume_url += '&time=' + toi;
+            volume_url += '&boundingBox=' + this.currentAoI;
+            volume_url += '&time=' + this.currentToI;
             volume_url += '&layer=' + layer;
             volume_url += '&format=model/nii-gz';
 
+            // FIXXME: If the viewer is not instantiated here, but in 'didInsertElemnet' the
+            // volumes are not displayed. No idea why...
             if (!this.getViewer()) {
                 this.setViewer(this._createViewer());
             }
@@ -123,7 +207,7 @@ define([
 
             // TESTDATA:
             // volume_url = './data/mptest.response';
-            // volume_url = 'http://demo.v-manip.eox.at/browse/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
+            //volume_url = 'http://demo.v-manip.eox.at/browse/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
             // volume_url = 'http://localhost:9000/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
 
             // volume_url = './data/Temperature.nii.gz';
@@ -153,7 +237,7 @@ define([
                 //
 
                 var model_url = this.baseURL;
-                model_url += '&boundingBox=' + aoi;
+                model_url += '&boundingBox=' + this.currentAoI;
                 model_url += '&time=' + toi;
                 model_url += '&layer=' + layer;
                 model_url += '&format=model/obj';
@@ -234,6 +318,10 @@ define([
             // request.responseType = 'arraybuffer';
             // // request.responseType = 'text/plain';
             // request.send(null);
+        },
+
+        _removeVolume: function(layer_name) {
+            this.getViewer().removeObject(layer_name);
         }
     });
 
