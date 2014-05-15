@@ -184,7 +184,7 @@
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "blue",
+            "color": "orange",
             "views": [{
                 "id": "ALARO_Temperature_isobaric",
                 "protocol": "W3DS",
@@ -204,7 +204,7 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "Cris",
+                "id": "ALARO_Temperature_isobaric",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             }
@@ -213,7 +213,7 @@
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "blue",
+            "color": "olive",
             "views": [{
                 "id": "ALARO_Specific_Humidity",
                 "protocol": "W3DS",
@@ -224,7 +224,7 @@
                 "format": "model/gltf",
                 "type": "volumetric"
             }, {
-                "id": "LARO_Specific_Humidity_outlines",
+                "id": "ALARO_Specific_Humidity_outlines",
                 "protocol": "WMS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -233,7 +233,7 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "Cris",
+                "id": "ALARO_Specific_Humidity",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             }
