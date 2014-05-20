@@ -354,6 +354,16 @@ define([
                 }
             }.bind(this));
 
+            // var supported_views = [];
+
+            // _.forEach(this._selectedLayers, function(model) {
+            //     var view = this.supportsLayer(model);
+            //     if (view) {
+            //         supported_views.push(view);
+            //     }
+            // }.bind(this));
+
+            // this.onStartup(supported_views);
             this.onStartup(this._selectedLayers);
         }
     });

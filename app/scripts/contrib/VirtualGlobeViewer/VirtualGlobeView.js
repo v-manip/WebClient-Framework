@@ -65,10 +65,10 @@ define([
         },
 
         supportsLayer: function(model) {
-            // NOTE: Currently we only take into account 'WMS' layers for the RBV:
             var view = _.find(model.get('views'), function(view) {
-                return view.protocol.toLowerCase() === 'w3ds' &&
-                    view.type.toLowerCase() === 'vertical_curtain';
+                return (view.protocol.toLowerCase() === 'w3ds' && view.type.toLowerCase() === 'vertical_curtain') ||
+                    view.protocol.toLowerCase() === 'wms' ||
+                    view.protocol.toLowerCase() === 'wmts';
             });
 
             if (view) {
@@ -76,6 +76,17 @@ define([
             }
 
             return null;
+        },
+
+        onStartup: function(initial_layers) {
+            this.getViewer().clearCache();
+            _.forEach(initial_layers, function(desc, name) {
+                // FIXXME The VGV and the internal viewer have to be ported to display a 'view', not a 'model'!
+                // if (this.supportsLayer(desc.model)) {
+                    this.getViewer().addLayer(desc.model, desc.isBaseLayer);
+                // }
+            }.bind(this));
+            this._sortOverlayLayers();
         },
 
         //----------------//
@@ -153,14 +164,6 @@ define([
             this.getViewer().sortOverlayLayers();
         },
 
-        onStartup: function(initial_layers) {
-            this.getViewer().clearCache();
-            _.each(initial_layers, function(desc, name) {
-                this.getViewer().addLayer(desc.model, desc.isBaseLayer);
-            }.bind(this));
-            this._sortOverlayLayers();
-        },
-
         _onMapCenter: function(pos) {
             var dis = 0;
             switch (pos.l) {
@@ -233,7 +236,7 @@ define([
             // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 
             // Sets the initial colorramp defined in 'config.json':
-            //vgv.setColorRamp(Communicator.mediator.colorRamp);
+            vgv.setColorRamp(Communicator.mediator.colorRamp);
 
             return vgv;
         },
