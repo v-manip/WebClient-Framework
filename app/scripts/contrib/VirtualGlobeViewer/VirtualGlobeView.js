@@ -217,8 +217,7 @@ define([
             var position = {
                 center: [pos.x, pos.y],
                 distance: dis,
-                duration: 100,
-                tilt: 45
+                duration: 100
             }
             this.zoomTo(position);
         },
