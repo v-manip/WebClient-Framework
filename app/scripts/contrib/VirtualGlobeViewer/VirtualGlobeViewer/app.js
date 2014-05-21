@@ -111,11 +111,7 @@ define([
         return coordinates;
     };
 
-    VGV.prototype.addAreaOfInterest = function(geojson, updateAoI) {
-        if (updateAoI && this.currentAoiFeature) {
-            this.aoiLayer.removeFeature(this.currentAoIFeature);
-        }
-
+    VGV.prototype.addAreaOfInterest = function(geojson) {
         // if (!this.aoiLayer) {
         //     this.aoiLayer = new GlobWeb.VectorLayer({
         //         style: style,
@@ -135,7 +131,7 @@ define([
             var altitude = 30000;
             var coordinates = convertFromOpenLayers(geojson, altitude);
 
-            this.currentAoIFeature = {
+            var feature = {
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": coordinates
@@ -145,7 +141,7 @@ define([
                 }
             };
 
-            this.aoiLayer.addFeature(this.currentAoiFeature);
+            this.aoiLayer.addFeature(feature);
         }
     };
 

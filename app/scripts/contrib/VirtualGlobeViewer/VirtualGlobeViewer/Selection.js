@@ -9,7 +9,8 @@
  */
 
 define(['./Point',
-	'virtualglobeviewer/GlobWeb'], function(Point, GlobWeb) {
+	'virtualglobeviewer/GlobWeb'
+], function(Point, GlobWeb) {
 
 	function Selection(layer, base_altitude) {
 		this._points = [];
@@ -27,7 +28,6 @@ define(['./Point',
 		if (this._feature) {
 			this._layer.removeFeature(this._feature);
 		}
-		// FIXXME: are the points garbage collected afterwards or do we have to use splice?
 		this._points = [];
 	};
 
@@ -40,27 +40,37 @@ define(['./Point',
 	};
 
 	Selection.prototype.render = function(height) {
-		if (this._feature) {
-			this._layer.removeFeature(this._feature);
-		}
+		// if (this._feature) {
+		// 	this._layer.removeFeature(this._feature);
+		// }
 
-		var type = "2D";
-		if (height) {
-			this.setHeight(height); // TODO: debug only!
-			type = "3D"
-		}
+		// var type = "2D";
+		// if (height) {
+		// 	this.setHeight(height); // TODO: debug only!
+		// 	type = "3D"
+		// }
 		var coords = this._projectOnSurface(0);
 
 		this._feature = {
 			"geometry": {
 				"type": "Polygon",
-				"area": type,
 				"coordinates": coords
-			},
-			"properties": {
-				"style": this._defaultStyle
-			}
+			}//,
+			// "properties": {
+			// 	"style": this._defaultStyle
+			// }
 		};
+
+		// this._feature = {
+		// 	"geometry": {
+		// 		"type": "Polygon",
+		// 		"area": type,
+		// 		"coordinates": coords
+		// 	},
+		// 	"properties": {
+		// 		"style": this._defaultStyle
+		// 	}
+		// };
 
 		this._layer.addFeature(this._feature);
 	};
@@ -73,7 +83,8 @@ define(['./Point',
 		var coords = [];
 
 		if (grid_resolution === 0) {
-			return this._points;
+			// return this.toArray();
+			return convertToGeoJSON(this._points, 30000);
 		} else {
 			console.log("[SelectionTool::projectOnSurface] NIY");
 
@@ -105,6 +116,27 @@ define(['./Point',
 		}
 
 		return coords;
+	};
+
+	var convertToGeoJSON = function(verts, altitude) {
+		var coordinates = [];
+		for (var idx = 0; idx < verts.length; ++idx) {
+			var p = [];
+
+			p.push(verts[idx].x);
+			p.push(verts[idx].y);
+			p.push(altitude);
+
+			coordinates.push(p);
+		}
+		var p = [];
+
+		p.push(verts[0].x);
+		p.push(verts[0].y);
+		p.push(altitude);
+		coordinates.push(p);
+
+		return coordinates;
 	};
 
 	Selection.prototype.toArray = function() {
@@ -177,9 +209,10 @@ define(['./Point',
 	};
 
 	Selection.prototype._defaultStyle = new GlobWeb.FeatureStyle({
-		fillColor: [255, 110, 0],
-		outlineColor: [0, 0, 0],
-		renderer: "AreaOfInterest"
+		fillColor: [1, 0.5, 0.1, 0.5],
+		strokeColor: [1, 0.5, 0.1, 1],
+		extrude: true,
+		fill: true
 	});
 
 	return Selection;
