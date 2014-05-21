@@ -1,18 +1,13 @@
 var K3D = {};
 
-// FIXXME: K3D defines its own buffer2string method, which one is more performant?
-function ab2str(buf) {
-    return String.fromCharCode.apply(null, new Uint8Array(buf));
-}
-
-function str2ab(str) {
-    var buf = new ArrayBuffer(str.length);
-    var bufView = new Uint8Array(buf);
-    for (var i = 0, strLen = str.length; i < strLen; i++) {
-        bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
-}
+// function str2ab(str) {
+//     var buf = new ArrayBuffer(str.length);
+//     var bufView = new Uint8Array(buf);
+//     for (var i = 0, strLen = str.length; i < strLen; i++) {
+//         bufView[i] = str.charCodeAt(i);
+//     }
+//     return buf;
+// }
 
 K3D.load = function(path, resp, responseType) {
     var request = new XMLHttpRequest();
@@ -69,7 +64,7 @@ K3D.parseMultiPartResponse = function(target, contenttype) {
     // FIXXME: detect arraybuffer in a robust way!
     var multipartdata = null;
     if (typeof target.response !== 'string') {
-        multipartdata = ab2str(target.response);
+        multipartdata = K3D.parse._buffToStr(target.response);
     } else {
         multipartdata = target.response;
     }
