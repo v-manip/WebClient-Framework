@@ -385,7 +385,13 @@ define([
     };
 
     VGV.prototype.zoomTo = function(pos) {
-        this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
+        if (!pos.tilt) {
+            var cur_pos = this.navigation.save();
+            this.navigation.zoomTo(pos.center, pos.distance, pos.duration, cur_pos.tilt);
+        } else {
+
+            this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
+        }
     };
 
     VGV.prototype.setToI = function(time) {
