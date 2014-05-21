@@ -160,8 +160,8 @@ define([
             return;
         }
 
-        var num_volumes = Object.keys(volumes).length;
-        // var num_volumes = 1;
+        var num_volumes = Object.keys(volumes).length,
+            volumes_to_add = [];
 
         for (var idx = 0; idx < num_volumes; idx++) {
             var volume_item = volumes[idx],
@@ -204,40 +204,40 @@ define([
                 volume: volume
             };
             entries.push(volume_info);
+            volumes_to_add.push(volume_info);
 
             this.renderer.add(volume);
-
-            // The onShowtime method gets executed after all files were fully loaded and
-            // just before the first rendering attempt. To ensure that the callback gets called
-            // when volumes are added the internal '_onShowtime' flag is set to 'false' here
-            // so that the callback gets called on the next render tick.
-            this.renderer._onShowtime = false;
-
-            this.renderer.onShowtime = function(entries) {
-                if (!this.baseInitDone) {
-                    var gui = this.mainGUI = new dat.GUI({
-                        autoPlace: true
-                    });
-                    this.renderer.container.appendChild(gui.domElement);
-                    this.baseInitDone = true;
-                }
-
-                // (we need to create the GUI during onShowtime(..) since we do not know the
-                // volume dimensions before the loading was completed)
-                for (var i=0; i<entries.length; i++) {
-                    var gui = this.addVolumeToGUI(entries[i].label, entries[i].volume);
-                    entries[i]['gui'] = gui;
-                }
-                
-                
-            }.bind(this, entries);
-
-            // NOTE: This triggers the loading of the volume and executes
-            // r.onShowtime() once done. Be sure to call render AFTER you
-            // added a volume. Otherwise values on the volume like min, max.
-            // range are not yet calculated!
-            this.renderer.render();
         }
+
+        // The onShowtime method gets executed after all files were fully loaded and
+        // just before the first rendering attempt. To ensure that the callback gets called
+        // when volumes are added the internal '_onShowtime' flag is set to 'false' here
+        // so that the callback gets called on the next render tick.
+        this.renderer._onShowtime = false;
+
+        this.renderer.onShowtime = function(entries) {
+            if (!this.baseInitDone) {
+                var gui = this.mainGUI = new dat.GUI({
+                    autoPlace: true
+                });
+                this.renderer.container.appendChild(gui.domElement);
+                this.baseInitDone = true;
+            }
+
+            // Note: we need to create the GUI during onShowtime(..) since we do not know the
+            // volume dimensions before the loading was completed
+            for (var idx = 0; idx < volumes_to_add.length; idx++) {
+                var volume_info = volumes_to_add[idx];
+                var gui = this.addVolumeToGUI(volume_info.label, volume_info.volume);
+                volume_info['gui'] = gui;
+            }
+        }.bind(this, entries);
+
+        // NOTE: This triggers the loading of the volume and executes
+        // r.onShowtime() once done. Be sure to call render AFTER you
+        // added a volume. Otherwise values on the volume like min, max.
+        // range are not yet calculated!
+        this.renderer.render();
     };
 
     XTKViewer.prototype.removeObject = function(layer_name) {
@@ -250,6 +250,13 @@ define([
                     this.removeGui(info.gui);
                 }
             }.bind(this));
+
+            delete this.volumes[layer_name];
+
+            // Recenter the view after all volumes are removed:
+            if (Object.keys(this.volumes).length === 0) {
+                this.onResize();
+            }
         }
     };
 
@@ -267,8 +274,8 @@ define([
         // .. configure the volume rendering opacity
         var opacityController = volumegui.add(volume, 'opacity', 0, 1).listen();
         // .. and the threshold in the min..max range
-        var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max + 0.0001  );
-        var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max + 0.0001  );
+        var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max + 0.0001);
+        var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max + 0.0001);
         var lowerWindowController = volumegui.add(volume, 'windowLow', volume.min, volume.max);
         var upperWindowController = volumegui.add(volume, 'windowHigh', volume.min, volume.max);
         // the indexX,Y,Z are the currently displayed slice indices in the range

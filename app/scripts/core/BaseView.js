@@ -354,6 +354,11 @@ define([
                 }
             }.bind(this));
 
+            // FIXXME: I'd suggest to not work with models in the V-MANIP view, but rather use the 'views' in the model
+            // as the fundamental datastructure. The reason is that a model can contain multiple views, not all have to
+            // be compatible with the viewer. The following code lines are implementing the 'views' approach for selecting
+            // the selected *and* compatible views (not layer models, as before):
+
             // var supported_views = [];
 
             // _.forEach(this._selectedLayers, function(model) {
