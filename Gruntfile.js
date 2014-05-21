@@ -76,7 +76,9 @@ module.exports = function (grunt) {
             proxies: [{
                 context: '/ows',
                 host: 'localhost',
+                // host: 'http://demo.v-manip.eox.at',
                 port: 38000,
+                // port: 80,
                 https: false,
                 changeOrigin: true,
                 xforward: false

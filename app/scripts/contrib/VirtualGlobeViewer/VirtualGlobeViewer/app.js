@@ -168,7 +168,7 @@ define([
         }
 
         var w3ds = _.find(views, function(view) {
-            return view.protocol === "W3DS";
+            return view.protocol === 'W3DS' && view.type === 'vertical_curtain';
         });
 
         var wmts = _.find(views, function(view) {
