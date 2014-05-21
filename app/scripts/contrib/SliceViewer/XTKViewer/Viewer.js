@@ -181,7 +181,6 @@ define([
             }
 
             volume.volumeRendering = opts.volumeRendering || undefined;
-            volume.upperThreshold = opts.upperThreshold || undefined;
             volume.opacity = opts.opacity || undefined;
             volume.minColor = opts.minColor || undefined;
             volume.maxColor = opts.maxColor || undefined;
@@ -192,10 +191,12 @@ define([
             // Cache the volume for later removal:
             var entries = this.volumes[opts.filename];
             if (!entries) {
-                entries = this.volumes[opts.filename] = [];
+                this.volumes[opts.filename] = [];
+                entries = this.volumes[opts.filename];
+                label += ' ' + (entries.length + 1);
             } else {
                 entries = this.volumes[opts.filename];
-                label += ' ' + entries.length + 1;
+                label += ' ' + (entries.length + 1);
             }
 
             var volume_info = {
@@ -212,7 +213,7 @@ define([
             // so that the callback gets called on the next render tick.
             this.renderer._onShowtime = false;
 
-            this.renderer.onShowtime = function(volume_info) {
+            this.renderer.onShowtime = function(entries) {
                 if (!this.baseInitDone) {
                     var gui = this.mainGUI = new dat.GUI({
                         autoPlace: true
@@ -223,10 +224,13 @@ define([
 
                 // (we need to create the GUI during onShowtime(..) since we do not know the
                 // volume dimensions before the loading was completed)
-                var gui = this.addVolumeToGUI(volume_info.label, volume_info.volume);
-                volume_info['gui'] = gui;
+                for (var i=0; i<entries.length; i++) {
+                    var gui = this.addVolumeToGUI(entries[i].label, entries[i].volume);
+                    entries[i]['gui'] = gui;
+                }
                 
-            }.bind(this, volume_info);
+                
+            }.bind(this, entries);
 
             // NOTE: This triggers the loading of the volume and executes
             // r.onShowtime() once done. Be sure to call render AFTER you
@@ -263,15 +267,16 @@ define([
         // .. configure the volume rendering opacity
         var opacityController = volumegui.add(volume, 'opacity', 0, 1).listen();
         // .. and the threshold in the min..max range
-        var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max);
-        var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max);
+        var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max + 0.0001  );
+        var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max + 0.0001  );
         var lowerWindowController = volumegui.add(volume, 'windowLow', volume.min, volume.max);
         var upperWindowController = volumegui.add(volume, 'windowHigh', volume.min, volume.max);
         // the indexX,Y,Z are the currently displayed slice indices in the range
         // 0..dimensions-1
+
         var sliceXController = volumegui.add(volume, 'indexX', 0, volume.range[0] - 1);
         var sliceYController = volumegui.add(volume, 'indexY', 0, volume.range[1] - 1);
-        var sliceZController = volumegui.add(volume, 'indexZ', 0, volume.range[2] - 1);
+        var sliceZController = volumegui.add(volume, 'indexZ', 0, Math.round(volume.range[2] - 1));
 
         volumegui.open();
 
