@@ -216,7 +216,7 @@ define([
         this.renderer._onShowtime = false;
 
         this.renderer.onShowtime = function(entries) {
-            if (!this.baseInitDone) {
+            if (!this.mainGUI) {
                 var gui = this.mainGUI = new dat.GUI({
                     autoPlace: true
                 });
@@ -256,6 +256,10 @@ define([
             // Recenter the view after all volumes are removed:
             if (Object.keys(this.volumes).length === 0) {
                 this.onResize();
+                if (this.mainGUI) {
+                    this.removeGui(this.mainGUI);
+                    this.mainGUI = null;
+                }
             }
         }
     };
