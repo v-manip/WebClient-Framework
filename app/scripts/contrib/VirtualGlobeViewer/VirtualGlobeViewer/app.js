@@ -6,8 +6,9 @@ define([
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
+    './SelectionTool',
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, SelectionTool, OpenLayers) {
 
     'use strict';
 
@@ -31,7 +32,20 @@ define([
             shadersPath: "/bower_components/virtualglobeviewer/shaders/"
         });
 
-        this.aoiLayer = undefined;
+        // this.aoiLayer = undefined;
+        var style = new GlobWeb.FeatureStyle({
+            fillColor: [1, 0.5, 0.1, 0.5],
+            strokeColor: [1, 0.5, 0.1, 1],
+            extrude: true,
+            fill: true
+        });
+
+        this.aoiLayer = new GlobWeb.VectorLayer({
+            style: style,
+            opacity: 1
+        });
+        this.globe.addLayer(this.aoiLayer);
+
         this.layerCache = {};
         this.overlayLayers = [];
 
@@ -40,6 +54,17 @@ define([
         });
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
+
+        var selection_tool = new SelectionTool(this.globe, this.navigation, this.aoiLayer);
+        // selection_tool.setInSelectionCallback(function(selection) {
+        //     var Store = function(verts) {
+        //         this.verts = verts;
+        //         this.getVertices = function() {
+        //             return this.verts;
+        //         }
+        //     }
+        //     this.addAreaOfInterest(new Store(selection._points), true);
+        // }.bind(this));
 
         // // glTF loader test:
         // var sgRenderer;
@@ -86,14 +111,18 @@ define([
         return coordinates;
     };
 
-    VGV.prototype.addAreaOfInterest = function(geojson) {
-        if (!this.aoiLayer) {
-            this.aoiLayer = new GlobWeb.VectorLayer({
-                style: style,
-                opacity: 1
-            });
-            this.globe.addLayer(this.aoiLayer);
+    VGV.prototype.addAreaOfInterest = function(geojson, updateAoI) {
+        if (updateAoI && this.currentAoiFeature) {
+            this.aoiLayer.removeFeature(this.currentAoIFeature);
         }
+
+        // if (!this.aoiLayer) {
+        //     this.aoiLayer = new GlobWeb.VectorLayer({
+        //         style: style,
+        //         opacity: 1
+        //     });
+        //     this.globe.addLayer(this.aoiLayer);
+        // }
 
         if (geojson) {
             var style = new GlobWeb.FeatureStyle({
@@ -106,7 +135,7 @@ define([
             var altitude = 30000;
             var coordinates = convertFromOpenLayers(geojson, altitude);
 
-            var selection0 = {
+            this.currentAoIFeature = {
                 "geometry": {
                     "type": "Polygon",
                     "coordinates": coordinates
@@ -116,7 +145,7 @@ define([
                 }
             };
 
-            this.aoiLayer.addFeature(selection0);
+            this.aoiLayer.addFeature(this.currentAoiFeature);
         }
     };
 
