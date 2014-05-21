@@ -93,45 +93,16 @@
             }]
         }],
         "products": [{
-            "name": "Cloudsat",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "color": "purple",
-            "views": [{
-                "id": "Cloudsat",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "vertical_curtain"
-            }, {
-                "id": "Cloudsat_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "Cloudsat",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        }, {
             "name": "SWARM-L1b",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "green",
+            "color": "blue",
             "views": [{
                 "id": "SWARM-L1b",
                 "protocol": "W3DS",
                 "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
+                    "http://demo.vires.eox.at/browse/ows"
                 ],
                 "style": "default",
                 "format": "model/gltf",
@@ -140,7 +111,27 @@
                 "id": "SWARM-L1b_outlines",
                 "protocol": "WMS",
                 "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SWARM-L1b",
+                "protocol": "EOWCS",
+                "url": "http://demo.vires.eox.at/browse/ows"
+            }
+        },{
+            "name": "Geoid height above reference ellipsoid (GOCE)",
+            "visible": false,
+            "timeSlider": false,
+            "timeSliderProtocol": "WPS",
+            "color": "green",
+            "views": [{
+                "id": "QGIS-MAP",
+                "protocol": "WMS",
+                "urls": [
+                    "http://data.eox.at/goce_ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -150,183 +141,7 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             }
-        }, {
-            "name": "Cris",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "color": "blue",
-            "views": [{
-                "id": "Cris",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "Cris_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "Cris",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
         },{
-            "name": "Tininnilik",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "color": "blue",
-            "views": [{
-                "id": "Tininnilik",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            },{
-                "id": "Tininnilik",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "Tininnilik",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        }, {
-            "name": "ALARO Temperature isobaric",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "color": "orange",
-            "views": [{
-                "id": "ALARO_Temperature_isobaric",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "ALARO_Temperature_isobaric_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "ALARO_Temperature_isobaric",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        }, {
-            "name": "ALARO Specific Humidity",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "color": "olive",
-            "views": [{
-                "id": "ALARO_Specific_Humidity",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "ALARO_Specific_Humidity_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "ALARO_Specific_Humidity",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        }, {
-            "name": "SPOT 4 View",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "color": "blue",
-            "views": [{
-                "id": "SPOT4_View",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "SPOT4_View",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        }, {
-            "name": "PanEuropean Fractional Snow Cover",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "EOWCS",
-            "color": "green",
-            "views": [{
-                "id": "daily_FSC_PanEuropean_Optical",
-                "protocol": "WMS",
-                "urls": [
-                    "http://neso.cryoland.enveo.at/cryoland/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "daily_FSC_PanEuropean_Optical",
-                "protocol": "EOWCS",
-                "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-            }
-        }, {
-            "name": "PanEuropean Snow Water Equivalent",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "EOWCS",
-            "color": "red",
-            "views": [{
-                "id": "daily_SWE_PanEuropean_Microwave",
-                "protocol": "WMS",
-                "urls": [
-                    "http://neso.cryoland.enveo.at/cryoland/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "daily_SWE_PanEuropean_Microwave",
-                "protocol": "EOWCS",
-                "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-            }
-        }, {
             "name": "Digital Elevation Model",
             "visible": true,
             "timeSlider": false,
@@ -336,21 +151,6 @@
                 "protocol": "DEM",
                 "urls": [
                     "http://data.eox.at/elevation?"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {}
-        }, {
-            "name": "Wireframe",
-            "visible": true,
-            "timeSlider": false,
-            "color": "lightgray",
-            "views": [{
-                "id": "Wireframe",
-                "protocol": "WIREFRAME",
-                "urls": [
-                    "http://localhost:9000/ows?"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -413,8 +213,8 @@
     }],
 
     "navBarConfig": {
-        "title": "V-MANIP",
-        "url": "http://www.v-manip.eox.at",
+        "title": "VirES",
+        "url": "http://www.vires.eox.at",
         "items": [{
             "name": "Layers",
             "icon": "fa-globe",
@@ -430,35 +230,17 @@
             "icon": "fa-tasks",
             "eventToRaise": "ui:open:options",
             "template": "OptionsControl"
-        }, {
-            "name": "Tutorial",
-            "icon": "fa-book",
-            "eventToRaise": "ui:open:storybanner",
-            "template": "UseCaseTestTemplate"
-        }, {
-            "name": "About",
-            "icon": "fa-info-circle",
-            "eventToRaise": "dialog:open:about",
-            "subitems": [{
-                "name": "Info",
-                "eventToRaise": "dialog:open:info",
-                "template": "info"
-            }, {
-                "name": "Help",
-                "eventToRaise": "dialog:open:help",
-                "template": "help"
-            }]
         }]
     },
 
     "timeSlider": {
         "domain": {
-            "start": "2012-05-17T10:15:00Z",
-            "end": "2013-09-17T11:45:00Z"
+            "start": "2013-11-17T10:15:00Z",
+            "end": "2014-03-17T11:45:00Z"
         },
         "brush": {
-            "start": "2013-05-17T11:00:00Z",
-            "end": "2013-05-17T11:17:00Z"
+            "start": "2014-01-01T00:00:01Z",
+            "end": "2014-01-02T11:59:00Z"
         }
     },
 

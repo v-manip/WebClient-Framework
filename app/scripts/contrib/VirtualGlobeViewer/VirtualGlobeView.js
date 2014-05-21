@@ -8,7 +8,7 @@ define([
 
     'use strict';
 
-    var VGVView = BaseView.extend({
+    var VirtualGlobeView = BaseView.extend({
 
         tagName: 'canvas',
 
@@ -28,18 +28,28 @@ define([
                 }
             };
 
-            this._initialLayers = {};
             this.currentToI = this.toi();
         },
 
+        // FIXXME: this method should be put into the BaseView to do a basic setup of
+        // the component. Developers can then hook to the 'didInsertElement' function
+        // in using VMANIP 'actions' (via an 'afterDOMInsert' action). 'Actions' have
+        // to be implemented first ;-)
         didInsertElement: function() {
             if (!this.getViewer()) {
                 this.setViewer(this._createVGV());
                 this.getViewer().setToI(this.toi());
+
+                // FIXXME: this should be triggered by the BaseView!
                 this._setLayersFromAppContext();
+
                 this.zoomTo(this._startPosition);
             }
 
+            // FIXXME: After implementing VMANIP 'actions' most of the 'listenTo' calls
+            // can be done implicitly in reading the 'actions' has and wiring up the
+            // onXXXHandler() actions there to the corresponding mediator event. This will
+            // help to do a cleanup of this repetitive code.
             this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
             this.listenTo(Communicator.mediator, 'map:setUrl', this.zoomTo);
             this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
@@ -54,75 +64,73 @@ define([
             // NOTE: The 'listenTo' bindings are automatically unbound by marionette
         },
 
+        supportsLayer: function(model) {
+            var view = _.find(model.get('views'), function(view) {
+                return (view.protocol.toLowerCase() === 'w3ds' && view.type.toLowerCase() === 'vertical_curtain') ||
+                    view.protocol.toLowerCase() === 'wms' ||
+                    view.protocol.toLowerCase() === 'wmts';
+            });
+
+            if (view) {
+                return view;
+            }
+
+            return null;
+        },
+
+        onStartup: function(initial_layers) {
+            this.getViewer().clearCache();
+            _.forEach(initial_layers, function(desc, name) {
+                // FIXXME The VGV and the internal viewer have to be ported to display a 'view', not a 'model'!
+                // if (this.supportsLayer(desc.model)) {
+                    this.getViewer().addLayer(desc.model, desc.isBaseLayer);
+                // }
+            }.bind(this));
+            this._sortOverlayLayers();
+        },
+
+        //----------------//
+        // VMANIP ACTIONS //
+        //----------------//
+
+        // FIXXME: create a distinct hash for that, e.g.:
+        // actions: {
+        //     onResize: function() {},
+        //     onLayerAdd: function() {},
+        //     onLayerRemove: function() {}
+        //     // ...
+        // }
+        // This way we can provide a defined interface for all
+        // default actions VMANIP is providing us, which is encapsulated
+        // clearly within the 'actions' hash. This is basically the 
+        // concrete interface implementation for the specific view.
+        //
+        // Note: This approach is inspired by Ember's 'actions' hash.
+
         onResize: function() {
-            this.getViewer().updateViewport();
+            if (this.getViewer()) {
+                this.getViewer().updateViewport();
+            }
         },
 
-        _addInitialLayer: function(model, isBaseLayer) {
-            this._initialLayers[model.get('name')] = {
-                model: model,
-                isBaseLayer: isBaseLayer
-            };
+        onLayerAdd: function(model, isBaseLayer) {
+            this.getViewer().addLayer(model, isBaseLayer);
         },
 
-        /** Adds the layers selected in the GUI and performs their setup (opacity, sorting oder, etc.).
-         *  Layers are either baselayers, products or overlays.
-         */
-        _setLayersFromAppContext: function() {
-            this._initialLayers = {};
-
-            globals.baseLayers.each(function(model) {
-                if (model.get('visible')) {
-                    this._addInitialLayer(model, true);
-                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
-                };
-            }.bind(this));
-
-            globals.products.each(function(model) {
-                if (model.get('visible')) {
-                    console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
-                    this._addInitialLayer(model, false);
-                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
-                }
-            }.bind(this));
-
-            globals.overlays.each(function(model) {
-                if (model.get('visible')) {
-                    this._addInitialLayer(model, false);
-                    console.log('[VirtualVGVViewController::setLayersFromAppContext] added overlays "' + model.get('name') + '"');
-                }
-            }.bind(this));
-
-            this._initLayers();
+        onLayerRemove: function(model, isBaseLayer) {
+            this.getViewer().removeLayer(model, isBaseLayer);
         },
+
+        //-------------------//
+        // PRIVATE INTERFACE //
+        //-------------------//
 
         _addAreaOfInterest: function(geojson) {
             this.getViewer().addAreaOfInterest(geojson);
         },
 
-        _addLayer: function(model, isBaseLayer) {
-            this.getViewer().addLayer(model, isBaseLayer);
-        },
-
-        _removeLayer: function(model, isBaseLayer) {
-            this.getViewer().removeLayer(model, isBaseLayer);
-        },
-
         _removeAllOverlays: function() {
             this.getViewer().removeAllOverlays();
-        },
-        
-        // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
-        _onLayerChange: function(options) {
-            var model = this.getModelForLayer(options.name, options.isBaseLayer); 
-
-            if (options.visible) {
-                this._addLayer(model, options.isBaseLayer);
-                console.log('[VGVView::onLayerChange] selected ' + model.get('name'));
-            } else {
-                this._removeLayer(model, options.isBaseLayer);
-                console.log('[VGVView::onLayerChange] deselected ' + model.get('name'));
-            }
         },
 
         _onOpacityChange: function(options) {
@@ -154,14 +162,6 @@ define([
 
         _sortOverlayLayers: function() {
             this.getViewer().sortOverlayLayers();
-        },
-
-        _initLayers: function() {
-            this.getViewer().clearCache();
-            _.each(this._initialLayers, function(desc, name) {
-                this.getViewer().addLayer(desc.model, desc.isBaseLayer);
-            }.bind(this));
-            this._sortOverlayLayers();
         },
 
         _onMapCenter: function(pos) {
@@ -217,8 +217,7 @@ define([
             var position = {
                 center: [pos.x, pos.y],
                 distance: dis,
-                duration: 100,
-                tilt: 45
+                duration: 100
             }
             this.zoomTo(position);
         },
@@ -250,6 +249,6 @@ define([
         }
     });
 
-    return VGVView;
+    return VirtualGlobeView;
 
 }); // end module definition

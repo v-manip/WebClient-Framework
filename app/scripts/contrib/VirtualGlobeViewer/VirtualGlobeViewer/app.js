@@ -36,7 +36,7 @@ define([
         this.overlayLayers = [];
 
         this.navigation = new GlobWeb.Navigation(this.globe, {
-            inertia: true
+            inertia: false
         });
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
@@ -168,7 +168,7 @@ define([
         }
 
         var w3ds = _.find(views, function(view) {
-            return view.protocol === "W3DS";
+            return view.protocol === 'W3DS' && view.type === 'vertical_curtain';
         });
 
         var wmts = _.find(views, function(view) {
@@ -385,7 +385,13 @@ define([
     };
 
     VGV.prototype.zoomTo = function(pos) {
-        this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
+        if (!pos.tilt) {
+            var cur_pos = this.navigation.save();
+            this.navigation.zoomTo(pos.center, pos.distance, pos.duration, cur_pos.tilt);
+        } else {
+
+            this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
+        }
     };
 
     VGV.prototype.setToI = function(time) {

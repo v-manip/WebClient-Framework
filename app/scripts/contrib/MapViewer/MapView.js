@@ -57,34 +57,7 @@ define(['backbone.marionette',
 					Communicator.mediator.trigger("map:position:change", this.map.getExtent());
 				}.bind(this));
 
-				// Add layers for different selection methods
-				this.vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
 				
-				this.map.addLayers([this.vectorLayer]);
-				this.map.addControl(new OpenLayers.Control.MousePosition());
-
-				this.drawControls = {
-					pointSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.Point),
-					lineSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.Path),
-					polygonSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.Polygon),
-					bboxSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.RegularPolygon, {
-							handlerOptions: {
-								sides: 4,
-								irregular: true
-							}
-						}
-					)
-				};
-
-				for (var key in this.drawControls) {
-					this.map.addControl(this.drawControls[key]);
-					this.drawControls[key].events.register("featureadded", this, this.onDone);
-				}
-
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
 					var layer = this.createLayer(baselayer);
@@ -127,6 +100,33 @@ define(['backbone.marionette',
 
 				this.geojson = new OpenLayers.Format.GeoJSON(io_options);
 
+				// Add layers for different selection methods
+				this.vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+				
+				this.map.addLayers([this.vectorLayer]);
+				this.map.addControl(new OpenLayers.Control.MousePosition());
+
+				this.drawControls = {
+					pointSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
+						OpenLayers.Handler.Point),
+					lineSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
+						OpenLayers.Handler.Path),
+					polygonSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
+						OpenLayers.Handler.Polygon),
+					bboxSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
+						OpenLayers.Handler.RegularPolygon, {
+							handlerOptions: {
+								sides: 4,
+								irregular: true
+							}
+						}
+					)
+				};
+
+				for (var key in this.drawControls) {
+					this.map.addControl(this.drawControls[key]);
+					this.drawControls[key].events.register("featureadded", this, this.onDone);
+				}
 
 				//Set attributes of map based on mapmodel attributes
 				var mapmodel = globals.objects.get('mapmodel');
@@ -203,7 +203,7 @@ define(['backbone.marionette',
 	                        isBaseLayer: view.isBaseLayer,
 	                        wrapDateLine: view.wrapDateLine,
 	                        zoomOffset: view.zoomOffset,
-	                        visible: layerdesc.get("visible"),
+	                        visibility: layerdesc.get("visible"),
 	                        time: layerdesc.get('time')
                         });
                     break;
