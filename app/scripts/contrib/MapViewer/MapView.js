@@ -203,7 +203,7 @@ define(['backbone.marionette',
 	                        isBaseLayer: view.isBaseLayer,
 	                        wrapDateLine: view.wrapDateLine,
 	                        zoomOffset: view.zoomOffset,
-	                        visible: layerdesc.get("visible"),
+	                        visibility: layerdesc.get("visible"),
 	                        time: layerdesc.get('time')
                         });
                     break;
