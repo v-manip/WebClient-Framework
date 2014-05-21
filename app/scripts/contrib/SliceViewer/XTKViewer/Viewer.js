@@ -250,6 +250,13 @@ define([
                     this.removeGui(info.gui);
                 }
             }.bind(this));
+
+            delete this.volumes[layer_name];
+
+            // Recenter the view after all volumes are removed:
+            if (Object.keys(this.volumes).length === 0) {
+                this.onResize();
+            }
         }
     };
 
