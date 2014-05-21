@@ -117,7 +117,7 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "vrvis_demo",
+                "id": "Cloudsat",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             }
