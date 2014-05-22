@@ -126,15 +126,25 @@ define([
         // PRIVATE INTERFACE //
         //-------------------//
 
-        _addAreaOfInterest: function(coords) {
+        _addAreaOfInterest: function(coords, color) {
             // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
             // when the selection items in the toolbar are clicked. This event triggers this method
             // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
             // method.
             if (coords) {
                 // var coords = this._convertCoordsFromOpenLayers(openlayers_geometry);
-                this.getViewer().addAreaOfInterest(coords);
+                var c = this._hexToRGB(color);
+                this.getViewer().addAreaOfInterest(coords, [c.r/255, c.g/255, c.b/255, 1]);
             }
+        },
+
+        _hexToRGB: function(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
         },
 
         _removeAllOverlays: function() {

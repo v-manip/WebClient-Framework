@@ -18,10 +18,15 @@ define(['./Point',
         this._layer = layer;
         this._baseAltitude = base_altitude || 30000;
         this._height = 0;
+        this._color = [1, 0.5, 0.1, 0.5];
     };
 
     AOIItem.prototype.setUnclosedCoordinates = function(coords) {
-    	this._coords = coords;
+        this._coords = coords;
+    };
+
+    AOIItem.prototype.setColor = function(color) {
+        this._color = color;
     };
 
     AOIItem.prototype.add = function(point) {
@@ -46,10 +51,24 @@ define(['./Point',
     AOIItem.prototype.render = function(height) {
         var coords = this._projectOnSurface(this._coords, this._baseAltitude, 0);
 
+        var strokeColor = this._color;
+        var fillColor = this._color;
+        fillColor[3] = 0.5;
+
+        var style = new GlobWeb.FeatureStyle({
+            fillColor: this._color,
+            strokeColor: strokeColor,
+            extrude: true,
+            fill: true
+        });
+
         this._feature = {
             "geometry": {
                 "type": "Polygon",
                 "coordinates": coords
+            },
+            "properties": {
+                "style": style
             }
         };
 
@@ -61,7 +80,7 @@ define(['./Point',
     };
 
     AOIItem.prototype._projectOnSurface = function(coords, height, grid_resolution) {
-    	var grid_coords = [];
+        var grid_coords = [];
 
         if (grid_resolution === 0) {
             grid_coords = this._convertToGeoJSON(coords, height);
@@ -122,13 +141,6 @@ define(['./Point',
     AOIItem.prototype.toJSON = function() {
         return this._feature;
     };
-
-    AOIItem.prototype._defaultStyle = new GlobWeb.FeatureStyle({
-        fillColor: [1, 0.5, 0.1, 0.5],
-        strokeColor: [1, 0.5, 0.1, 1],
-        extrude: true,
-        fill: true
-    });
 
     return AOIItem;
 

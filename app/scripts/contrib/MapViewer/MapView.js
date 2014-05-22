@@ -368,7 +368,7 @@ define(['backbone.marionette',
 				color = this.colors(evt.feature.layer.features.length-1);
 				evt.feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
 				evt.feature.layer.drawFeature(evt.feature);
-				Communicator.mediator.trigger("selection:changed", this._convertCoordsFromOpenLayers(evt.feature.geometry, 0));
+				Communicator.mediator.trigger("selection:changed", this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
 			},
 
 	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
@@ -404,7 +404,7 @@ define(['backbone.marionette',
                     	product.set("time",string);
                         var productLayer = this.map.getLayersByName(product.get("name"))[0];
                       	productLayer.mergeNewParams({'time':string});
-                    }	
+                    }
 	            }, this);
             },
 

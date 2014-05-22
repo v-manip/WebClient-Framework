@@ -34,9 +34,12 @@ define(['./Point',
             this.stop();
         };
 
-        this.addAOI = function(coords) {
+        this.addAOI = function(coords, color) {
             var aoiItem = new AOIItem(this._aoiLayer);
             aoiItem.setUnclosedCoordinates(coords);
+            if (typeof color !== 'undefined') {
+                aoiItem.setColor(color);
+            }
             aoiItem.render();
         };
 
@@ -99,7 +102,7 @@ define(['./Point',
 
         this._onSelectionEnd = function() {
             if (this._onSelectionEndCallback) {
-                this._onSelectionEndCallback(this._curAoiItem._coords);
+                this._onSelectionEndCallback();
             }
             this._curAoiItem = null;
         }

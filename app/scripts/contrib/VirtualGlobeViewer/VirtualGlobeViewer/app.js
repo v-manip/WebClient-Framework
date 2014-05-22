@@ -115,8 +115,8 @@ define([
         this.aoiRenderer.disableSelection();
     };
 
-    VGV.prototype.addAreaOfInterest = function(coords) {
-        this.aoiRenderer.addAOI(coords);
+    VGV.prototype.addAreaOfInterest = function(coords, color) {
+        this.aoiRenderer.addAOI(coords, color);
     };
 
     VGV.prototype.setOnNewAOICallback = function(cb) {
