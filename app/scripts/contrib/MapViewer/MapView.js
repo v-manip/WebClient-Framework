@@ -404,13 +404,18 @@ define(['backbone.marionette',
                     	product.set("time",string);
                         var productLayer = this.map.getLayersByName(product.get("name"))[0];
                       	productLayer.mergeNewParams({'time':string});
-                    }
+                    }	
 	            }, this);
             },
 
 			onSelectionChanged: function(coords) {
-				// MapView should draw the new AOI here:
-				console.dir(coords);
+	            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
+	            // when the selection items in the toolbar are clicked. This event triggers this method
+	            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
+	            // method.
+				if (coords) {
+					console.dir(coords);
+				}
 			},
 
             onSetExtent: function(bbox) {

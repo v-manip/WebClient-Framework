@@ -253,7 +253,7 @@ define([
             // When a new AOI is selected in the viewer this callback gets executed:
             vgv.setOnNewAOICallback(function(aoi_coords) {
                 this.stopListening(Communicator.mediator, 'selection:changed');
-                Communicator.mediator.trigger('selection:changed', {bla: 3});
+                Communicator.mediator.trigger('selection:changed', aoi_coords);
                 this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
             }.bind(this));
 

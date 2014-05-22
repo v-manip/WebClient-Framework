@@ -93,20 +93,20 @@ define(['./Point',
 
         this._onSelectionStart = function() {
             if (this._onSelectionStartCallback) {
-                this._onSelectionStartCallback(this._curAoiItem);
+                this._onSelectionStartCallback(this._curAoiItem._coords);
             }
         }
 
         this._onSelectionEnd = function() {
             if (this._onSelectionEndCallback) {
-                this._onSelectionEndCallback(this._curAoiItem);
+                this._onSelectionEndCallback(this._curAoiItem._coords);
             }
             this._curAoiItem = null;
         }
 
         this._onSelectionMove = function() {
             if (this._onSelectionMoveCallback) {
-                this._onSelectionMoveCallback(this._curAoiItem);
+                this._onSelectionMoveCallback(this._curAoiItem._coords);
             }
         }
 

@@ -16,7 +16,7 @@ define(['./Point',
         this._coords = [];
         this._feature = null;
         this._layer = layer;
-        this._baseAltitude = base_altitude || 5000;
+        this._baseAltitude = base_altitude || 30000;
         this._height = 0;
     };
 
