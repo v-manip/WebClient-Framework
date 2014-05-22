@@ -6,13 +6,13 @@ define([
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
-    './SelectionTool',
+    './AOIRenderer',
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, SelectionTool, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, OpenLayers) {
 
     'use strict';
 
-    function VGV(options) {
+    var VGV = function(options) {
         this.canvas = $(options.canvas);
 
         if (!this.canvas) {
@@ -55,7 +55,7 @@ define([
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
 
-        var selection_tool = new SelectionTool(this.globe, this.navigation, this.aoiLayer);
+        this.aoiRenderer = new AOIRenderer(this.globe, this.navigation, this.aoiLayer);
         // selection_tool.setInSelectionCallback(function(selection) {
         //     var Store = function(verts) {
         //         this.verts = verts;
@@ -109,6 +109,16 @@ define([
         coordinates.push(p);
 
         return coordinates;
+    };
+
+    VGV.prototype.enableAOISelection = function(type) {
+        console.log('[VGV::enableAOISelection] type: ' + type);
+        this.aoiRenderer.enableSelection(type);
+    };
+
+    VGV.prototype.disableAOISelection = function() {
+        console.log('[VGV::disableAOISelection] disabled');
+        this.aoiRenderer.disableSelection();
     };
 
     VGV.prototype.addAreaOfInterest = function(geojson) {

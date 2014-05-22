@@ -51,6 +51,7 @@ define([
             // onXXXHandler() actions there to the corresponding mediator event. This will
             // help to do a cleanup of this repetitive code.
             this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
+            this.listenTo(Communicator.mediator, 'selection:activated', this._onSelectionActivated);
             this.listenTo(Communicator.mediator, 'map:setUrl', this.zoomTo);
             this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
             this.listenTo(Communicator.mediator, 'map:layer:change', this._onLayerChange);
@@ -83,7 +84,7 @@ define([
             _.forEach(initial_layers, function(desc, name) {
                 // FIXXME The VGV and the internal viewer have to be ported to display a 'view', not a 'model'!
                 // if (this.supportsLayer(desc.model)) {
-                    this.getViewer().addLayer(desc.model, desc.isBaseLayer);
+                this.getViewer().addLayer(desc.model, desc.isBaseLayer);
                 // }
             }.bind(this));
             this._sortOverlayLayers();
@@ -144,6 +145,16 @@ define([
             var endtime = new Date(time.end);
 
             this.getViewer().setToI(starttime.toISOString() + '/' + endtime.toISOString());
+        },
+
+        // arg.id: bboxSelection, polygonSelection, lineSelection, pointSelection
+        // arg.active: true, false
+        _onSelectionActivated: function(arg) {
+            if (arg.active) {
+                this.getViewer().enableAOISelection(arg.id);
+            } else {
+                this.getViewer().disableAOISelection();
+            }
         },
 
         toi: function() {
