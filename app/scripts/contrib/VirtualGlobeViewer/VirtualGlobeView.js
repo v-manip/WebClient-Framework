@@ -134,7 +134,7 @@ define([
             if (coords) {
                 // var coords = this._convertCoordsFromOpenLayers(openlayers_geometry);
                 var c = this._hexToRGB(color);
-                this.getViewer().addAreaOfInterest(coords, [c.r/255, c.g/255, c.b/255, 1]);
+                this.getViewer().addAreaOfInterest(coords, [c.r / 255, c.g / 255, c.b / 255, 1]);
             }
         },
 
@@ -262,8 +262,16 @@ define([
 
             // When a new AOI is selected in the viewer this callback gets executed:
             vgv.setOnNewAOICallback(function(aoi_coords) {
+                // FIXXME: I'm using Openlayers here to calculate the bounds, this has to be fixed somewhen...
+                var bounds = new OpenLayers.Bounds();
+                for (var idx = 0; idx < aoi_coords.length; idx++) {
+                    bounds.extend(new OpenLayers.Geometry.Point(aoi_coords[idx].x, aoi_coords[idx].y));
+                };
+
+                var b = bounds.toArray();
+
                 this.stopListening(Communicator.mediator, 'selection:changed');
-                Communicator.mediator.trigger('selection:changed', aoi_coords);
+                Communicator.mediator.trigger('selection:changed',  b, aoi_coords);
                 this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
             }.bind(this));
 
