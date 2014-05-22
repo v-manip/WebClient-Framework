@@ -4,11 +4,12 @@ define(['backbone.marionette',
 		'models/AnalyticsModel',
 		'globals',
 		'hbs!tmpl/wps_getdata',
+		'hbs!tmpl/wps_getCoverageDifference',
 		'd3',
 		'analytics',
 		'nv'
 	],
-	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl) {
+	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl, wps_getCovDiffTmpl) {
 
 		var AnalyticsView = Marionette.View.extend({
 
