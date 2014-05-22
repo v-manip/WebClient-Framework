@@ -222,7 +222,7 @@ define([
 					toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 				}
 
-				this.currentAoI = bounds;//[bounds.left, bounds.bottom, bounds.right, bounds.top];
+				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
 				this._createScene(this.options, {
 					aoi: this.currentAoI,
