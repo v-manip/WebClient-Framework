@@ -368,7 +368,9 @@ define(['backbone.marionette',
 				color = this.colors(evt.feature.layer.features.length-1);
 				evt.feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
 				evt.feature.layer.drawFeature(evt.feature);
-				Communicator.mediator.trigger("selection:changed", this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
+				// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
+				// not have to be rewritten. This has to be changed somewhen...
+				Communicator.mediator.trigger("selection:changed", evt.feature.geometry, this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
 			},
 
 	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {

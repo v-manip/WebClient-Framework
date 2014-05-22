@@ -129,12 +129,12 @@ define([
             this.$el.html('');
         },
 
-        _setCurrentAoI: function(area) {
+        _setCurrentAoI: function(openlayer_geometry) {
             // If the releases the mouse button to finish the selection of
             // an AoI the 'area' parameter is set, otherwise it is 'null'.
-            if (area) {
+            if (openlayer_geometry) {
                 // 1. store current AoI bounds
-                this.currentAoI = area.bounds.toString();
+                this.currentAoI = openlayer_geometry.bounds.toString();
 
                 // 2. store current ToI interval
                 var toi = this.currentToI;

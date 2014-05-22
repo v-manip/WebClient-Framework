@@ -126,7 +126,7 @@ define([
         // PRIVATE INTERFACE //
         //-------------------//
 
-        _addAreaOfInterest: function(coords, color) {
+        _addAreaOfInterest: function(openlayers_geometry, coords, color) {
             // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
             // when the selection items in the toolbar are clicked. This event triggers this method
             // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
