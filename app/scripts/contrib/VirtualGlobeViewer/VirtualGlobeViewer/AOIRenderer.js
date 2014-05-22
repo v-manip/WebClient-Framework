@@ -23,6 +23,7 @@ define(['./Point',
         this._shiftKey = false;
         this._inRectangular = false; // FIXXME: quick hack for the moment...
         this._aoiLayer = aoiLayer;
+        this._aoiLayer['mytoken'] = 42;
 
         // window.onkeydown = function(evt) {
         this.enableSelection = function(type) {
@@ -31,7 +32,14 @@ define(['./Point',
 
         // window.onkeyup = function() {
         this.disableSelection = function() {
+            this._aoiLayer.removeAllFeatures();
             this.stop();
+        };
+
+        this.addAOI = function(geojson) {
+            var aoiItem = new AOIItem(this._aoiLayer);
+            aoiItem.setGeoJSON(geojson);
+            aoiItem.render();
         };
 
         this.start = function() {

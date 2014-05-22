@@ -122,37 +122,7 @@ define([
     };
 
     VGV.prototype.addAreaOfInterest = function(geojson) {
-        // if (!this.aoiLayer) {
-        //     this.aoiLayer = new GlobWeb.VectorLayer({
-        //         style: style,
-        //         opacity: 1
-        //     });
-        //     this.globe.addLayer(this.aoiLayer);
-        // }
-
-        if (geojson) {
-            var style = new GlobWeb.FeatureStyle({
-                fillColor: [1, 0.5, 0.1, 0.5],
-                strokeColor: [1, 0.5, 0.1, 1],
-                extrude: true,
-                fill: true
-            });
-
-            var altitude = 30000;
-            var coordinates = convertFromOpenLayers(geojson, altitude);
-
-            var feature = {
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": coordinates
-                },
-                "properties": {
-                    "style": style
-                }
-            };
-
-            this.aoiLayer.addFeature(feature);
-        }
+        this.aoiRenderer.addAOI(geojson);
     };
 
     VGV.prototype.createCommonLayerOptionsFromView = function(view) {

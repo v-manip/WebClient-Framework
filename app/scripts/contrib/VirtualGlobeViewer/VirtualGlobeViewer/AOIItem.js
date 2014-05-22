@@ -20,11 +20,16 @@ define(['./Point',
         this._height = 0;
     };
 
+    AOIItem.prototype.setGeoJSON = function(geojson) {
+    	var points = this._convertFromOpenLayers(geojson, this._baseAltitude);
+    	this._points = points;
+    };
+
     AOIItem.prototype.add = function(point) {
         this._points.push(point);
     };
 
-    AOIItem.prototype.clear = function(point) {
+    AOIItem.prototype.clear = function() {
         if (this._feature) {
             this._layer.removeFeature(this._feature);
         }
@@ -37,6 +42,29 @@ define(['./Point',
 
     AOIItem.prototype.getNumPoints = function() {
         return this._points.length;
+    };
+
+    AOIItem.prototype._convertFromOpenLayers = function(ol_geometry, altitude) {
+        var verts = ol_geometry.getVertices();
+
+        var coordinates = [];
+        for (var idx = 0; idx < verts.length-1; ++idx) {
+            var p = [];
+
+            p.push(verts[idx].x);
+            p.push(verts[idx].y);
+            p.push(altitude);
+
+            coordinates.push(p);
+        }
+        var p = [];
+
+        p.push(verts[0].x);
+        p.push(verts[0].y);
+        p.push(altitude);
+        coordinates.push(p);
+
+        return coordinates;
     };
 
     AOIItem.prototype.render = function(height) {
@@ -59,6 +87,7 @@ define(['./Point',
             // "properties": {
             // 	"style": this._defaultStyle
             // }
+            , "test": "42"
         };
 
         // this._feature = {

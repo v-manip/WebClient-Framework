@@ -127,7 +127,13 @@ define([
         //-------------------//
 
         _addAreaOfInterest: function(geojson) {
-            this.getViewer().addAreaOfInterest(geojson);
+            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
+            // when the selection items in the toolbar are clicked. This event triggers this method
+            // here in the VGV. So if the geojson parameter is 'null' we skip the execution of this
+            // method.
+            if (geojson) {
+                this.getViewer().addAreaOfInterest(geojson);
+            }
         },
 
         _removeAllOverlays: function() {
