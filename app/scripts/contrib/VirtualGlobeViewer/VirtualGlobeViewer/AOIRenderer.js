@@ -25,20 +25,18 @@ define(['./Point',
         this._aoiLayer = aoiLayer;
         this._aoiLayer['mytoken'] = 42;
 
-        // window.onkeydown = function(evt) {
         this.enableSelection = function(type) {
             this.start();
         };
 
-        // window.onkeyup = function() {
         this.disableSelection = function() {
             this._aoiLayer.removeAllFeatures();
             this.stop();
         };
 
-        this.addAOI = function(geojson) {
+        this.addAOI = function(coords) {
             var aoiItem = new AOIItem(this._aoiLayer);
-            aoiItem.setGeoJSON(geojson);
+            aoiItem.setUnclosedCoordinates(coords);
             aoiItem.render();
         };
 
@@ -89,7 +87,7 @@ define(['./Point',
             this._inSelectionMoveCallback = cb;
         }
 
-        this.render = function() {
+        this.updateCurrent = function() {
                 this._curAoiItem.render();
         };
 
@@ -165,8 +163,7 @@ define(['./Point',
                 this._curAoiItem.add(cur_point);
                 this._curAoiItem.add(new Point([start_point.x, cur_point.y]));
 
-                this.render();
-                // this._inSelection();
+                this.updateCurrent();
             }
         }.bind(this);
 
@@ -183,7 +180,7 @@ define(['./Point',
                 this._curAoiItem.add(cur_point);
                 this._curAoiItem.add(new Point([start_point.x, cur_point.y]));
 
-                this.render();
+                this.updateCurrent();
                 this._onSelectionEnd();
 
                 this._navigation.start();

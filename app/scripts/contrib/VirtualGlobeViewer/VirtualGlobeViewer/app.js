@@ -56,15 +56,9 @@ define([
         this.w3dsBaseUrl = options.w3dsBaseUrl;
 
         this.aoiRenderer = new AOIRenderer(this.globe, this.navigation, this.aoiLayer);
-        // selection_tool.setInSelectionCallback(function(selection) {
-        //     var Store = function(verts) {
-        //         this.verts = verts;
-        //         this.getVertices = function() {
-        //             return this.verts;
-        //         }
-        //     }
-        //     this.addAreaOfInterest(new Store(selection._points), true);
-        // }.bind(this));
+        this.aoiRenderer.setOnSelectionEndCallback(function(selection) {
+            this.onNewAOICallback(selection);
+        }.bind(this));
 
         // // glTF loader test:
         // var sgRenderer;
@@ -112,17 +106,21 @@ define([
     };
 
     VGV.prototype.enableAOISelection = function(type) {
-        console.log('[VGV::enableAOISelection] type: ' + type);
+        // console.log('[VGV::enableAOISelection] type: ' + type);
         this.aoiRenderer.enableSelection(type);
     };
 
     VGV.prototype.disableAOISelection = function() {
-        console.log('[VGV::disableAOISelection] disabled');
+        // console.log('[VGV::disableAOISelection] disabled');
         this.aoiRenderer.disableSelection();
     };
 
-    VGV.prototype.addAreaOfInterest = function(geojson) {
-        this.aoiRenderer.addAOI(geojson);
+    VGV.prototype.addAreaOfInterest = function(coords) {
+        this.aoiRenderer.addAOI(coords);
+    };
+
+    VGV.prototype.setOnNewAOICallback = function(cb) {
+        this.aoiRenderer.setOnSelectionEndCallback(cb);
     };
 
     VGV.prototype.createCommonLayerOptionsFromView = function(view) {

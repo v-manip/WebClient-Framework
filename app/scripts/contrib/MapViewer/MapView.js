@@ -368,8 +368,32 @@ define(['backbone.marionette',
 				color = this.colors(evt.feature.layer.features.length-1);
 				evt.feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
 				evt.feature.layer.drawFeature(evt.feature);
-				Communicator.mediator.trigger("selection:changed", evt.feature.geometry);
+				Communicator.mediator.trigger("selection:changed", this._convertCoordsFromOpenLayers(evt.feature.geometry, 0));
 			},
+
+	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
+	            var verts = openlayer_geometry.getVertices();
+
+	            var coordinates = [];
+	            for (var idx = 0; idx < verts.length - 1; ++idx) {
+	                var p = {
+	                    x: verts[idx].x,
+	                    y: verts[idx].y,
+	                    z: altitude // not mandatory, can be undefined
+	                };
+
+	                coordinates.push(p);
+	            }
+	            var p = {
+	                x: verts[idx].x,
+	                y: verts[idx].y,
+	                z: altitude // not mandatory, can be undefined
+	            };
+
+	            coordinates.push(p);
+
+	            return coordinates;
+	        },
 
 			onTimeChange: function (time) {
 
@@ -383,6 +407,11 @@ define(['backbone.marionette',
                     }
 	            }, this);
             },
+
+			onSelectionChanged: function(coords) {
+				// MapView should draw the new AOI here:
+				console.dir(coords);
+			},
 
             onSetExtent: function(bbox) {
             	this.map.zoomToExtent(bbox);

@@ -13,27 +13,26 @@ define(['./Point',
 ], function(Point, GlobWeb) {
 
     function AOIItem(layer, base_altitude) {
-        this._points = [];
+        this._coords = [];
         this._feature = null;
         this._layer = layer;
         this._baseAltitude = base_altitude || 5000;
         this._height = 0;
     };
 
-    AOIItem.prototype.setGeoJSON = function(geojson) {
-    	var points = this._convertFromOpenLayers(geojson, this._baseAltitude);
-    	this._points = points;
+    AOIItem.prototype.setUnclosedCoordinates = function(coords) {
+    	this._coords = coords;
     };
 
     AOIItem.prototype.add = function(point) {
-        this._points.push(point);
+        this._coords.push(point);
     };
 
     AOIItem.prototype.clear = function() {
         if (this._feature) {
             this._layer.removeFeature(this._feature);
         }
-        this._points = [];
+        this._coords = [];
     };
 
     AOIItem.prototype.setHeight = function(height) {
@@ -41,78 +40,31 @@ define(['./Point',
     };
 
     AOIItem.prototype.getNumPoints = function() {
-        return this._points.length;
-    };
-
-    AOIItem.prototype._convertFromOpenLayers = function(ol_geometry, altitude) {
-        var verts = ol_geometry.getVertices();
-
-        var coordinates = [];
-        for (var idx = 0; idx < verts.length-1; ++idx) {
-            var p = [];
-
-            p.push(verts[idx].x);
-            p.push(verts[idx].y);
-            p.push(altitude);
-
-            coordinates.push(p);
-        }
-        var p = [];
-
-        p.push(verts[0].x);
-        p.push(verts[0].y);
-        p.push(altitude);
-        coordinates.push(p);
-
-        return coordinates;
+        return this._coords.length;
     };
 
     AOIItem.prototype.render = function(height) {
-        // if (this._feature) {
-        // 	this._layer.removeFeature(this._feature);
-        // }
-
-        // var type = "2D";
-        // if (height) {
-        // 	this.setHeight(height); // TODO: debug only!
-        // 	type = "3D"
-        // }
-        var coords = this._projectOnSurface(0);
+        var coords = this._projectOnSurface(this._coords, this._baseAltitude, 0);
 
         this._feature = {
             "geometry": {
                 "type": "Polygon",
                 "coordinates": coords
-            } //,
-            // "properties": {
-            // 	"style": this._defaultStyle
-            // }
-            , "test": "42"
+            }
         };
-
-        // this._feature = {
-        // 	"geometry": {
-        // 		"type": "Polygon",
-        // 		"area": type,
-        // 		"coordinates": coords
-        // 	},
-        // 	"properties": {
-        // 		"style": this._defaultStyle
-        // 	}
-        // };
 
         this._layer.addFeature(this._feature);
     };
 
     AOIItem.prototype.getStartPoint = function() {
-        return this._points[0];
+        return this._coords[0];
     };
 
-    AOIItem.prototype._projectOnSurface = function(grid_resolution) {
-        var coords = [];
+    AOIItem.prototype._projectOnSurface = function(coords, height, grid_resolution) {
+    	var grid_coords = [];
 
         if (grid_resolution === 0) {
-            return this._convertToGeoJSON(this._points, this._baseAltitude);
+            grid_coords = this._convertToGeoJSON(coords, height);
         } else {
             console.log("[AOIItemTool::projectOnSurface] NIY");
 
@@ -143,7 +95,7 @@ define(['./Point',
             // 	}
         }
 
-        return coords;
+        return grid_coords;
     };
 
     AOIItem.prototype._convertToGeoJSON = function(verts, altitude) {
@@ -166,71 +118,6 @@ define(['./Point',
 
         return coordinates;
     };
-
-    // AOIItem.prototype.toArray = function() {
-    // 	if (this._points.length === 0) {
-    // 		return;
-    // 	}
-
-    // 	var coords = [];
-
-    // 	if (this._height === 0) { // 2D selection
-    // 		for (var idx in this._points) {
-    // 			var p = this._points[idx];
-    // 			coords.push([p.x, p.y, this._baseAltitude]); // FIXXME: extend point class with altitude!
-    // 		}
-    // 		coords.push([this._points[0].x, this._points[0].y, this._baseAltitude]);
-    // 	} else { // 3D selection
-    // 		var tl = this._points[0];
-    // 		var tr = this._points[1];
-    // 		var bl = this._points[2];
-    // 		var br = this._points[3];
-
-    // 		var h = this._height;
-
-    // 		// coords.push([br.x, br.y, h]); // v0
-    // 		// coords.push([bl.x, bl.y, h]); // v1
-    // 		// coords.push([bl.x, bl.y, 0]); // v2
-    // 		// coords.push([br.x, br.y, 0]); // v3
-
-    // 		// coords.push([tr.x, tr.y, 0]); // v4
-    // 		// coords.push([br.x, br.y, h]); // v5
-    // 		// coords.push([tl.x, tl.y, h]); // v6
-    // 		// coords.push([tl.x, tl.y, 0]); // v7
-
-    // 		coords.push([bl.x, bl.y, h]); // v0
-    // 		coords.push([br.x, br.y, h]); // v1
-    // 		coords.push([br.x, br.y, 0]); // v2
-    // 		coords.push([bl.x, bl.y, 0]); // v3
-
-    // 		coords.push([bl.x, bl.y, h]); // v0
-    // 		coords.push([bl.x, bl.y, 0]); // v3
-    // 		coords.push([tr.x, tr.y, 0]); // v4
-    // 		coords.push([tr.x, tr.y, h]); // v5
-
-    // 		coords.push([bl.x, bl.y, h]); // v0
-    // 		coords.push([tr.x, tr.y, h]); // v5
-    // 		coords.push([tl.x, tl.y, h]); // v6
-    // 		coords.push([br.x, br.y, h]); // v1
-
-    // 		coords.push([br.x, br.y, h]); // v1
-    // 		coords.push([tl.x, tl.y, h]); // v6
-    // 		coords.push([tl.x, tl.y, 0]); // v7
-    // 		coords.push([br.x, br.y, 0]); // v2
-
-    // 		coords.push([tl.x, tl.y, 0]); // v7
-    // 		coords.push([tr.x, tr.y, 0]); // v4
-    // 		coords.push([bl.x, bl.y, 0]); // v3
-    // 		coords.push([br.x, br.y, 0]); // v2
-
-    // 		coords.push([tr.x, tr.y, 0]); // v4
-    // 		coords.push([tl.x, tl.y, 0]); // v7
-    // 		coords.push([tl.x, tl.y, h]); // v6
-    // 		coords.push([tr.x, tr.y, h]); // v5
-    // 	}
-
-    // 	return coords;
-    // };
 
     AOIItem.prototype.toJSON = function() {
         return this._feature;

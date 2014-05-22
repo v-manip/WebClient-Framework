@@ -126,13 +126,14 @@ define([
         // PRIVATE INTERFACE //
         //-------------------//
 
-        _addAreaOfInterest: function(geojson) {
+        _addAreaOfInterest: function(coords) {
             // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
             // when the selection items in the toolbar are clicked. This event triggers this method
-            // here in the VGV. So if the geojson parameter is 'null' we skip the execution of this
+            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
             // method.
-            if (geojson) {
-                this.getViewer().addAreaOfInterest(geojson);
+            if (coords) {
+                // var coords = this._convertCoordsFromOpenLayers(openlayers_geometry);
+                this.getViewer().addAreaOfInterest(coords);
             }
         },
 
@@ -248,6 +249,13 @@ define([
                 canvas: this.el,
                 w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
+
+            // When a new AOI is selected in the viewer this callback gets executed:
+            vgv.setOnNewAOICallback(function(aoi_coords) {
+                this.stopListening(Communicator.mediator, 'selection:changed');
+                Communicator.mediator.trigger('selection:changed', {bla: 3});
+                this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
+            }.bind(this));
 
             // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 
