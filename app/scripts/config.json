@@ -93,6 +93,93 @@
             }]
         }],
         "products": [{
+            "name": "SW OPER MAGA LR 1B",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "SW_OPER_MAGA_LR_1B",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "SW_OPER_MAGA_LR_1B_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGA_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://demo.vires.eox.at/browse/ows"
+            }
+        },{
+            "name": "SW OPER MAGB LR 1B",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "SW_OPER_MAGB_LR_1B",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "SW_OPER_MAGB_LR_1B_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGB_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://demo.vires.eox.at/browse/ows"
+            }
+        },{
+            "name": "SW OPER MAGC LR 1B",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "SW_OPER_MAGC_LR_1B_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.vires.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://demo.vires.eox.at/browse/ows"
+            }
+        },{
             "name": "Cloudsat",
             "visible": false,
             "timeSlider": true,
