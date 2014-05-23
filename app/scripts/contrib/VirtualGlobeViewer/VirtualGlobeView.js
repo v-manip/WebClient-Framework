@@ -193,6 +193,11 @@ define([
         },
 
         _onMapCenter: function(pos) {
+            // If the event comes from ourselves we skip it to prevent a loop:
+            if (pos.source === 'VGV') {
+                return;
+            }
+
             var dis = 0;
             switch (pos.l) {
                 case 0:
@@ -260,6 +265,50 @@ define([
                 w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
 
+            vgv.setOnPanEventCallback(function(navigation, dx, dy) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                console.log('dist:' + dist);
+
+                if (dist > 3) {
+                    map_dist = 14;
+                } else if (dist > 2.8 && dist <= 3) {
+                    map_dist = 13;
+                } else if (dist > 2.6 && dist <= 2.8) {
+                    map_dist = 12;
+                } else if (dist > 2.4 && dist <= 2.6) {
+                    map_dist = 11;
+                } else if (dist > 2.2 && dist <= 2.4) {
+                    map_dist = 10;
+                } else if (dist > 2.0 && dist <= 2.2) {
+                    map_dist = 9;
+                } else if (dist > 1.8 && dist <= 2.0) {
+                    map_dist = 8;
+                } else if (dist > 1.6 && dist <= 1.8) {
+                    map_dist = 7;
+                } else if (dist > 1.4 && dist <= 1.6) {
+                    map_dist = 6;
+                } else if (dist > 1.2 && dist <= 1.4) {
+                    map_dist = 5;
+                } else if (dist > 1.0 && dist <= 1.2) {
+                    map_dist = 4;
+                } else if (dist > 0.8 && dist <= 1.0) {
+                    map_dist = 3;
+                };
+
+                console.log('map_dist: ' + map_dist);
+
+                this.stopListening(Communicator.mediator, 'map:center');
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: 4
+                });
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
             // When a new AOI is selected in the viewer this callback gets executed:
             vgv.setOnNewAOICallback(function(aoi_coords) {
                 // FIXXME: I'm using Openlayers here to calculate the bounds, this has to be fixed somewhen...
@@ -271,9 +320,10 @@ define([
                 var b = bounds.toArray();
 
                 this.stopListening(Communicator.mediator, 'selection:changed');
-                Communicator.mediator.trigger('selection:changed',  b, aoi_coords);
+                Communicator.mediator.trigger('selection:changed', b, aoi_coords);
                 this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
             }.bind(this));
+
 
             // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 

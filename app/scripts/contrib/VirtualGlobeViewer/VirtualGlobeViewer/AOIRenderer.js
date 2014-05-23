@@ -101,7 +101,7 @@ define(['./Point',
         }
 
         this._onSelectionEnd = function() {
-            if (this._onSelectionEndCallback) {
+            if (this._onSelectionEndCallback && this._curAoiItem) {
                 this._onSelectionEndCallback(this._curAoiItem._coords);
             }
             this._curAoiItem = null;

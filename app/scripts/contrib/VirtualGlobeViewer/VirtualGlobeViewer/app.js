@@ -32,16 +32,7 @@ define([
             shadersPath: "/bower_components/virtualglobeviewer/shaders/"
         });
 
-        // this.aoiLayer = undefined;
-        var style = new GlobWeb.FeatureStyle({
-            fillColor: [1, 0.5, 0.1, 0.5],
-            strokeColor: [1, 0.5, 0.1, 1],
-            extrude: true,
-            fill: true
-        });
-
         this.aoiLayer = new GlobWeb.VectorLayer({
-            style: style,
             opacity: 1
         });
         this.globe.addLayer(this.aoiLayer);
@@ -52,6 +43,14 @@ define([
         this.navigation = new GlobWeb.Navigation(this.globe, {
             inertia: false
         });
+        var pan = this.navigation.pan.bind(this.navigation);
+        this.navigation.pan = function(dx, dy) {
+            pan(dx, dy);
+
+            if (this.onPanEventCallback) {
+                this.onPanEventCallback(this.navigation, dx, dy);
+            }
+        }.bind(this);
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
 
@@ -103,6 +102,10 @@ define([
         coordinates.push(p);
 
         return coordinates;
+    };
+
+    VGV.prototype.setOnPanEventCallback = function(cb) {
+        this.onPanEventCallback = cb;
     };
 
     VGV.prototype.enableAOISelection = function(type) {
