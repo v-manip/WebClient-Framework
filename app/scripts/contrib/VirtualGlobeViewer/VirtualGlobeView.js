@@ -193,11 +193,6 @@ define([
         },
 
         _onMapCenter: function(pos) {
-            // If the event comes from ourselves we skip it to prevent a loop:
-            if (pos.source === 'VGV') {
-                return;
-            }
-
             var dis = 0;
             switch (pos.l) {
                 case 0:

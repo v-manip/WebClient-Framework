@@ -50,25 +50,13 @@ define(['backbone.marionette',
 						'center': [center.lon, center.lat],
 						'zoom': data.object.zoom
 					});
-
-					Communicator.mediator.trigger("map:center", {
-						x: this.model.get('center')[0],
-						y: this.model.get('center')[1],
-						l: this.model.get('zoom')
-					});
 				}.bind(this));
 
 				
 				this.map.events.register("moveend", this.map, function(data) {
-					Communicator.mediator.trigger("map:position:change", this.map.getExtent());
-					// Communicator.mediator.trigger("map:center", {
-					// 	x: this.model.get('center')[0],
-					// 	y: this.model.get('center')[1],
-					// 	l: this.model.get('zoom'),
-					// 	source: 'MapViewer'
-					// });					
+					Communicator.mediator.trigger("map:position:change", this.map.getExtent());				
 				}.bind(this));
-
+				
 				
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
@@ -269,18 +257,12 @@ define(['backbone.marionette',
             },
 
 			centerMap: function(data) {
-				if (data.source === 'MapViewer') {
-					return;
-				}
-
-				console.log('map: ' + data.l);
-
 				this.map.setCenter(new OpenLayers.LonLat(data.x, data.y), data.l);
 
-				// this.model.set({
-				// 	'center': [data.x, data.y],
-				// 	'zoom': data.l
-				// });
+				this.model.set({
+					'center': [data.x, data.y],
+					'zoom': data.l
+				});
 			},
 
 			onSortProducts: function(productLayers) {
