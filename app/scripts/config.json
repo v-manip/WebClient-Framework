@@ -287,7 +287,7 @@
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "process" : {
-                "id": "getCoverageData",
+                "id": "getData",
                 "layer_id": "SPOT4_Pente"
             }
         }, {
