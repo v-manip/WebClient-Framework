@@ -285,6 +285,34 @@
                 "id": "SPOT4_View",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getCoverageData",
+                "layer_id": "SPOT4_Pente"
+            }
+        }, {
+            "name": "ALARO Temperature Surface",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "blue",
+            "views": [{
+                "id": "ALARO_Temperature_surface",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "ALARO_Temperature_surface",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getCoverageData",
+                "layer_id": "ALARO_Temperature_surface"
             }
         }, {
             "name": "PanEuropean Fractional Snow Cover",

@@ -44,6 +44,10 @@
 				id : '',
 				protocol: '',
 				url : [],
+			},
+			process : {
+				id: null,
+				layer_id: null
 			}
 			
 			

@@ -122,7 +122,8 @@
 									id: products.download.id,
 									protocol: products.download.protocol,
 									url: products.download.url
-								}
+								},
+								process: products.process 
 							})
 					);
 					console.log("Added product " + products.name );
