@@ -91,7 +91,7 @@ define(['./Point',
         }
 
         this.updateCurrent = function() {
-                this._curAoiItem.render();
+            this._curAoiItem.render();
         };
 
         this._onSelectionStart = function() {
@@ -129,75 +129,81 @@ define(['./Point',
         var _handleOnMouseDown = function(evt) {
             this._mouseButtonDown = true;
 
-            if (!this._curAoiItem) {
-                var pos = this._globe.renderContext.getXYRelativeToCanvas(evt);
-                var lonlat = this._globe.getLonLatFromPixel(pos[0], pos[1]);
+            if (evt.which === 1) {
+                if (!this._curAoiItem) {
+                    var pos = this._globe.renderContext.getXYRelativeToCanvas(evt);
+                    var lonlat = this._globe.getLonLatFromPixel(pos[0], pos[1]);
 
-                var selection = new AOIItem(this._aoiLayer);
-                this._aoiItems.push(selection);
+                    var selection = new AOIItem(this._aoiLayer);
+                    this._aoiItems.push(selection);
 
-                this._curAoiItem = selection;
+                    this._curAoiItem = selection;
+                }
+
+                this._curAoiItem.add(this._getLatLngPoint(evt));
+
+                if (this._curAoiItem.getNumPoints() > 1) {
+                    this._inRectangular = true;
+                }
+
+                // if (this._mode === "rectangular") {
+                // 	_storePoint(evt);
+                // 	this._navigation.stop();
+                // }
             }
-
-            this._curAoiItem.add(this._getLatLngPoint(evt));
-
-            if (this._curAoiItem.getNumPoints() > 1) {
-                this._inRectangular = true;
-            }
-
-            // if (this._mode === "rectangular") {
-            // 	_storePoint(evt);
-            // 	this._navigation.stop();
-            // }
         }.bind(this);
 
         var _handleOnMouseMove = function(evt) {
-            if (this._mouseButtonDown && !this._inRectangular) {
+            if (evt.which === 1) {
+                if (this._mouseButtonDown && !this._inRectangular) {
 
-                this._navigation.stop();
-                this._mode = "rectangular";
+                    this._navigation.stop();
+                    this._mode = "rectangular";
 
-                var start_point = this._curAoiItem.getStartPoint().clone();
-                var cur_point = this._getLatLngPoint(evt);
+                    var start_point = this._curAoiItem.getStartPoint().clone();
+                    var cur_point = this._getLatLngPoint(evt);
 
-                this._curAoiItem.clear();
-                this._curAoiItem.add(start_point);
-                this._curAoiItem.add(new Point([cur_point.x, start_point.y]));
-                this._curAoiItem.add(cur_point);
-                this._curAoiItem.add(new Point([start_point.x, cur_point.y]));
+                    this._curAoiItem.clear();
+                    this._curAoiItem.add(start_point);
+                    this._curAoiItem.add(new Point([cur_point.x, start_point.y]));
+                    this._curAoiItem.add(cur_point);
+                    this._curAoiItem.add(new Point([start_point.x, cur_point.y]));
 
-                this.updateCurrent();
-            }
+                    this.updateCurrent();
+                }
+            };
         }.bind(this);
 
         var _handleOnMouseUp = function(evt) {
-            this._mouseButtonDown = false;
+            if (evt.which === 1) {
+                this._mouseButtonDown = false;
 
-            if (this._mode === "rectangular") {
-                var start_point = this._curAoiItem.getStartPoint().clone();
-                var cur_point = this._getLatLngPoint(evt);
+                if (this._mode === "rectangular") {
+                    var start_point = this._curAoiItem.getStartPoint().clone();
+                    var cur_point = this._getLatLngPoint(evt);
 
-                this._curAoiItem.clear();
-                this._curAoiItem.add(start_point);
-                this._curAoiItem.add(new Point([cur_point.x, start_point.y]));
-                this._curAoiItem.add(cur_point);
-                this._curAoiItem.add(new Point([start_point.x, cur_point.y]));
+                    this._curAoiItem.clear();
+                    this._curAoiItem.add(start_point);
+                    this._curAoiItem.add(new Point([cur_point.x, start_point.y]));
+                    this._curAoiItem.add(cur_point);
+                    this._curAoiItem.add(new Point([start_point.x, cur_point.y]));
 
-                this.updateCurrent();
-                this._onSelectionEnd();
-
-                this._navigation.start();
-                this._mode = "polygonal";
-            } else {
-                if (evt.button === 0) { // left button
-                    this._curAoiItem.add(this._getLatLngPoint(evt));
-                    this._curAoiItem.render();
-                } else if (evt.button === 2) { // right button
+                    this.updateCurrent();
                     this._onSelectionEnd();
-                }
-            }
 
-            this._inRectangular = false;
+                    this._navigation.start();
+                    this._mode = "polygonal";
+                } else {
+                    if (evt.button === 0) { // left button
+                        this._curAoiItem.add(this._getLatLngPoint(evt));
+                        this._curAoiItem.render();
+                    } else if (evt.button === 2) { // right button
+                        this._onSelectionEnd();
+                    }
+                }
+
+                this._inRectangular = false;
+            }
         }.bind(this);
 
         this._handleOnContextMenu = function(evt) {
