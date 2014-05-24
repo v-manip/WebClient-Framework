@@ -28,6 +28,7 @@ define([
 
         this.volumes = {};
         this.meshes = {};
+        this.volumes_to_add = [];
 
         // adjust the camera position a little bit, just for visualization purposes
         r.camera.position = this.cameraPosition;
@@ -158,8 +159,8 @@ define([
             return;
         }
 
-        var num_volumes = Object.keys(volumes).length,
-            volumes_to_add = [];
+        var num_volumes = Object.keys(volumes).length;
+            
 
         for (var idx = 0; idx < num_volumes; idx++) {
             var volume_item = volumes[idx],
@@ -202,7 +203,7 @@ define([
                 volume: volume
             };
             entries.push(volume_info);
-            volumes_to_add.push(volume_info);
+            this.volumes_to_add.push(volume_info);
 
             this.renderer.add(volume);
         }
@@ -224,11 +225,12 @@ define([
 
             // Note: we need to create the GUI during onShowtime(..) since we do not know the
             // volume dimensions before the loading was completed
-            for (var idx = 0; idx < volumes_to_add.length; idx++) {
-                var volume_info = volumes_to_add[idx];
+            for (var idx = 0; idx < this.volumes_to_add.length; idx++) {
+                var volume_info = this.volumes_to_add[idx];
                 var gui = this.addVolumeToGUI(volume_info.label, volume_info.volume);
                 volume_info['gui'] = gui;
             }
+            this.volumes_to_add = [];
         }.bind(this, entries);
 
         // NOTE: This triggers the loading of the volume and executes
