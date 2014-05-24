@@ -29,6 +29,7 @@ define([
         this.volumes = {};
         this.meshes = {};
         this.volumes_to_add = [];
+        this.meshes_to_add = [];
 
         // adjust the camera position a little bit, just for visualization purposes
         r.camera.position = this.cameraPosition;
@@ -101,8 +102,7 @@ define([
         var label = opts.label || 'Curtain';
 
         // Cache the mesh for later removal:
-        var entries = this.meshes[mesh.file],
-            meshes_to_add = [];
+        var entries = this.meshes[mesh.file];
 
         if (!entries) {
             this.meshes[opts.filename] = [];
@@ -118,7 +118,7 @@ define([
             mesh: root
         };
         entries.push(mesh_info);
-        meshes_to_add.push(mesh_info);
+        this.meshes_to_add.push(mesh_info);
 
         // The onShowtime method gets executed after all files were fully loaded and
         // just before the first rendering attempt. To ensure that the callback gets called
@@ -135,9 +135,11 @@ define([
                 this.baseInitDone = true;
             }
 
-            _.forEach(this.meshes, function(value, key) {
-                this.addMeshToGUI(value[0].label, value[0].mesh);
+            _.forEach(this.meshes_to_add, function(value, key) {
+                this.addMeshToGUI(value.label, value.mesh);
+                // volume_info['gui'] = gui;
             }.bind(this));
+            this.meshes_to_add = [];
         }.bind(this);
 
         this.renderer.add(root);
