@@ -124,7 +124,7 @@ K3D.extractHeaderAndData = function(part, newline_divider) {
     var header_block = part.slice(0, idx);
     // "Trim" content_block out of multipart envelope in removing the first
     // two newline divider, as well as the closing newline divider:
-    var content_block = part.slice(idx + newline_divider.length*2, -newline_divider.length);
+    var content_block = part.slice(idx + newline_divider.length * 2, -newline_divider.length);
 
     var res = {};
     res['header'] = {};
@@ -147,6 +147,12 @@ K3D.extractHeaderAndData = function(part, newline_divider) {
 K3D.save = function(buff, path) {
     var dataURI = "data:application/octet-stream;base64," + btoa(K3D.parse._buffToStr(buff));
     window.location.href = dataURI;
+}
+
+K3D.convertToPNGURI = function(buff) {
+    var dataURI = "data:image/png;base64," + btoa(K3D.parse._buffToStr(buff));
+    // window.location.href = dataURI;
+    return dataURI;
 }
 
 K3D.clone = function(o) {
@@ -319,6 +325,11 @@ K3D.parse.toIndividualOBJs = function(parsed_obj) {
 }
 
 K3D.parse.fromOBJ = function(buff) {
+    // FIXXME: this could be done more efficiently
+    if (typeof buff === 'string') {
+        buff = K3D.parse._strToBuff(buff);
+    }
+
     var res = {};
     res.groups = {};
 
@@ -426,6 +437,11 @@ K3D.parse.fromOBJ = function(buff) {
 }
 
 K3D.parse.fromMTL = function(buff) {
+    // FIXXME: this could be done more efficiently
+    if (typeof buff === 'string') {
+        buff = K3D.parse._strToBuff(buff);
+    }
+
     var res = {};
     res.materials = [];
     var cur_mtl_idx = -1;

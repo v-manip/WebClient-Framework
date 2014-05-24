@@ -61,12 +61,12 @@ define([
         didRemoveElement: function() {
             // NOTE: The 'listenTo' bindings are automatically unbound by marionette
         },
-
+        
         supportsLayer: function(model) {
             // NOTE: Currently we only take into account 'WMS' layers for the RBV:
             var view = _.find(model.get('views'), function(view) {
                 return view.protocol.toLowerCase() === 'w3ds' &&
-                    view.type.toLowerCase() === 'volumetric';
+                    (view.type.toLowerCase() === 'volumetric' || view.type.toLowerCase() === 'vertical_curtain');
             });
 
             if (view) {
@@ -76,9 +76,9 @@ define([
             return null;
         },
 
-        //----------------//
+        //-------------------------//
         // VMANIP ACTIONS //
-        //----------------//
+        //------------------------//
 
         // FIXXME: create a distinct hash for that, e.g.:
         // actions: {
@@ -101,11 +101,24 @@ define([
         },
 
         onLayerAdd: function(model, isBaseLayer, views) {
+            if (!this.currentToI) {
+                return;
+            };
+
             _.forEach(views, function(view) {
-                // var layer = this.context.getLayerById(view.id, 'imagery');
-                // this.context.trigger('change:layer:visibility', layer, true);
-                console.log('[SliceView::onLayerAdd] adding: ' + view.id);
-                this._addVolume(view.id);
+                console.log('[SliceView::onLayerAdd] adding: ' + view.id + ' of type "' + view.type + '"');
+
+                // FIXXME: use _update() here!
+                var data_url_base = this.baseURL;
+                data_url_base += '&boundingBox=' + this.currentAoI;
+                data_url_base += '&time=' + this.currentToI;
+                data_url_base += '&layer=' + view.id;
+
+                if (view.type === 'volumetric') {
+                    this._addVolume(view.id, data_url_base);
+                } else if (view.type === 'vertical_curtain') {
+                    this._addMesh(view.id, data_url_base);
+                }
             }.bind(this));
         },
 
@@ -163,15 +176,22 @@ define([
         },
 
         _update: function() {
-            // if (this.getViewer()) {
-            //     this.getViewer().reset();
-            // }
-
             _.forEach(this.selectedLayers(), function(layer_info, key) {
                 var view = this.supportsLayer(layer_info.model);
-                if (view) {
-                    this._addVolume(view.id);
-                    console.log('[SliceView::_udpate] added layer: ' + view.id);
+
+                if (!view) {
+                    return;
+                }
+
+                var data_url_base = this.baseURL;
+                data_url_base += '&boundingBox=' + this.currentAoI;
+                data_url_base += '&time=' + this.currentToI;
+                data_url_base += '&layer=' + view.id;
+
+                if (view.type === 'volumetric') {
+                    this._addVolume(view.id, data_url_base);
+                } else if (view.type === 'vertical_curtain') {
+                    this._addMesh(view.id, data_url_base);
                 }
             }.bind(this));
         },
@@ -185,15 +205,9 @@ define([
             });
         },
 
-        _addVolume: function(layer) {
+        _addVolume: function(layer, base_url) {
             this.enableEmptyView(false);
             this.onShow();
-
-            var volume_url = this.baseURL;
-            volume_url += '&boundingBox=' + this.currentAoI;
-            volume_url += '&time=' + this.currentToI;
-            volume_url += '&layer=' + layer;
-            volume_url += '&format=model/nii-gz';
 
             // FIXXME: If the viewer is not instantiated here, but in 'didInsertElemnet' the
             // volumes are not displayed. No idea why...
@@ -209,8 +223,9 @@ define([
             // volume_url = './data/mptest.response';
             //volume_url = 'http://demo.v-manip.eox.at/browse/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
             // volume_url = 'http://localhost:9000/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
-
             // volume_url = './data/Temperature.nii.gz';
+
+            var volume_url = base_url + '&format=model/nii-gz';
 
             K3D.load(volume_url, function(data, isMultiPart) {
                 this.getViewer().addVolume({
@@ -227,40 +242,114 @@ define([
                 });
             }.bind(this));
             // }.bind(this), 'text/plain');
+        },
 
-            // DISABLED for testing now:
-            if (false) {
-                //
-                // Add a an eventual mesh to the viewer:
-                //
+        // _addVolume: function(layer_id, url_base) {
+        //      this.enableEmptyView(false);
+        //      this.onShow();
 
-                var model_url = this.baseURL;
-                model_url += '&boundingBox=' + this.currentAoI;
-                model_url += '&time=' + toi;
-                model_url += '&layer=' + layer;
-                model_url += '&format=model/obj';
+        //      // FIXXME: If the viewer is not instantiated here, but in 'didInsertElemet' the
+        //      // volumes are not displayed. No idea why...
+        //      if (!this.getViewer()) {
+        //          this.setViewer(this._createViewer());
+        //      }
 
-                // TESTDATA:
-                model_url = './data/mptest.response';
+        //      //
+        //      // Add a volume to the viewer:
+        //      //
 
-                console.log('requesting: ' + model_url);
-                K3D.load(model_url, function(data, isMultiPart) {
-                    if (!isMultiPart) {
-                        // For now we only support multipart responses
-                        return;
-                    } else {
-                        // FIXXME: no error handling at the moment, the data has
-                        // to be in the expected format, otherwise the code will
-                        // fail!
+        //      // Testdata sets:
+        //      // var volume_url = './data/mptest.response';
+        //      // var volume_url = 'http://demo.v-manip.eox.at/browse/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
+        //      // var volume_url = 'http://localhost:9000/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-23.141513671875,62.896319434756,-15.033603515625,67.137042091006&time=2013-05-17T11:00:00.000Z/2013-05-17T11:17:00.000Z&layer=Cris&format=model/nii-gz';
+        //      // var volume_url = './data/Temperature.nii.gz';
+        //      var volume_url = url_base + '&format=model/nii-gz';
+
+        //      K3D.load(volume_url, function(data, isMultiPart) {
+        //          this.getViewer().addVolume({
+        //              filename: layer_id,
+        //              data: data,
+        //              isMultiPart: isMultiPart,
+        //              label: layer_id,
+        //              volumeRendering: true,
+        //              upperThreshold: 219,
+        //              opacity: 0.3,
+        //              minColor: [0.4, 0.4, 0.4],
+        //              maxColor: [0, 0, 0],
+        //              reslicing: false
+        //          });
+        //      }.bind(this));
+        //      // }.bind(this), 'text/plain');
+        //  },
+
+        _addMesh: function(layer_id, url_base) {
+            this.enableEmptyView(false);
+            this.onShow();
+
+            // FIXXME: If the viewer is not instantiated here, but in 'didInsertElemet' the
+            // meshes are not displayed. No idea why...
+            if (!this.getViewer()) {
+                this.setViewer(this._createViewer());
+            }
+
+            // Testdata sets:
+            // model_url = './data/mptest.response';
+
+            var model_url = url_base + '&format=model/obj';
+            K3D.load(model_url, function(data, isMultiPart) {
+                if (!isMultiPart) {
+                    // For now we only support multipart responses
+                    return;
+                } else {
+                    // FIXXME: no error handling at the moment, the data has
+                    // to be in the expected format, otherwise the code will
+                    // fail!
+
+                    // FIXXME: test data until the mesh_factory sends a reasonable response for 'model/obj'
+                    if (false) {
                         this.getViewer().addMesh({
                             models: data['model/obj'],
                             mtls: data['text/plain'],
                             textures: data['image/png']
                         });
-                    }
-                    // }.bind(this));
-                }.bind(this), 'text/plain');
-            }
+                    } else {
+                        var base_url = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3',
+                            obj = base_url + '.obj',
+                            mtl = base_url + '.mtl',
+                            png0 = 'data/curtain-obj/159be6d2-2913-40eb-8a7f-d8807d7d3bd1.png',
+                            png1 = 'data/curtain-obj/629bd189-e29e-461f-954f-36702067f987.png',
+                            png2 = 'data/curtain-obj/6368222a-9686-42b2-8b5d-ceca917ed263.png',
+                            that = this;
+
+                        K3D.load(obj, function(obj_str) {
+                            K3D.load(mtl, function(mtl_str) {
+                                K3D.load(png0, function(png0_data) {
+                                    K3D.load(png1, function(png1_data) {
+                                        K3D.load(png2, function(png2_data) {
+                                            data = {
+                                                'model/obj': [obj_str['application/x-tgif'][0]],
+                                                'text/plain': [mtl_str['application/octet-stream'][0]],
+                                                'image/png': {
+                                                    '159be6d2-2913-40eb-8a7f-d8807d7d3bd1.png': png0_data['image/png'][0]['entry-0'],
+                                                    '629bd189-e29e-461f-954f-36702067f987.png': png1_data['image/png'][0]['entry-0'],
+                                                    '6368222a-9686-42b2-8b5d-ceca917ed263.png': png2_data['image/png'][0]['entry-0']
+                                                }
+                                            };
+
+                                            that.getViewer().addMesh({
+                                                models: data['model/obj'],
+                                                mtls: data['text/plain'],
+                                                textures: data['image/png']
+                                            });
+                                        }, 'arraybuffer');
+                                    }, 'arraybuffer');
+                                }, 'arraybuffer');
+                            }, 'text/plain');
+                        }, 'text/plain');
+                    };
+                }
+                // }.bind(this));
+            }.bind(this), 'text/plain');
 
             // STATIC TEST VERSION:
 
@@ -317,7 +406,6 @@ define([
             // // request.responseType = 'text/plain';
             // request.send(null);
         },
-
         _removeVolume: function(layer_name) {
             this.getViewer().removeObject(layer_name);
         }
