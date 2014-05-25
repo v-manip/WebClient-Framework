@@ -79,7 +79,6 @@ define([
                 name = single_objs[idx].name,
                 material = single_objs[idx].material,
                 mesh = new X.mesh();
-            opts.model_filename
 
             mesh.file = name + '.obj';
             mesh.filedata = K3D.parse._strToBuff(obj);
@@ -102,21 +101,23 @@ define([
         var label = opts.label || 'Curtain';
 
         // Cache the mesh for later removal:
-        var entries = this.meshes[mesh.file];
+        var entries = this.meshes[opts.label];
 
         if (!entries) {
-            this.meshes[opts.filename] = [];
-            entries = this.meshes[opts.filename];
+            this.meshes[opts.label] = [];
+            entries = this.meshes[opts.label];
             label += ' ' + (entries.length + 1);
         } else {
-            entries = this.meshes[opts.filename];
+            entries = this.meshes[opts.label];
             label += ' ' + (entries.length + 1);
         }
 
         var mesh_info = {
             label: label,
-            mesh: root
+            object: root,
+            gui: null // will be set in 'onShowtime' callback
         };
+
         entries.push(mesh_info);
         this.meshes_to_add.push(mesh_info);
 
@@ -127,19 +128,38 @@ define([
         this.renderer._onShowtime = false;
 
         this.renderer.onShowtime = function() {
-            if (!this.baseInitDone) {
+            if (!this.mainGUI) {
                 var gui = this.mainGUI = new dat.GUI({
                     autoPlace: true
                 });
                 this.renderer.container.appendChild(gui.domElement);
-                this.baseInitDone = true;
             }
 
-            _.forEach(this.meshes_to_add, function(value, key) {
-                this.addMeshToGUI(value.label, value.mesh);
-                // volume_info['gui'] = gui;
-            }.bind(this));
+            for (var idx = 0; idx < this.meshes_to_add.length; idx++) {
+                var mesh_info = this.meshes_to_add[idx];
+                var gui = this.addMeshToGUI(mesh_info.label, mesh_info.object);
+                mesh_info['gui'] = gui;
+
+                var center = [0,0,0];
+                _.forEach(mesh_info.object.children, function(mesh) {
+
+                    // FIXXME: for now we scale up the geometry so that the X.interactor3D is working better.
+                    // At low scales it behaves too unfriendly (near/far planes, rotation center are off).
+                    mesh.transform.scale(30, 30, 30);
+
+                    var centroid = mesh.points._centroid;
+                    var x = (center[0] + centroid[0]) / 2;
+                    var y = (center[1] + centroid[1]) / 2;
+                    var z = (center[2] + centroid[2]) / 2;
+                    center = [x,y,z];
+                });
+
+                this.renderer.camera.position = [0, 0, -3];
+                this.renderer.camera.focus = center;
+            }
+            
             this.meshes_to_add = [];
+
         }.bind(this);
 
         this.renderer.add(root);
@@ -202,7 +222,8 @@ define([
 
             var volume_info = {
                 label: label,
-                volume: volume
+                object: volume,
+                gui: null // will be set in 'onShowtime' callback
             };
             entries.push(volume_info);
             this.volumes_to_add.push(volume_info);
@@ -229,7 +250,7 @@ define([
             // volume dimensions before the loading was completed
             for (var idx = 0; idx < this.volumes_to_add.length; idx++) {
                 var volume_info = this.volumes_to_add[idx];
-                var gui = this.addVolumeToGUI(volume_info.label, volume_info.volume);
+                var gui = this.addVolumeToGUI(volume_info.label, volume_info.object);
                 volume_info['gui'] = gui;
             }
             this.volumes_to_add = [];
@@ -247,7 +268,7 @@ define([
 
         if (data_set) {
             _.forEach(data_set, function(info) {
-                this.renderer.remove(info.volume);
+                this.renderer.remove(info.object);
                 if (info.gui) {
                     this.removeGui(info.gui);
                 }
@@ -260,7 +281,7 @@ define([
             }
 
             // Recenter the view after all volumes are removed:
-            if (Object.keys(this.volumes).length === 0) {
+            if (Object.keys(this.volumes).length === 0 && Object.keys(this.meshes).length === 0) {
                 this.onResize();
                 if (this.mainGUI) {
                     this.removeGui(this.mainGUI);
@@ -305,6 +326,8 @@ define([
         var meshVisibleController = meshgui.add(mesh, 'visible');
         //var meshColorController = meshgui.addColor(mesh, 'color');
         meshgui.open();
+
+        return meshgui;
     };
 
     XTKViewer.prototype.reset = function() {

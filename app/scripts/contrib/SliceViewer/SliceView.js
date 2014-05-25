@@ -61,7 +61,7 @@ define([
         didRemoveElement: function() {
             // NOTE: The 'listenTo' bindings are automatically unbound by marionette
         },
-        
+
         supportsLayer: function(model) {
             // NOTE: Currently we only take into account 'WMS' layers for the RBV:
             var view = _.find(model.get('views'), function(view) {
@@ -310,7 +310,8 @@ define([
                         this.getViewer().addMesh({
                             models: data['model/obj'],
                             mtls: data['text/plain'],
-                            textures: data['image/png']
+                            textures: data['image/png'],
+                            label: layer_id
                         });
                     } else {
                         var base_url = 'data/curtain-obj/1143645b-49d5-4da0-b9fb-b519d24f75b3',
@@ -339,7 +340,8 @@ define([
                                             that.getViewer().addMesh({
                                                 models: data['model/obj'],
                                                 mtls: data['text/plain'],
-                                                textures: data['image/png']
+                                                textures: data['image/png'],
+                                                label: layer_id
                                             });
                                         }, 'arraybuffer');
                                     }, 'arraybuffer');
