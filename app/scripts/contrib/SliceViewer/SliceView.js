@@ -229,14 +229,14 @@ define([
             // }.bind(this), 'text/plain');
 
             // DISABLED for testing now:
-            if (false) {
+            if (true) {
                 //
                 // Add a an eventual mesh to the viewer:
                 //
 
                 var model_url = this.baseURL;
                 model_url += '&boundingBox=' + this.currentAoI;
-                model_url += '&time=' + toi;
+                model_url += '&time=' + this.currentToI;
                 model_url += '&layer=' + layer;
                 model_url += '&format=model/obj';
 

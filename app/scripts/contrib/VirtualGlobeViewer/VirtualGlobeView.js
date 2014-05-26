@@ -301,7 +301,9 @@ define([
                     y: pos.geoCenter[1],
                     l: 4
                 });
-                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+                setTimeout(function() {
+                    this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+                }.bind(this), 1000);
             }.bind(this));
 
             // When a new AOI is selected in the viewer this callback gets executed:
