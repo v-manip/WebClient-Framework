@@ -54,7 +54,7 @@ define([
     XTKViewer.prototype.addMesh = function(opts) {
         var modelnames = Object.keys(opts.models[0]),
             modeldata = opts.models[0][modelnames[0]],
-            mtldata = opts.mtls[0][modelnames[0]];
+            mtldata = opts.mtls[0][(modelnames[0].split('.')[0] + ".mtl")];
 
         console.log('[XTKViewer.addMesh] adding obj/mtl pair: ' + modelnames[0]);
 
@@ -91,7 +91,13 @@ define([
                 // mesh.texture._image.addEventListener("load", function() {
                 // }, false);
                 mesh.texture.flipY = true;
-                mesh.texture._image.src = K3D.convertToPNGURI(opts.textures[tex_name]);
+
+                var tex_data = _.find(opts.textures, function(tex_info) {
+                    if (tex_info[tex_name]) return true;
+                    return false;
+                });
+                var key = Object.keys(tex_data)[0];
+                mesh.texture._image.src = K3D.convertToPNGURI(tex_data[key]);
             }
 
             mesh.color = [0, 1, 0];
@@ -140,24 +146,24 @@ define([
                 var gui = this.addMeshToGUI(mesh_info.label, mesh_info.object);
                 mesh_info['gui'] = gui;
 
-                var center = [0,0,0];
+                var center = [0, 0, 0];
                 _.forEach(mesh_info.object.children, function(mesh) {
 
                     // FIXXME: for now we scale up the geometry so that the X.interactor3D is working better.
                     // At low scales it behaves too unfriendly (near/far planes, rotation center are off).
-                    mesh.transform.scale(30, 30, 30);
+                    mesh.transform.scale(200, 200, 200);
 
                     var centroid = mesh.points._centroid;
                     var x = (center[0] + centroid[0]) / 2;
                     var y = (center[1] + centroid[1]) / 2;
                     var z = (center[2] + centroid[2]) / 2;
-                    center = [x,y,z];
+                    center = [x, y, z];
                 });
 
                 this.renderer.camera.position = [0, 0, -3];
                 this.renderer.camera.focus = center;
             }
-            
+
             this.meshes_to_add = [];
 
         }.bind(this);

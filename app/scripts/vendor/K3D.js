@@ -87,7 +87,7 @@ K3D.parseMultiPartResponse = function(target, contenttype) {
         var newline_divider = '\r\n';
         var d = K3D.extractHeaderAndData(part, newline_divider);
 
-        var cid = d.header['Content-ID'];
+        var cid = d.header['Content-Disposition'].split(';')[1].split('=')[1].replace(/"/g, '');
 
         if (!res[d.header['Content-Type'].split('; ')[0]]) { // Create new entry for given mimetype:
             var entries = res[d.header['Content-Type'].split('; ')[0]] = [];
@@ -150,6 +150,10 @@ K3D.save = function(buff, path) {
 }
 
 K3D.convertToPNGURI = function(buff) {
+    // FIXXME: this could be done more efficiently
+    if (typeof buff === 'string') {
+        buff = K3D.parse._strToBuff(buff);
+    }
     var dataURI = "data:image/png;base64," + btoa(K3D.parse._buffToStr(buff));
     // window.location.href = dataURI;
     return dataURI;

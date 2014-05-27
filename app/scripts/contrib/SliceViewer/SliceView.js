@@ -294,8 +294,10 @@ define([
 
             // Testdata sets:
             // model_url = './data/mptest.response';
+            // model_url = 'http://demo.v-manip.eox.at/browse/ows?service=W3DS&request=GetScene&crs=EPSG:4326&version=1.0.0&boundingBox=-50.180703125,0.61869140625,70.0195703125,90.84525390625&time=2013-05-17T15:51:30.000Z/2013-05-17T15:54:06.000Z&layer=Cloudsat';
 
             var model_url = url_base + '&format=model/obj';
+
             K3D.load(model_url, function(data, isMultiPart) {
                 if (!isMultiPart) {
                     // For now we only support multipart responses
@@ -306,7 +308,7 @@ define([
                     // fail!
 
                     // FIXXME: test data until the mesh_factory sends a reasonable response for 'model/obj'
-                    if (false) {
+                    if (true) {
                         this.getViewer().addMesh({
                             models: data['model/obj'],
                             mtls: data['text/plain'],
