@@ -1,6 +1,6 @@
 {
 
-  "debug": true,
+  "debug": false,
 
   "modules": [
     "contrib/MapViewer/MapViewModule",
@@ -98,52 +98,35 @@
       }
     ],
     "products": [
-      {
-        "name": "SPOT 4 View",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"blue",
-        "views": [
-          {
-            "id": "SPOT4_View",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "SPOT4_View",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
+        {
+            "name": "Tininnilik",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "Tininnilik",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            },{
+                "id": "Tininnilik",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "Tininnilik",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
         }
-      },
-      {
-        "name": "PanEuropean Fractional Snow Cover",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"green",
-        "views": [
-          {
-            "id": "daily_FSC_PanEuropean_Optical",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_FSC_PanEuropean_Optical",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      }
     ],
     "overlays": [
        {
@@ -228,12 +211,6 @@
         "template" : "ToolSelection"
       },
       {
-        "name" : "Options",
-        "icon" : "fa-tasks",
-        "eventToRaise" : "ui:open:options",
-        "template" : "OptionsControl"
-      },
-      {
         "name" : "Tutorial",
         "icon" : "fa-book",
         "eventToRaise" : "ui:open:storybanner",
@@ -261,8 +238,8 @@
 
   "timeSlider": {
     "domain": {
-      "start": "2012-05-17T10:15:00Z",
-      "end": "2013-09-17T11:45:00Z"
+      "start": "2000-01-17T10:15:00Z",
+      "end": "2013-12-17T11:45:00Z"
     },
     "brush": {
        "start": "2013-05-17T11:00:00Z",
@@ -349,9 +326,9 @@
 
   "selectionTools":[
     {
-      "id":"pointSelection",
-      "description": "Allows selection of Points in Map",
-      "icon":"icon-large icon-screenshot"
+      "id": "bboxSelection",
+      "description": "Allows drawing a bounding box selection in Map",
+      "icon": "icon-large icon-vector-path-square"
     }
   ],
 
@@ -390,14 +367,6 @@
       "icon":"fa fa-pause fa-2x",
       "enabled":true,
       "active":false
-    },
-    {
-      "id":"QuadView",
-      "eventToRaise":"layout:switch:quadview",
-      "description": "Splits screen into four windows displaying one map on each corner",
-      "icon":"fa fa-th-large fa-2x",
-      "enabled":true,
-      "active":false
     }
 
   ],
@@ -405,10 +374,10 @@
   "backendConfig": {
     "MeshFactory": {
       "protocol": "W3DS",
-      "url": "http://localhost:9000/ows?",
+      "url": "http://demo.v-manip.eox.at/ows?",
       "version": "1.0.0"
     },
-    "W3DSDataUrl": "http://localhost:9000/gltf/"
+    "W3DSDataUrl": "http://demo.v-manip.eox.at/gltf/"
   },
 
   "colorRamp": {
