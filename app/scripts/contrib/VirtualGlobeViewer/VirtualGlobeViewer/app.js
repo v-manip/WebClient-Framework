@@ -40,6 +40,8 @@ define([
 
         this.layerCache = {};
         this.overlayLayers = [];
+        this.onPanEventCallback = null;
+        this.onZoomEventCallback = null;
 
         this.navigation = new GlobWeb.Navigation(this.globe, {
             inertia: false
@@ -58,6 +60,22 @@ define([
 
             pan(dx, dy);
         }.bind(this);
+
+        var zoom = this.navigation.zoom.bind(this.navigation);
+        this.navigation.zoom = function(delta, scale) {
+            // If the MapView is currently panning do not allow the VGV to do a pan. This would result in an infinite loop.
+            if (App.isMapZooming) {
+                console.log('prevent panning...');
+                return;
+            }
+
+            if (this.onZoomEventCallback) {
+                this.onZoomEventCallback(this.navigation, delta, scale);
+            }
+
+            zoom(delta, scale);
+        }.bind(this);
+
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
 
@@ -113,6 +131,10 @@ define([
 
     VGV.prototype.setOnPanEventCallback = function(cb) {
         this.onPanEventCallback = cb;
+    };
+
+    VGV.prototype.setOnZoomEventCallback = function(cb) {
+        this.onZoomEventCallback = cb;
     };
 
     VGV.prototype.enableAOISelection = function(type) {

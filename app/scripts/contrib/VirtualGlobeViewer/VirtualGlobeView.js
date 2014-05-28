@@ -260,50 +260,74 @@ define([
                 w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
 
+            function convertZoomValue(vgv_zoom_value) {
+                // console.log('vgv_zoom_value:' + vgv_zoom_value);
+
+                var map_zoom_value = 13;
+
+                if (vgv_zoom_value > 0.0 && vgv_zoom_value <= 0.0024) {
+                    map_zoom_value = 13;
+                } else if (vgv_zoom_value > 0.0024 && vgv_zoom_value <= 0.004) {
+                    map_zoom_value = 12;
+                } else if (vgv_zoom_value > 0.004 && vgv_zoom_value <= 0.0047) {
+                    map_zoom_value = 11;
+                } else if (vgv_zoom_value > 0.0047 && vgv_zoom_value <= 0.017) {
+                    map_zoom_value = 10;
+                } else if (vgv_zoom_value > 0.017 && vgv_zoom_value <= 0.03) {
+                     map_zoom_value = 9;
+                } else if (vgv_zoom_value > 0.03 && vgv_zoom_value <= 0.07) {
+                     map_zoom_value = 8;
+                } else if (vgv_zoom_value > 0.07 && vgv_zoom_value <= 0.18) {
+                     map_zoom_value = 7;
+                } else if (vgv_zoom_value > 0.18 && vgv_zoom_value <= 0.5) {
+                     map_zoom_value = 6;
+                } else if (vgv_zoom_value > 0.5 && vgv_zoom_value <= 0.2) {
+                    map_zoom_value = 5;
+                } else if (vgv_zoom_value > 0.2 && vgv_zoom_value <= 1.0) {
+                     map_zoom_value = 4;
+                } else if (vgv_zoom_value > 1.0 && vgv_zoom_value <= 2.0) {
+                     map_zoom_value = 3;
+                } else if (vgv_zoom_value > 2.0 && vgv_zoom_value <= 2.8) {
+                     map_zoom_value = 2;
+                } else if (vgv_zoom_value > 2.8) {
+                     map_zoom_value = 1;
+                };
+
+                // console.log('map_zoom_value: ' + map_zoom_value);
+
+                return map_zoom_value;
+            };
+
             vgv.setOnPanEventCallback(function(navigation, dx, dy) {
                 var pos = navigation.save(),
                     dist = pos.distance,
                     map_dist = 1;
 
-                console.log('dist:' + dist);
-
-                if (dist > 3) {
-                    map_dist = 14;
-                } else if (dist > 2.8 && dist <= 3) {
-                    map_dist = 13;
-                } else if (dist > 2.6 && dist <= 2.8) {
-                    map_dist = 12;
-                } else if (dist > 2.4 && dist <= 2.6) {
-                    map_dist = 11;
-                } else if (dist > 2.2 && dist <= 2.4) {
-                    map_dist = 10;
-                } else if (dist > 2.0 && dist <= 2.2) {
-                    map_dist = 9;
-                } else if (dist > 1.8 && dist <= 2.0) {
-                    map_dist = 8;
-                } else if (dist > 1.6 && dist <= 1.8) {
-                    map_dist = 7;
-                } else if (dist > 1.4 && dist <= 1.6) {
-                    map_dist = 6;
-                } else if (dist > 1.2 && dist <= 1.4) {
-                    map_dist = 5;
-                } else if (dist > 1.0 && dist <= 1.2) {
-                    map_dist = 4;
-                } else if (dist > 0.8 && dist <= 1.0) {
-                    map_dist = 3;
-                };
-
-                console.log('map_dist: ' + map_dist);
-
                 this.stopListening(Communicator.mediator, 'map:center');
+
                 Communicator.mediator.trigger("map:center", {
                     x: pos.geoCenter[0],
                     y: pos.geoCenter[1],
-                    l: 4
+                    l: convertZoomValue(dist)
                 });
-                setTimeout(function() {
-                    this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
-                }.bind(this), 1000);
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
+            vgv.setOnZoomEventCallback(function(navigation, delta, scale) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
             }.bind(this));
 
             // When a new AOI is selected in the viewer this callback gets executed:
