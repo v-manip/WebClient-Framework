@@ -101,6 +101,13 @@
 					);
 					console.log("Added baselayer " + baselayer.id );
 				}, this);
+				
+				var autoColor = {
+		            colors : d3.scale.category10(),
+		            index : 0,
+		            getColor: function () { return this.colors(this.index++) }
+		        }
+
 
 				//Productsare loaded and added to the global collection
                 var ordinal = 0;
@@ -113,7 +120,7 @@
 							timeSlider: products.timeSlider,
 							// Default to WMS if no protocol is defined
 							timeSliderProtocol: (products.timeSliderProtocol) ? products.timeSliderProtocol : "WMS",
-							color: products.color,
+							color: products.color ? obj.color : autoColor.getColor() ,
 							//time: products.time, // Is set in TimeSliderView on time change.
 								opacity: 1,
 								views: products.views,
@@ -122,7 +129,8 @@
 									id: products.download.id,
 									protocol: products.download.protocol,
 									url: products.download.url
-								}
+								},
+								process: products.process 
 							})
 					);
 					console.log("Added product " + products.name );
