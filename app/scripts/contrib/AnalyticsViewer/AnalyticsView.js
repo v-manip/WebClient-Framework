@@ -103,7 +103,7 @@ define(['backbone.marionette',
 							'<div class="outer">'+
 								'<div class="middle">'+
 									'<div class="inner">'+
-										'<img style="display: block;margin-left: auto;margin-right: auto;max-width:100%; max-height:100%;" src="data:image/png;base64,' + this.img + '" />'+
+										'<img style="width:100%; height:100%;" src="data:image/png;base64,' + this.img + '" />'+
 									'</div>'+
 								'</div>'+
 							'</div>'
