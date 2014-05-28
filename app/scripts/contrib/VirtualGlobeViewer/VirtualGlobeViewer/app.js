@@ -7,8 +7,9 @@ define([
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
     './AOIRenderer',
+        'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, App, OpenLayers) {
 
     'use strict';
 
@@ -32,26 +33,49 @@ define([
             shadersPath: "/bower_components/virtualglobeviewer/shaders/"
         });
 
-        // this.aoiLayer = undefined;
-        var style = new GlobWeb.FeatureStyle({
-            fillColor: [1, 0.5, 0.1, 0.5],
-            strokeColor: [1, 0.5, 0.1, 1],
-            extrude: true,
-            fill: true
-        });
-
         this.aoiLayer = new GlobWeb.VectorLayer({
-            style: style,
             opacity: 1
         });
         this.globe.addLayer(this.aoiLayer);
 
         this.layerCache = {};
         this.overlayLayers = [];
+        this.onPanEventCallback = null;
+        this.onZoomEventCallback = null;
 
         this.navigation = new GlobWeb.Navigation(this.globe, {
             inertia: false
         });
+        var pan = this.navigation.pan.bind(this.navigation);
+        this.navigation.pan = function(dx, dy) {
+            // If the MapView is currently panning do not allow the VGV to do a pan. This would result in an infinite loop.
+            if (App.isMapPanning) {
+                console.log('prevent panning...');
+                return;
+            }
+
+            if (this.onPanEventCallback) {
+                this.onPanEventCallback(this.navigation, dx, dy);
+            }
+
+            pan(dx, dy);
+        }.bind(this);
+
+        var zoom = this.navigation.zoom.bind(this.navigation);
+        this.navigation.zoom = function(delta, scale) {
+            // If the MapView is currently panning do not allow the VGV to do a pan. This would result in an infinite loop.
+            if (App.isMapZooming) {
+                console.log('prevent panning...');
+                return;
+            }
+
+            if (this.onZoomEventCallback) {
+                this.onZoomEventCallback(this.navigation, delta, scale);
+            }
+
+            zoom(delta, scale);
+        }.bind(this);
+
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
 
@@ -103,6 +127,14 @@ define([
         coordinates.push(p);
 
         return coordinates;
+    };
+
+    VGV.prototype.setOnPanEventCallback = function(cb) {
+        this.onPanEventCallback = cb;
+    };
+
+    VGV.prototype.setOnZoomEventCallback = function(cb) {
+        this.onZoomEventCallback = cb;
     };
 
     VGV.prototype.enableAOISelection = function(type) {

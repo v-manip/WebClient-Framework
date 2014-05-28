@@ -260,6 +260,76 @@ define([
                 w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
 
+            function convertZoomValue(vgv_zoom_value) {
+                // console.log('vgv_zoom_value:' + vgv_zoom_value);
+
+                var map_zoom_value = 13;
+
+                if (vgv_zoom_value > 0.0 && vgv_zoom_value <= 0.0024) {
+                    map_zoom_value = 13;
+                } else if (vgv_zoom_value > 0.0024 && vgv_zoom_value <= 0.004) {
+                    map_zoom_value = 12;
+                } else if (vgv_zoom_value > 0.004 && vgv_zoom_value <= 0.0047) {
+                    map_zoom_value = 11;
+                } else if (vgv_zoom_value > 0.0047 && vgv_zoom_value <= 0.017) {
+                    map_zoom_value = 10;
+                } else if (vgv_zoom_value > 0.017 && vgv_zoom_value <= 0.03) {
+                     map_zoom_value = 9;
+                } else if (vgv_zoom_value > 0.03 && vgv_zoom_value <= 0.07) {
+                     map_zoom_value = 8;
+                } else if (vgv_zoom_value > 0.07 && vgv_zoom_value <= 0.18) {
+                     map_zoom_value = 7;
+                } else if (vgv_zoom_value > 0.18 && vgv_zoom_value <= 0.5) {
+                     map_zoom_value = 6;
+                } else if (vgv_zoom_value > 0.5 && vgv_zoom_value <= 0.2) {
+                    map_zoom_value = 5;
+                } else if (vgv_zoom_value > 0.2 && vgv_zoom_value <= 1.0) {
+                     map_zoom_value = 4;
+                } else if (vgv_zoom_value > 1.0 && vgv_zoom_value <= 2.0) {
+                     map_zoom_value = 3;
+                } else if (vgv_zoom_value > 2.0 && vgv_zoom_value <= 2.8) {
+                     map_zoom_value = 2;
+                } else if (vgv_zoom_value > 2.8) {
+                     map_zoom_value = 1;
+                };
+
+                // console.log('map_zoom_value: ' + map_zoom_value);
+
+                return map_zoom_value;
+            };
+
+            vgv.setOnPanEventCallback(function(navigation, dx, dy) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
+            vgv.setOnZoomEventCallback(function(navigation, delta, scale) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
             // When a new AOI is selected in the viewer this callback gets executed:
             vgv.setOnNewAOICallback(function(aoi_coords) {
                 // FIXXME: I'm using Openlayers here to calculate the bounds, this has to be fixed somewhen...
@@ -271,9 +341,10 @@ define([
                 var b = bounds.toArray();
 
                 this.stopListening(Communicator.mediator, 'selection:changed');
-                Communicator.mediator.trigger('selection:changed',  b, aoi_coords);
+                Communicator.mediator.trigger('selection:changed', b, aoi_coords);
                 this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
             }.bind(this));
+
 
             // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 
