@@ -50,10 +50,17 @@ define(['backbone.marionette',
 						'center': [center.lon, center.lat],
 						'zoom': data.object.zoom
 					});
+
+					// We set a flag here so that other views have the possibility to check if there is a
+					// map panning going on at the moment. This is important e.g. for the VGV to prevent
+					// sending a 'pan' event in some cases which would lead to a infinite recursion.
+					App.isMapPanning = true;
 				}.bind(this));
 
 				
 				this.map.events.register("moveend", this.map, function(data) {
+					// See lines above for an explanation of that flag:
+					App.isMapPanning = false;
 					Communicator.mediator.trigger("map:position:change", this.map.getExtent());				
 				}.bind(this));
 				

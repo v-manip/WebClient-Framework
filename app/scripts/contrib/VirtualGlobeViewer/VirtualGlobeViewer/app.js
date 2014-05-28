@@ -7,8 +7,9 @@ define([
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
     './AOIRenderer',
+        'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, App, OpenLayers) {
 
     'use strict';
 
@@ -45,11 +46,17 @@ define([
         });
         var pan = this.navigation.pan.bind(this.navigation);
         this.navigation.pan = function(dx, dy) {
-            pan(dx, dy);
+            // If the MapView is currently panning do not allow the VGV to do a pan. This would result in an infinite loop.
+            if (App.isMapPanning) {
+                console.log('prevent panning...');
+                return;
+            }
 
             if (this.onPanEventCallback) {
                 this.onPanEventCallback(this.navigation, dx, dy);
             }
+
+            pan(dx, dy);
         }.bind(this);
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;

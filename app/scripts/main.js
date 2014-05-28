@@ -116,6 +116,9 @@
 				});
 
 				App.start();
+
+				// Global settings:
+				App.isMapPanning = false;
 			});
 		});
 	});
