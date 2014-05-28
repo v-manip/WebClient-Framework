@@ -3,10 +3,10 @@
     <span class="close">&#215;</span>
     <small class='scroll'>Scroll ▼</small>
     <h1>Hi there, </h1>
-    <p>this is a demonstrator for the Project V-MANIP which stands for Visualization and Manipulation of Multidimensional Data.</p>
-    <p>This demonstrator is configured to show all of the capabilities available for visualization and manipulation and is more of a technical demostrator.</p>
+    <p>here you can see one of the use case applications of the V-MANIP Project. This application demonstrates how through volume visualization the temporal evolution of a glacier can be analyzed</p>
+    <p>This tutorial banner will present to you the available functionality and tools needed to visualize the data.</p>
     <p>We will go through the available tools and visualizations as a tutorial which can be scrolled through. </p>
-    <p>Under the parent website you can find the web client configured for specific use cases where again a banner like this will walk you through the steps. We recommend you to have a look at them too.</p>
+    <p>Under the parent <a href="http://demo.v-manip.eox.at/validation/">website</a> you can find the the different use case Apps, where again a banner like this will walk you through the steps for different tools. We recommend you to have a look at them too.</p>
     <p>You can always close this banner and play around with the system to get acquanted to it.</p>
     <small class='scroll'>Scroll ▼</small>
 </section>
@@ -18,51 +18,51 @@
     <p>The Layer/Product Widget allows activating and deactivating the configured products, which are then visualized in the different viewers.</p>
     <p>You can move the widget to another position by clicking and dragging on its header, give that a try.</p>
     <p>The Widget shows base layers (e.g. Terrain and Blue Marble), overlay layers (e.g. Streets) and product layer.</p>
-    <p>It is possible to sort the layers by clicking and dragging on the two triangle symbol.</p>
     <p>Transparency can be set by slider that appears by clicking on the circle icon of the product.</p>
+</section>
+<section data-layers="Tininnilik">
+    <span class="close">&#215;</span>
+    <h2>Time Slider</h2>
+    <p>We now activated the Tininnilik product layer for you, you can activate/deactivate product layers by clicking on the product checkbox in the Layer Selection Widget.</p>
+    <p>If you look at the Time Slider at the bottom of the screen, you can now see circles in the color displayed in the Layer Selection Widget. The circles are not filled, which means there is data available at the time but in the map extent you are seeing there is no data available. The glacier is in Greenland. If you move your mouse cursor over a circle you can see the coverage id.</p>
+    <p>By clicking on it you will automatically zoom to the extent of the coverage. On the next section we will zoom there.</p>
+</section>
+<section data-zoom="10" data-longitude="-50.3481" data-latitude="68.7602">
+    <span class="close">&#215;</span>
+    <p>Now that we are seeing the area where data is available you can see that the circles in the time slider are filled.</p>
+    <p>In order to see the glacier data we have to select a time interval. As we want to see the temporal evolution of the glacier, we will select a time interval where data is available.</p>
+    <p>It is possible create a time interval by clicking and holding the mouse while you move from start to end of the interval and releaseing when reaching the end. You can also zoom in and out in the time slider by using the mouse scroll when the cursor is over the Time Slider.</p>
+</section>
+<section data-time="2000-06-30T00:00:00Z/2012-10-30T23:59:59Z">
+    <span class="close">&#215;</span>
+    <p>We selected the time interval for you, as you can see it is the dark grey area added in the Time Slider.</p>
+    <p>This is why on the map we can see in white now the new white area which represents the glacier.</p>
+    <p>The problem is we cannot make out which form corresponds to which time, as they are stacked together.</p>
+    <p>To solve this we can use the Rectangular Box Viewer which allows us to view a volume of the temporal evolution of the glacier.</p>
 </section>
 <section data-events="ui:open:toolselection">
     <span class="close">&#215;</span>
     <h2>Tools</h2>
-    <p>On the right i now opened the <strong>Tools</strong> Widget. This widget has Tools for selection, management and Layout separated in three groups</p>
-    <p>The <strong>selection</strong> tools are on the upper button group, which are from top to bottom, point, line. polygon and bounding box selection.</p>
-    <p>In the middle button group we have the <strong>Download Tool</strong> and the <strong>Selection Manager Tool</strong></p>
-    <p>The <strong>Layout</strong> Tools are available at the bottom, these allow setting the client as split screen or quad screen. </p>
-    <p>We will go into more detail of each of these components. As with the Layer Widget you can open and close the Tool Widget by clicking on the Tools button with the icon <i class="fa fa-fw fa-wrench"></i>.</p>
+    <p>To open the Rectangular Box Viewer Widget we need to activate the Split Window mode. This can be done in the Tools pane.</p>
+    <p>We opened it automatically for you but as the Layer Widget you can open and close the Tool Widget by clicking on the Tools button with the icon <i class="fa fa-fw fa-wrench"></i>.</p>
+    <p>In the next step we will open the split view mode, this can also be done by clicking on the Split View Button <i class="fa fa-pause"></i> in the Tools panel.</p>
 </section>
-<section data-layers="MSI_IMG_3A" data-time="2013-01-30T00:00:00Z/2013-05-30T23:59:59Z">
+<section data-events="layout:switch:splitview" data-tr="SliceViewer">
     <span class="close">&#215;</span>
-    <h2>Time Selection</h2>
-    <p>Did you notice the <strong>time slider</strong> at the bottom of the page? We already selected September 29th, 2011 for you.</p>
-    <p>Try stretching the time interval at its ends or draw a new one and watch the satellite images adjusting. Only those acquired within the selected interval are displayed.</p>
-    <p>Note that only the latest 100 satellite images are shown per tile. Thus when selecting a big time interval you might not see all images available.</p>
-    <p>By the way, try the scroll wheel to uncover additional functionality.</p>
-</section>
-<section data-tl="VirtualGlobeViewer">
-    <span class="close">&#215;</span>
-    <h2>Virtual Globe</h2>
-    <p>Let us have a look at another visulization of the data. This is the <strong>Virtual Globe Viewer</strong>.</p>
+    <h2>Split View</h2>
+    <p>Now that we activated the split view, we can see the map on the left and the Rectnagular Box Viewer on the right.</p>
     <p>The views can be changed with the 4 bottons displayed in the top left of each of the visualization windows. Each icon represents a visualization method.</p>
     <p><i class="fa fa-picture-o"/> 2D Map Visualization</p>
     <p><i class="fa fa-globe"/> 3D Virtual Globe</p>
     <p><i class="fa fa-inbox"/> Rectangular Box Viewer</p>
     <p><i class="fa fa-bars"/> Slice Viewer</p>
     <p><i class="fa fa-bar-chart-o"/> Analytics Viewer</p>
+    <p>Now that we have selected a product layer (Tininnilik) and the time of interest we just need to select an area we are interested to be displayed as volume. Let me do that for you, keep scrolling</p>
 </section>
-<section data-events="layout:switch:splitview">
-    <span class="close">&#215;</span>
-    <h2>Split View</h2>
-    <p>Did you notice the <strong>time slider</strong> at the bottom of the page? We already selected September 29th, 2011 for you.</p>
-    <p>Try stretching the time interval at its ends or draw a new one and watch the satellite images adjusting. Only those acquired within the selected interval are displayed.</p>
-    <p>Note that only the latest 100 satellite images are shown per tile. Thus when selecting a big time interval you might not see all images available.</p>
-    <p>By the way, try the scroll wheel to uncover additional functionality.</p>
-</section>
-<section data-selection="data/selection_example.json">
+<section data-selection="data/tininnilik.geojson">
     <span class="close">&#215;</span>
     <h2>Selection</h2>
-    <p>Using the <strong>Selection Tools</strong> in the Tools Widget you can create different selections.</p>
-    <p>For example, i created a bounding box selection on the map right now. By clicking on the Bounding Box selection again, you will delete the current selection.</p>
+    <p>As you can see now an area was selected around the glacier and a volume is displayed on the right. </p>
+    <p>You can create a bounding box selection by clicking on the cube symbol of the Tools pane.</p>
 </section>
-
 <div style="height: 25em;"><!-- FIXME --></div>
-U

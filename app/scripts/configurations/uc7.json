@@ -10,7 +10,7 @@
     "contrib/AnalyticsViewer/AnalyticsViewModule"
   ],
 
-  "storyTemplate":"UseCaseTestTemplate",
+  "storyTemplate":"UseCase7",
 
   "mapConfig": {
     "model": "models/MapModel",
@@ -319,8 +319,8 @@
     }
     ,
     {
-      "id":"UseCaseTestTemplate",
-      "template":"hbs!tmpl/UseCaseTestTemplate"
+      "id":"UseCase7",
+      "template":"hbs!tmpl/UseCase7"
     }
   ],
 
@@ -374,7 +374,7 @@
   "backendConfig": {
     "MeshFactory": {
       "protocol": "W3DS",
-      "url": "http://demo.v-manip.eox.at/ows?",
+      "url": "http://demo.v-manip.eox.at/browse/ows?",
       "version": "1.0.0"
     },
     "W3DSDataUrl": "http://demo.v-manip.eox.at/gltf/"
