@@ -23,6 +23,7 @@ define([
 				startPosition: opts.startPosition,
 				tileManager: this.tileManager
 			});
+			
 
 			this.connectToView();
 		},
@@ -40,15 +41,20 @@ define([
 		},
 
 		connectToView: function() {
-			this.listenTo(Communicator.mediator, "map:center", _.bind(this.mapView.centerMap, this.mapView));
-			this.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.mapView.onSetExtent, this.mapView));
-			this.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.mapView.changeLayer, this.mapView));
-			this.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.mapView.onSortProducts, this.mapView));
-			this.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.mapView.onUpdateOpacity, this.mapView));
-			this.listenTo(Communicator.mediator, "selection:activated", _.bind(this.mapView.onSelectionActivated, this.mapView));
-			this.listenTo(Communicator.mediator, "map:load:geojson", _.bind(this.mapView.onLoadGeoJSON, this.mapView));
-			this.listenTo(Communicator.mediator, "map:export:geojson", _.bind(this.mapView.onExportGeoJSON, this.mapView));
-			this.listenTo(Communicator.mediator, 'time:change', _.bind(this.mapView.onTimeChange, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "map:center", _.bind(this.mapView.centerMap, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.mapView.onSetExtent, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.mapView.changeLayer, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.mapView.onSortProducts, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.mapView.onUpdateOpacity, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "selection:activated", _.bind(this.mapView.onSelectionActivated, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "selection:changed", _.bind(this.mapView.onSelectionChanged, this.mapView));
+
+			/*if (!this.mapView.isEventListenedTo("map:load:geojson"))
+				this.mapView.listenTo(Communicator.mediator, "map:load:geojson", _.bind(this.mapView.onLoadGeoJSON, this.mapView));*/
+
+
+			this.mapView.listenTo(Communicator.mediator, "map:export:geojson", _.bind(this.mapView.onExportGeoJSON, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, 'time:change', _.bind(this.mapView.onTimeChange, this.mapView));
 
 			Communicator.reqres.setHandler('get:selection:json', _.bind(this.mapView.onGetGeoJSON, this.mapView));
 			Communicator.reqres.setHandler('map:get:extent', _.bind(this.mapView.onGetMapExtent, this.mapView));
