@@ -134,7 +134,7 @@ define([
             // an AoI the 'area' parameter is set, otherwise it is 'null'.
             if (area) {
                 // 1. store current AoI bounds
-                this.currentAoI = area.bounds.toString();
+                this.currentAoI = area.geometry.bounds.toString();
 
                 // 2. store current ToI interval
                 var toi = this.currentToI;
