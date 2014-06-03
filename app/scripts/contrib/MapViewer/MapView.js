@@ -101,7 +101,7 @@ define(['backbone.marionette',
 				this.geojson = new OpenLayers.Format.GeoJSON(io_options);
 
 				// Add layers for different selection methods
-				this.vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+				this.vectorLayer = new OpenLayers.Layer.Vector("vectorLayer");
 				
 				this.map.addLayers([this.vectorLayer]);
 				this.map.addControl(new OpenLayers.Control.MousePosition());
@@ -322,7 +322,7 @@ define(['backbone.marionette',
 				}
 			},
 
-			onLoadGeoJSON: function(data) {
+			/*onLoadGeoJSON: function(data) {
 				this.vectorLayer.removeAllFeatures();
 				var features = this.geojson.read(data);
 				var bounds;
@@ -336,12 +336,17 @@ define(['backbone.marionette',
 						} else {
 							bounds.extend(features[i].geometry.getBounds());
 						}
-
+						color = this.colors(i);
+						features[i].style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
+						Communicator.mediator.trigger("selection:changed", features[i].geometry);
 					}
+					
+					
+					
 					this.vectorLayer.addFeatures(features);
 					this.map.zoomToExtent(bounds);
 				}
-			},
+			},*/
 
 			onExportGeoJSON: function() {
 				var geojsonstring = this.geojson.write(this.vectorLayer.features, true);
@@ -365,10 +370,19 @@ define(['backbone.marionette',
 				// TODO: How to handle multiple draws etc has to be thought of
 				// as well as what exactly is comunicated out
 				//console.log(colors(evt.feature.layer.features.length-1),evt.feature.layer.features.length-1);
-				color = this.colors(evt.feature.layer.features.length-1);
-				evt.feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
-				evt.feature.layer.drawFeature(evt.feature);
-				Communicator.mediator.trigger("selection:changed", evt.feature.geometry);
+				
+				Communicator.mediator.trigger("selection:changed", evt.feature);
+				evt.feature.destroy();
+			},
+
+			onSelectionChanged: function(feature){
+				if(feature){
+					console.log(this.map.id);
+					console.log(this.vectorLayer.id);
+					color = this.colors(this.vectorLayer.features.length-1);
+					feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
+					this.vectorLayer.addFeatures([feature.clone()]);
+				}
 			},
 
 			onTimeChange: function (time) {
@@ -390,6 +404,9 @@ define(['backbone.marionette',
             },
 
 			onClose: function(){
+				this.stopListening();
+				this.remove();
+				this.unbind();
 				this.isClosed = true;
 			},
 
@@ -399,6 +416,9 @@ define(['backbone.marionette',
 					return true;
 				}
 				return false;
+			},
+			isEventListenedTo: function(eventName) {
+			  return !!this._events[eventName];
 			}
 		});
 

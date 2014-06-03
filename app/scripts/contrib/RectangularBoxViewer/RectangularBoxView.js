@@ -222,7 +222,7 @@ define([
 					toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 				}
 
-				var bounds = area.bounds;
+				var bounds = area.geometry.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
 				this._createScene(this.options, {

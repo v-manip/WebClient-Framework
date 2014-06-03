@@ -64,7 +64,7 @@ define([
     };
 
     var convertFromOpenLayers = function(ol_geometry, altitude) {
-        var verts = ol_geometry.getVertices();
+        var verts = ol_geometry.geometry.getVertices();
 
         var coordinates = [];
         for (var idx = 0; idx < verts.length; ++idx) {

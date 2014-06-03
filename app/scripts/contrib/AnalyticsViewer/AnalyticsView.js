@@ -194,7 +194,7 @@ define(['backbone.marionette',
 
             	if (getcoveragedifflist.length > 0){
 
-            		var bbox = this.selection_list[0].getBounds().toBBOX();
+            		var bbox = this.selection_list[0].geometry.getBounds().toBBOX();
 
 					var request_process = wps_getCovDiffTmpl({
 						layer: getcoveragedifflist,
