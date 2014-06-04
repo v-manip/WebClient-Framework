@@ -269,7 +269,7 @@ define(['backbone.marionette',
 
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
 					}
 					list = list.substring(0, list.length - 1);
 
