@@ -213,7 +213,7 @@
 
   "navBarConfig": {
     "title" : "V-MANIP",
-    "url" : "http://www.demo.v-manip.eox.at/validation/",
+    "url" : "http://demo.v-manip.eox.at/validation/",
     "items" : [
       {
         "name" : "Layers",
