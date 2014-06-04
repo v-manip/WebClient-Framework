@@ -147,7 +147,7 @@ define(['backbone.marionette',
 			onSelectionChanged: function(feature) {
 				
 				if(feature){
-					this.selection_list.push(feature);
+					this.selection_list.push(feature.clone());
 					this.checkSelections();
 				}else{
 					this.plotdata = [];
@@ -226,7 +226,7 @@ define(['backbone.marionette',
             	}else if (getdatalist.length == 1){
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
 					}
 					list = list.substring(0, list.length - 1);
 
@@ -249,7 +249,7 @@ define(['backbone.marionette',
 
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
 					}
 					list = list.substring(0, list.length - 1);
 

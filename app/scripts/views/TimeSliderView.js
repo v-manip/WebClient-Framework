@@ -110,17 +110,20 @@
                   break;
                 case "WPS":
                   var extent = Communicator.reqres.request('map:get:extent');
-                  this.slider.addDataset({
-                    id: product.get('download').id,
-                    color: product.get('color'),
-                    data: new TimeSlider.Plugin.WPS({
-                        url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id ,
-                        bbox: [extent.left, extent.bottom, extent.right, extent.top]
-                     })
-                  });
-                  this.activeWPSproducts.push(product.get('download').id);
+                  if (this.activeWPSproducts.indexOf(product.get('download').id)==-1){
+                    this.slider.addDataset({
+                      id: product.get('download').id,
+                      color: product.get('color'),
+                      data: new TimeSlider.Plugin.WPS({
+                          url: product.get('download').url,
+                          eoid: product.get('download').id,
+                          dataset: product.get('download').id ,
+                          bbox: [extent.left, extent.bottom, extent.right, extent.top]
+                       })
+                    });
+                    this.activeWPSproducts.push(product.get('download').id);
+                  }
+                  
                   // For some reason updateBBox is needed, altough bbox it is initialized already.
                   // Withouth this update the first time activating a layer after the first map move
                   // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong

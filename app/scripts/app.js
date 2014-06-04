@@ -121,7 +121,7 @@
 							timeSlider: products.timeSlider,
 							// Default to WMS if no protocol is defined
 							timeSliderProtocol: (products.timeSliderProtocol) ? products.timeSliderProtocol : "WMS",
-							color: products.color ? obj.color : autoColor.getColor() ,
+							color: products.color ? products.color : autoColor.getColor() ,
 							//time: products.time, // Is set in TimeSliderView on time change.
 								opacity: 1,
 								views: products.views,
