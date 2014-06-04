@@ -383,7 +383,8 @@ module.exports = function (grunt) {
                         'bower_components/virtualglobeviewer/src/**',
                         'scripts/vendor/**',
                         'scripts/core/ColorRamp/ColorRampControl.hbs',
-                        'scripts/configurations/**'
+                        'scripts/configurations/**',
+                        'data/*.geojson'
                     ]
                 },{
                     expand: true,
