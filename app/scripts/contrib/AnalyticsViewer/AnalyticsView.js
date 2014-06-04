@@ -5,11 +5,13 @@ define(['backbone.marionette',
 		'globals',
 		'hbs!tmpl/wps_getdata',
 		'hbs!tmpl/wps_getCoverageDifference',
+		'hbs!tmpl/wps_getVolumePixelValues',
+		'hbs!tmpl/wps_getValuesThroughTime',
 		'd3',
 		'analytics',
 		'nv'
 	],
-	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl, wps_getCovDiffTmpl) {
+	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl, wps_getCovDiffTmpl, wps_getVolumePixelValuesTmpl, wps_getValuesThroughTimeTmpl) {
 
 		var AnalyticsView = Marionette.View.extend({
 
@@ -98,6 +100,9 @@ define(['backbone.marionette',
 					case 'parallel':
 						analytics.parallelsPlot(args);
 						break;
+					case 'stacked':
+						analytics.stackedPlot(args);
+						break;
 					case '':
 						this.$('.d3canvas').html(
 							'<div class="outer">'+
@@ -174,6 +179,8 @@ define(['backbone.marionette',
 
 				var getcoveragedifflist = [];
 				var getdatalist = [];
+				var getvolumepixelvaluelist = [];
+				var getvaluesthroughtimelist = [];
 
 				globals.products.each(function(model) {
 	                if (model.get('visible')) {
@@ -186,6 +193,13 @@ define(['backbone.marionette',
 		                    	case "getCoverageData":
 		                    		getcoveragedifflist.push(model.get("process").layer_id);
 		                    	break;
+		                    	case "getVolumePixelValues":
+		                    		getvolumepixelvaluelist.push(model.get("process").layer_id);
+		                    	break;
+		                    	case "getValuesThroughTime":
+		                    		getvaluesthroughtimelist.push(model.get("process").layer_id);
+		                    	break;
+		                    	
 		                    }
 		                }
 
@@ -231,6 +245,46 @@ define(['backbone.marionette',
 						that.plotdata = data;
 						that.render(that.plot_type);
 					});
+            	}else if (getvolumepixelvaluelist.length > 0){
+
+            		var list = "";
+					for (var i=0;i<this.selection_list.length;i++){
+						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+					}
+					list = list.substring(0, list.length - 1);
+
+					var request_process = wps_getVolumePixelValuesTmpl({
+						layers: getvolumepixelvaluelist,
+						start: getISODateTimeString(this.selected_time.start),
+						end: getISODateTimeString(this.selected_time.end),
+						list: list,
+						srid: "4326"
+					});
+					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
+						that.plotdata = data;
+						that.render(that.plot_type);
+					});
+
+            	}else if (getvaluesthroughtimelist.length > 0){
+
+            		var list = "";
+					for (var i=0;i<this.selection_list.length;i++){
+						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+					}
+					list = list.substring(0, list.length - 1);
+
+					var request_process = wps_getValuesThroughTimeTmpl({
+						layers: getvaluesthroughtimelist,
+						start: getISODateTimeString(this.selected_time.start),
+						end: getISODateTimeString(this.selected_time.end),
+						list: list,
+						srid: "4326"
+					});
+					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
+						that.plotdata = data;
+						that.render('stacked');
+					});
+
             	}
 
 				

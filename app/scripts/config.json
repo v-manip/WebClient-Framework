@@ -83,6 +83,10 @@
                 "id": "ALARO_Specific_Humidity_201305150000",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "ALARO_Specific_Humidity_201305150000"
             }
         },{
             "name": "AROME Specific Humidity",
@@ -111,6 +115,10 @@
                 "id": "AROME_Specific_Humidity_201305150000",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "AROME_Specific_Humidity_201305150000"
             }
         },{
             "name": "ALARO Temperature surface",
@@ -132,7 +140,7 @@
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "process" : {
-                "id": "getCoverageData",
+                "id": "getValuesThroughTime",
                 "layer_id": "ALARO_Temperature_surface_201305150000"
             }
         },{
@@ -155,7 +163,7 @@
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "process" : {
-                "id": "getCoverageData",
+                "id": "getValuesThroughTime",
                 "layer_id": "AROME_Temperature_surface_201305150000"
             }
         },{
@@ -185,6 +193,10 @@
                 "id": "AROME_Temperature_isobaric_201305150000",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "AROME_Temperature_isobaric_201305150000"
             }
         },{
             "name": "ALARO Temperature isobaric",
@@ -213,6 +225,10 @@
                 "id": "ALARO_Temperature_isobaric_201305150000",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "ALARO_Temperature_isobaric_201305150000"
             }
         },{
             "name": "AROME Surface Pressure",
