@@ -417,7 +417,7 @@
     }],
 
     "navBarConfig": {
-        "title": "V-MANIP",
+        "title": "V-MANIP Features & functions",
         "url": "http://www.v-manip.eox.at",
         "items": [{
             "name": "Layers",

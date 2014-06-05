@@ -195,7 +195,7 @@
   ],
 
   "navBarConfig": {
-    "title" : "V-MANIP",
+    "title" : "Glacier temporal evolution",
     "url" : "http://demo.v-manip.eox.at/validation/",
     "items" : [
       {

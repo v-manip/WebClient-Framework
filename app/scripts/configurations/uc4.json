@@ -307,7 +307,7 @@
   ],
 
   "navBarConfig": {
-    "title" : "V-MANIP",
+    "title" : "Weather radar & satellite data",
     "url" : "http://demo.v-manip.eox.at/validation/",
     "items" : [
       {

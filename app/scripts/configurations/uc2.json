@@ -305,7 +305,7 @@
   ],
 
   "navBarConfig": {
-    "title" : "V-MANIP",
+    "title" : "Meteorological data control",
     "url" : "http://demo.v-manip.eox.at/validation/",
     "items" : [
       {
@@ -319,12 +319,6 @@
         "icon" : "fa-wrench",
         "eventToRaise" : "ui:open:toolselection",
         "template" : "ToolSelection"
-      },
-      {
-        "name" : "Options",
-        "icon" : "fa-tasks",
-        "eventToRaise" : "ui:open:options",
-        "template" : "OptionsControl"
       },
       {
         "name" : "Tutorial",

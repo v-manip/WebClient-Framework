@@ -199,7 +199,7 @@
   ],
 
   "navBarConfig": {
-    "title" : "V-MANIP",
+    "title" : "Snow map correlation",
     "url" : "http://demo.v-manip.eox.at/validation/",
     "items" : [
       {

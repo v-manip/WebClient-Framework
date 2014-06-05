@@ -212,7 +212,7 @@
   ],
 
   "navBarConfig": {
-    "title" : "V-MANIP",
+    "title" : "Meteorological workstation",
     "url" : "http://demo.v-manip.eox.at/validation/",
     "items" : [
       {
