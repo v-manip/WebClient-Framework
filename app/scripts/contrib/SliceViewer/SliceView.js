@@ -181,7 +181,7 @@ define([
                 elem: this.el,
                 backgroundColor: [0.005, 0.005, 0.005],
                 // cameraPosition: [120, 80, 160]
-                cameraPosition: [2, 10, 10]
+                cameraPosition: [500, 0, 500]
             });
         },
 
