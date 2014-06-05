@@ -35,8 +35,8 @@ define([
 
             } else {
                 startPosition = {
-                    center: [15, 47],
-                    distance: 2400000,
+                    center: [3, 47],
+                    distance: 2300000,
                     duration: 100,
                     tilt: 40
                 };
