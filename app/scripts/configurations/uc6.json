@@ -10,7 +10,7 @@
     "contrib/AnalyticsViewer/AnalyticsViewModule"
   ],
 
-  "storyTemplate":"UseCaseTestTemplate",
+  "storyTemplate":"UseCase6",
 
   "mapConfig": {
     "model": "models/MapModel",
@@ -99,51 +99,38 @@
     ],
     "products": [
       {
-        "name": "SPOT 4 View",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"blue",
-        "views": [
-          {
-            "id": "SPOT4_View",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "SPOT4_View",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
+            "name": "FSC Pan European",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            },{
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }],
+            "download": {
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getCoverageData",
+                "layer_id": "daily_FSC_PanEuropean_Optical"
+            }
         }
-      },
-      {
-        "name": "PanEuropean Fractional Snow Cover",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"green",
-        "views": [
-          {
-            "id": "daily_FSC_PanEuropean_Optical",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_FSC_PanEuropean_Optical",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      }
     ],
     "overlays": [
        {
@@ -228,12 +215,6 @@
         "template" : "ToolSelection"
       },
       {
-        "name" : "Options",
-        "icon" : "fa-tasks",
-        "eventToRaise" : "ui:open:options",
-        "template" : "OptionsControl"
-      },
-      {
         "name" : "Tutorial",
         "icon" : "fa-book",
         "eventToRaise" : "ui:open:storybanner",
@@ -261,8 +242,8 @@
 
   "timeSlider": {
     "domain": {
-      "start": "2012-05-17T10:15:00Z",
-      "end": "2013-09-17T11:45:00Z"
+      "start": "2013-11-15T10:15:00Z",
+      "end": "2014-01-15T11:45:00Z"
     },
     "brush": {
        "start": "2013-05-17T11:00:00Z",
@@ -342,16 +323,16 @@
     }
     ,
     {
-      "id":"UseCaseTestTemplate",
-      "template":"hbs!tmpl/UseCaseTestTemplate"
+      "id":"UseCase6",
+      "template":"hbs!tmpl/UseCase6"
     }
   ],
 
   "selectionTools":[
     {
-      "id":"pointSelection",
-      "description": "Allows selection of Points in Map",
-      "icon":"icon-large icon-screenshot"
+      "id": "bboxSelection",
+      "description": "Allows drawing a bounding box selection in Map",
+      "icon": "icon-large icon-vector-path-square"
     }
   ],
 
@@ -388,14 +369,6 @@
       "eventToRaise":"layout:switch:splitview",
       "description": "Splits screen to visualize two maps side by side",
       "icon":"fa fa-pause fa-2x",
-      "enabled":true,
-      "active":false
-    },
-    {
-      "id":"QuadView",
-      "eventToRaise":"layout:switch:quadview",
-      "description": "Splits screen into four windows displaying one map on each corner",
-      "icon":"fa fa-th-large fa-2x",
       "enabled":true,
       "active":false
     }
