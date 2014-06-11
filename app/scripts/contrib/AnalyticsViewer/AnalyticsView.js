@@ -100,8 +100,8 @@ define(['backbone.marionette',
 					case 'parallel':
 						analytics.parallelsPlot(args);
 						break;
-					case 'stacked':
-						analytics.stackedPlot(args);
+					case 'line':
+						analytics.linePlot(args);
 						break;
 					case '':
 						this.$('.d3canvas').html(
@@ -282,7 +282,7 @@ define(['backbone.marionette',
 					});
 					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
 						that.plotdata = data;
-						that.render('stacked');
+						that.render('line');
 					});
 
             	}

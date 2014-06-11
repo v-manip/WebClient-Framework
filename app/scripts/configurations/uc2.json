@@ -17,8 +17,8 @@
     "visualizationLibs": [
       "openlayers"
     ],
-    "center": [13.41,52.52],
-    "zoom": 5,
+    "center": [6.37,48.02],
+    "zoom": 4,
     "baseLayers": [
       {
         "name": "Terrain",
@@ -119,7 +119,7 @@
             },
             "process" : {
                 "id": "getValuesThroughTime",
-                "layer_id": "ALARO_Temperature_surface_201305150000"
+                "layer_id": "ALARO_Temperature_surface_201305150000_data"
             }
         },{
             "name": "AROME Temperature surface",
@@ -142,7 +142,7 @@
             },
             "process" : {
                 "id": "getValuesThroughTime",
-                "layer_id": "AROME_Temperature_surface_201305150000"
+                "layer_id": "AROME_Temperature_surface_201305150000_data"
             }
         },{
             "name": "MOD07 Surface temperature",
@@ -165,7 +165,7 @@
             },
             "process" : {
                 "id": "getValuesThroughTime",
-                "layer_id": "MOD07_Surface_temperature"
+                "layer_id": "MOD07_Surface_temperature_data"
             }
         },{
             "name": "AROME Surface Pressure",
@@ -188,7 +188,7 @@
             },
             "process" : {
                 "id": "getValuesThroughTime",
-                "layer_id": "AROME_Surface_Pressure_201305150000"
+                "layer_id": "AROME_Surface_Pressure_201305150000_data"
             }
         },{
             "name": "ALARO Surface Pressure",
@@ -211,7 +211,7 @@
             },
             "process" : {
                 "id": "getValuesThroughTime",
-                "layer_id": "ALARO_Surface_Pressure_201305150000"
+                "layer_id": "ALARO_Surface_Pressure_201305150000_data"
             }
         },{
             "name": "MOD07 Surface Pressure",
@@ -234,7 +234,7 @@
             },
             "process" : {
                 "id": "getValuesThroughTime",
-                "layer_id": "MOD07_Surface_Pressure"
+                "layer_id": "MOD07_Surface_Pressure_data"
             }
         }
     ],
