@@ -99,51 +99,103 @@
     ],
     "products": [
       {
-        "name": "SPOT 4 View",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"blue",
-        "views": [
-          {
-            "id": "SPOT4_View",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "SPOT4_View",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
+            "name": "GOME-2",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "GOME-2",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "GOME-2_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "GOME-2",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "GOME-2"
+            }
+        },
+        {
+            "name": "NPL3Merged",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "NPL3Merged",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "NPL3Merged_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "NPL3Merged",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "NPL3Merged"
+            }
+        },{
+            "name": "REAN",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "REAN",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "REAN_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "REAN",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "REAN"
+            }
         }
-      },
-      {
-        "name": "PanEuropean Fractional Snow Cover",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"green",
-        "views": [
-          {
-            "id": "daily_FSC_PanEuropean_Optical",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_FSC_PanEuropean_Optical",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      }
     ],
     "overlays": [
        {
@@ -261,8 +313,8 @@
 
   "timeSlider": {
     "domain": {
-      "start": "2012-05-17T10:15:00Z",
-      "end": "2013-09-17T11:45:00Z"
+      "start": "2008-07-17T10:15:00Z",
+      "end": "2008-11-17T11:45:00Z"
     },
     "brush": {
        "start": "2013-05-17T11:00:00Z",
@@ -352,6 +404,11 @@
       "id":"pointSelection",
       "description": "Allows selection of Points in Map",
       "icon":"icon-large icon-screenshot"
+    },
+    {
+        "id": "bboxSelection",
+        "description": "Allows drawing a bounding box selection in Map",
+        "icon": "icon-large icon-vector-path-square"
     }
   ],
 

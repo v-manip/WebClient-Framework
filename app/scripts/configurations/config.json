@@ -57,6 +57,102 @@
             }]
         }],
         "products": [{
+            "name": "FSC Pan European",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            },{
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }],
+            "download": {
+                "id": "daily_FSC_PanEuropean_Optical",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getValuesThroughTime",
+                "layer_id": "daily_FSC_PanEuropean_Optical"
+            }
+        },{
+            "name": "MOD07 Retrived Temperature Profile",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "MOD07_Retrived_Temperature_Profile",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "MOD07_Retrived_Temperature_Profile_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MOD07_Retrived_Temperature_Profile",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "MOD07_Retrived_Temperature_Profile"
+            }
+        },{
+            "name": "MOD07 Specific Humidity",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "MOD07_Specific_Umidity",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "MOD07_Specific_Umidity_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MOD07_Specific_Umidity",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getVolumePixelValues",
+                "layer_id": "MOD07_Specific_Umidity"
+            }
+        },{
             "name": "ALARO Specific Humidity",
             "visible": false,
             "timeSlider": true,
