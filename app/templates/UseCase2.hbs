@@ -3,7 +3,7 @@
     <span class="close">&#215;</span>
     <small class='scroll'>Scroll ▼</small>
     <h1>Hi there, </h1>
-    <p>here you can see one of the use case applications of the V-MANIP Project. This application demonstrates how comparison between 2D data such as model or satellite data can be achieved through a 2D Plot</p>
+    <p>here you can see one of the use case applications of the V-MANIP Project. This application demonstrates how comparison between 2D data such as model or satellite data can be achieved through a Graph Plot</p>
     <p>This tutorial banner will present to you the available functionality and tools needed to visualize and compare the data.</p>
     <p>We will go through the available tools and visualizations as a tutorial which can be scrolled through. </p>
     <p>Under the parent <a href="http://demo.v-manip.eox.at/validation/">website</a> you can find the the different use case Apps, where again a banner like this will walk you through the steps for different tools. We recommend you to have a look at them too.</p>
@@ -23,15 +23,15 @@
 <section data-layers="ALARO_Temperature_surface_201305150000;AROME_Temperature_surface_201305150000;MOD07_Surface_temperature">
     <span class="close">&#215;</span>
     <h2>Time Slider</h2>
-    <p>We now activated the ALARO and AROME Temperature surface product layers for you, you can activate/deactivate product layers by clicking on the product checkbox in the Layer Selection Widget.</p>
+    <p>We now activated the ALARO and AROME Temperature surface as well as MOD07 Surface temperature product layers for you, you can activate/deactivate product layers by clicking on the product checkbox in the Layer Selection Widget.</p>
     <p>If you look at the Time Slider at the bottom of the screen, you can now see circles in the color displayed in the Layer Selection Widget.</p>
     <p>Hovering with the mouse over a point will reveal the coverage id and by clicking on it you will automatically zoom to the extent of the coverage.</p>
-    <p>In order to compare two products we will need to select a time where both are available, we will do that in the next step.</p>
+    <p>In order to compare various products we will need to select a time where both are available, we will do that in the next step.</p>
 </section>
 <section data-time="2013-05-14T23:30:00Z/2013-05-16T06:30:00Z">
     <span class="close">&#215;</span>
     <p>We selected the time interval for you, as you can see it is the dark grey area added in the Time Slider.</p>
-    <p>Now we can see the outlines of both products on the map.</p>
+    <p>Now we can see the product visualizations on the map.</p>
     <p>In order to compare the values at a specific point we will need to open the Analytics Viewer and make a selection.</p>
 </section>
 <section data-events="ui:open:toolselection">
@@ -44,20 +44,21 @@
 <section data-events="layout:switch:splitview" data-tr="AnalyticsViewer">
     <span class="close">&#215;</span>
     <h2>Split View</h2>
-    <p>Now that we activated the split view, we can see the map on the left and the Rectnagular Box Viewer on the right.</p>
+    <p>Now that we activated the split view, we can see the map on the left and the Analytics Viewer on the right.</p>
     <p>The views can be changed with the 4 bottons displayed in the top left of each of the visualization windows. Each icon represents a visualization method.</p>
     <p><i class="fa fa-picture-o"/> 2D Map Visualization</p>
     <p><i class="fa fa-globe"/> 3D Virtual Globe</p>
     <p><i class="fa fa-inbox"/> Rectangular Box Viewer</p>
     <p><i class="fa fa-bars"/> Slice Viewer</p>
     <p><i class="fa fa-bar-chart-o"/> Analytics Viewer</p>
-    <p>Now that we have selected two products (ALARO and AROME Surface Temperature) and the time of interest we just need to select a point we are interested to be displayed as plot. Let me do that for you, keep scrolling</p>
+    <p>Now that we have selected three products (ALARO and AROME Surface Temperatureas well as MOD07 Surface temperature) and the time of interest we just need to select a point we are interested to be displayed as plot. Let me do that for you, keep scrolling</p>
 </section>
 <section data-selection="data/uc1_data.geojson">
     <span class="close">&#215;</span>
     <h2>Selection</h2>
-    <p>As you can see now a point was selected and in the Analytics Viewer plot you can see the values for both models through the selected time interval.</p>
+    <p>As you can see now a point was selected and in the Analytics Viewer plot you can see the values for both models as well as MOD07 Surface temperature as well as MOD07 Surface temperature through the selected time interval.</p>
+    <p>This helps see where and when data differs from the expected values and could be used also to find faulty sensor data.</p>
     <p>You can create additional point of interest by clicking on the crosshair symbol in the Tools pane.</p>
-    <p>Feel free to play around a little with this web application</p>
+    <p>Feel free to play around a little with this web application.</p>
 </section>
 <div style="height: 25em;"><!-- FIXME --></div>

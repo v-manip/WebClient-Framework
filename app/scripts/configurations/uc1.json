@@ -17,7 +17,7 @@
     "visualizationLibs": [
       "openlayers"
     ],
-    "center": [13.41,52.52],
+    "center": [10.37,48.02],
     "zoom": 5,
     "baseLayers": [
       {

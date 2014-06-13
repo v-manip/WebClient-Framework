@@ -10,15 +10,15 @@
     "contrib/AnalyticsViewer/AnalyticsViewModule"
   ],
 
-  "storyTemplate":"UseCaseTestTemplate",
+  "storyTemplate":"UseCase5",
 
   "mapConfig": {
     "model": "models/MapModel",
     "visualizationLibs": [
       "openlayers"
     ],
-    "center": [13.41,52.52],
-    "zoom": 5,
+    "center": [0,0],
+    "zoom": 1,
     "baseLayers": [
       {
         "name": "Terrain",
@@ -132,12 +132,12 @@
             }
         },
         {
-            "name": "NPL3Merged",
+            "name": "LPL2_MIPAS",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "NPL3Merged",
+                "id": "LPL2_MIPAS",
                 "protocol": "W3DS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -146,7 +146,7 @@
                 "format": "model/gltf",
                 "type": "volumetric"
             }, {
-                "id": "NPL3Merged_outlines",
+                "id": "LPL2_MIPAS_outlines",
                 "protocol": "WMS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -155,21 +155,21 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "NPL3Merged",
+                "id": "LPL2_MIPAS",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "process" : {
                 "id": "getVolumePixelValues",
-                "layer_id": "NPL3Merged"
+                "layer_id": "LPL2_MIPAS"
             }
         },{
-            "name": "REAN",
+            "name": "BASCOE",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "REAN",
+                "id": "BASCOE",
                 "protocol": "W3DS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -178,7 +178,7 @@
                 "format": "model/gltf",
                 "type": "volumetric"
             }, {
-                "id": "REAN_outlines",
+                "id": "BASCOE_outlines",
                 "protocol": "WMS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -187,13 +187,13 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "REAN",
+                "id": "BASCOE",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "process" : {
                 "id": "getVolumePixelValues",
-                "layer_id": "REAN"
+                "layer_id": "BASCOE"
             }
         }
     ],
@@ -280,12 +280,6 @@
         "template" : "ToolSelection"
       },
       {
-        "name" : "Options",
-        "icon" : "fa-tasks",
-        "eventToRaise" : "ui:open:options",
-        "template" : "OptionsControl"
-      },
-      {
         "name" : "Tutorial",
         "icon" : "fa-book",
         "eventToRaise" : "ui:open:storybanner",
@@ -313,8 +307,8 @@
 
   "timeSlider": {
     "domain": {
-      "start": "2008-07-17T10:15:00Z",
-      "end": "2008-11-17T11:45:00Z"
+      "start": "2008-08-06T10:15:00Z",
+      "end": "2008-08-19T11:45:00Z"
     },
     "brush": {
        "start": "2013-05-17T11:00:00Z",
@@ -394,8 +388,8 @@
     }
     ,
     {
-      "id":"UseCaseTestTemplate",
-      "template":"hbs!tmpl/UseCaseTestTemplate"
+      "id":"UseCase5",
+      "template":"hbs!tmpl/UseCase5"
     }
   ],
 
@@ -445,14 +439,6 @@
       "eventToRaise":"layout:switch:splitview",
       "description": "Splits screen to visualize two maps side by side",
       "icon":"fa fa-pause fa-2x",
-      "enabled":true,
-      "active":false
-    },
-    {
-      "id":"QuadView",
-      "eventToRaise":"layout:switch:quadview",
-      "description": "Splits screen into four windows displaying one map on each corner",
-      "icon":"fa fa-th-large fa-2x",
       "enabled":true,
       "active":false
     }
