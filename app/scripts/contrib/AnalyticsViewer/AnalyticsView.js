@@ -162,7 +162,7 @@ define(['backbone.marionette',
 			onSelectionChanged: function(feature) {
 				
 				if(feature){
-					this.selection_list.push(feature);
+					this.selection_list.push(feature.clone());
 					this.checkSelections();
 				}else{
 					this.plotdata = [];
@@ -239,7 +239,7 @@ define(['backbone.marionette',
 						var url = "http://a.tiles.maps.eox.at/wms/?"
 						var req = "LAYERS=overlay&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
 						//var BBOX=33.75,45,39.375,50.625&
-						req = req + "&BBOX=" + that.selection_list[0].getBounds().toBBOX();
+						req = req + "&BBOX=" + that.selection_list[0].geometry.getBounds().toBBOX();
 						var img = document.getElementById('diffimg');
 						req = req + "&WIDTH=" + img.clientWidth;
 						req = req + "&HEIGHT=" + img.clientHeight;
