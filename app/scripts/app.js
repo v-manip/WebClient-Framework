@@ -69,7 +69,6 @@
 					})
 				);
 
-				globals.objects.add('color', d3.scale.category10());
 
 				//Base Layers are loaded and added to the global collection
 				_.each(config.mapConfig.baseLayers, function(baselayer) {

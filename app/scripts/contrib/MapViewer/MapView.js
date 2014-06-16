@@ -356,9 +356,12 @@ define(['backbone.marionette',
 
 			onSelectionChanged: function(feature, coords, color){
 				if(feature){
-					if (color)
+					/*if (color)
 						color = this.colors(this.vectorLayer.features.length-1);
 					else
+						color = this.colors(this.vectorLayer.features.length);*/
+
+					if(!color)
 						color = this.colors(this.vectorLayer.features.length);
 					feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
 					this.vectorLayer.addFeatures([feature.clone()]);

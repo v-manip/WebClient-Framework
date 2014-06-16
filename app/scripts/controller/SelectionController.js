@@ -9,7 +9,8 @@
     	'globals',
 		'app',
     	'models/SelectionModel',
-    	'openlayers'
+    	'openlayers',
+    	'd3'
 	],
 
 	function( Backbone, Communicator, globals, App, m ) {
@@ -18,7 +19,9 @@
 			model: new m.SelectionModel(),
 
 	    initialize: function(options){
+	    	globals.objects.add('color', d3.scale.category10());
 	      	this.model.set('selections', []);
+	      	this.colors = globals.objects.get("color");
 
 	      	// Openlayers format readers for loading geojson selections
 			var io_options = {
@@ -59,9 +62,12 @@
 					} else {
 						bounds.extend(features[i].geometry.getBounds());
 					}
+					Communicator.mediator.trigger("selection:activated",false);
 					//var color = this.colors(i);
 					//features[i].style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
-					Communicator.mediator.trigger("selection:changed", features[i]);
+					//Communicator.mediator.trigger("selection:changed", features[i]);
+					var color = this.colors(i);
+					Communicator.mediator.trigger("selection:changed", features[i], this._convertCoordsFromOpenLayers(features[i].geometry, 0), color);
 				}
 				
 				
@@ -69,7 +75,31 @@
 				//this.vectorLayer.addFeatures(features);
 				//this.map.zoomToExtent(bounds);
 			}
-		}
+		},
+
+		_convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
+            var verts = openlayer_geometry.getVertices();
+
+            var coordinates = [];
+            for (var idx = 0; idx < verts.length - 1; ++idx) {
+                var p = {
+                    x: verts[idx].x,
+                    y: verts[idx].y,
+                    z: altitude // not mandatory, can be undefined
+                };
+
+                coordinates.push(p);
+            }
+            var p = {
+                x: verts[idx].x,
+                y: verts[idx].y,
+                z: altitude // not mandatory, can be undefined
+            };
+
+            coordinates.push(p);
+
+            return coordinates;
+        }
 
 
 		});
