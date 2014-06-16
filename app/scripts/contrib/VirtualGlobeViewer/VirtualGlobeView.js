@@ -332,16 +332,19 @@ define([
 
             // When a new AOI is selected in the viewer this callback gets executed:
             vgv.setOnNewAOICallback(function(aoi_coords) {
-                // FIXXME: I'm using Openlayers here to calculate the bounds, this has to be fixed somewhen...
-                var bounds = new OpenLayers.Bounds();
+                // FIXXME: Openlayers feature is used in the selection changed event, this has to be changed at some point
+
+                var points = [];
                 for (var idx = 0; idx < aoi_coords.length; idx++) {
-                    bounds.extend(new OpenLayers.Geometry.Point(aoi_coords[idx].x, aoi_coords[idx].y));
+                    points.push(new OpenLayers.Geometry.Point(aoi_coords[idx].x, aoi_coords[idx].y));
                 };
 
-                var b = bounds.toArray();
+                var ring = new OpenLayers.Geometry.LinearRing(points);
+                var polygon = new OpenLayers.Geometry.Polygon([ring]);
+                var feature = new OpenLayers.Feature.Vector(polygon);
 
                 this.stopListening(Communicator.mediator, 'selection:changed');
-                Communicator.mediator.trigger('selection:changed', b, aoi_coords);
+                Communicator.mediator.trigger('selection:changed', feature, aoi_coords);
                 this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
             }.bind(this));
 

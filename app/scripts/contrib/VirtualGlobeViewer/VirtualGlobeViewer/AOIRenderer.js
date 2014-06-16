@@ -9,8 +9,9 @@
  */
 
 define(['./Point',
-    './AOIItem'
-], function(Point, AOIItem) {
+    './AOIItem',
+    'globals'
+], function(Point, AOIItem, globals) {
 
     AOIRenderer = function(globe, navigation, aoiLayer) {
         this._globe = globe;
@@ -24,6 +25,7 @@ define(['./Point',
         this._inRectangular = false; // FIXXME: quick hack for the moment...
         this._aoiLayer = aoiLayer;
         this._aoiLayer['mytoken'] = 42;
+        this.colors = globals.objects.get("color");
 
         this.enableSelection = function(type) {
             this.start();
@@ -31,6 +33,7 @@ define(['./Point',
 
         this.disableSelection = function() {
             this._aoiLayer.removeAllFeatures();
+            this._aoiItems = [];
             this.stop();
         };
 
@@ -41,6 +44,7 @@ define(['./Point',
                 aoiItem.setColor(color);
             }
             aoiItem.render();
+            this._aoiItems.push(aoiItem);
         };
 
         this.start = function() {
@@ -135,7 +139,14 @@ define(['./Point',
                     var lonlat = this._globe.getLonLatFromPixel(pos[0], pos[1]);
 
                     var selection = new AOIItem(this._aoiLayer);
+                    
                     this._aoiItems.push(selection);
+
+                    var color = this.colors(this._aoiItems.length-1);
+                    var c = _hexToRGB(color);
+
+                   
+                    selection.setColor([c.r / 255, c.g / 255, c.b / 255, 1]);
 
                     this._curAoiItem = selection;
                 }
@@ -146,12 +157,17 @@ define(['./Point',
                     this._inRectangular = true;
                 }
 
-                // if (this._mode === "rectangular") {
-                // 	_storePoint(evt);
-                // 	this._navigation.stop();
-                // }
             }
         }.bind(this);
+
+        var _hexToRGB = function(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
 
         var _handleOnMouseMove = function(evt) {
             if (evt.which === 1) {

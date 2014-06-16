@@ -17,7 +17,8 @@
 			'controller/DownloadController',
 			'controller/SelectionManagerController',
 			'controller/LoadingController',
-			'controller/LayerController'
+			'controller/LayerController',
+			'controller/SelectionController'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -67,6 +68,8 @@
 						zoom: config.mapConfig.zoom
 					})
 				);
+
+				globals.objects.add('color', d3.scale.category10());
 
 				//Base Layers are loaded and added to the global collection
 				_.each(config.mapConfig.baseLayers, function(baselayer) {
