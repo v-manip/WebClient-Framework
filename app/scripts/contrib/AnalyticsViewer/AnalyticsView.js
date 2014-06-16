@@ -23,6 +23,7 @@ define(['backbone.marionette',
 				this.selection_list = [];
 				this.plotdata = [];
 				this.img = null;
+				this.overlay = null;
 				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
 				this.selected_time = Communicator.reqres.request('get:time');
@@ -84,7 +85,9 @@ define(['backbone.marionette',
 
 				this.plot_type = type;
 
-				this.$('.d3canvas').empty();
+				if(type!="overlay")
+					this.$('.d3canvas').empty();
+				
 				var args = {
 					selector: this.$('.d3canvas')[0],
 					data: this.plotdata
@@ -103,12 +106,12 @@ define(['backbone.marionette',
 					case 'stacked':
 						analytics.stackedPlot(args);
 						break;
-					case '':
+					case 'diff':
 						this.$('.d3canvas').html(
 							'<div class="outer">'+
 								'<div class="middle">'+
 									'<div class="inner">'+
-										'<img style="width:100%; height:100%;" src="data:image/png;base64,' + this.img + '" />'+
+										'<img id="diffimg" style="width:100%; height:100%;" src="data:image/png;base64,' + this.img + '" />'+
 									'</div>'+
 								'</div>'+
 							'</div>'
@@ -116,6 +119,18 @@ define(['backbone.marionette',
 
 							
 						this.img = null;
+						break;
+					case 'overlay':
+						this.$('.d3canvas').append(
+							'<div class="outer">'+
+								'<div class="middle">'+
+									'<div class="inner">'+
+										'<img style="width:100%; height:100%;z-index=800"; background:transparent; src="' + this.overlay + '" />'+
+									'</div>'+
+								'</div>'+
+							'</div>'
+						);	
+						this.overlay = null;
 						break;
 				}
 
@@ -220,7 +235,22 @@ define(['backbone.marionette',
 
 					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
 						that.img = data;
-						that.render("");
+						that.render("diff");
+						var url = "http://a.tiles.maps.eox.at/wms/?"
+						var req = "LAYERS=overlay&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
+						//var BBOX=33.75,45,39.375,50.625&
+						req = req + "&BBOX=" + that.selection_list[0].getBounds().toBBOX();
+						var img = document.getElementById('diffimg');
+						req = req + "&WIDTH=" + img.clientWidth;
+						req = req + "&HEIGHT=" + img.clientHeight;
+						that.overlay = url + req;
+						that.render("overlay");
+						console.log(req);
+
+						/*$.get(req, function( data ) {
+							that.overlay = data;
+							that.render("overlay");
+						});*/
 					});
 
             	}else if (getdatalist.length == 1){
