@@ -6,12 +6,14 @@ define([
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
+    './AOIRenderer',
+        'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, App, OpenLayers) {
 
     'use strict';
 
-    function VGV(options) {
+    var VGV = function(options) {
         this.canvas = $(options.canvas);
 
         if (!this.canvas) {
@@ -31,15 +33,56 @@ define([
             shadersPath: "/bower_components/virtualglobeviewer/shaders/"
         });
 
-        this.aoiLayer = undefined;
+        this.aoiLayer = new GlobWeb.VectorLayer({
+            opacity: 1
+        });
+        this.globe.addLayer(this.aoiLayer);
+
         this.layerCache = {};
         this.overlayLayers = [];
+        this.onPanEventCallback = null;
+        this.onZoomEventCallback = null;
 
         this.navigation = new GlobWeb.Navigation(this.globe, {
             inertia: false
         });
+        var pan = this.navigation.pan.bind(this.navigation);
+        this.navigation.pan = function(dx, dy) {
+            // If the MapView is currently panning do not allow the VGV to do a pan. This would result in an infinite loop.
+            if (App.isMapPanning) {
+                console.log('prevent panning...');
+                return;
+            }
+
+            if (this.onPanEventCallback) {
+                this.onPanEventCallback(this.navigation, dx, dy);
+            }
+
+            pan(dx, dy);
+        }.bind(this);
+
+        var zoom = this.navigation.zoom.bind(this.navigation);
+        this.navigation.zoom = function(delta, scale) {
+            // If the MapView is currently panning do not allow the VGV to do a pan. This would result in an infinite loop.
+            if (App.isMapZooming) {
+                console.log('prevent panning...');
+                return;
+            }
+
+            if (this.onZoomEventCallback) {
+                this.onZoomEventCallback(this.navigation, delta, scale);
+            }
+
+            zoom(delta, scale);
+        }.bind(this);
+
 
         this.w3dsBaseUrl = options.w3dsBaseUrl;
+
+        this.aoiRenderer = new AOIRenderer(this.globe, this.navigation, this.aoiLayer);
+        this.aoiRenderer.setOnSelectionEndCallback(function(selection) {
+            this.onNewAOICallback(selection);
+        }.bind(this));
 
         // // glTF loader test:
         // var sgRenderer;
@@ -64,7 +107,7 @@ define([
     };
 
     var convertFromOpenLayers = function(ol_geometry, altitude) {
-        var verts = ol_geometry.getVertices();
+        var verts = ol_geometry.geometry.getVertices();
 
         var coordinates = [];
         for (var idx = 0; idx < verts.length; ++idx) {
@@ -86,38 +129,30 @@ define([
         return coordinates;
     };
 
-    VGV.prototype.addAreaOfInterest = function(geojson) {
-        if (!this.aoiLayer) {
-            this.aoiLayer = new GlobWeb.VectorLayer({
-                style: style,
-                opacity: 1
-            });
-            this.globe.addLayer(this.aoiLayer);
-        }
+    VGV.prototype.setOnPanEventCallback = function(cb) {
+        this.onPanEventCallback = cb;
+    };
 
-        if (geojson) {
-            var style = new GlobWeb.FeatureStyle({
-                fillColor: [1, 0.5, 0.1, 0.5],
-                strokeColor: [1, 0.5, 0.1, 1],
-                extrude: true,
-                fill: true
-            });
+    VGV.prototype.setOnZoomEventCallback = function(cb) {
+        this.onZoomEventCallback = cb;
+    };
 
-            var altitude = 30000;
-            var coordinates = convertFromOpenLayers(geojson, altitude);
+    VGV.prototype.enableAOISelection = function(type) {
+        // console.log('[VGV::enableAOISelection] type: ' + type);
+        this.aoiRenderer.enableSelection(type);
+    };
 
-            var selection0 = {
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates": coordinates
-                },
-                "properties": {
-                    "style": style
-                }
-            };
+    VGV.prototype.disableAOISelection = function() {
+        // console.log('[VGV::disableAOISelection] disabled');
+        this.aoiRenderer.disableSelection();
+    };
 
-            this.aoiLayer.addFeature(selection0);
-        }
+    VGV.prototype.addAreaOfInterest = function(coords, color) {
+        this.aoiRenderer.addAOI(coords, color);
+    };
+
+    VGV.prototype.setOnNewAOICallback = function(cb) {
+        this.aoiRenderer.setOnSelectionEndCallback(cb);
     };
 
     VGV.prototype.createCommonLayerOptionsFromView = function(view) {

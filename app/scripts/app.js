@@ -17,7 +17,8 @@
 			'controller/DownloadController',
 			'controller/SelectionManagerController',
 			'controller/LoadingController',
-			'controller/LayerController'
+			'controller/LayerController',
+			'controller/SelectionController'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -67,6 +68,7 @@
 						zoom: config.mapConfig.zoom
 					})
 				);
+
 
 				//Base Layers are loaded and added to the global collection
 				_.each(config.mapConfig.baseLayers, function(baselayer) {

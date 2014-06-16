@@ -34,14 +34,7 @@ define(['backbone.marionette',
 					tileManager: this.tileManager
 				});
 
-				/*this.map.events.register("moveend", this.map, function(data) {
-					this.model.set({
-						'center': [data.object.center.lon, data.object.center.lat],
-						'zoom': data.object.zoom
-					});
-				}.bind(this));*/
-
-				this.colors = d3.scale.category10();
+				this.colors = globals.objects.get("color");
 
 				this.map.events.register("move", this.map, function(data) {
 					//console.log(data.object.getCenter());
@@ -50,13 +43,20 @@ define(['backbone.marionette',
 						'center': [center.lon, center.lat],
 						'zoom': data.object.zoom
 					});
+
+					// We set a flag here so that other views have the possibility to check if there is a
+					// map panning going on at the moment. This is important e.g. for the VGV to prevent
+					// sending a 'pan' event in some cases which would lead to a infinite recursion.
+					App.isMapPanning = true;
 				}.bind(this));
 
 				
 				this.map.events.register("moveend", this.map, function(data) {
-					Communicator.mediator.trigger("map:position:change", this.map.getExtent());
+					// See lines above for an explanation of that flag:
+					App.isMapPanning = false;
+					Communicator.mediator.trigger("map:position:change", this.map.getExtent());				
 				}.bind(this));
-
+				
 				
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
@@ -101,7 +101,7 @@ define(['backbone.marionette',
 				this.geojson = new OpenLayers.Format.GeoJSON(io_options);
 
 				// Add layers for different selection methods
-				this.vectorLayer = new OpenLayers.Layer.Vector("Vector Layer");
+				this.vectorLayer = new OpenLayers.Layer.Vector("vectorLayer");
 				
 				this.map.addLayers([this.vectorLayer]);
 				this.map.addControl(new OpenLayers.Control.MousePosition());
@@ -322,27 +322,6 @@ define(['backbone.marionette',
 				}
 			},
 
-			onLoadGeoJSON: function(data) {
-				this.vectorLayer.removeAllFeatures();
-				var features = this.geojson.read(data);
-				var bounds;
-				if (features) {
-					if (features.constructor != Array) {
-						features = [features];
-					}
-					for (var i = 0; i < features.length; ++i) {
-						if (!bounds) {
-							bounds = features[i].geometry.getBounds();
-						} else {
-							bounds.extend(features[i].geometry.getBounds());
-						}
-
-					}
-					this.vectorLayer.addFeatures(features);
-					this.map.zoomToExtent(bounds);
-				}
-			},
-
 			onExportGeoJSON: function() {
 				var geojsonstring = this.geojson.write(this.vectorLayer.features, true);
 
@@ -365,11 +344,63 @@ define(['backbone.marionette',
 				// TODO: How to handle multiple draws etc has to be thought of
 				// as well as what exactly is comunicated out
 				//console.log(colors(evt.feature.layer.features.length-1),evt.feature.layer.features.length-1);
-				color = this.colors(evt.feature.layer.features.length-1);
-				evt.feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
-				evt.feature.layer.drawFeature(evt.feature);
-				Communicator.mediator.trigger("selection:changed", evt.feature.geometry);
+				
+				//Communicator.mediator.trigger("selection:changed", evt.feature);
+				// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
+				// not have to be rewritten. This has to be changed somewhen...
+				var color = this.colors(this.vectorLayer.features.length-1);
+				Communicator.mediator.trigger("selection:changed", evt.feature, this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
+				
+				evt.feature.destroy();
 			},
+
+			onSelectionChanged: function(feature, coords, color){
+				if(feature){
+					/*if (color)
+						color = this.colors(this.vectorLayer.features.length-1);
+					else
+						color = this.colors(this.vectorLayer.features.length);*/
+
+					if(!color)
+						color = this.colors(this.vectorLayer.features.length);
+					feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
+					this.vectorLayer.addFeatures([feature.clone()]);
+				}
+			},
+
+			/*onSelectionChanged: function(coords) {
+	            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
+	            // when the selection items in the toolbar are clicked. This event triggers this method
+	            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
+	            // method.
+				if (coords) {
+					console.dir(coords);
+				}
+			},*/
+
+	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
+	            var verts = openlayer_geometry.getVertices();
+
+	            var coordinates = [];
+	            for (var idx = 0; idx < verts.length - 1; ++idx) {
+	                var p = {
+	                    x: verts[idx].x,
+	                    y: verts[idx].y,
+	                    z: altitude // not mandatory, can be undefined
+	                };
+
+	                coordinates.push(p);
+	            }
+	            var p = {
+	                x: verts[idx].x,
+	                y: verts[idx].y,
+	                z: altitude // not mandatory, can be undefined
+	            };
+
+	            coordinates.push(p);
+
+	            return coordinates;
+	        },
 
 			onTimeChange: function (time) {
 
@@ -390,6 +421,9 @@ define(['backbone.marionette',
             },
 
 			onClose: function(){
+				this.stopListening();
+				this.remove();
+				this.unbind();
 				this.isClosed = true;
 			},
 
@@ -399,6 +433,9 @@ define(['backbone.marionette',
 					return true;
 				}
 				return false;
+			},
+			isEventListenedTo: function(eventName) {
+			  return !!this._events[eventName];
 			}
 		});
 

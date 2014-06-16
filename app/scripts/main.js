@@ -51,6 +51,7 @@
 		// 	console.log("link: " + nodes.item(i).href);
 		// }
 
+
 		$.get("scripts/config.json", function(values) {
 			
 			// Configure Debug options
@@ -116,6 +117,9 @@
 				});
 
 				App.start();
+
+				// Global settings:
+				App.isMapPanning = false;
 			});
 		});
 	});
