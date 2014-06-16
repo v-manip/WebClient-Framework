@@ -113,28 +113,36 @@ RBV.Context.prototype.legacyCreateLayersFromGlobalContext = function() {
 	_.forEach(model_descs, function(desc) {
 		var layer = null;
 		var model = desc.model;
+		if (desc.type === 'baselayer') {
+			// Find compatible baselayer protocol:
+			var view = _.find(model.get('views'), function(view) {
+				return view.protocol.toUpperCase() === 'WMS';
+			});
 
-		// NOTE: Currently we only take into account 'WMS' layers for the RBV:
-		var view = _.find(model.get('views'), function(view) {
-			return view.protocol.toUpperCase() === 'WMS';
-		});
-
-		if (view) {
 			layer = new VMANIP.Layers.WMS({
 				id: view.id,
 				urls: view.urls,
 				crs: 'EPSG:4326',
 				format: view.format.replace('image/', ''),
-				transparent: 'true',
+				transparent: 'false',
 				// FIXXME: '0' would be more intuitive, however, that goes against the necessary ordering in the TextureBlend effect
-				ordinal: (desc.type === 'baselayer') ? 10000 : model.get('ordinal'), // A base layer is always the most bottom layer.
-				opacity: (desc.type === 'baselayer') ? 1 : model.get('opacity'),
-				baselayer: (desc.type === 'baselayer') ? true : false
+				ordinal: 10000, // A base layer is always the most bottom layer.
+				opacity: 1,
+				baselayer: true //model.get('opacity')
 			});
-			
-			layers['imagery'].push(layer);
-			console.log('added layer: ' + layer.id);
+		} else {
+			layer = new VMANIP.Layers.WMS({
+				id: model.get('view').id,
+				urls: model.get('view').urls,
+				crs: 'EPSG:4326',
+				format: model.get('view').format.replace('image/', ''),
+				transparent: 'true',
+				ordinal: model.get('ordinal'),
+				opacity: model.get('opacity'),
+				baselayer: false
+			});
 		}
+		layers['imagery'].push(layer);
 	});
 
 	return layers;
@@ -327,16 +335,9 @@ RBV.Context.prototype.getSelectedLayersByType = function(type, filter) {
 	var selectedLayers = [];
 
 	_.forEach(models_desc, function(desc) {
-		// FIXXME: Currently we only take into account 'WMS' layers:
-		var view = _.find(desc.model.get('views'), function(view) {
-			return view.protocol.toUpperCase() === 'WMS';
-		});
-
-		if (view) {
-			var layer = this.getLayerById(view.id, 'imagery');
-			console.log('added: ' + layer.get('id'));
-			selectedLayers.push(layer);
-		}
+		var layer = this.getLayerById(desc.model.get('view').id, 'imagery');
+		console.log('added: ' + layer.get('id'));
+		selectedLayers.push(layer);
 	}.bind(this));
 
 	return selectedLayers;
@@ -468,20 +469,28 @@ RBV.Models.DemWithOverlays = function() {
     this.context = null;
     this.terrainLayer = null;
     this.imageryLayers = [];
-    // There is none or exactly one base layer in this model:
-    this.baseLayer = null;
 
     this.terrain = null;
 };
 RBV.Models.DemWithOverlays.inheritsFrom(EarthServerGenericClient.AbstractSceneModel);
 
 RBV.Models.DemWithOverlays.prototype.supportsLayer = function(model) {
-    // NOTE: Currently we only take into account 'WMS' layers for the RBV:
-    var view = _.find(model.get('views'), function(view) {
-        return view.protocol.toUpperCase() === 'WMS';
-    });
-
-    return (view) ? true : false;
+    if (model.get('view').isBaseLayer) {
+        console.log('SKIPPING REQUEST!!!');
+        return false;
+        var views = model.get('views');
+        var isSupported = false;
+        for (var idx = 0; idx < views.length; idx++) {
+            var view = views[idx];
+            if (view.protocol.toUpperCase() === 'WMS') {
+                isSupported = true;
+                break;
+            }
+        };
+        return isSupported;
+    } else {
+        return (model.get('view').protocol.toUpperCase() === 'WMS') ? true : false;
+    }
 }
 
 RBV.Models.DemWithOverlays.prototype.applyContext = function(context) {
@@ -497,11 +506,6 @@ RBV.Models.DemWithOverlays.prototype.applyContext = function(context) {
     this.terrainLayer = terrainLayers[0];
     this.imageryLayers = this.context.getSelectedLayersByType('imagery', this.supportsLayer);
 
-    // FIXXME: Currently it is necessary here to split out an eventual base layer manually:
-    this.baseLayer = _.find(this.imageryLayers, function(layer) {
-        return layer.get('baselayer') === true;
-    })
-
     //Register to context relevant changes: 
     _.forEach(this.imageryLayers, function(layer) {
         layer.on('change:opacity', this.onOpacityChange, this);
@@ -514,11 +518,7 @@ RBV.Models.DemWithOverlays.prototype.applyContext = function(context) {
     // });
 
     this.context.on('change:layer:visibility', function(layer, visibility) {
-        if (visibility) {
-            this.addImageLayer(layer);
-        } else {
-            this.removeImageLayerById(layer.get('id'));
-        }
+        this.addImageLayer(layer);
     }.bind(this));
 }
 
@@ -568,15 +568,6 @@ RBV.Models.DemWithOverlays.prototype.addTerrainLayer = function(layer) {
 RBV.Models.DemWithOverlays.prototype.addImageLayer = function(layer) {
     this.imageryLayers.push(layer);
 
-    if (layer.get('baselayer')) {
-        // If a base layer already exists, remove it first. There can only be
-        // a single base layer at a time:
-        if (this.baseLayer) {
-            this.removeImageLayerById(this.baseLayer.get('id'));
-        }
-        this.baseLayer = layer;
-    }
-
     // Connect to transparency change events:
     layer.on('change:opacity', function(layer, value) {
         this.terrain.setTransparencyFor(layer.get('id'), (1 - value));
@@ -593,9 +584,6 @@ RBV.Models.DemWithOverlays.prototype.removeImageLayerById = function(id) {
     });
 
     if (layer) {
-        // FIXXME: reseting the layer here is not the best place!
-        layer.set('isUpToDate', false);
-        
         layer.off('change:opacity', this.onOpacityChange);
         var idx = _.indexOf(this.imageryLayers, layer);
         this.imageryLayers.splice(idx, 1);
@@ -605,6 +593,7 @@ RBV.Models.DemWithOverlays.prototype.removeImageLayerById = function(id) {
 
     if (this.terrain) {
         this.terrain.removeOverlayById(id);
+
     }
 };
 

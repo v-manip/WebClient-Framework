@@ -50,13 +50,20 @@ define(['backbone.marionette',
 						'center': [center.lon, center.lat],
 						'zoom': data.object.zoom
 					});
+
+					// We set a flag here so that other views have the possibility to check if there is a
+					// map panning going on at the moment. This is important e.g. for the VGV to prevent
+					// sending a 'pan' event in some cases which would lead to a infinite recursion.
+					App.isMapPanning = true;
 				}.bind(this));
 
 				
 				this.map.events.register("moveend", this.map, function(data) {
-					Communicator.mediator.trigger("map:position:change", this.map.getExtent());
+					// See lines above for an explanation of that flag:
+					App.isMapPanning = false;
+					Communicator.mediator.trigger("map:position:change", this.map.getExtent());				
 				}.bind(this));
-
+				
 				
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
@@ -368,8 +375,34 @@ define(['backbone.marionette',
 				color = this.colors(evt.feature.layer.features.length-1);
 				evt.feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
 				evt.feature.layer.drawFeature(evt.feature);
-				Communicator.mediator.trigger("selection:changed", evt.feature.geometry);
+				// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
+				// not have to be rewritten. This has to be changed somewhen...
+				Communicator.mediator.trigger("selection:changed", evt.feature.geometry.bounds, this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
 			},
+
+	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
+	            var verts = openlayer_geometry.getVertices();
+
+	            var coordinates = [];
+	            for (var idx = 0; idx < verts.length - 1; ++idx) {
+	                var p = {
+	                    x: verts[idx].x,
+	                    y: verts[idx].y,
+	                    z: altitude // not mandatory, can be undefined
+	                };
+
+	                coordinates.push(p);
+	            }
+	            var p = {
+	                x: verts[idx].x,
+	                y: verts[idx].y,
+	                z: altitude // not mandatory, can be undefined
+	            };
+
+	            coordinates.push(p);
+
+	            return coordinates;
+	        },
 
 			onTimeChange: function (time) {
 
@@ -383,6 +416,16 @@ define(['backbone.marionette',
                     }
 	            }, this);
             },
+
+			onSelectionChanged: function(coords) {
+	            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
+	            // when the selection items in the toolbar are clicked. This event triggers this method
+	            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
+	            // method.
+				if (coords) {
+					console.dir(coords);
+				}
+			},
 
             onSetExtent: function(bbox) {
             	this.map.zoomToExtent(bbox);

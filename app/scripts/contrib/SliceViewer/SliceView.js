@@ -129,12 +129,12 @@ define([
             this.$el.html('');
         },
 
-        _setCurrentAoI: function(area) {
+        _setCurrentAoI: function(bounds) {
             // If the releases the mouse button to finish the selection of
             // an AoI the 'area' parameter is set, otherwise it is 'null'.
-            if (area) {
+            if (bounds) {
                 // 1. store current AoI bounds
-                this.currentAoI = area.bounds.toString();
+                this.currentAoI = bounds.toString();
 
                 // 2. store current ToI interval
                 var toi = this.currentToI;
@@ -229,14 +229,14 @@ define([
             // }.bind(this), 'text/plain');
 
             // DISABLED for testing now:
-            if (false) {
+            if (true) {
                 //
                 // Add a an eventual mesh to the viewer:
                 //
 
                 var model_url = this.baseURL;
                 model_url += '&boundingBox=' + this.currentAoI;
-                model_url += '&time=' + toi;
+                model_url += '&time=' + this.currentToI;
                 model_url += '&layer=' + layer;
                 model_url += '&format=model/obj';
 

@@ -210,8 +210,8 @@ define([
 			this.$el.html('');
 		},
 
-		_setAreaOfInterest: function(area) {
-			if (area) {
+		_setAreaOfInterest: function(bounds) {
+			if (bounds) {
 				var toi = this.currentToI;
 				// In case no ToI was set during the lifecycle of this viewer we can access
 				// the time of interest from the global context:
@@ -222,7 +222,6 @@ define([
 					toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 				}
 
-				var bounds = area.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
 				this._createScene(this.options, {

@@ -51,6 +51,7 @@ define([
             // onXXXHandler() actions there to the corresponding mediator event. This will
             // help to do a cleanup of this repetitive code.
             this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
+            this.listenTo(Communicator.mediator, 'selection:activated', this._onSelectionActivated);
             this.listenTo(Communicator.mediator, 'map:setUrl', this.zoomTo);
             this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
             this.listenTo(Communicator.mediator, 'map:layer:change', this._onLayerChange);
@@ -83,7 +84,7 @@ define([
             _.forEach(initial_layers, function(desc, name) {
                 // FIXXME The VGV and the internal viewer have to be ported to display a 'view', not a 'model'!
                 // if (this.supportsLayer(desc.model)) {
-                    this.getViewer().addLayer(desc.model, desc.isBaseLayer);
+                this.getViewer().addLayer(desc.model, desc.isBaseLayer);
                 // }
             }.bind(this));
             this._sortOverlayLayers();
@@ -125,8 +126,25 @@ define([
         // PRIVATE INTERFACE //
         //-------------------//
 
-        _addAreaOfInterest: function(geojson) {
-            this.getViewer().addAreaOfInterest(geojson);
+        _addAreaOfInterest: function(openlayers_geometry, coords, color) {
+            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
+            // when the selection items in the toolbar are clicked. This event triggers this method
+            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
+            // method.
+            if (coords) {
+                // var coords = this._convertCoordsFromOpenLayers(openlayers_geometry);
+                var c = this._hexToRGB(color);
+                this.getViewer().addAreaOfInterest(coords, [c.r / 255, c.g / 255, c.b / 255, 1]);
+            }
+        },
+
+        _hexToRGB: function(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
         },
 
         _removeAllOverlays: function() {
@@ -144,6 +162,16 @@ define([
             var endtime = new Date(time.end);
 
             this.getViewer().setToI(starttime.toISOString() + '/' + endtime.toISOString());
+        },
+
+        // arg.id: bboxSelection, polygonSelection, lineSelection, pointSelection
+        // arg.active: true, false
+        _onSelectionActivated: function(arg) {
+            if (arg.active) {
+                this.getViewer().enableAOISelection(arg.id);
+            } else {
+                this.getViewer().disableAOISelection();
+            }
         },
 
         toi: function() {
@@ -231,6 +259,92 @@ define([
                 canvas: this.el,
                 w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
+
+            function convertZoomValue(vgv_zoom_value) {
+                // console.log('vgv_zoom_value:' + vgv_zoom_value);
+
+                var map_zoom_value = 13;
+
+                if (vgv_zoom_value > 0.0 && vgv_zoom_value <= 0.0024) {
+                    map_zoom_value = 13;
+                } else if (vgv_zoom_value > 0.0024 && vgv_zoom_value <= 0.004) {
+                    map_zoom_value = 12;
+                } else if (vgv_zoom_value > 0.004 && vgv_zoom_value <= 0.0047) {
+                    map_zoom_value = 11;
+                } else if (vgv_zoom_value > 0.0047 && vgv_zoom_value <= 0.017) {
+                    map_zoom_value = 10;
+                } else if (vgv_zoom_value > 0.017 && vgv_zoom_value <= 0.03) {
+                     map_zoom_value = 9;
+                } else if (vgv_zoom_value > 0.03 && vgv_zoom_value <= 0.07) {
+                     map_zoom_value = 8;
+                } else if (vgv_zoom_value > 0.07 && vgv_zoom_value <= 0.18) {
+                     map_zoom_value = 7;
+                } else if (vgv_zoom_value > 0.18 && vgv_zoom_value <= 0.5) {
+                     map_zoom_value = 6;
+                } else if (vgv_zoom_value > 0.5 && vgv_zoom_value <= 0.2) {
+                    map_zoom_value = 5;
+                } else if (vgv_zoom_value > 0.2 && vgv_zoom_value <= 1.0) {
+                     map_zoom_value = 4;
+                } else if (vgv_zoom_value > 1.0 && vgv_zoom_value <= 2.0) {
+                     map_zoom_value = 3;
+                } else if (vgv_zoom_value > 2.0 && vgv_zoom_value <= 2.8) {
+                     map_zoom_value = 2;
+                } else if (vgv_zoom_value > 2.8) {
+                     map_zoom_value = 1;
+                };
+
+                // console.log('map_zoom_value: ' + map_zoom_value);
+
+                return map_zoom_value;
+            };
+
+            vgv.setOnPanEventCallback(function(navigation, dx, dy) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
+            vgv.setOnZoomEventCallback(function(navigation, delta, scale) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
+            // When a new AOI is selected in the viewer this callback gets executed:
+            vgv.setOnNewAOICallback(function(aoi_coords) {
+                // FIXXME: I'm using Openlayers here to calculate the bounds, this has to be fixed somewhen...
+                var bounds = new OpenLayers.Bounds();
+                for (var idx = 0; idx < aoi_coords.length; idx++) {
+                    bounds.extend(new OpenLayers.Geometry.Point(aoi_coords[idx].x, aoi_coords[idx].y));
+                };
+
+                var b = bounds.toArray();
+
+                this.stopListening(Communicator.mediator, 'selection:changed');
+                Communicator.mediator.trigger('selection:changed', b, aoi_coords);
+                this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
+            }.bind(this));
+
 
             // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
 
