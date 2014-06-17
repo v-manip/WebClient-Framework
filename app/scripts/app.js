@@ -69,6 +69,7 @@
 					})
 				);
 
+
 				//Base Layers are loaded and added to the global collection
 				_.each(config.mapConfig.baseLayers, function(baselayer) {
 

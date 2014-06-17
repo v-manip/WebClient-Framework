@@ -23,7 +23,6 @@ define([
 				startPosition: opts.startPosition,
 				tileManager: this.tileManager
 			});
-			
 
 			this.connectToView();
 		},
@@ -52,9 +51,12 @@ define([
 			/*if (!this.mapView.isEventListenedTo("map:load:geojson"))
 				this.mapView.listenTo(Communicator.mediator, "map:load:geojson", _.bind(this.mapView.onLoadGeoJSON, this.mapView));*/
 
-
+	
 			this.mapView.listenTo(Communicator.mediator, "map:export:geojson", _.bind(this.mapView.onExportGeoJSON, this.mapView));
 			this.mapView.listenTo(Communicator.mediator, 'time:change', _.bind(this.mapView.onTimeChange, this.mapView));
+            
+
+			//this.listenTo(Communicator.mediator, "selection:changed", _.bind(this.mapView.onSelectionChanged, this.mapView));
 
 			Communicator.reqres.setHandler('get:selection:json', _.bind(this.mapView.onGetGeoJSON, this.mapView));
 			Communicator.reqres.setHandler('map:get:extent', _.bind(this.mapView.onGetMapExtent, this.mapView));

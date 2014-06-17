@@ -50,9 +50,14 @@
 		// 	console.log("link: " + nodes.item(i).href);
 		// }
 
+<<<<<<< HEAD
 		var configuration_file = $("#configuration").data("config");
 
 		$.get(configuration_file, function(values) {
+=======
+
+		$.get("scripts/config.json", function(values) {
+>>>>>>> a6123d9b1025f71b1a920ccd6bc5fd3dc8f9170b
 			
 			// Configure Debug options
 			setuplogging(values.debug);
