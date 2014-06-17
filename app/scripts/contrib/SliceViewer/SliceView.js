@@ -24,7 +24,7 @@ define([
 
             this.currentToI = null;
             // Set a default AoI and Layer  as the timeline can be changed even if no AoI and Layer is selected in the WebClient:
-            this.currentAoI = [17.6726953125, 56.8705859375, 19.3865625, 58.12302734375];
+            this.currentAoI = null;
 
             // FIXXME: read from config!
             var backend = this.legacyContext().backendConfig['MeshFactory'];
@@ -146,10 +146,11 @@ define([
 
                     toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
                 }
-
-                // Remove all currently shown volumes and request the new data to update the view:
-                this._update();
+            } else {
+                this.currentToI = null;
             }
+            // Remove all currently shown volumes and request the new data to update the view:
+            this._update();
         },
 
         _onTimeChange: function(time) {
@@ -163,17 +164,20 @@ define([
         },
 
         _update: function() {
-            // if (this.getViewer()) {
-            //     this.getViewer().reset();
-            // }
+             if (this.getViewer()) {
+                 this.getViewer().reset();
+             }
+
+             if (this.currentAoI != null && this.currentToI != null){
 
             _.forEach(this.selectedLayers(), function(layer_info, key) {
-                var view = this.supportsLayer(layer_info.model);
-                if (view) {
-                    this._addVolume(view.id);
-                    console.log('[SliceView::_udpate] added layer: ' + view.id);
-                }
-            }.bind(this));
+                    var view = this.supportsLayer(layer_info.model);
+                    if (view) {
+                        this._addVolume(view.id);
+                        console.log('[SliceView::_udpate] added layer: ' + view.id);
+                    }
+                }.bind(this));
+            }
         },
 
         _createViewer: function() {
@@ -186,6 +190,7 @@ define([
         },
 
         _addVolume: function(layer) {
+
             this.enableEmptyView(false);
             this.onShow();
 
@@ -320,6 +325,16 @@ define([
 
         _removeVolume: function(layer_name) {
             this.getViewer().removeObject(layer_name);
+        },
+
+        onClose: function(){
+            if (this.getViewer()) {
+                 this.getViewer().reset();
+            }
+            this.stopListening();
+            this.remove();
+            this.unbind();
+            this.isClosed = true;
         }
     });
 

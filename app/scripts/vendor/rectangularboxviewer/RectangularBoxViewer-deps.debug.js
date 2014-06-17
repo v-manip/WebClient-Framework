@@ -60359,9 +60359,26 @@ I._texture&&W&&!a?(this._context.uniform1i(D,!0),this._context.activeTexture(thi
 parseFloat(J._opacity)):T&&T._visible&&(J=I._labelmap._id,this._context.uniform1i(C,!0),this._context.activeTexture(this._context.TEXTURE1),this._context.bindTexture(this._context.TEXTURE_2D,this._textures.get(J)),this._context.uniform1i(Q,1),this._context.uniform1f(H,T._opacity),this._context.uniform4fv(z,T._showOnlyColor)));this._context.uniformMatrix4fv(da,!1,I._transform._matrix);J=1;I._type==X.displayable.types.POINTS&&(J=I._pointsize);this._context.uniform1f(ea,J);J=-1;I._type==X.displayable.types.TRIANGLES?
 (J=this._context.TRIANGLES,f&&(j+=M._itemCount/3)):I._type==X.displayable.types.LINES?(this._context.lineWidth(I._linewidth),J=this._context.LINES,f&&(k+=M._itemCount/2)):I._type==X.displayable.types.POINTS?(J=this._context.POINTS,f&&(m+=M._itemCount)):I._type==X.displayable.types.TRIANGLE_STRIPS?(J=this._context.TRIANGLE_STRIP,f&&(j+=M._itemCount/3)):I._type==X.displayable.types.POLYGONS&&(J=0==M._itemCount%3?this._context.TRIANGLES:this._context.TRIANGLE_FAN,f&&(j+=M._itemCount/3));f&&(h+=M._itemCount);
 this._context.drawArrays(J,0,M._itemCount)}}}while(--e);f&&(c="Objects: "+d+" | "+("Vertices: "+h+" | "),c+="Triangles: "+Math.round(j)+" | ",c+="Lines: "+k+" | ",c+="Points: "+m+" | ",c+="Textures: "+this._textures.getCount(),window.console.log(c))}};
-X.renderer3D.prototype.remove=function(a){X.renderer3D.superClass_.remove.call(this,a);if(0<a._children.length)for(var b=a._children,c=b.length,d=0,d=0;d<c;d++)this.remove(b[d]);b=a._id;c=this._texturePositionBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);if(a._texture&&(c=this._textures.get(a._texture._id)))this._context.deleteTexture(c),this._textures.remove(a._texture._id);c=this._vertexBuffers.get(b);goog.isDefAndNotNull(c)&&
-this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);c=this._normalBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);c=this._colorBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);c=this._scalarBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);this._vertexBuffers.remove(b);this._normalBuffers.remove(b);
-this._colorBuffers.remove(b);this._texturePositionBuffers.remove(b);this._scalarBuffers.remove(b);this._objects.remove(a);return!0};X.renderer3D.prototype.destroy=function(){this._shaders=null;delete this._shaders;this._context.clear(this._context.COLOR_BUFFER_BIT|this._context.DEPTH_BUFFER_BIT);X.renderer3D.superClass_.destroy.call(this)};X.renderer3D.prototype.__defineGetter__("bgColor",function(){return this._bgColor});
+
+X.renderer3D.prototype.remove=function(a){
+if(a){
+    X.renderer3D.superClass_.remove.call(this,a);
+    if(0<a._children.length)for(var b=a._children,c=b.length,d=0,d=0;d<c;d++)this.remove(b[d]);
+    b=a._id;
+    c=this._texturePositionBuffers.get(b);
+    goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);
+    if(a._texture&&(c=this._textures.get(a._texture._id)))this._context.deleteTexture(c),this._textures.remove(a._texture._id);
+    c=this._vertexBuffers.get(b);goog.isDefAndNotNull(c)&&
+    this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);
+    c=this._normalBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);
+    c=this._colorBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);
+    c=this._scalarBuffers.get(b);goog.isDefAndNotNull(c)&&this._context.isBuffer(c._glBuffer)&&this._context.deleteBuffer(c._glBuffer);
+    this._vertexBuffers.remove(b);this._normalBuffers.remove(b);
+    this._colorBuffers.remove(b);this._texturePositionBuffers.remove(b);this._scalarBuffers.remove(b);this._objects.remove(a);return!0
+    }
+};
+
+X.renderer3D.prototype.destroy=function(){this._shaders=null;delete this._shaders;this._context.clear(this._context.COLOR_BUFFER_BIT|this._context.DEPTH_BUFFER_BIT);X.renderer3D.superClass_.destroy.call(this)};X.renderer3D.prototype.__defineGetter__("bgColor",function(){return this._bgColor});
 X.renderer3D.prototype.__defineSetter__("bgColor",function(a){this._bgColor=a});X.renderer3D.prototype.ray_intersect_box_=function(a,b,c){for(var d=[],e=[],f=0;6>f;f++){var g=Math.floor(f/2),h=(g+1)%3,j=(g+2)%3,k=(2+2*g)%6,m=(4+2*g)%6,l=(a[f]-b[g])*(1/c[g]);if(Infinity!=l&&-Infinity!=l){var n=b[h]+c[h]*l,l=b[j]+c[j]*l;n>=a[k]&&n<=a[k+1]&&l>=a[m]&&l<=a[m+1]?(k=[],k[g]=a[f],k[h]=n,k[j]=l,d.push(k)):(k=[],k[g]=a[f],k[h]=n,k[j]=l,e.push(k))}}return[d,e]};
 X.renderer3D.prototype.pick3d=function(a,b,c,d,e){goog.isDefAndNotNull(c)||(c=4);goog.isDefAndNotNull(d)||(d=2);if(!goog.isDefAndNotNull(e)){e=this.pick(a,b);if(-1==e)return null;e=this.get(e);if(!e)return null}var f=this._camera.unproject_(2*(a/this._width)-1,2*((this._height-b)/this._height)-1,0);a=this._camera.unproject_(2*(a/this._width)-1,2*((this._height-b)/this._height)-1,1);f[0]+=this._center[0];f[1]+=this._center[1];f[2]+=this._center[2];a[0]+=this._center[0];a[1]+=this._center[1];a[2]+=
 this._center[2];b=[e._points._minA,e._points._minB,e._points._minC];var g=[e._points._maxA,e._points._minB,e._points._minC],h=[e._points._maxA,e._points._maxB,e._points._minC],j=[e._points._minA,e._points._maxB,e._points._minC],k=[e._points._minA,e._points._maxB,e._points._maxC],m=[e._points._minA,e._points._minB,e._points._maxC],l=[e._points._maxA,e._points._maxB,e._points._maxC],n=[e._points._maxA,e._points._minB,e._points._maxC];b=[X.matrix.multiplyByVector(e._transform._matrix,b[0],b[1],b[2]),
