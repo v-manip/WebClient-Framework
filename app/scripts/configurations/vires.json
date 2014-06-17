@@ -18,7 +18,7 @@
             "openlayers"
         ],
         "center": [13.41, 52.52],
-        "zoom": 5,
+        "zoom": 1,
         "baseLayers": [{
             "name": "Terrain",
             "visible": true,
@@ -93,40 +93,94 @@
             }]
         }],
         "products": [{
-            "name": "SWARM-L1b",
+            "name": "SW OPER MAGA LR 1B",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "blue",
             "views": [{
-                "id": "SWARM-L1b",
+                "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "W3DS",
                 "urls": [
-                    "http://demo.vires.eox.at/browse/ows"
+                    "http://demo.v-manip.eox.at/browse/ows"
                 ],
                 "style": "default",
                 "format": "model/gltf",
                 "type": "vertical_curtain"
             }, {
-                "id": "SWARM-L1b_outlines",
+                "id": "SW_OPER_MAGA_LR_1B_outlines",
                 "protocol": "WMS",
                 "urls": [
-                    "http://demo.vires.eox.at/browse/ows"
+                    "http://demo.v-manip.eox.at/browse/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
             }],
             "download": {
-                "id": "SWARM-L1b",
+                "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://demo.vires.eox.at/browse/ows"
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        },{
+            "name": "SW OPER MAGB LR 1B",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "SW_OPER_MAGB_LR_1B",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "SW_OPER_MAGB_LR_1B_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGB_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            }
+        },{
+            "name": "SW OPER MAGC LR 1B",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "vertical_curtain"
+            }, {
+                "id": "SW_OPER_MAGC_LR_1B_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
             }
         },{
             "name": "Geoid height above reference ellipsoid (GOCE)",
             "visible": false,
             "timeSlider": false,
             "timeSliderProtocol": "WPS",
-            "color": "green",
             "views": [{
                 "id": "QGIS-MAP",
                 "protocol": "WMS",
@@ -161,7 +215,7 @@
             "name": "Streets",
             "id": "overlay",
             "protocol": "WMTS",
-            "visible": true,
+            "visible": false,
             "urls": [
                 "http://a.tiles.maps.eox.at/wmts/",
                 "http://b.tiles.maps.eox.at/wmts/",
@@ -235,8 +289,8 @@
 
     "timeSlider": {
         "domain": {
-            "start": "2013-11-17T10:15:00Z",
-            "end": "2014-03-17T11:45:00Z"
+            "start": "2014-04-15T10:15:00Z",
+            "end": "2014-04-25T10:45:00Z"
         },
         "brush": {
             "start": "2014-01-01T00:00:01Z",
