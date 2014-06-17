@@ -17,13 +17,16 @@ define([
 
         this.mainGUI = null;
         this.idx = 0;
+        this.renderer = null;
         this.cameraPosition = opts.cameraPosition || [120, 80, 160];
         this.backgroundColor = opts.backgroundColor || [1, 1, 1];
+        this.container = opts.elem;
 
         // create and initialize a 3D renderer
         var r = this.renderer = new X.renderer3D();
         r.container = opts.elem;
         r.bgColor = this.backgroundColor;
+
         r.init();
 
         this.volumes = {};
@@ -32,6 +35,15 @@ define([
         this.meshes_to_add = [];
 
         // adjust the camera position a little bit, just for visualization purposes
+        r.camera.position = this.cameraPosition;
+    };
+
+    XTKViewer.prototype.createRenderer = function() {
+        // create and initialize a 3D renderer
+        var r = this.renderer = new X.renderer3D();
+        r.container = this.container;
+        r.bgColor = this.backgroundColor;
+        r.init();
         r.camera.position = this.cameraPosition;
     };
 
@@ -52,6 +64,11 @@ define([
     // Takes (multiple) obj/mtl pairs with textures and adds them to the viewer.
     // NOTE: Currently only the first obj/mtl pair is displayed!
     XTKViewer.prototype.addMesh = function(opts) {
+
+        if(typeof this.renderer === 'undefined' || this.renderer == null)
+            this.createRenderer();
+
+
         var modelnames = Object.keys(opts.models[0]),
             modeldata = opts.models[0][modelnames[0]],
             mtldata = opts.mtls[0][(modelnames[0].split('.')[0] + ".mtl")];
@@ -134,6 +151,7 @@ define([
         this.renderer._onShowtime = false;
 
         this.renderer.onShowtime = function() {
+
             if (!this.mainGUI) {
                 var gui = this.mainGUI = new dat.GUI({
                     autoPlace: true
@@ -173,8 +191,13 @@ define([
     };
 
     XTKViewer.prototype.addVolume = function(opts) {
+
+        if(typeof this.renderer === 'undefined' || this.renderer == null)
+            this.createRenderer();
         // FIXXME: define an array with supported mimetypes to not have to hardcode
         // the mimetypes here and below!
+        
+        //this.createRenderer();
         var volumes = null;
         if (opts.data['application/x-nifti']) {
             volumes = opts.data['application/x-nifti'];
@@ -244,6 +267,7 @@ define([
         this.renderer._onShowtime = false;
 
         this.renderer.onShowtime = function(entries) {
+
             if (!this.mainGUI) {
                 var gui = this.mainGUI = new dat.GUI({
                     autoPlace: true
@@ -337,6 +361,26 @@ define([
     };
 
     XTKViewer.prototype.reset = function() {
+        _.each(_.keys(this.volumes), function(v){
+            this.removeObject(v);
+        },this);
+        _.each(_.keys(this.meshes), function(v){
+            this.removeObject(v);
+        },this);
+        
+        if (this.mainGUI) {
+            this.removeGui(this.mainGUI);
+        }
+    };
+
+    XTKViewer.prototype.destroy = function() {
+        _.each(_.keys(this.volumes), function(v){
+            this.removeObject(v);
+        },this);
+        _.each(_.keys(this.meshes), function(v){
+            this.removeObject(v);
+        },this);
+
         this.renderer.destroy();
         if (this.mainGUI) {
             this.removeGui(this.mainGUI);
