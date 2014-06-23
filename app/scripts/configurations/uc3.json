@@ -99,51 +99,131 @@
     ],
     "products": [
       {
-        "name": "SPOT 4 View",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "WPS",
-        "color":"blue",
-        "views": [
-          {
-            "id": "SPOT4_View",
-            "protocol": "WMS",
-            "urls": [
-                "http://demo.v-manip.eox.at/browse/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
+          "name": "Radar Bonn UH",
+          "visible": false,
+          "timeSlider": true,
+          "timeSliderProtocol": "WPS",
+          "views": [{
+              "id": "Radar_Bonn_UH",
+              "protocol": "W3DS",
+              "urls": [
+                  "http://demo.v-manip.eox.at/browse/ows"
+              ],
+              "style": "default",
+              "format": "model/gltf",
+              "type": "volumetric"
+          }, {
+              "id": "Radar_Bonn_UH_outlines",
+              "protocol": "WMS",
+              "urls": [
+                  "http://demo.v-manip.eox.at/browse/ows"
+              ],
+              "style": "default",
+              "format": "image/png"
+          }],
+          "download": {
+              "id": "Radar_Bonn_UH",
+              "protocol": "EOWCS",
+              "url": "http://demo.v-manip.eox.at/browse/ows"
           }
-        ],
-        "download": {
-          "id": "SPOT4_View",
-          "protocol": "EOWCS",
-          "url": "http://demo.v-manip.eox.at/browse/ows"
+      },{
+            "name": "ALARO Temperature surface",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "ALARO_Temperature_surface_201305181200_data",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            },{
+                "id": "ALARO_Temperature_surface_201305181200",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "ALARO_Temperature_surface_201305181200",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getValuesThroughTime",
+                "layer_id": "ALARO_Temperature_surface_201305181200_data"
+            }
+        },{
+            "name": "AROME Temperature surface",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "AROME_Temperature_surface_201305181200_data",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            },{
+                "id": "AROME_Temperature_surface_201305181200",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "AROME_Temperature_surface_201305181200",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getValuesThroughTime",
+                "layer_id": "AROME_Temperature_surface_201305181200_data"
+            }
+        },{
+            "name": "MOD07 Surface temperature",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "MOD07_Surface_temperature_data",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            },{
+                "id": "MOD07_Surface_temperature",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MOD07_Surface_temperature",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "process" : {
+                "id": "getValuesThroughTime",
+                "layer_id": "MOD07_Surface_temperature_data"
+            }
         }
-      },
-      {
-        "name": "PanEuropean Fractional Snow Cover",
-        "visible": false,
-        "timeSlider": true,
-        "timeSliderProtocol": "EOWCS",
-        "color":"green",
-        "views": [
-          {
-            "id": "daily_FSC_PanEuropean_Optical",
-            "protocol": "WMS",
-            "urls": [
-                "http://neso.cryoland.enveo.at/cryoland/ows"
-            ],
-            "style": "default",
-            "format": "image/png"
-          }
-        ],
-        "download": {
-          "id": "daily_FSC_PanEuropean_Optical",
-          "protocol": "EOWCS",
-          "url": "http://neso.cryoland.enveo.at/cryoland/ows"
-        }
-      }
+      
     ],
     "overlays": [
        {
@@ -352,6 +432,11 @@
       "id":"pointSelection",
       "description": "Allows selection of Points in Map",
       "icon":"icon-large icon-screenshot"
+    },
+    {
+        "id": "bboxSelection",
+        "description": "Allows drawing a bounding box selection in Map",
+        "icon": "icon-large icon-vector-path-square"
     }
   ],
 
