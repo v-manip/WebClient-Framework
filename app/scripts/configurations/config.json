@@ -120,10 +120,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getValuesThroughTime",
                 "layer_id": "daily_FSC_PanEuropean_Optical"
-            }
+            }]
         },{
             "name": "MOD07 Retrived Temperature Profile",
             "visible": false,
@@ -152,10 +152,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "MOD07_Retrived_Temperature_Profile"
-            }
+            }]
         },{
             "name": "MOD07 Specific Humidity",
             "visible": false,
@@ -184,10 +184,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "MOD07_Specific_Umidity"
-            }
+            }]
         },{
             "name": "ALARO Specific Humidity",
             "visible": false,

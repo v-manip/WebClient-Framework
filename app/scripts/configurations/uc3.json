@@ -154,10 +154,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getValuesThroughTime",
                 "layer_id": "ALARO_Temperature_surface_201305181200_data"
-            }
+            }]
         },{
             "name": "AROME Temperature surface",
             "visible": false,
@@ -186,10 +186,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getValuesThroughTime",
                 "layer_id": "AROME_Temperature_surface_201305181200_data"
-            }
+            }]
         },{
             "name": "MOD07 Surface temperature",
             "visible": false,
@@ -218,10 +218,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getValuesThroughTime",
                 "layer_id": "MOD07_Surface_temperature_data"
-            }
+            }]
         }
       
     ],

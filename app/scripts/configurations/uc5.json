@@ -126,10 +126,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "GOME-2"
-            }
+            }]
         },
         {
             "name": "LPL2_MIPAS",
@@ -159,10 +159,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "LPL2_MIPAS"
-            }
+            }]
         },{
             "name": "BASCOE",
             "visible": false,
@@ -191,10 +191,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "BASCOE"
-            }
+            }]
         }
     ],
     "overlays": [
