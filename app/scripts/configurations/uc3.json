@@ -99,34 +99,6 @@
     ],
     "products": [
       {
-          "name": "Radar Bonn UH",
-          "visible": false,
-          "timeSlider": true,
-          "timeSliderProtocol": "WPS",
-          "views": [{
-              "id": "Radar_Bonn_UH",
-              "protocol": "W3DS",
-              "urls": [
-                  "http://demo.v-manip.eox.at/browse/ows"
-              ],
-              "style": "default",
-              "format": "model/gltf",
-              "type": "volumetric"
-          }, {
-              "id": "Radar_Bonn_UH_outlines",
-              "protocol": "WMS",
-              "urls": [
-                  "http://demo.v-manip.eox.at/browse/ows"
-              ],
-              "style": "default",
-              "format": "image/png"
-          }],
-          "download": {
-              "id": "Radar_Bonn_UH",
-              "protocol": "EOWCS",
-              "url": "http://demo.v-manip.eox.at/browse/ows"
-          }
-      },{
             "name": "ALARO Temperature surface",
             "visible": false,
             "timeSlider": true,
@@ -156,6 +128,9 @@
             },
             "processes" : [{
                 "id": "getValuesThroughTime",
+                "layer_id": "ALARO_Temperature_surface_201305181200_data"
+            },{
+                "id": "getCoverageData",
                 "layer_id": "ALARO_Temperature_surface_201305181200_data"
             }]
         },{
@@ -189,6 +164,9 @@
             "processes" : [{
                 "id": "getValuesThroughTime",
                 "layer_id": "AROME_Temperature_surface_201305181200_data"
+            },{
+                "id": "getCoverageData",
+                "layer_id": "AROME_Temperature_surface_201305181200_data"
             }]
         },{
             "name": "MOD07 Surface temperature",
@@ -221,8 +199,139 @@
             "processes" : [{
                 "id": "getValuesThroughTime",
                 "layer_id": "MOD07_Surface_temperature_data"
+            },{
+                "id": "getCoverageData",
+                "layer_id": "MOD07_Surface_temperature_data"
             }]
-        }
+        },{
+            "name": "ALARO Specific Humidity",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "ALARO_Specific_Humidity_201305181200",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "ALARO_Specific_Humidity_201305181200_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "ALARO_Specific_Humidity_201305181200",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "processes" : [{
+                "id": "getVolumePixelValues",
+                "layer_id": "ALARO_Specific_Humidity_201305181200"
+            }]
+        },{
+            "name": "AROME Specific Humidity",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "AROME_Specific_Humidity_201305181200",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "AROME_Specific_Humidity_201305181200_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "AROME_Specific_Humidity_201305181200",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "processes" : [{
+                "id": "getVolumePixelValues",
+                "layer_id": "AROME_Specific_Humidity_201305181200"
+            }]
+        },{
+            "name": "MOD07 Specific Humidity",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "MOD07_Specific_Umidity",
+                "protocol": "W3DS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "model/gltf",
+                "type": "volumetric"
+            }, {
+                "id": "MOD07_Specific_Umidity_outlines",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MOD07_Specific_Umidity",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "processes" : [{
+                "id": "getVolumePixelValues",
+                "layer_id": "MOD07_Specific_Umidity"
+            }]
+        },{
+          "name": "Radar Bonn UH",
+          "visible": false,
+          "timeSlider": true,
+          "timeSliderProtocol": "WPS",
+          "views": [{
+              "id": "Radar_Bonn_UH",
+              "protocol": "W3DS",
+              "urls": [
+                  "http://demo.v-manip.eox.at/browse/ows"
+              ],
+              "style": "default",
+              "format": "model/gltf",
+              "type": "volumetric"
+          }, {
+              "id": "Radar_Bonn_UH_outlines",
+              "protocol": "WMS",
+              "urls": [
+                  "http://demo.v-manip.eox.at/browse/ows"
+              ],
+              "style": "default",
+              "format": "image/png"
+          }],
+          "download": {
+              "id": "Radar_Bonn_UH",
+              "protocol": "EOWCS",
+              "url": "http://demo.v-manip.eox.at/browse/ows"
+          },
+            "processes" : [{
+                "id": "getVolumePixelValues",
+                "layer_id": "Radar_Bonn_UH"
+            }]
+      }
       
     ],
     "overlays": [

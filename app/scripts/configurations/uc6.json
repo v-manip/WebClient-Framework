@@ -126,10 +126,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "daily_FSC_PanEuropean_Optical"
-            }
+            }]
         }
     ],
     "overlays": [
