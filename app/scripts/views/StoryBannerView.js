@@ -160,6 +160,7 @@
         }
         if(this.sections[index].hasAttribute('data-tr')){
           Communicator.mediator.trigger("region:show:view", 'tr', this.sections[index].getAttribute('data-tr'));
+          Communicator.mediator.trigger("region:show:view", 'tr', this.sections[index].getAttribute('data-tr'));
         }
         if(this.sections[index].hasAttribute('data-bl')){
           Communicator.mediator.trigger("region:show:view", 'bl', this.sections[index].getAttribute('data-bl'));
@@ -170,9 +171,13 @@
 
         // Load a selection specified by a json file
         if(this.sections[index].hasAttribute('data-selection')){
-          $.get(this.sections[index].getAttribute('data-selection'), function(values) {
-            Communicator.mediator.trigger("map:load:geojson", values);
-          });
+          if(this.sections[index].getAttribute('data-selection')!="clear"){
+            $.get(this.sections[index].getAttribute('data-selection'), function(values) {
+              Communicator.mediator.trigger("map:load:geojson", values);
+            });
+          }else{
+            Communicator.mediator.trigger("selection:activated", false);
+          }
           
         }
 
