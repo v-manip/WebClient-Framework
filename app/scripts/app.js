@@ -132,7 +132,7 @@
 									protocol: products.download.protocol,
 									url: products.download.url
 								},
-								process: products.process 
+								processes: products.processes 
 							})
 					);
 					console.log("Added product " + products.name );

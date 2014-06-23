@@ -64,8 +64,8 @@ define(['backbone.marionette',
 
 				globals.products.each(function(model) {
 	                if (model.get('visible')) {
-	                    if (model.get("process")) {
-	                        this.activeWPSproducts.push(model.get('process').layer_id)
+	                    if (model.get("processes")) {
+	                        this.activeWPSproducts.push(model.get('processes')[0].layer_id)
 	                    } 
 	                }
             	}, this);
@@ -106,6 +106,9 @@ define(['backbone.marionette',
 					case 'stacked':
 						analytics.stackedPlot(args);
 						break;
+					case 'line':
+						analytics.linePlot(args);
+						break;
 					case 'diff':
 						this.$('.d3canvas').html(
 							'<div class="outer">'+
@@ -143,15 +146,19 @@ define(['backbone.marionette',
 		          if (product){
 		            if(options.visible && product.get('timeSlider')){
 
-		            	if (product.get("process")){
-		                  this.activeWPSproducts.push(product.get('process').layer_id);
+		            	if (product.get("processes")){
+		            		_.each(product.get("processes"), function(process){
+		            			this.activeWPSproducts.push(product.get('process').layer_id);
+		            		},this);
 		              	}
 		              	this.checkSelections();
 		              
 		            }else{
-		              if (this.activeWPSproducts.indexOf(product.get('process').layer_id)!=-1)
-		                this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(product.get('process').layer_id), 1);
-		              console.log(this.activeWPSproducts);
+		            	_.each(product.get("processes"), function(process){
+	            			if (this.activeWPSproducts.indexOf(product.get('process').layer_id)!=-1)
+			                	this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(product.get('process').layer_id), 1);
+			              	console.log(this.activeWPSproducts);
+	            		},this);
 		            }
 		          }
 		        }
@@ -199,29 +206,30 @@ define(['backbone.marionette',
 
 				globals.products.each(function(model) {
 	                if (model.get('visible')) {
-	                	var process = model.get("process");
-	                	if(process){
-		                    switch (process.id){
-		                    	case "getData":
-		                    		getdatalist.push(model.get("process").layer_id);
-		                    	break;
-		                    	case "getCoverageData":
-		                    		getcoveragedifflist.push(model.get("process").layer_id);
-		                    	break;
-		                    	case "getVolumePixelValues":
-		                    		getvolumepixelvaluelist.push(model.get("process").layer_id);
-		                    	break;
-		                    	case "getValuesThroughTime":
-		                    		getvaluesthroughtimelist.push(model.get("process").layer_id);
-		                    	break;
-		                    	
-		                    }
-		                }
-
+	                	var processes = model.get("processes");
+	                	_.each(processes, function(process){
+	                		if(process){
+			                    switch (process.id){
+			                    	case "getData":
+			                    		getdatalist.push(process.layer_id);
+			                    	break;
+			                    	case "getCoverageData":
+			                    		getcoveragedifflist.push(process.layer_id);
+			                    	break;
+			                    	case "getVolumePixelValues":
+			                    		getvolumepixelvaluelist.push(process.layer_id);
+			                    	break;
+			                    	case "getValuesThroughTime":
+			                    		getvaluesthroughtimelist.push(process.layer_id);
+			                    	break;
+			                    	
+			                    }
+			                }
+	                	}, this);
 	                }
             	}, this);
 
-            	if (getcoveragedifflist.length > 0){
+            	if (getcoveragedifflist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
 
             		var bbox = this.selection_list[0].geometry.getBounds().toBBOX();
 
@@ -253,10 +261,10 @@ define(['backbone.marionette',
 						});*/
 					});
 
-            	}else if (getdatalist.length == 1){
+            	}else if (getdatalist.length == 1 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
 					}
 					list = list.substring(0, list.length - 1);
 
@@ -275,11 +283,11 @@ define(['backbone.marionette',
 						that.plotdata = data;
 						that.render(that.plot_type);
 					});
-            	}else if (getvolumepixelvaluelist.length > 0){
+            	}else if (getvolumepixelvaluelist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
 
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
 					}
 					list = list.substring(0, list.length - 1);
 
@@ -295,11 +303,11 @@ define(['backbone.marionette',
 						that.render(that.plot_type);
 					});
 
-            	}else if (getvaluesthroughtimelist.length > 0){
+            	}else if (getvaluesthroughtimelist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
 
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].x +','+ this.selection_list[i].y + ';';
+						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
 					}
 					list = list.substring(0, list.length - 1);
 
@@ -312,7 +320,7 @@ define(['backbone.marionette',
 					});
 					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
 						that.plotdata = data;
-						that.render('stacked');
+						that.render('line');
 					});
 
             	}
