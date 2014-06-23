@@ -216,10 +216,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "ALARO_Specific_Humidity_201305150000"
-            }
+            }]
         },{
             "name": "AROME Specific Humidity",
             "visible": false,
@@ -248,10 +248,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "AROME_Specific_Humidity_201305150000"
-            }
+            }]
         },{
             "name": "ALARO Temperature surface",
             "visible": false,
@@ -271,10 +271,16 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
-                "id": "getValuesThroughTime",
-                "layer_id": "ALARO_Temperature_surface_201305150000"
-            }
+            "processes" : [
+                {
+                    "id": "getValuesThroughTime",
+                    "layer_id": "ALARO_Temperature_surface_201305150000"
+                },
+                {
+                    "id": "getCoverageData",
+                    "layer_id": "ALARO_Temperature_surface_201305150000"
+                }
+            ]
         },{
             "name": "AROME Temperature surface",
             "visible": false,
@@ -294,10 +300,16 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
-                "id": "getValuesThroughTime",
-                "layer_id": "AROME_Temperature_surface_201305150000"
-            }
+            "processes" : [
+                {
+                    "id": "getValuesThroughTime",
+                    "layer_id": "AROME_Temperature_surface_201305150000"
+                },
+                {
+                    "id": "getCoverageData",
+                    "layer_id": "AROME_Temperature_surface_201305150000"
+                }
+            ]
         },{
             "name": "AROME Temperature isobaric",
             "visible": false,
@@ -326,10 +338,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "AROME_Temperature_isobaric_201305150000"
-            }
+            }]
         },{
             "name": "ALARO Temperature isobaric",
             "visible": false,
@@ -358,10 +370,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "ALARO_Temperature_isobaric_201305150000"
-            }
+            }]
         },{
             "name": "AROME Surface Pressure",
             "visible": false,
@@ -381,10 +393,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "AROME_Surface_Pressure_201305150000"
-            }
+            }]
         },{
             "name": "ALARO Surface Pressure",
             "visible": false,
@@ -404,10 +416,10 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
-            "process" : {
+            "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "ALARO_Surface_Pressure_201305150000"
-            }
+            }]
         },{
             "name": "Radar Bonn UH",
             "visible": false,
