@@ -442,7 +442,8 @@ define([
     };
 
     VGV.prototype.onOpacityChange = function(layer_name, opacity) {
-        var layerDesc = this.layerCache[layer_name];
+        // FIXXME: refactor layerCache into an object with a .get('layername') method!
+        var layerDesc = this.layerCache[layer_name + '-WMS'] || this.layerCache[layer_name + '-WMTS'];
         if (typeof layerDesc !== 'undefined') {
             layerDesc.layer.opacity(opacity);
         }
