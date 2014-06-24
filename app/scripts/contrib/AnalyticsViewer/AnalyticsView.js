@@ -148,15 +148,15 @@ define(['backbone.marionette',
 
 		            	if (product.get("processes")){
 		            		_.each(product.get("processes"), function(process){
-		            			this.activeWPSproducts.push(product.get('process').layer_id);
+		            			this.activeWPSproducts.push(process.layer_id);
 		            		},this);
 		              	}
 		              	this.checkSelections();
 		              
 		            }else{
 		            	_.each(product.get("processes"), function(process){
-	            			if (this.activeWPSproducts.indexOf(product.get('process').layer_id)!=-1)
-			                	this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(product.get('process').layer_id), 1);
+	            			if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
+			                	this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
 			              	console.log(this.activeWPSproducts);
 	            		},this);
 		            }

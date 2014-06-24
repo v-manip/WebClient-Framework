@@ -349,6 +349,7 @@ define(['backbone.marionette',
 				if(this.selectionType == "single"){
 					this.vectorLayer.removeAllFeatures();
 					colorindex = this.vectorLayer.features.length;
+					Communicator.mediator.trigger("selection:changed", null);
 				}
 
 				
