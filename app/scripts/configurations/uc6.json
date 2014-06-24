@@ -332,7 +332,8 @@
     {
       "id": "bboxSelection",
       "description": "Allows drawing a bounding box selection in Map",
-      "icon": "icon-large icon-vector-path-square"
+      "icon": "icon-large icon-vector-path-square",
+        "selectionType":"single"
     }
   ],
 

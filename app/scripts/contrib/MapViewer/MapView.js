@@ -16,6 +16,7 @@ define(['backbone.marionette',
 				this.map = undefined;
 				this.isClosed = true;
 				this.tileManager = options.tileManager;
+				this.selectionType = null;
 
 				$(window).resize(function() {
 					if (this.map) {
@@ -269,14 +270,13 @@ define(['backbone.marionette',
 				globals.products.each(function(product) {
 					//if (this.isModelCompatible(product)) {
 					// Another quick hack to exclude 'W3DS' layers. We should use the isModelCompatible() function!
-					if (product.get('views')[0].protocol !== 'W3DS' &&
-						product.get('views')[0].protocol !== 'DEM' &&
-						product.get('views')[0].protocol !== 'WIREFRAME') {
-						var productLayer = this.map.getLayersByName(product.get("name"))[0];
-						var index = globals.products.indexOf(productLayer);
-						this.map.setLayerIndex(productLayer, index);
-					//}
-					}
+					_.each(product.get('views'), function(view){
+						if (view.protocol == 'WMS' || view.protocol == "WMTS"){
+							var productLayer = this.map.getLayersByName(product.get("name"))[0];
+							var index = globals.products.length - globals.products.indexOf(product);
+							this.map.setLayerIndex(productLayer, index);
+						}
+					},this);
 				}, this);
 				console.log("Map products sorted");
 			},
@@ -300,6 +300,7 @@ define(['backbone.marionette',
             },
 
 			onSelectionActivated: function(arg) {
+				this.selectionType = arg.selectionType;
 				if (arg.active) {
 					for (key in this.drawControls) {
 						var control = this.drawControls[key];
@@ -344,25 +345,37 @@ define(['backbone.marionette',
 				// TODO: How to handle multiple draws etc has to be thought of
 				// as well as what exactly is comunicated out
 				//console.log(colors(evt.feature.layer.features.length-1),evt.feature.layer.features.length-1);
+				var colorindex = this.vectorLayer.features.length;
+				if(this.selectionType == "single"){
+					this.vectorLayer.removeAllFeatures();
+					colorindex = this.vectorLayer.features.length;
+				}
+
 				
 				//Communicator.mediator.trigger("selection:changed", evt.feature);
 				// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
 				// not have to be rewritten. This has to be changed somewhen...
-				var color = this.colors(this.vectorLayer.features.length-1);
+				var color = this.colors(colorindex);
 				Communicator.mediator.trigger("selection:changed", evt.feature, this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
 				
 				evt.feature.destroy();
 			},
 
 			onSelectionChanged: function(feature, coords, color){
+
 				if(feature){
+					var colorindex = this.vectorLayer.features.length+1;
+					if(this.selectionType == "single"){
+						this.vectorLayer.removeAllFeatures();
+						colorindex = this.vectorLayer.features.length;
+					}
 					/*if (color)
 						color = this.colors(this.vectorLayer.features.length-1);
 					else
 						color = this.colors(this.vectorLayer.features.length);*/
 
 					if(!color)
-						color = this.colors(this.vectorLayer.features.length);
+						color = this.colors(colorindex);
 					feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
 					this.vectorLayer.addFeatures([feature.clone()]);
 				}

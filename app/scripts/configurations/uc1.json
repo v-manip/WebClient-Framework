@@ -454,7 +454,8 @@
     {
       "id":"pointSelection",
       "description": "Allows selection of Points in Map",
-      "icon":"icon-large icon-screenshot"
+      "icon":"icon-large icon-screenshot",
+        "selectionType":"single"
     }
   ],
 
