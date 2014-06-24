@@ -264,7 +264,8 @@
 								icon:selTool.icon,
 								enabled: true,
 								active: false,
-								type: "selection"
+								type: "selection",
+								selectionType: selTool.selectionType
 							}));
 				}, this);
 

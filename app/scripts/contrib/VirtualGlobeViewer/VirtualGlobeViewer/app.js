@@ -137,14 +137,18 @@ define([
         this.onZoomEventCallback = cb;
     };
 
-    VGV.prototype.enableAOISelection = function(type) {
+    VGV.prototype.enableAOISelection = function(type, selectionType) {
         // console.log('[VGV::enableAOISelection] type: ' + type);
-        this.aoiRenderer.enableSelection(type);
+        this.aoiRenderer.enableSelection(type, selectionType);
     };
 
     VGV.prototype.disableAOISelection = function() {
         // console.log('[VGV::disableAOISelection] disabled');
         this.aoiRenderer.disableSelection();
+    };
+
+    VGV.prototype.removeFeatures = function() {
+        this.aoiRenderer.removeFeatures();
     };
 
     VGV.prototype.addAreaOfInterest = function(coords, color) {
