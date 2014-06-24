@@ -10,8 +10,9 @@
 
 define(['./Point',
     './AOIItem',
-    'globals'
-], function(Point, AOIItem, globals) {
+    'globals',
+    'communicator'
+], function(Point, AOIItem, globals, Communicator) {
 
     AOIRenderer = function(globe, navigation, aoiLayer) {
         this._globe = globe;
@@ -150,6 +151,7 @@ define(['./Point',
                     if(this._selectionType == "single"){
                         this._aoiLayer.removeAllFeatures();
                         this._aoiItems = [];
+                        Communicator.mediator.trigger("selection:changed", null);
                         colorindex = this._aoiItems.length;
                     }
                     var pos = this._globe.renderContext.getXYRelativeToCanvas(evt);
