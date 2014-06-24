@@ -269,14 +269,13 @@ define(['backbone.marionette',
 				globals.products.each(function(product) {
 					//if (this.isModelCompatible(product)) {
 					// Another quick hack to exclude 'W3DS' layers. We should use the isModelCompatible() function!
-					if (product.get('views')[0].protocol !== 'W3DS' &&
-						product.get('views')[0].protocol !== 'DEM' &&
-						product.get('views')[0].protocol !== 'WIREFRAME') {
-						var productLayer = this.map.getLayersByName(product.get("name"))[0];
-						var index = globals.products.indexOf(productLayer);
-						this.map.setLayerIndex(productLayer, index);
-					//}
-					}
+					_.each(product.get('views'), function(view){
+						if (view.protocol == 'WMS' || view.protocol == "WMTS"){
+							var productLayer = this.map.getLayersByName(product.get("name"))[0];
+							var index = globals.products.length - globals.products.indexOf(product);
+							this.map.setLayerIndex(productLayer, index);
+						}
+					},this);
 				}, this);
 				console.log("Map products sorted");
 			},
