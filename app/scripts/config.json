@@ -580,19 +580,23 @@
     "selectionTools": [{
         "id": "pointSelection",
         "description": "Allows selection of Points in Map",
-        "icon": "icon-large icon-screenshot"
+        "icon": "icon-large icon-screenshot",
+        "selectionType":"single"
     }, {
         "id": "lineSelection",
         "description": "Allows selection of Lines in Map",
-        "icon": "icon-large icon-vector-path-line"
+        "icon": "icon-large icon-vector-path-line",
+        "selectionType":"multi"
     }, {
         "id": "polygonSelection",
         "description": "Allows selection of Polygons in Map",
-        "icon": "icon-large icon-vector-path-polygon"
+        "icon": "icon-large icon-vector-path-polygon",
+        "selectionType":"single"
     }, {
         "id": "bboxSelection",
         "description": "Allows drawing a bounding box selection in Map",
-        "icon": "icon-large icon-vector-path-square"
+        "icon": "icon-large icon-vector-path-square",
+        "selectionType":"multi"
     }],
 
     "visualizationTools": [{
