@@ -17,6 +17,7 @@ define([
         initialize: function(opts) {
             BaseView.prototype.initialize.call(this, opts);
             this.enableEmptyView(false);
+            this.selectinType = null;
 
             this._startPosition = opts.startPosition;
             if (typeof this._startPosition === 'undefined') {
@@ -131,6 +132,10 @@ define([
             // when the selection items in the toolbar are clicked. This event triggers this method
             // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
             // method.
+            if(this.selectionType == "single"){
+                this.getViewer().removeFeatures();
+            }
+
             if (coords) {
                 // var coords = this._convertCoordsFromOpenLayers(openlayers_geometry);
                 var c = this._hexToRGB(color);
@@ -167,8 +172,9 @@ define([
         // arg.id: bboxSelection, polygonSelection, lineSelection, pointSelection
         // arg.active: true, false
         _onSelectionActivated: function(arg) {
+            this.selectionType = arg.selectionType;
             if (arg.active) {
-                this.getViewer().enableAOISelection(arg.id);
+                this.getViewer().enableAOISelection(arg.id, this.selectionType);
             } else {
                 this.getViewer().disableAOISelection();
             }

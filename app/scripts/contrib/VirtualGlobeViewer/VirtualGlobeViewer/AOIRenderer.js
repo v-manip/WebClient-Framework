@@ -10,8 +10,9 @@
 
 define(['./Point',
     './AOIItem',
-    'globals'
-], function(Point, AOIItem, globals) {
+    'globals',
+    'communicator'
+], function(Point, AOIItem, globals, Communicator) {
 
     AOIRenderer = function(globe, navigation, aoiLayer) {
         this._globe = globe;
@@ -25,9 +26,16 @@ define(['./Point',
         this._inRectangular = false; // FIXXME: quick hack for the moment...
         this._aoiLayer = aoiLayer;
         this._aoiLayer['mytoken'] = 42;
+        this._selectionType = null;
         this.colors = globals.objects.get("color");
 
-        this.enableSelection = function(type) {
+        this.enableSelection = function(type, selectionType) {
+            this._selectionType = selectionType;
+            if(selectionType == "single"){
+                this._aoiLayer.removeAllFeatures();
+                this._aoiItems = [];
+            }
+
             this.start();
         };
 
@@ -35,6 +43,11 @@ define(['./Point',
             this._aoiLayer.removeAllFeatures();
             this._aoiItems = [];
             this.stop();
+        };
+
+        this.removeFeatures = function(){
+            this._aoiLayer.removeAllFeatures();
+            this._aoiItems = [];
         };
 
         this.addAOI = function(coords, color) {
@@ -132,19 +145,25 @@ define(['./Point',
 
         var _handleOnMouseDown = function(evt) {
             this._mouseButtonDown = true;
-
+            var colorindex = this._aoiItems.length+1;
             if (evt.which === 1) {
                 if (!this._curAoiItem) {
+                    if(this._selectionType == "single"){
+                        this._aoiLayer.removeAllFeatures();
+                        this._aoiItems = [];
+                        Communicator.mediator.trigger("selection:changed", null);
+                        colorindex = this._aoiItems.length;
+                    }
                     var pos = this._globe.renderContext.getXYRelativeToCanvas(evt);
                     var lonlat = this._globe.getLonLatFromPixel(pos[0], pos[1]);
 
                     var selection = new AOIItem(this._aoiLayer);
                     
-                    this._aoiItems.push(selection);
 
-                    var color = this.colors(this._aoiItems.length-1);
+                    var color = this.colors(colorindex);
                     var c = _hexToRGB(color);
 
+                    this._aoiItems.push(selection);
                    
                     selection.setColor([c.r / 255, c.g / 255, c.b / 255, 1]);
 
