@@ -7,7 +7,7 @@ define([
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
     './AOIRenderer',
-        'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
+    'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
     'openlayers' // FIXXME: replace OpenLayers with generic format!
 ], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, App, OpenLayers) {
 
@@ -419,6 +419,12 @@ define([
         this.globe.refresh();
     };
 
+    // var pos = {
+    //     center: [74, 15],
+    //     distance: 10000000,
+    //     duration: 1000,
+    //     tilt: 45
+    // };
     VGV.prototype.zoomTo = function(pos) {
         if (!pos.tilt) {
             var cur_pos = this.navigation.save();

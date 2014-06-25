@@ -65,7 +65,7 @@ define([
     // NOTE: Currently only the first obj/mtl pair is displayed!
     XTKViewer.prototype.addMesh = function(opts) {
 
-        if(typeof this.renderer === 'undefined' || this.renderer == null)
+        if (typeof this.renderer === 'undefined' || this.renderer == null)
             this.createRenderer();
 
 
@@ -192,11 +192,11 @@ define([
 
     XTKViewer.prototype.addVolume = function(opts) {
 
-        if(typeof this.renderer === 'undefined' || this.renderer == null)
+        if (typeof this.renderer === 'undefined' || this.renderer == null)
             this.createRenderer();
         // FIXXME: define an array with supported mimetypes to not have to hardcode
         // the mimetypes here and below!
-        
+
         //this.createRenderer();
         var volumes = null;
         if (opts.data['application/x-nifti']) {
@@ -298,9 +298,14 @@ define([
 
         if (data_set) {
             _.forEach(data_set, function(info) {
-                this.renderer.remove(info.object);
-                if (info.gui) {
-                    this.removeGui(info.gui);
+                if (info && info.object && info.object._children) {
+                    this.renderer.remove(info.object);
+                    if (info.gui) {
+                        this.removeGui(info.gui);
+                    }
+                } else {
+                    // FIXXME: Why does this happen?
+                    console.log('[XTKViewer::removeObject] Trying to remove invalid object, this should not happen!');
                 }
             }.bind(this));
 
@@ -361,25 +366,25 @@ define([
     };
 
     XTKViewer.prototype.reset = function() {
-        _.each(_.keys(this.volumes), function(v){
+        _.each(_.keys(this.volumes), function(v) {
             this.removeObject(v);
-        },this);
-        _.each(_.keys(this.meshes), function(v){
+        }, this);
+        _.each(_.keys(this.meshes), function(v) {
             this.removeObject(v);
-        },this);
-        
+        }, this);
+
         if (this.mainGUI) {
             this.removeGui(this.mainGUI);
         }
     };
 
     XTKViewer.prototype.destroy = function() {
-        _.each(_.keys(this.volumes), function(v){
+        _.each(_.keys(this.volumes), function(v) {
             this.removeObject(v);
-        },this);
-        _.each(_.keys(this.meshes), function(v){
+        }, this);
+        _.each(_.keys(this.meshes), function(v) {
             this.removeObject(v);
-        },this);
+        }, this);
 
         this.renderer.destroy();
         if (this.mainGUI) {
