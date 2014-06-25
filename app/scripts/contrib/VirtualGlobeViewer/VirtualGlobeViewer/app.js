@@ -6,10 +6,11 @@ define([
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
+    'virtualglobeviewer/CoordinateSystem',
     './AOIRenderer',
     'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, App, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, CoordinateSystem, AOIRenderer, App, OpenLayers) {
 
     'use strict';
 
@@ -434,9 +435,16 @@ define([
             var cur_pos = this.navigation.save();
             this.navigation.zoomTo(pos.center, pos.distance, pos.duration, cur_pos.tilt);
         } else {
-
             this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
         }
+    };
+
+    VGV.prototype.setTilt = function(value, duration) {
+        // FIXXME: wunderschoen...
+        var pos = this.navigation.save(),
+            distance = pos.distance * CoordinateSystem.realEarthRadius;
+
+        this.navigation.zoomTo(pos.geoCenter, distance, duration || 1, value);
     };
 
     VGV.prototype.setToI = function(time) {

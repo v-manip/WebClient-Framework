@@ -56,6 +56,10 @@ define([
 
         zoomTo: function(opts) {
             this.globeView.zoomTo(opts);
+        },
+
+        setTilt: function(value, duration) {
+            this.globeView.setTilt(value, duration);
         }
     });
 

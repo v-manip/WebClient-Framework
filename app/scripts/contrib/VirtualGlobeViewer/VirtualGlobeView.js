@@ -260,6 +260,10 @@ define([
             this.getViewer().zoomTo(position);
         },
 
+        setTilt: function(value, duration) {
+            this.getViewer().setTilt(value, duration);
+        },        
+
         _createVGV: function() {
             var vgv = new VGV({
                 canvas: this.el,
