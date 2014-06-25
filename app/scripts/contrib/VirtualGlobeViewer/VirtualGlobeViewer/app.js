@@ -6,10 +6,11 @@ define([
     'virtualglobeviewer/W3DSLayer',
     'virtualglobeviewer/TileWireframeLayer',
     'virtualglobeviewer/Loader/glTF/glTFLoader',
+    'virtualglobeviewer/CoordinateSystem',
     './AOIRenderer',
-        'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
+    'app', // FIXXME: should not be here, this is the wrong layer (really wrong...)!
     'openlayers' // FIXXME: replace OpenLayers with generic format!
-], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, AOIRenderer, App, OpenLayers) {
+], function(GlobWeb, GlobWebRenderContext, SceneGraph, SceneGraphRenderer, W3DSLayer, TileWireframeLayer, GlobWebGLTFLoader, CoordinateSystem, AOIRenderer, App, OpenLayers) {
 
     'use strict';
 
@@ -423,14 +424,27 @@ define([
         this.globe.refresh();
     };
 
+    // var pos = {
+    //     center: [74, 15],
+    //     distance: 10000000,
+    //     duration: 1000,
+    //     tilt: 45
+    // };
     VGV.prototype.zoomTo = function(pos) {
         if (!pos.tilt) {
             var cur_pos = this.navigation.save();
             this.navigation.zoomTo(pos.center, pos.distance, pos.duration, cur_pos.tilt);
         } else {
-
             this.navigation.zoomTo(pos.center, pos.distance, pos.duration, pos.tilt);
         }
+    };
+
+    VGV.prototype.setTilt = function(value, duration) {
+        // FIXXME: wunderschoen...
+        var pos = this.navigation.save(),
+            distance = pos.distance * CoordinateSystem.realEarthRadius;
+
+        this.navigation.zoomTo(pos.geoCenter, distance, duration || 1, value);
     };
 
     VGV.prototype.setToI = function(time) {
@@ -446,7 +460,8 @@ define([
     };
 
     VGV.prototype.onOpacityChange = function(layer_name, opacity) {
-        var layerDesc = this.layerCache[layer_name];
+        // FIXXME: refactor layerCache into an object with a .get('layername') method!
+        var layerDesc = this.layerCache[layer_name + '-WMS'] || this.layerCache[layer_name + '-WMTS'];
         if (typeof layerDesc !== 'undefined') {
             layerDesc.layer.opacity(opacity);
         }
