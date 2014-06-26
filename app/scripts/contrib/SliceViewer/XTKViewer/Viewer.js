@@ -21,6 +21,7 @@ define([
         this.cameraPosition = opts.cameraPosition || [120, 80, 160];
         this.backgroundColor = opts.backgroundColor || [1, 1, 1];
         this.container = opts.elem;
+        this.animSpeed = 1;
 
         // create and initialize a 3D renderer
         var r = this.renderer = new X.renderer3D();
@@ -333,23 +334,91 @@ define([
         var volumegui = this.mainGUI.addFolder(label);
         // now we can configure controllers which..
         // .. switch between slicing and volume rendering
-        var vrController = volumegui.add(volume, 'volumeRendering');
+        var vrController = volumegui.add(volume, 'volumeRendering').name('Volume Rendering');
+
+        var segmentation_folder = volumegui.addFolder('Segmentation Settings');
+
         // the min and max color which define the linear gradient mapping
-        var minColorController = volumegui.addColor(volume, 'minColor');
-        var maxColorController = volumegui.addColor(volume, 'maxColor');
+        segmentation_folder.addColor(volume, 'minColor');
+        segmentation_folder.addColor(volume, 'maxColor');
         // .. configure the volume rendering opacity
-        var opacityController = volumegui.add(volume, 'opacity', 0, 1).listen();
+        segmentation_folder.add(volume, 'opacity', 0, 1).listen();
         // .. and the threshold in the min..max range
-        var lowerThresholdController = volumegui.add(volume, 'lowerThreshold', volume.min, volume.max + 0.0001);
-        var upperThresholdController = volumegui.add(volume, 'upperThreshold', volume.min, volume.max + 0.0001);
-        var lowerWindowController = volumegui.add(volume, 'windowLow', volume.min, volume.max);
-        var upperWindowController = volumegui.add(volume, 'windowHigh', volume.min, volume.max);
+        segmentation_folder.add(volume, 'lowerThreshold', volume.min, volume.max + 0.0001);
+        segmentation_folder.add(volume, 'upperThreshold', volume.min, volume.max + 0.0001);
+        segmentation_folder.add(volume, 'windowLow', volume.min, volume.max);
+        segmentation_folder.add(volume, 'windowHigh', volume.min, volume.max);
         // the indexX,Y,Z are the currently displayed slice indices in the range
         // 0..dimensions-1
 
-        var sliceXController = volumegui.add(volume, 'indexX', 0, volume.range[0] - 1);
-        var sliceYController = volumegui.add(volume, 'indexY', 0, volume.range[1] - 1);
-        var sliceZController = volumegui.add(volume, 'indexZ', 0, Math.round(volume.range[2] - 1));
+        var slice_folder = volumegui.addFolder('Slicing');
+        slice_folder.add(volume, 'indexX', 0, volume.range[0] - 1);
+        slice_folder.add(volume, 'indexY', 0, volume.range[1] - 1);
+        slice_folder.add(volume, 'indexZ', 0, Math.round(volume.range[2] - 1));
+
+        // FIXXME: refactor, this is a quick hack at the moment:
+        var AnimateAxis = function(volume, axis, speed) {
+            this.volume = volume;
+            this.speed = speed || 1;
+            this.isStarted = false;
+            this.curIdx = 0;
+            this.speed = speed;
+            this.oldSpeed = speed;
+
+            this.axisMembers = ['indexX', 'indexY', 'indexZ'];
+
+            if (axis === 'x') {
+                this.axis = this.axisMembers[0];
+                this.maxIdx = volume.range[0] + 1;
+            } else if (axis === 'y') {
+                this.axis = this.axisMembers[1];
+                this.maxIdx = volume.range[1] + 1;
+            } else if (axis === 'z') {
+                this.axis = this.axisMembers[2];
+                this.maxIdx = volume.range[2] + 1;
+            } else {
+                throw Error('[AnimateAxis::ctor] no valid axis given!');
+            }
+
+            this.stop = function() {
+                clearInterval(this.handle);
+                this.isStarted = false;
+            };
+
+            this.start = function() {
+                if (this.isStarted) {
+                    this.stop();
+                } else {
+                    this.handle = setInterval(function() {
+                        if (this.curIdx > this.maxIdx) {
+                            this.curIdx = 0;
+                        }
+                        this.volume[this.axis] = this.curIdx++;
+
+                        // React to speed settings change:
+                        if (this.speed !== this.oldSpeed) {
+                            this.stop();
+                            this.start();
+                        }
+                    }.bind(this), this.speed);
+                    this.isStarted = true;
+                }
+            };
+        };
+
+        var min_speed = 200;
+        var anim_folder = volumegui.addFolder('Animation Settings');
+        var xanimation = new AnimateAxis(volume, 'x', min_speed);
+        anim_folder.add(xanimation, 'start').name('Toggle x-axis animation');
+        anim_folder.add(xanimation, 'speed', 0, min_speed).name('X animation speed').step(1);
+
+        var yanimation = new AnimateAxis(volume, 'y', min_speed);
+        anim_folder.add(yanimation, 'start').name('Toggle y-axis animation');
+        anim_folder.add(yanimation, 'speed', 0, min_speed).name('Y animation speed').step(1);
+
+        var zanimation = new AnimateAxis(volume, 'z', min_speed);
+        anim_folder.add(zanimation, 'start').name('Toggle z-axis animation');
+        anim_folder.add(zanimation, 'speed', 0, min_speed).name('Z animation speed').step(1);
 
         volumegui.open();
 
