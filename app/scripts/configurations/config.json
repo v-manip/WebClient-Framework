@@ -562,7 +562,7 @@
 
     "navBarConfig": {
         "title": "V-MANIP Features & functions",
-        "url": "http://www.v-manip.eox.at",
+        "url": "http://demo.v-manip.eox.at/validation",
         "items": [{
             "name": "Layers",
             "icon": "fa-globe",
