@@ -408,6 +408,21 @@
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             }
+        },{
+            "name": "Digital Elevation Model",
+            "visible": true,
+            "timeSlider": false,
+            "color": "lightgray",
+            "views": [{
+                "id": "Wireframe",
+                "protocol": "DEM",
+                "urls": [
+                    "http://data.eox.at/elevation?"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {}
         }],
         "overlays": [{
             "name": "Streets",

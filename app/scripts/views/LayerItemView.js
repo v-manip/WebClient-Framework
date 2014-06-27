@@ -94,7 +94,13 @@
 		    		var checkbox = $( "input[type$='checkbox']", this.$el);
 		    		checkbox.click();
 		    	}
-		    }
+		    },
+
+			onRender: function(){
+			 	if (this.model.get("name") == "Digital Elevation Model"){
+			 		this.$el.empty();
+			 	}
+			 }
 
 		});
 		return {'LayerItemView':LayerItemView};
