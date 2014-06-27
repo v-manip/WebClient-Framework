@@ -113,7 +113,11 @@
 
 				//Productsare loaded and added to the global collection
                 var ordinal = 0;
+                var domain = [];
+                var range = [];
+
 				_.each(config.mapConfig.products, function(product) {
+					var p_color = product.color ? product.color : autoColor.getColor();
 					globals.products.add(
 						new m.LayerModel({
 							name: product.name,
@@ -122,7 +126,7 @@
 							timeSlider: product.timeSlider,
 							// Default to WMS if no protocol is defined
 							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
-							color: product.color ? product.color : autoColor.getColor() ,
+							color: p_color,
 							//time: products.time, // Is set in TimeSliderView on time change.
 								opacity: 1,
 								views: product.views,
@@ -135,9 +139,19 @@
 								processes: product.processes 
 							})
 					);
+
+					if(product.processes){
+						domain.push(product.processes[0].layer_id);
+						range.push(p_color);
+					}
+					
 					console.log("Added product " + product.name );
 				}, this);
 
+				var productcolors = d3.scale.ordinal().domain(domain).range(range);
+
+				globals.objects.add('productcolors', productcolors);
+	      	
 				//Overlays are loaded and added to the global collection
 				_.each(config.mapConfig.overlays, function(overlay) {
 

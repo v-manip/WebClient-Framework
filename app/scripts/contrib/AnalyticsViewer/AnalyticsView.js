@@ -83,6 +83,8 @@ define(['backbone.marionette',
 
 			render: function(type) {
 
+				var colors = globals.objects.get("productcolors");
+
 				this.plot_type = type;
 
 				if(type!="overlay")
@@ -90,7 +92,8 @@ define(['backbone.marionette',
 				
 				var args = {
 					selector: this.$('.d3canvas')[0],
-					data: this.plotdata
+					data: this.plotdata,
+					colors: colors
 				};
 
 				switch (type){
@@ -151,8 +154,7 @@ define(['backbone.marionette',
 		            			this.activeWPSproducts.push(process.layer_id);
 		            		},this);
 		              	}
-		              	this.checkSelections();
-		              
+		              			              
 		            }else{
 		            	_.each(product.get("processes"), function(process){
 	            			if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
@@ -160,6 +162,7 @@ define(['backbone.marionette',
 			              	console.log(this.activeWPSproducts);
 	            		},this);
 		            }
+		            this.checkSelections();
 		          }
 		        }
 			},
