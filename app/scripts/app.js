@@ -113,31 +113,45 @@
 
 				//Productsare loaded and added to the global collection
                 var ordinal = 0;
-				_.each(config.mapConfig.products, function(products) {
+                var domain = [];
+                var range = [];
+
+				_.each(config.mapConfig.products, function(product) {
+					var p_color = product.color ? product.color : autoColor.getColor();
 					globals.products.add(
 						new m.LayerModel({
-							name: products.name,
-							visible: products.visible,
+							name: product.name,
+							visible: product.visible,
                             ordinal: ordinal,
-							timeSlider: products.timeSlider,
+							timeSlider: product.timeSlider,
 							// Default to WMS if no protocol is defined
-							timeSliderProtocol: (products.timeSliderProtocol) ? products.timeSliderProtocol : "WMS",
-							color: products.color ? products.color : autoColor.getColor() ,
+							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
+							color: p_color,
 							//time: products.time, // Is set in TimeSliderView on time change.
 								opacity: 1,
-								views: products.views,
+								views: product.views,
 								view: {isBaseLayer: false},
 								download: {
-									id: products.download.id,
-									protocol: products.download.protocol,
-									url: products.download.url
+									id: product.download.id,
+									protocol: product.download.protocol,
+									url: product.download.url
 								},
-								processes: products.processes 
+								processes: product.processes 
 							})
 					);
-					console.log("Added product " + products.name );
+
+					if(product.processes){
+						domain.push(product.processes[0].layer_id);
+						range.push(p_color);
+					}
+					
+					console.log("Added product " + product.name );
 				}, this);
 
+				var productcolors = d3.scale.ordinal().domain(domain).range(range);
+
+				globals.objects.add('productcolors', productcolors);
+	      	
 				//Overlays are loaded and added to the global collection
 				_.each(config.mapConfig.overlays, function(overlay) {
 

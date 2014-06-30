@@ -94,7 +94,15 @@
 		    		var checkbox = $( "input[type$='checkbox']", this.$el);
 		    		checkbox.click();
 		    	}
-		    }
+		    },
+
+			onRender: function(){
+				//TODO: This is a somwhat temporary solution, we need to think about
+				// how we want to handle the DEM for the Virtual Globe
+			 	if (this.model.get("name") == "Digital Elevation Model"){
+			 		this.$el.empty();
+			 	}
+			 }
 
 		});
 		return {'LayerItemView':LayerItemView};
