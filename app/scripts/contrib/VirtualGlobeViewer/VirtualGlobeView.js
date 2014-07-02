@@ -3,12 +3,12 @@ define([
     'app',
     'communicator',
     'globals',
-    './GlobeRenderer/Globe'
-], function(BaseView, App, Communicator, globals, Globe) {
+    './VirtualGlobeViewer/app'
+], function(BaseView, App, Communicator, globals, VGV) {
 
     'use strict';
 
-    var GlobeView = BaseView.extend({
+    var VirtualGlobeView = BaseView.extend({
 
         tagName: 'canvas',
 
@@ -17,6 +17,7 @@ define([
         initialize: function(opts) {
             BaseView.prototype.initialize.call(this, opts);
             this.enableEmptyView(false);
+            this.selectinType = null;
 
             this._startPosition = opts.startPosition;
             if (typeof this._startPosition === 'undefined') {
@@ -28,19 +29,30 @@ define([
                 }
             };
 
-            this._initialLayers = {};
             this.currentToI = this.toi();
         },
 
+        // FIXXME: this method should be put into the BaseView to do a basic setup of
+        // the component. Developers can then hook to the 'didInsertElement' function
+        // in using VMANIP 'actions' (via an 'afterDOMInsert' action). 'Actions' have
+        // to be implemented first ;-)
         didInsertElement: function() {
             if (!this.getViewer()) {
-                this.setViewer(this._createGlobe());
+                this.setViewer(this._createVGV());
                 this.getViewer().setToI(this.toi());
+
+                // FIXXME: this should be triggered by the BaseView!
                 this._setLayersFromAppContext();
+
                 this.zoomTo(this._startPosition);
             }
 
+            // FIXXME: After implementing VMANIP 'actions' most of the 'listenTo' calls
+            // can be done implicitly in reading the 'actions' has and wiring up the
+            // onXXXHandler() actions there to the corresponding mediator event. This will
+            // help to do a cleanup of this repetitive code.
             this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
+            this.listenTo(Communicator.mediator, 'selection:activated', this._onSelectionActivated);
             this.listenTo(Communicator.mediator, 'map:setUrl', this.zoomTo);
             this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
             this.listenTo(Communicator.mediator, 'map:layer:change', this._onLayerChange);
@@ -54,75 +66,94 @@ define([
             // NOTE: The 'listenTo' bindings are automatically unbound by marionette
         },
 
+        supportsLayer: function(model) {
+            var view = _.find(model.get('views'), function(view) {
+                return (view.protocol.toLowerCase() === 'w3ds' && view.type.toLowerCase() === 'vertical_curtain') ||
+                    view.protocol.toLowerCase() === 'wms' ||
+                    view.protocol.toLowerCase() === 'wmts';
+            });
+
+            if (view) {
+                return view;
+            }
+
+            return null;
+        },
+
+        onStartup: function(initial_layers) {
+            this.getViewer().clearCache();
+            _.forEach(initial_layers, function(desc, name) {
+                // FIXXME The VGV and the internal viewer have to be ported to display a 'view', not a 'model'!
+                // if (this.supportsLayer(desc.model)) {
+                this.getViewer().addLayer(desc.model, desc.isBaseLayer);
+                // }
+            }.bind(this));
+            this._sortOverlayLayers();
+        },
+
+        //----------------//
+        // VMANIP ACTIONS //
+        //----------------//
+
+        // FIXXME: create a distinct hash for that, e.g.:
+        // actions: {
+        //     onResize: function() {},
+        //     onLayerAdd: function() {},
+        //     onLayerRemove: function() {}
+        //     // ...
+        // }
+        // This way we can provide a defined interface for all
+        // default actions VMANIP is providing us, which is encapsulated
+        // clearly within the 'actions' hash. This is basically the 
+        // concrete interface implementation for the specific view.
+        //
+        // Note: This approach is inspired by Ember's 'actions' hash.
+
         onResize: function() {
-            this.getViewer().updateViewport();
+            if (this.getViewer()) {
+                this.getViewer().updateViewport();
+            }
         },
 
-        _addInitialLayer: function(model, isBaseLayer) {
-            this._initialLayers[model.get('name')] = {
-                model: model,
-                isBaseLayer: isBaseLayer
-            };
-        },
-
-        /** Adds the layers selected in the GUI and performs their setup (opacity, sorting oder, etc.).
-         *  Layers are either baselayers, products or overlays.
-         */
-        _setLayersFromAppContext: function() {
-            this._initialLayers = {};
-
-            globals.baseLayers.each(function(model) {
-                if (model.get('visible')) {
-                    this._addInitialLayer(model, true);
-                    console.log('[VirtualGlobeViewController::setLayersFromAppContext] added baselayer "' + model.get('name') + '"');
-                };
-            }.bind(this));
-
-            globals.products.each(function(model) {
-                if (model.get('visible')) {
-                    console.log('model: ' + model.get('name') + ' / state: ' + model.get('visible'));
-                    this._addInitialLayer(model, false);
-                    console.log('[VirtualGlobeViewController::setLayersFromAppContext] added products "' + model.get('name') + '"');
-                }
-            }.bind(this));
-
-            globals.overlays.each(function(model) {
-                if (model.get('visible')) {
-                    this._addInitialLayer(model, false);
-                    console.log('[VirtualGlobeViewController::setLayersFromAppContext] added overlays "' + model.get('name') + '"');
-                }
-            }.bind(this));
-
-            this._initLayers();
-        },
-
-        _addAreaOfInterest: function(geojson) {
-            this.getViewer().addAreaOfInterest(geojson);
-        },
-
-        _addLayer: function(model, isBaseLayer) {
+        onLayerAdd: function(model, isBaseLayer) {
             this.getViewer().addLayer(model, isBaseLayer);
         },
 
-        _removeLayer: function(model, isBaseLayer) {
+        onLayerRemove: function(model, isBaseLayer) {
             this.getViewer().removeLayer(model, isBaseLayer);
+        },
+
+        //-------------------//
+        // PRIVATE INTERFACE //
+        //-------------------//
+
+        _addAreaOfInterest: function(openlayers_geometry, coords, color) {
+            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
+            // when the selection items in the toolbar are clicked. This event triggers this method
+            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
+            // method.
+            if(this.selectionType == "single"){
+                this.getViewer().removeFeatures();
+            }
+
+            if (coords) {
+                // var coords = this._convertCoordsFromOpenLayers(openlayers_geometry);
+                var c = this._hexToRGB(color);
+                this.getViewer().addAreaOfInterest(coords, [c.r / 255, c.g / 255, c.b / 255, 1]);
+            }
+        },
+
+        _hexToRGB: function(hex) {
+            var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
         },
 
         _removeAllOverlays: function() {
             this.getViewer().removeAllOverlays();
-        },
-        
-        // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
-        _onLayerChange: function(options) {
-            var model = this.getModelForLayer(options.name, options.isBaseLayer); 
-
-            if (options.visible) {
-                this._addLayer(model, options.isBaseLayer);
-                console.log('[GlobeView::onLayerChange] selected ' + model.get('name'));
-            } else {
-                this._removeLayer(model, options.isBaseLayer);
-                console.log('[GlobeView::onLayerChange] deselected ' + model.get('name'));
-            }
         },
 
         _onOpacityChange: function(options) {
@@ -136,6 +167,17 @@ define([
             var endtime = new Date(time.end);
 
             this.getViewer().setToI(starttime.toISOString() + '/' + endtime.toISOString());
+        },
+
+        // arg.id: bboxSelection, polygonSelection, lineSelection, pointSelection
+        // arg.active: true, false
+        _onSelectionActivated: function(arg) {
+            this.selectionType = arg.selectionType;
+            if (arg.active) {
+                this.getViewer().enableAOISelection(arg.id, this.selectionType);
+            } else {
+                this.getViewer().disableAOISelection();
+            }
         },
 
         toi: function() {
@@ -154,14 +196,6 @@ define([
 
         _sortOverlayLayers: function() {
             this.getViewer().sortOverlayLayers();
-        },
-
-        _initLayers: function() {
-            this.getViewer().clearCache();
-            _.each(this._initialLayers, function(desc, name) {
-                this.getViewer().addLayer(desc.model, desc.isBaseLayer);
-            }.bind(this));
-            this._sortOverlayLayers();
         },
 
         _onMapCenter: function(pos) {
@@ -217,8 +251,7 @@ define([
             var position = {
                 center: [pos.x, pos.y],
                 distance: dis,
-                duration: 100,
-                tilt: 45
+                duration: 100
             }
             this.zoomTo(position);
         },
@@ -227,15 +260,111 @@ define([
             this.getViewer().zoomTo(position);
         },
 
-        _createGlobe: function() {
-            var globe = new Globe({
-                canvas: this.el
+        setTilt: function(value, duration) {
+            this.getViewer().setTilt(value, duration);
+        },        
+
+        _createVGV: function() {
+            var vgv = new VGV({
+                canvas: this.el,
+                w3dsBaseUrl: Communicator.mediator.config.backendConfig.W3DSDataUrl
             });
 
-            // Sets the initial colorramp defined in 'config.json':
-            globe.setColorRamp(Communicator.mediator.colorRamp);
+            function convertZoomValue(vgv_zoom_value) {
+                // console.log('vgv_zoom_value:' + vgv_zoom_value);
 
-            return globe;
+                var map_zoom_value = 13;
+
+                if (vgv_zoom_value > 0.0 && vgv_zoom_value <= 0.0024) {
+                    map_zoom_value = 13;
+                } else if (vgv_zoom_value > 0.0024 && vgv_zoom_value <= 0.004) {
+                    map_zoom_value = 12;
+                } else if (vgv_zoom_value > 0.004 && vgv_zoom_value <= 0.0047) {
+                    map_zoom_value = 11;
+                } else if (vgv_zoom_value > 0.0047 && vgv_zoom_value <= 0.017) {
+                    map_zoom_value = 10;
+                } else if (vgv_zoom_value > 0.017 && vgv_zoom_value <= 0.03) {
+                     map_zoom_value = 9;
+                } else if (vgv_zoom_value > 0.03 && vgv_zoom_value <= 0.07) {
+                     map_zoom_value = 8;
+                } else if (vgv_zoom_value > 0.07 && vgv_zoom_value <= 0.18) {
+                     map_zoom_value = 7;
+                } else if (vgv_zoom_value > 0.18 && vgv_zoom_value <= 0.5) {
+                     map_zoom_value = 6;
+                } else if (vgv_zoom_value > 0.5 && vgv_zoom_value <= 0.2) {
+                    map_zoom_value = 5;
+                } else if (vgv_zoom_value > 0.2 && vgv_zoom_value <= 1.0) {
+                     map_zoom_value = 4;
+                } else if (vgv_zoom_value > 1.0 && vgv_zoom_value <= 2.0) {
+                     map_zoom_value = 3;
+                } else if (vgv_zoom_value > 2.0 && vgv_zoom_value <= 2.8) {
+                     map_zoom_value = 2;
+                } else if (vgv_zoom_value > 2.8) {
+                     map_zoom_value = 1;
+                };
+
+                // console.log('map_zoom_value: ' + map_zoom_value);
+
+                return map_zoom_value;
+            };
+
+            vgv.setOnPanEventCallback(function(navigation, dx, dy) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
+            vgv.setOnZoomEventCallback(function(navigation, delta, scale) {
+                var pos = navigation.save(),
+                    dist = pos.distance,
+                    map_dist = 1;
+
+                this.stopListening(Communicator.mediator, 'map:center');
+
+                Communicator.mediator.trigger("map:center", {
+                    x: pos.geoCenter[0],
+                    y: pos.geoCenter[1],
+                    l: convertZoomValue(dist)
+                });
+
+                this.listenTo(Communicator.mediator, 'map:center', this._onMapCenter);
+            }.bind(this));
+
+            // When a new AOI is selected in the viewer this callback gets executed:
+            vgv.setOnNewAOICallback(function(aoi_coords) {
+                // FIXXME: Openlayers feature is used in the selection changed event, this has to be changed at some point
+
+                var points = [];
+                for (var idx = 0; idx < aoi_coords.length; idx++) {
+                    points.push(new OpenLayers.Geometry.Point(aoi_coords[idx].x, aoi_coords[idx].y));
+                };
+
+                var ring = new OpenLayers.Geometry.LinearRing(points);
+                var polygon = new OpenLayers.Geometry.Polygon([ring]);
+                var feature = new OpenLayers.Feature.Vector(polygon);
+
+                this.stopListening(Communicator.mediator, 'selection:changed');
+                Communicator.mediator.trigger('selection:changed', feature, aoi_coords);
+                this.listenTo(Communicator.mediator, 'selection:changed', this._addAreaOfInterest);
+            }.bind(this));
+
+
+            // console.log('W3DS data url: ' + Communicator.mediator.config.backendConfig.W3DSDataUrl);
+
+            // Sets the initial colorramp defined in 'config.json':
+            vgv.setColorRamp(Communicator.mediator.colorRamp);
+
+            return vgv;
         },
 
         _colorRampChange: function(config) {
@@ -247,6 +376,6 @@ define([
         }
     });
 
-    return GlobeView;
+    return VirtualGlobeView;
 
 }); // end module definition

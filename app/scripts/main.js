@@ -51,6 +51,7 @@
 		// 	console.log("link: " + nodes.item(i).href);
 		// }
 
+
 		$.get("scripts/config.json", function(values) {
 			
 			// Configure Debug options
@@ -66,6 +67,7 @@
 			// FIXXME: Communicator.mediator is the global context...
 			Communicator.mediator.backendConfig = values.backendConfig;
 			Communicator.mediator.colorRamp = values.colorRamp;
+			Communicator.mediator.config = values;
 
 			_.each(values.modules, function(module) {
 				modules.push(module);
@@ -115,6 +117,9 @@
 				});
 
 				App.start();
+
+				// Global settings:
+				App.isMapPanning = false;
 			});
 		});
 	});

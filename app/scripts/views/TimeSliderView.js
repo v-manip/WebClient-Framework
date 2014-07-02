@@ -28,7 +28,10 @@
 
         this.listenTo(Communicator.mediator, "map:layer:change", this.changeLayer);
         this.listenTo(Communicator.mediator, "map:position:change", this.updateExtent);
+        this.listenTo(Communicator.mediator, "date:selection:change", this.onDateSelectionChange);
+
         Communicator.reqres.setHandler('get:time', this.returnTime);
+
 
         var selectionstart = new Date(this.options.brush.start);
         var selectionend = new Date(this.options.brush.end);
@@ -70,6 +73,10 @@
           start: evt.originalEvent.detail.start,
           end: evt.originalEvent.detail.end
         };
+      },
+
+      onDateSelectionChange: function(opt) {
+        this.slider.select(opt.start, opt.end);
       },
 
       changeLayer: function (options) {

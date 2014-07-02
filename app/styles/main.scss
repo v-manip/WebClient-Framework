@@ -13,6 +13,7 @@ $iconWhiteSpritePath: "../images/glyphicons-halflings-white.png";
 @import "stylesheet";
 @import "optionscontrol";
 @import "colorramp";
+@import "story";
 
 /* Not used right now ;)
 #preloadedImages {
@@ -160,7 +161,7 @@ button[active=active] {
  * Layer control styles
  */
 .layercontrol {
-    width: 20em;
+    width: 21.8em;
     top: 10em;
     left: 3em;
     font-size: .9em;

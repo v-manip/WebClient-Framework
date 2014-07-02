@@ -125,10 +125,10 @@ define([
 			});
 
 			if (view) {
-				return true;
+				return view;
 			}
 
-			return false;
+			return null;
 		},
 
 		// onSortProducts: function(productLayers) {
@@ -142,20 +142,33 @@ define([
 		// 	console.log("Map products sorted");
 		// },
 
-		// options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
-		onLayerChange: function(model, isVisible) {
-			if (!model.hasOwnProperty('isBaseLayer')) {
-				// FIXXME: reasonably port to model.get('views')!
-				var view = _.find(model.get('views'), function(view) {
-			        return view.protocol.toUpperCase() === 'WMS';
-			    });				
-			    if (view) {
-					var layer = this.context.getLayerById(view.id, 'imagery');
-					this.context.trigger('change:layer:visibility', layer, isVisible);
-				}
-			}
-			return;
+		onLayerAdd: function(model, isBaseLayer, views) {
+			_.forEach(views, function(view) {
+				var layer = this.context.getLayerById(view.id, 'imagery');
+				this.context.trigger('change:layer:visibility', layer, true);
+			}.bind(this));
 		},
+
+		onLayerRemove: function(model, isBaseLayer, views) {
+			_.forEach(views, function(view) {
+				var layer = this.context.getLayerById(view.id, 'imagery');
+				this.context.trigger('change:layer:visibility', layer, true);
+			}.bind(this));
+		},
+
+		// // options: { name: 'xy', isBaseLayer: 'true/false', visible: 'true/false'}
+		// onLayerChange: function(model, isVisible) {
+		// 	if (!model.hasOwnProperty('isBaseLayer')) {
+		// 		var view = _.find(model.get('views'), function(view) {
+		// 	        return view.protocol.toUpperCase() === 'WMS';
+		// 	    });				
+		// 	    if (view) {
+		// 			var layer = this.context.getLayerById(view.id, 'imagery');
+		// 			this.context.trigger('change:layer:visibility', layer, isVisible);
+		// 		}
+		// 	}
+		// 	return;
+		// },
 
 		// onSortUpdated: function(productLayers) {
 		// 	globals.products.each(function(product) {
@@ -181,7 +194,7 @@ define([
 		didInsertElement: function() {
 			this.listenTo(this.legacyContext(), 'selection:changed', this._setAreaOfInterest);
 			this.listenTo(this.legacyContext(), 'time:change', this._onTimeChange);
-			this.listenTo(this.legacyContext(), 'map:layer:change', this.onLayerChange);
+			// this.listenTo(this.legacyContext(), 'map:layer:change', this.onLayerChange);
 			// this.listenTo(this.legacyContext(), "productCollection:sortUpdated", this.onSortUpdated);
 			this.listenTo(this.legacyContext(), 'productCollection:updateOpacity', this._onUpdateOpacity);
 		},
@@ -209,7 +222,7 @@ define([
 					toi = this.currentToI = starttime.toISOString() + '/' + endtime.toISOString();
 				}
 
-				var bounds = area.bounds;
+				var bounds = area.geometry.bounds;
 				this.currentAoI = [bounds.left, bounds.bottom, bounds.right, bounds.top];
 
 				this._createScene(this.options, {

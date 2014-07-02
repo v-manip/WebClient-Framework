@@ -44,7 +44,8 @@
 				id : '',
 				protocol: '',
 				url : [],
-			}
+			},
+			processes : []
 			
 			
 		});

@@ -34,6 +34,8 @@
 			},
 			onShow: function(view){
 
+				this.listenTo(Communicator.mediator, "layer:activate", this.layerActivate);
+
 				$( ".sortable" ).sortable({
 					revert: true,
 					delay: 90,
@@ -68,33 +70,56 @@
                 	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
                     if (layer != -1) {
                     	// TODO: Here we should go through all views, or maybe only url is necessary?
-                    	var url = layer.get('views')[0].urls[0];
+                    	var url = layer.get('views')[0].urls[0]+"?";
                     	
+
                     	if (url.indexOf('https') > -1){
+
+                    		var layer = layer.get('views')[0].id;
+							var req = "LAYERS=" + layer + "&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
+							req += "&BBOX=33.75,56.25,33.80,56.50&WIDTH=2&HEIGHT=2";
+							req = url + req;
+
 	                    	$.ajax({
-							    url: url,
+							    url: req,
 							    type: "GET",
-							    dataType:"text xml",
+							    suppressErrors: true,
+							    xhrFields: {
+							      withCredentials: true
+							   },
+							    //dataType:"text xml",
 							    success: function(xml, textStatus, xhr) {
-							        console.log(arguments);
-							        console.log(xhr.status);
+							        //console.log(arguments);
+							        //console.log(xhr.status);
+							        //TODO: Check if image is returend, if not do not activate and show not authorized message
+							        Communicator.mediator.trigger('map:layer:change', options);
 							    },
 							    complete: function(xhr, textStatus) {
-							        console.log(xhr.status);
+							        //console.log(xhr.status);
 							    },
 							    error: function(jqXHR, textStatus, errorThrown) {
+							    	//console.log(jqXHR, textStatus, errorThrown);
 
-							    	console.log(jqXHR, textStatus, errorThrown);
+							    	if (jqXHR.status == 403){
+							    		$("#error-messages").append(
+					                              '<div class="alert alert-warning alert-danger">'+
+					                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+					                              '<strong>Warning!</strong> You are not authorized to access this product' +
+					                            '</div>'
+					                    );
+							    	}else{
+							    		
+							    		this.authview = new av.AuthView({
+								    		model: new am.AuthModel({url:req}),
+								    		template: iFrameTmpl,
+								    		layerprop: options
+								    	});
 
-							    	this.authview = new av.AuthView({
-							    		model: new am.AuthModel({url:url}),
-							    		template: iFrameTmpl,
-							    		layerprop: options
-							    	});
+								    	Communicator.mediator.trigger("progress:change", false);
 
-							    	Communicator.mediator.trigger("progress:change", false);
+								    	App.optionsBar.show(this.authview);
 
-							    	App.optionsBar.show(this.authview);
+							    	}
 							    }
 							});
 	                    }else{
@@ -129,7 +154,23 @@
 		    onOpacityAdjust: function(evt, ui) {
 		    	this.model.set("opacity", ui.value/100);
 		    	Communicator.mediator.trigger('productCollection:updateOpacity', {model:this.model, value:ui.value/100});
-		    }
+		    },
+
+		    layerActivate: function(layer){
+		    	if(this.model.get('views') && this.model.get('views')[0].id == layer){
+		    		this.model.set("visible", true);
+		    		var checkbox = $( "input[type$='checkbox']", this.$el);
+		    		checkbox.click();
+		    	}
+		    },
+
+			onRender: function(){
+				//TODO: This is a somwhat temporary solution, we need to think about
+				// how we want to handle the DEM for the Virtual Globe
+			 	if (this.model.get("name") == "Digital Elevation Model"){
+			 		this.$el.empty();
+			 	}
+			 }
 
 		});
 		return {'LayerItemView':LayerItemView};

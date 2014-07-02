@@ -74,18 +74,19 @@ module.exports = function (grunt) {
                 hostname: '0.0.0.0'
             },
             proxies: [{
-                context: '/browse/ows',
-                host: '192.168.122.191',
-                port: 443,
-                https: true,
+                context: '/ows',
+                host: 'localhost',
+                // host: 'http://demo.v-manip.eox.at',
+                port: 38000,
+                // port: 80,
+                https: false,
                 changeOrigin: true,
-                xforward: false,
-                rejectUnauthorized: false
+                xforward: false
             }, {
                 context: '/c',
-                host: '192.168.122.191',
-                port: 443,
-                https: true,
+                host: 'localhost',
+                port: 3080,
+                https: false,
                 changeOrigin: true,
                 xforward: false
             }, {
@@ -380,8 +381,8 @@ module.exports = function (grunt) {
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
-                        'scripts/vendor/rectangularboxviewer/*.js',
-                        'data/**'
+                        'scripts/vendor/**',
+                        'scripts/core/ColorRamp/ColorRampControl.hbs'
                     ]
                 },{
                     expand: true,
