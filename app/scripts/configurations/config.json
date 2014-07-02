@@ -477,6 +477,29 @@
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             }
         },{
+            "name": "SPOT 4",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "SPOT4_View",
+                "protocol": "WMS",
+                "urls": [
+                    "https://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SPOT4_View",
+                "protocol": "EOWCS",
+                "url": "https://demo.v-manip.eox.at/unsec/ows"
+            },
+            "processes" : [{
+                "id": "getData",
+                "layer_id": "SPOT4_Pente"
+            }]
+        },{
             "name": "Tininnilik",
             "visible": false,
             "timeSlider": true,
