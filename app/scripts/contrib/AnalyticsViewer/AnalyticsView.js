@@ -282,7 +282,7 @@ define(['backbone.marionette',
 						srid: "4326"
 					});
 
-					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
+					$.post( "https://demo.v-manip.eox.at/unsec/ows", request_process, function( data ) {
 						that.plotdata = data;
 						that.render(that.plot_type);
 					});

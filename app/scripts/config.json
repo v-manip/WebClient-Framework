@@ -400,7 +400,7 @@
                 "url": "https://demo.v-manip.eox.at/unsec/ows"
             },
             "processes" : [{
-                "id": "getValuesThroughTime",
+                "id": "getData",
                 "layer_id": "SPOT4_Pente"
             }]
         },{
