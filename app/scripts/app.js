@@ -39,7 +39,7 @@
 					var obj = {};
 					obj[region.name] = "#" + region.name;
 					this.addRegions(obj);
-					//console.log("Added region " + obj[region.name]);
+					console.log("Added region " + obj[region.name]);
 				}, this);
 
 				//Load all configured views
@@ -393,12 +393,16 @@
                 });
 
                 $(document).ajaxError(function( event, request, settings ) {
-                        $("#error-messages").append(
-                                  '<div class="alert alert-warning alert-danger">'+
-                                  '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                                  '<strong>Warning!</strong> Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0] +
-                                '</div>'
-                        );
+                	if(settings.suppressErrors) {
+				        return;
+				    }
+
+                    $("#error-messages").append(
+                              '<div class="alert alert-warning alert-danger">'+
+                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+                              '<strong>Warning!</strong> Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0] +
+                            '</div>'
+                    );
                 });
 
                 // Remove loading screen when this point is reached in the script

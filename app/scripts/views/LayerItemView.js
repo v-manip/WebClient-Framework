@@ -4,10 +4,15 @@
 	root.define([
 		'backbone',
 		'communicator',
+		'views/AuthView',
+		'models/AuthModel',
 		'hbs!tmpl/BulletLayer',
+		'hbs!tmpl/iFrame',
+		'globals',
+		'app',
 		'underscore'
 	],
-	function( Backbone, Communicator, BulletLayerTmpl) {
+	function( Backbone, Communicator, av, am, BulletLayerTmpl, iFrameTmpl, globals, App) {
 		var LayerItemView = Backbone.Marionette.ItemView.extend({
 			tagName: "li",
 			events: {
@@ -25,6 +30,7 @@
 			        min: 0
 			    });
 			    this.$slider.width(100);
+			    this.authview = null;
 			},
 			onShow: function(view){
 
@@ -60,7 +66,69 @@
                 if (this.model.get('view').isBaseLayer)
                 	isBaseLayer = true;
                 var options = { name: this.model.get('name'), isBaseLayer: isBaseLayer, visible: evt.target.checked };
-                Communicator.mediator.trigger('map:layer:change', options);
+                if( !isBaseLayer && evt.target.checked ){
+                	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
+                    if (layer != -1) {
+                    	// TODO: Here we should go through all views, or maybe only url is necessary?
+                    	var url = layer.get('views')[0].urls[0]+"?";
+                    	
+
+                    	if (url.indexOf('https') > -1){
+
+                    		var layer = layer.get('views')[0].id;
+							var req = "LAYERS=" + layer + "&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
+							req += "&BBOX=33.75,56.25,33.80,56.50&WIDTH=2&HEIGHT=2";
+							req = url + req;
+
+	                    	$.ajax({
+							    url: req,
+							    type: "GET",
+							    suppressErrors: true,
+							    xhrFields: {
+							      withCredentials: true
+							   },
+							    //dataType:"text xml",
+							    success: function(xml, textStatus, xhr) {
+							        //console.log(arguments);
+							        //console.log(xhr.status);
+							        //TODO: Check if image is returend, if not do not activate and show not authorized message
+							        Communicator.mediator.trigger('map:layer:change', options);
+							    },
+							    complete: function(xhr, textStatus) {
+							        //console.log(xhr.status);
+							    },
+							    error: function(jqXHR, textStatus, errorThrown) {
+							    	//console.log(jqXHR, textStatus, errorThrown);
+
+							    	if (jqXHR.status == 403){
+							    		$("#error-messages").append(
+					                              '<div class="alert alert-warning alert-danger">'+
+					                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+					                              '<strong>Warning!</strong> You are not authorized to access this product' +
+					                            '</div>'
+					                    );
+							    	}else{
+							    		
+							    		this.authview = new av.AuthView({
+								    		model: new am.AuthModel({url:req}),
+								    		template: iFrameTmpl,
+								    		layerprop: options
+								    	});
+
+								    	Communicator.mediator.trigger("progress:change", false);
+
+								    	App.optionsBar.show(this.authview);
+
+							    	}
+							    }
+							});
+	                    }else{
+	                    	Communicator.mediator.trigger('map:layer:change', options);
+	                    }
+                    }
+                } else if (!evt.target.checked){
+                	Communicator.mediator.trigger('map:layer:change', options);
+                }
             },
 
             drop: function(event, index) {

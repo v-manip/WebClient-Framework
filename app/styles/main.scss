@@ -95,6 +95,25 @@ div#preload {
   z-index: $layer-gui;
 }
 
+.authview{
+  width: 50em;
+  height: 80%;
+  top: 5em;
+  left: 50%;
+  margin: 0 0 0 -25em;
+  font-size: 1em;
+  position: absolute;
+}
+
+.authview .panel-body{
+  height: 97%;
+}
+
+#content{
+  width: 100%;
+  height: 100%;
+}
+
 
 /*
  * Panels & Modals
