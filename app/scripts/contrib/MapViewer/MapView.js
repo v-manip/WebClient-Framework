@@ -17,6 +17,10 @@ define(['backbone.marionette',
 				this.isClosed = true;
 				this.tileManager = options.tileManager;
 				this.selectionType = null;
+				this.overlay_index = 99;
+				this.diffimage_index = this.overlay_index-10;
+				this.diff_overlay = null;
+				this.overlay_layers = [];
 
 				$(window).resize(function() {
 					if (this.map) {
@@ -78,17 +82,7 @@ define(['backbone.marionette',
 					//}
 				}, this);
 
-				// Go through all products and add them to the map
-                globals.overlays.each(function(overlay){
-					// FIXXME: quick hack to not include W3DS layers:
-					//if (this.isModelCompatible(overlay)) {
-						// console.log('protocol: ' + overlay.get('view').protocol);
-						var layer = this.createLayer(overlay);
-						if (layer) {
-							this.map.addLayer(layer);
-						}
-					//}
-                }, this);
+				
 
 				// Order (sort) the product layers based on collection order
 				this.onSortProducts();
@@ -123,6 +117,19 @@ define(['backbone.marionette',
 						}
 					)
 				};
+
+				// Go through all products and add them to the map
+                globals.overlays.each(function(overlay){
+					// FIXXME: quick hack to not include W3DS layers:
+					//if (this.isModelCompatible(overlay)) {
+						// console.log('protocol: ' + overlay.get('view').protocol);
+						var layer = this.createLayer(overlay);
+						if (layer) {
+							this.map.addLayer(layer);
+							this.overlay_layers.push(layer);
+						}
+					//}
+                }, this);
 
 				for (var key in this.drawControls) {
 					this.map.addControl(this.drawControls[key]);
@@ -450,7 +457,34 @@ define(['backbone.marionette',
 			},
 			isEventListenedTo: function(eventName) {
 			  return !!this._events[eventName];
+			},
+
+			onLoadImage: function(url, selection_bounds){
+
+				proj4326 = new OpenLayers.Projection("EPSG:4326");
+				bounds = selection_bounds;
+
+				bounds.transform(proj4326, this.map.getProjectionObject());
+				this.diff_overlay = new OpenLayers.Layer.Image('diff_overlay', url, bounds, new OpenLayers.Size(3400, 1600), {
+				 'isBaseLayer': false,
+				 'alwaysInRange': true
+				});
+				this.map.addLayer(this.diff_overlay);
+				this.diffimage_index = this.map.getLayerIndex(this.diff_overlay);
+				console.log("image "+this.diffimage_index);
+
+				var minzindex = 9999;
+
+				_.each(this.overlay_layers, function(layer){
+					 var zindex = layer.getZIndex();
+					 if (zindex < minzindex)
+					 	minzindex = zindex;
+				}.bind(this));
+
+				this.diff_overlay.setZIndex(minzindex-1);
+	
 			}
+
 		});
 
 		return MapView;

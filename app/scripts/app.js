@@ -18,7 +18,8 @@
 			'controller/SelectionManagerController',
 			'controller/LoadingController',
 			'controller/LayerController',
-			'controller/SelectionController'
+			'controller/SelectionController',
+			'controller/DifferenceController'
 		],
 
 		function(Backbone, globals, DialogRegion,
