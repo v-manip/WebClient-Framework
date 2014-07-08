@@ -32,7 +32,12 @@ define(['backbone.marionette',
 				this.map = new OpenLayers.Map({
 					div: this.el,
 					fallThrough: true,
-					tileManager: this.tileManager
+					tileManager: this.tileManager,
+					 controls: [
+					 	new OpenLayers.Control.Navigation(),
+                        new OpenLayers.Control.Zoom( { zoomInId: "zoomIn", zoomOutId: "zoomOut" } ),
+                        new OpenLayers.Control.Attribution( { displayClass: 'olControlAttribution' } )
+                    ]
 				});
 
 				this.colors = globals.objects.get("color");
@@ -205,7 +210,8 @@ define(['backbone.marionette',
 	                        wrapDateLine: view.wrapDateLine,
 	                        zoomOffset: view.zoomOffset,
 	                        visibility: layerdesc.get("visible"),
-	                        time: layerdesc.get('time')
+	                        time: layerdesc.get('time'),
+	                        attribution: view.attribution
                         });
                     break;
 
@@ -235,7 +241,8 @@ define(['backbone.marionette',
                                 isBaseLayer: view.isBaseLayer,
                                 wrapDateLine: view.wrapDateLine,
                                 zoomOffset: view.zoomOffset,
-                                visibility: layerdesc.get("visible")
+                                visibility: layerdesc.get("visible"),
+                                attribution: view.attribution
                             }
                         );
                     break;
