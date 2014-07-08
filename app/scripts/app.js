@@ -19,7 +19,8 @@
 			'controller/LoadingController',
 			'controller/LayerController',
 			'controller/SelectionController',
-			'controller/DifferenceController'
+			'controller/DifferenceController',
+			'vendor/colorlegend'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -408,6 +409,20 @@
 
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
+
+
+                var data = [-10,0,1,3,5,7,8,10];
+				var min = d3.min(data);
+				var mean = d3.sum(data) / data.length;
+				var max = d3.max(data);
+
+				
+				// linear scale, 2 colors
+				/*var lScale = d3.scale.linear()
+				.domain([-1, 0, max])
+				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
+				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
+
 
 			}
 
