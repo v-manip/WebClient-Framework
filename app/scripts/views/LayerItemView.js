@@ -68,7 +68,7 @@
                 var options = { name: this.model.get('name'), isBaseLayer: isBaseLayer, visible: evt.target.checked };
                 if( !isBaseLayer && evt.target.checked ){
                 	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
-                    if (layer != -1) {
+                    if (layer != -1  && !(typeof layer === 'undefined')) {
                     	// TODO: Here we should go through all views, or maybe only url is necessary?
                     	var url = layer.get('views')[0].urls[0]+"?";
                     	
@@ -86,20 +86,11 @@
 							    suppressErrors: true,
 							    xhrFields: {
 							      withCredentials: true
-							   },
-							    //dataType:"text xml",
+							   	},
 							    success: function(xml, textStatus, xhr) {
-							        //console.log(arguments);
-							        //console.log(xhr.status);
-							        //TODO: Check if image is returend, if not do not activate and show not authorized message
 							        Communicator.mediator.trigger('map:layer:change', options);
 							    },
-							    complete: function(xhr, textStatus) {
-							        //console.log(xhr.status);
-							    },
 							    error: function(jqXHR, textStatus, errorThrown) {
-							    	//console.log(jqXHR, textStatus, errorThrown);
-
 							    	if (jqXHR.status == 403){
 							    		$("#error-messages").append(
 					                              '<div class="alert alert-warning alert-danger">'+
@@ -108,25 +99,25 @@
 					                            '</div>'
 					                    );
 							    	}else{
-							    		
 							    		this.authview = new av.AuthView({
 								    		model: new am.AuthModel({url:req}),
 								    		template: iFrameTmpl,
 								    		layerprop: options
 								    	});
-
 								    	Communicator.mediator.trigger("progress:change", false);
-
 								    	App.optionsBar.show(this.authview);
-
 							    	}
 							    }
 							});
 	                    }else{
 	                    	Communicator.mediator.trigger('map:layer:change', options);
 	                    }
-                    }
+                    }else if (typeof layer === 'undefined'){
+	                	Communicator.mediator.trigger('map:layer:change', options);
+	                }
                 } else if (!evt.target.checked){
+                	Communicator.mediator.trigger('map:layer:change', options);
+                } else if (isBaseLayer && evt.target.checked){
                 	Communicator.mediator.trigger('map:layer:change', options);
                 }
             },
