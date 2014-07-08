@@ -44,7 +44,8 @@
                 "transitionEffect": "resize",
                 "isphericalMercator": false,
                 "wrapDateLine": true,
-                "zoomOffset": 0
+                "zoomOffset": 0,
+                "attribution": "Terrain &copy; <a href='javascript:;' onClick='toggle(terrain_attribution)'>Various</a>"
             }, {
                 "id": "terrain",
                 "protocol": "WMS",
