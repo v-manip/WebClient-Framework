@@ -131,7 +131,7 @@
             html: true,
             content: CoverageInfoTmpl(coverageJSON),
             title: "Coverage Description",
-            placement: "bottom"
+            placement: "right"
           });
         }, this);
       },

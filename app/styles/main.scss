@@ -224,7 +224,7 @@ button[active=active] {
  * Selection Manager, Download Manager
  */
 .selectionManager, .download {
-  width: 50em;
+  width: 55em;
   top: 10em;
   left: 50%;
   margin: 0 0 0 -25em;
@@ -242,6 +242,19 @@ button[active=active] {
 .selectionManager .panel-body, .download .panel-body {
   max-height: 15em;
   overflow: auto;
+}
+
+.popover {
+  width: 20em;
+  font-weight:normal;
+}
+
+.popover-title {
+    font-size: 1.2em;
+}
+.popover-content {
+    font-size: 0.9em;
+
 }
 
 /*

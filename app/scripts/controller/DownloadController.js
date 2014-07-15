@@ -49,6 +49,7 @@
 
 	    onSelectionChange: function(selection) {
 	        if (selection != null) {
+	        	selection = selection.geometry;
 	          if(selection.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
 	            this.model.set('AoI', selection);
 	          }
