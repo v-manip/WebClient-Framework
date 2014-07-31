@@ -112,9 +112,10 @@ define(['backbone.marionette',
 						OpenLayers.Handler.RegularPolygon, {
 							handlerOptions: {
 								sides: 4,
-								irregular: true
+								irregular: true,
+								keyMask: !OpenLayers.Handler.MOD_CTRL
 							}
-						}
+            			}
 					)
 				};
 
