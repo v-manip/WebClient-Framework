@@ -66,30 +66,23 @@ hr {
   position: absolute;
   height: 75px;
   top: 60px;
-  width:310px;
+  width: 640px;
   left: 50%;
-  margin-left: -155px;
+  margin-left: -320px;
   z-index: $layer-gui;
-  background-color: #222;
+  /*background-color: #222;
   border-radius: 5px;
   color: #999;
   font-family: Helvetica,Arial,sans-serif;
   font-size: 12px;
   padding: 5px;
-  text-align: center;
+  text-align: center;*/
 
 
 }
 
-.colorlegend{
-  background: #ff0000; /* Old browsers */
-  background: -moz-linear-gradient(left,  #ff0000 0%, #000000 50%, #0000ff 100%); /* FF3.6+ */
-  background: -webkit-gradient(linear, left top, right top, color-stop(0%,#ff0000), color-stop(50%,#000000), color-stop(100%,#0000ff)); /* Chrome,Safari4+ */
-  background: -webkit-linear-gradient(left,  #ff0000 0%,#000000 50%,#0000ff 100%); /* Chrome10+,Safari5.1+ */
-  background: -o-linear-gradient(left,  #ff0000 0%,#000000 50%,#0000ff 100%); /* Opera 11.10+ */
-  background: -ms-linear-gradient(left,  #ff0000 0%,#000000 50%,#0000ff 100%); /* IE10+ */
-  background: linear-gradient(to right,  #ff0000 0%,#000000 50%,#0000ff 100%); /* W3C */
-  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ff0000', endColorstr='#0000ff',GradientType=1 ); /* IE6-9 */
+.colorlegend img{
+  border-radius: 5px;
 }
 
 

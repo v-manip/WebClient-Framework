@@ -93,70 +93,6 @@
             }]
         }],
         "products": [{
-            "name": "ALARO Specific Humidity",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "ALARO_Specific_Humidity_201305150000",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "ALARO_Specific_Humidity_201305150000_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "ALARO_Specific_Humidity_201305150000",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getVolumePixelValues",
-                "layer_id": "ALARO_Specific_Humidity_201305150000"
-            }]
-        },{
-            "name": "AROME Specific Humidity",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "AROME_Specific_Humidity_201305150000",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "AROME_Specific_Humidity_201305150000_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "AROME_Specific_Humidity_201305150000",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getVolumePixelValues",
-                "layer_id": "AROME_Specific_Humidity_201305150000"
-            }]
-        },{
             "name": "ALARO Temperature surface",
             "visible": false,
             "timeSlider": true,
@@ -165,7 +101,7 @@
                 "id": "ALARO_Temperature_surface_201305150000",
                 "protocol": "WMS",
                 "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
+                    "http://localhost:3080/browse/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -173,7 +109,7 @@
             "download": {
                 "id": "ALARO_Temperature_surface_201305150000",
                 "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
+                "url": "http://localhost:3080/browse/ows"
             },
             "processes" : [
                 {

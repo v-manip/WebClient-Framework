@@ -483,6 +483,13 @@ define(['backbone.marionette',
 
 				this.diff_overlay.setZIndex(minzindex-1);
 	
+			},
+
+			onClearImage: function(){
+				if(this.diff_overlay){
+					this.map.removeLayer(this.diff_overlay);
+					this.diff_overlay = null;
+				}
 			}
 
 		});
