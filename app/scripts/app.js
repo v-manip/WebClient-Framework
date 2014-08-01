@@ -30,6 +30,22 @@
 
 			configure: function(config) {
 
+
+				// Load jquery ui tooltip tool
+
+				$(document).ready(function() {
+				    $("body").tooltip({ 
+				    	selector: '[data-toggle=tooltip]',
+				    	position: { my: "left+5 center", at: "right center" },
+						hide: { effect: false, duration: 0 },
+						show:{ effect: false, delay: 700}
+				    });
+
+				});
+
+
+
+
 				var v = {}; //views
 				var m = {};	//models
 				var t = {};	//templates
@@ -291,6 +307,7 @@
 								id: visTool.id,
 								eventToRaise: visTool.eventToRaise,
 								description: visTool.description,
+								disabledDescription: visTool.disabledDescription,
 								icon:visTool.icon,
 								enabled: visTool.enabled,
 								active: visTool.active,

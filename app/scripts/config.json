@@ -620,22 +620,22 @@
 
     "selectionTools": [{
         "id": "pointSelection",
-        "description": "Allows selection of Points in Map",
+        "description": "Point selection tool - Click on the map to select a point",
         "icon": "icon-large icon-screenshot",
         "selectionType":"single"
     }, {
         "id": "lineSelection",
-        "description": "Allows selection of Lines in Map",
+        "description": "Line selection tool - Click on the map for each line point you want to set; double click to finalize selection",
         "icon": "icon-large icon-vector-path-line",
         "selectionType":"multi"
     }, {
         "id": "polygonSelection",
-        "description": "Allows selection of Polygons in Map",
+        "description": "Polygon selection tool - Click on the map for each polygon point you want to set; double click to finalize selection. Shift Key modifier allows free hand draw mode",
         "icon": "icon-large icon-vector-path-polygon",
         "selectionType":"single"
     }, {
         "id": "bboxSelection",
-        "description": "Allows drawing a bounding box selection in Map",
+        "description": "Bounding box selection tool - Click and drag to create a selection",
         "icon": "icon-large icon-vector-path-square",
         "selectionType":"single"
     }],
@@ -643,14 +643,15 @@
     "visualizationTools": [{
             "id": "download",
             "eventToRaise": "dialog:open:download",
-            "description": "WCS Download Tool for specific selections",
+            "description": "WCS Download Tool",
+            "disabledDescription": "Please make sure you have selected a product layer, an area of interest and a time of interest in order to use the download tool",
             "icon": "fa fa-download fa-2x",
             "enabled": false,
             "active": false
         }, {
             "id": "selectionManager",
             "eventToRaise": "ui:open:selectionManager",
-            "description": "Allows importing, exporting and saving selections",
+            "description": "Import, export and saving functionality for selections",
             "icon": "fa fa-edit fa-2x",
             "enabled": true,
             "active": false
