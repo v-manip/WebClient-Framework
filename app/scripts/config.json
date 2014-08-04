@@ -120,7 +120,8 @@
                     "id": "getCoverageData",
                     "layer_id": "ALARO_Temperature_surface_201305150000"
                 }
-            ]
+            ],
+            "unit": "Kelvin (K)"
         },{
             "name": "AROME Temperature surface",
             "visible": false,
@@ -149,7 +150,8 @@
                     "id": "getCoverageData",
                     "layer_id": "AROME_Temperature_surface_201305150000"
                 }
-            ]
+            ],
+            "unit": "Kelvin (K)"
         },{
             "name": "AROME Temperature isobaric",
             "visible": false,
@@ -181,7 +183,8 @@
             "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "AROME_Temperature_isobaric_201305150000"
-            }]
+            }],
+            "unit": "Kelvin (K)"
         },{
             "name": "ALARO Temperature isobaric",
             "visible": false,
@@ -213,7 +216,8 @@
             "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "ALARO_Temperature_isobaric_201305150000"
-            }]
+            }],
+            "unit": "Kelvin (K)"
         },{
             "name": "AROME Surface Pressure",
             "visible": false,
@@ -236,7 +240,8 @@
             "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "AROME_Surface_Pressure_201305150000"
-            }]
+            }],
+            "unit": "Pascal (Pa)"
         },{
             "name": "ALARO Surface Pressure",
             "visible": false,
@@ -259,7 +264,8 @@
             "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "ALARO_Surface_Pressure_201305150000"
-            }]
+            }],
+            "unit": "Pascal (Pa)"
         },{
             "name": "Radar Bonn UH",
             "visible": false,

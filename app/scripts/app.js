@@ -138,7 +138,8 @@
 									protocol: product.download.protocol,
 									url: product.download.url
 								},
-								processes: product.processes 
+								processes: product.processes,
+								unit: product.unit 
 							})
 					);
 

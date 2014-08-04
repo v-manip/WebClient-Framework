@@ -18,6 +18,7 @@
 
 		    	this.selection_list = [];
 				this.activeWPSproducts = [];
+				this.selected_time = null;
 				//this.selected_time = Communicator.reqres.request('get:time');
 
 				this.listenTo(Communicator.mediator, "map:layer:change",this.changeLayer);
@@ -65,7 +66,9 @@
 			},
 
 			checkSelections: function(){
-				this.selected_time = Communicator.reqres.request('get:time');
+				if (this.selected_time == null)
+					this.selected_time = Communicator.reqres.request('get:time');
+
 				if (this.activeWPSproducts.length > 0 && this.selection_list.length > 0 && this.selected_time){
 					this.sendRequest();
 				}else{
@@ -86,6 +89,7 @@
 				var that = this;
 
 				var getcoveragedifflist = [];
+				var units = [];
 
 				globals.products.each(function(model) {
 	                if (model.get('visible')) {
@@ -94,6 +98,7 @@
 	                		if(process){
 	                			if (process.id == "getCoverageData"){
 	                				getcoveragedifflist.push(process.layer_id);
+	                				units.push(model.get("unit"));
 	                			}
 			                }
 	                	}, this);
@@ -116,6 +121,21 @@
 
 					Communicator.mediator.trigger("map:load:image", url, this.selection_list[0].geometry.getBounds());
 
+					var unit = "";
+					var first = true;
+					_.each(units, function(u){
+						if (u) {
+							if (first){
+								unit = u;
+								first = false;
+							}else{
+								if (!unit == u)
+									unit = "";
+							}
+						}
+
+					}, this);
+
 					var label_url = "http://localhost:3080/browse/ows" + "?service=WPS&version=1.0.0&request=Execute&" +
 							  "identifier=getCoverageDifferenceLabel&" +
 							  "DataInputs="+
@@ -123,7 +143,8 @@
 							  "begin_time="+ getISODateTimeString(this.selected_time.start) +"%3B"+
 							  "end_time="+ getISODateTimeString(this.selected_time.end) +"%3B"+
 							  "bbox="+ bbox +"%3B"+
-							  "crs=4326&"+
+							  "crs=4326" +"%3B"+
+							  "unit="+unit+"&"+
 							  "rawdataoutput=processed";
 
 					$(".colorlegend").empty();
