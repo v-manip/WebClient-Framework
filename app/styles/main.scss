@@ -63,6 +63,30 @@ hr {
   user-select: none;
 }
 
+.colorlegend{
+  position: absolute;
+  height: 75px;
+  top: 60px;
+  width: 640px;
+  left: 50%;
+  margin-left: -320px;
+  z-index: $layer-gui;
+  /*background-color: #222;
+  border-radius: 5px;
+  color: #999;
+  font-family: Helvetica,Arial,sans-serif;
+  font-size: 12px;
+  padding: 5px;
+  text-align: center;*/
+
+
+}
+
+.colorlegend img{
+  border-radius: 5px;
+}
+
+
 body.wait *, body.wait {
   cursor:wait !important;
 }
@@ -74,15 +98,14 @@ body.wait *, body.wait {
   width: 100%;
   height: 100%;
   position: absolute;
-  left: 0;
   z-index: 5000;
   text-align: center;
   opacity: 0.8;
 }
 
 #loadscreen i {
-  top: 50%;
-  position: absolute;
+  position:relative;
+  top: calc(50%);
 }
 
 div#preload { 
