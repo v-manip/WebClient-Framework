@@ -95,102 +95,6 @@
             }]
         }],
         "products": [{
-            "name": "FSC Pan European",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "daily_FSC_PanEuropean_Optical",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            },{
-                "id": "daily_FSC_PanEuropean_Optical",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }],
-            "download": {
-                "id": "daily_FSC_PanEuropean_Optical",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getValuesThroughTime",
-                "layer_id": "daily_FSC_PanEuropean_Optical"
-            }]
-        },{
-            "name": "MOD07 Retrived Temperature Profile",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "MOD07_Retrived_Temperature_Profile",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "MOD07_Retrived_Temperature_Profile_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "MOD07_Retrived_Temperature_Profile",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getVolumePixelValues",
-                "layer_id": "MOD07_Retrived_Temperature_Profile"
-            }]
-        },{
-            "name": "MOD07 Specific Humidity",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "MOD07_Specific_Umidity",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "MOD07_Specific_Umidity_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "MOD07_Specific_Umidity",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getVolumePixelValues",
-                "layer_id": "MOD07_Specific_Umidity"
-            }]
-        },{
             "name": "ALARO Specific Humidity",
             "visible": false,
             "timeSlider": true,
@@ -282,7 +186,8 @@
                     "id": "getCoverageData",
                     "layer_id": "ALARO_Temperature_surface_201305150000"
                 }
-            ]
+            ],
+            "unit": "Kelvin (K)"
         },{
             "name": "AROME Temperature surface",
             "visible": false,
@@ -311,7 +216,8 @@
                     "id": "getCoverageData",
                     "layer_id": "AROME_Temperature_surface_201305150000"
                 }
-            ]
+            ],
+            "unit": "Kelvin (K)"
         },{
             "name": "AROME Temperature isobaric",
             "visible": false,
@@ -343,7 +249,8 @@
             "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "AROME_Temperature_isobaric_201305150000"
-            }]
+            }],
+            "unit": "Kelvin (K)"
         },{
             "name": "ALARO Temperature isobaric",
             "visible": false,
@@ -375,7 +282,8 @@
             "processes" : [{
                 "id": "getVolumePixelValues",
                 "layer_id": "ALARO_Temperature_isobaric_201305150000"
-            }]
+            }],
+            "unit": "Kelvin (K)"
         },{
             "name": "AROME Surface Pressure",
             "visible": false,
@@ -398,7 +306,8 @@
             "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "AROME_Surface_Pressure_201305150000"
-            }]
+            }],
+            "unit": "Pascal (Pa)"
         },{
             "name": "ALARO Surface Pressure",
             "visible": false,
@@ -421,7 +330,8 @@
             "processes" : [{
                 "id": "getCoverageData",
                 "layer_id": "ALARO_Surface_Pressure_201305150000"
-            }]
+            }],
+            "unit": "Pascal (Pa)"
         },{
             "name": "Radar Bonn UH",
             "visible": false,
@@ -716,22 +626,22 @@
 
     "selectionTools": [{
         "id": "pointSelection",
-        "description": "Allows selection of Points in Map",
+        "description": "Point selection tool - Click on the map to select a point",
         "icon": "icon-large icon-screenshot",
         "selectionType":"single"
     }, {
         "id": "lineSelection",
-        "description": "Allows selection of Lines in Map",
+        "description": "Line selection tool - Click on the map for each line point you want to set; double click to finalize selection",
         "icon": "icon-large icon-vector-path-line",
         "selectionType":"multi"
     }, {
         "id": "polygonSelection",
-        "description": "Allows selection of Polygons in Map",
+        "description": "Polygon selection tool - Click on the map for each polygon point you want to set; double click to finalize selection. Shift Key modifier allows free hand draw mode",
         "icon": "icon-large icon-vector-path-polygon",
         "selectionType":"single"
     }, {
         "id": "bboxSelection",
-        "description": "Allows drawing a bounding box selection in Map",
+        "description": "Bounding box selection tool - Click and drag to create a selection",
         "icon": "icon-large icon-vector-path-square",
         "selectionType":"single"
     }],
@@ -739,14 +649,15 @@
     "visualizationTools": [{
             "id": "download",
             "eventToRaise": "dialog:open:download",
-            "description": "WCS Download Tool for specific selections",
+            "description": "WCS Download Tool",
+            "disabledDescription": "Please make sure you have selected a product layer, an area of interest and a time of interest in order to use the download tool",
             "icon": "fa fa-download fa-2x",
             "enabled": false,
             "active": false
         }, {
             "id": "selectionManager",
             "eventToRaise": "ui:open:selectionManager",
-            "description": "Allows importing, exporting and saving selections",
+            "description": "Import, export and saving functionality for selections",
             "icon": "fa fa-edit fa-2x",
             "enabled": true,
             "active": false

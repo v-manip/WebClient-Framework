@@ -47,6 +47,8 @@ define([
 			this.mapView.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.mapView.onUpdateOpacity, this.mapView));
 			this.mapView.listenTo(Communicator.mediator, "selection:activated", _.bind(this.mapView.onSelectionActivated, this.mapView));
 			this.mapView.listenTo(Communicator.mediator, "selection:changed", _.bind(this.mapView.onSelectionChanged, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "map:load:image", _.bind(this.mapView.onLoadImage, this.mapView));
+			this.mapView.listenTo(Communicator.mediator, "map:clear:image", _.bind(this.mapView.onClearImage, this.mapView));
 
 			/*if (!this.mapView.isEventListenedTo("map:load:geojson"))
 				this.mapView.listenTo(Communicator.mediator, "map:load:geojson", _.bind(this.mapView.onLoadGeoJSON, this.mapView));*/

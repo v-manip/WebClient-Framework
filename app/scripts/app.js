@@ -18,7 +18,9 @@
 			'controller/SelectionManagerController',
 			'controller/LoadingController',
 			'controller/LayerController',
-			'controller/SelectionController'
+			'controller/SelectionController',
+			'controller/DifferenceController',
+			'vendor/colorlegend'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -29,6 +31,27 @@
 			},
 
 			configure: function(config) {
+
+
+				// Load jquery ui tooltip tool
+
+				/*$(document).ready(function() {
+				    $("body").tooltip({ 
+				    	selector: '[data-toggle=tooltip]',
+				    	position: { my: "left+5 center", at: "right center" },
+						hide: { effect: false, duration: 0 },
+						show:{ effect: false, delay: 700}
+				    });
+
+				});*/
+
+				$("body").tooltip({ 
+			    	selector: '[data-toggle=tooltip]',
+			    	position: { my: "left+5 center", at: "right center" },
+					hide: { effect: false, duration: 0 },
+					show:{ effect: false, delay: 700}
+			    });
+
 
 				var v = {}; //views
 				var m = {};	//models
@@ -136,7 +159,8 @@
 									protocol: product.download.protocol,
 									url: product.download.url
 								},
-								processes: product.processes 
+								processes: product.processes,
+								unit: product.unit 
 							})
 					);
 
@@ -291,6 +315,7 @@
 								id: visTool.id,
 								eventToRaise: visTool.eventToRaise,
 								description: visTool.description,
+								disabledDescription: visTool.disabledDescription,
 								icon:visTool.icon,
 								enabled: visTool.enabled,
 								active: visTool.active,
@@ -405,8 +430,31 @@
                     );
                 });
 
+                // The tooltip is called twice at beginning and end, it seems to show the style of the
+                // tooltips more consistently, there is some problem where sometimes no style is shown for tooltips
+                $("body").tooltip({ 
+			    	selector: '[data-toggle=tooltip]',
+			    	position: { my: "left+5 center", at: "right center" },
+					hide: { effect: false, duration: 0 },
+					show:{ effect: false, delay: 700}
+			    });
+
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
+
+
+                var data = [-10,0,1,3,5,7,8,10];
+				var min = d3.min(data);
+				var mean = d3.sum(data) / data.length;
+				var max = d3.max(data);
+
+				
+				// linear scale, 2 colors
+				/*var lScale = d3.scale.linear()
+				.domain([-1, 0, max])
+				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
+				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
+
 
 			}
 

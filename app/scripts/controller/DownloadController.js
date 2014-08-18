@@ -49,8 +49,8 @@
 
 	    onSelectionChange: function(selection) {
 	        if (selection != null) {
-	          if(selection.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
-	            this.model.set('AoI', selection);
+	          if(selection.geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
+	            this.model.set('AoI', selection.geometry);
 	          }
 	        }else{
 	          this.model.set('AoI', null);

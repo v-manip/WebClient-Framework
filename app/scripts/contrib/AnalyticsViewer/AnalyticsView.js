@@ -231,7 +231,7 @@ define(['backbone.marionette',
 	                }
             	}, this);
 
-            	if (getcoveragedifflist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
+            	/*if (getcoveragedifflist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
 
             		var bbox = this.selection_list[0].geometry.getBounds().toBBOX();
 
@@ -243,8 +243,21 @@ define(['backbone.marionette',
 						srid: "4326"
 					});
 
+					var url = "http://demo.v-manip.eox.at/browse/ows" + "?service=WPS&version=1.0.0&request=Execute&" +
+							  "identifier=getCoverageDifference&" +
+							  "DataInputs="+
+							  "collections="+ getcoveragedifflist +"%3B"+
+							  "begin_time="+ getISODateTimeString(this.selected_time.start) +"%3B"+
+							  "end_time="+ getISODateTimeString(this.selected_time.end) +"%3B"+
+							  "bbox="+ bbox +"%3B"+
+							  "crs=4326&"+
+							  "rawdataoutput=processed";
+
+					//Communicator.mediator.trigger("map:load:image", url);
+
 					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
 						that.img = data;
+						Communicator.mediator.trigger("map:load:image", data);
 						that.render("diff");
 						var url = "http://a.tiles.maps.eox.at/wms/?"
 						var req = "LAYERS=overlay&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
@@ -256,14 +269,9 @@ define(['backbone.marionette',
 						that.overlay = url + req;
 						that.render("overlay");
 						console.log(req);
-
-						/*$.get(req, function( data ) {
-							that.overlay = data;
-							that.render("overlay");
-						});*/
 					});
 
-            	}else if (getdatalist.length == 1 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
+            	}else */if (getdatalist.length == 1 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
 						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
