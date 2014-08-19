@@ -71,6 +71,7 @@ hr {
   left: 50%;
   margin-left: -320px;
   z-index: $layer-gui;
+  pointer-events:none;
   /*background-color: #222;
   border-radius: 5px;
   color: #999;
