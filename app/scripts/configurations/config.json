@@ -95,6 +95,36 @@
             }]
         }],
         "products": [{
+            "name": "ALARO Temperature surface",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "ALARO_Temperature_surface_201305150000",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:3080/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "ALARO_Temperature_surface_201305150000",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "processes" : [
+                {
+                    "id": "getValuesThroughTime",
+                    "layer_id": "ALARO_Temperature_surface_201305150000"
+                },
+                {
+                    "id": "getCoverageData",
+                    "layer_id": "ALARO_Temperature_surface_201305150000"
+                }
+            ],
+            "unit": "Kelvin (K)"
+        },{
             "name": "ALARO Specific Humidity",
             "visible": false,
             "timeSlider": true,

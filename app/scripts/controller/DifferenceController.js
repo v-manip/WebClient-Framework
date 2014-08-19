@@ -124,14 +124,12 @@
 					var unit = "";
 					var first = true;
 					_.each(units, function(u){
-						if (u) {
-							if (first){
-								unit = u;
-								first = false;
-							}else{
-								if (!unit == u)
-									unit = "";
-							}
+						if (first){
+							unit = u;
+							first = false;
+						}else{
+							if (unit != u)
+								unit = "";
 						}
 
 					}, this);
