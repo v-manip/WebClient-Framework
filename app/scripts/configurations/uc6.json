@@ -334,7 +334,7 @@
   "selectionTools":[
     {
       "id": "bboxSelection",
-      "description": "Allows drawing a bounding box selection in Map",
+      "description": "Allows drawing a bounding box selection in Map; Use Ctrl modifier key to pan while bbox tool is active",
       "icon": "icon-large icon-vector-path-square",
         "selectionType":"single"
     }
