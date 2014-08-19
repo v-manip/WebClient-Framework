@@ -199,6 +199,23 @@ define([
         this.renderer.render();
     };
 
+    XTKViewer.prototype.pick = function(x,y) {
+        var sliceid = this.renderer.pick(x,y);
+        console.log(sliceid);
+
+        // API says no picked element return -1 but it seems to return 65281 for some reason and sometimes 0 it appears
+        if(sliceid != -1 && sliceid != 65281 && sliceid != 0){
+
+            var slice = this.renderer.get(sliceid);
+            //How can we transform the current coordinates to the volume coordinates?
+            var conv = X.matrix.multiplyByVector(slice._XYToIJK, x, y, -1);
+            //Slice volume has some conversion matrices too, no idea if we can use those.
+            // Get the right value here. Is this possible?
+            //var something = slice._volume.image[][][];
+        }
+
+    };
+
     XTKViewer.prototype.addVolume = function(opts) {
 
         if (typeof this.renderer === 'undefined' || this.renderer == null)

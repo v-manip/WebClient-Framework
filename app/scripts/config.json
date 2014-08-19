@@ -155,12 +155,12 @@
             ],
             "unit": "Kelvin (K)"
         },{
-            "name": "AROME Temperature isobaric",
+            "name": "ALARO Specific Humidity",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "AROME_Temperature_isobaric_201305150000",
+                "id": "ALARO_Specific_Humidity_201305150000",
                 "protocol": "W3DS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -169,7 +169,7 @@
                 "format": "model/gltf",
                 "type": "volumetric"
             }, {
-                "id": "AROME_Temperature_isobaric_201305150000_outlines",
+                "id": "ALARO_Specific_Humidity_201305150000_outlines",
                 "protocol": "WMS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -178,22 +178,21 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "AROME_Temperature_isobaric_201305150000",
+                "id": "ALARO_Specific_Humidity_201305150000",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "processes" : [{
                 "id": "getVolumePixelValues",
-                "layer_id": "AROME_Temperature_isobaric_201305150000"
-            }],
-            "unit": "Kelvin (K)"
+                "layer_id": "ALARO_Specific_Humidity_201305150000"
+            }]
         },{
-            "name": "ALARO Temperature isobaric",
+            "name": "AROME Specific Humidity",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "ALARO_Temperature_isobaric_201305150000",
+                "id": "AROME_Specific_Humidity_201305150000",
                 "protocol": "W3DS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -202,7 +201,7 @@
                 "format": "model/gltf",
                 "type": "volumetric"
             }, {
-                "id": "ALARO_Temperature_isobaric_201305150000_outlines",
+                "id": "AROME_Specific_Humidity_201305150000_outlines",
                 "protocol": "WMS",
                 "urls": [
                     "http://demo.v-manip.eox.at/browse/ows"
@@ -211,15 +210,14 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "ALARO_Temperature_isobaric_201305150000",
+                "id": "AROME_Specific_Humidity_201305150000",
                 "protocol": "EOWCS",
                 "url": "http://demo.v-manip.eox.at/browse/ows"
             },
             "processes" : [{
                 "id": "getVolumePixelValues",
-                "layer_id": "ALARO_Temperature_isobaric_201305150000"
-            }],
-            "unit": "Kelvin (K)"
+                "layer_id": "AROME_Specific_Humidity_201305150000"
+            }]
         },{
             "name": "AROME Surface Pressure",
             "visible": false,

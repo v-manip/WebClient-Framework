@@ -35,7 +35,13 @@ define([
         },
 
         onStartup: function(selected_layers) {
-            // console.log('blalbu');
+            console.log("SliceView show");
+            var that = this;
+            this.$el.click(function(evt){
+                console.log(evt.offsetX, evt.offsetY);
+                that._pick(evt.offsetX, evt.offsetY);
+            });
+            
         },
 
         // FIXXME: this method should be put into the BaseView to do a basic setup of
@@ -195,6 +201,10 @@ define([
                 // cameraPosition: [120, 80, 160]
                 cameraPosition: [500, 0, 500]
             });
+        },
+
+        _pick: function (x,y){
+            this.getViewer().pick(x,y);
         },
 
         _addVolume: function(layer) {
