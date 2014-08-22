@@ -95,6 +95,26 @@
             }]
         }],
         "products": [{
+            "name": "Temperature sensor data",
+            "visible": false,
+            "timeSlider": false,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "sensors",
+                "protocol": "WFS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/sensor"
+                ],
+                "style": "default",
+                "format": "image/png",
+                "attribute": "Temperature"
+            }],
+            "download": {
+                "id": "sensors",
+                "protocol": "WFS",
+                "url": "http://demo.v-manip.eox.at/sensor"
+            }
+        },{
             "name": "ALARO Temperature surface",
             "visible": false,
             "timeSlider": true,

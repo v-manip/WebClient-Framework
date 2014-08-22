@@ -37,11 +37,16 @@ define(['backbone.marionette',
 					div: this.el,
 					fallThrough: true,
 					tileManager: this.tileManager,
-					 controls: [
+					controls: [
 					 	new OpenLayers.Control.Navigation(),
                         new OpenLayers.Control.Zoom( { zoomInId: "zoomIn", zoomOutId: "zoomOut" } ),
                         new OpenLayers.Control.Attribution( { displayClass: 'olControlAttribution' } )
-                    ]
+                    ],
+                    eventListeners: {
+				        featureclick: function(e) {
+				            log("Map says: " + e.feature.id + " clicked on " + e.feature.layer.name);
+				        }
+    				}
 				});
 
 				this.colors = globals.objects.get("color");
@@ -253,6 +258,44 @@ define(['backbone.marionette',
                                 attribution: view.attribution
                             }
                         );
+                    break;
+
+                    case "WFS":
+                    	var customStyle = new OpenLayers.StyleMap({
+			                "default": new OpenLayers.Style({
+			                	pointRadius: 8, 
+			                    fillColor: "#ffcc66",
+			                    strokeColor: "#ff9933",
+			                    strokeWidth: 2,
+			                    graphicZIndex: 1005
+			                }),
+			                "select": new OpenLayers.Style({
+			                	pointRadius: 8, 
+			                    fillColor: "#ffcc66",
+			                    strokeColor: "#ff9933",
+			                    strokeWidth: 2,
+			                    graphicZIndex: 1005
+			                }),
+			            });
+
+			            clustering = new OpenLayers.Strategy.Cluster();
+
+						var return_layer = new OpenLayers.Layer.Vector(layerdesc.get("name"), {
+							styleMap: customStyle,
+		                    strategies: [new OpenLayers.Strategy.BBOX(), clustering],
+		                    protocol: new OpenLayers.Protocol.WFS({
+		                        url:  view.urls[0],
+		                        featureType: view.id
+		                    })
+		                });
+
+		                // Create a select feature control and add it to the map.
+			            var select = new OpenLayers.Control.SelectFeature(return_layer, {hover: false});
+			            this.map.addControl(select);
+			            select.activate();
+
+		                return_layer.setVisibility(false);
+
                     break;
 
                     default:
