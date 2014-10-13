@@ -448,8 +448,8 @@
     }],
 
     "navBarConfig": {
-        "title": "V-MANIP",
-        "url": "http://www.v-manip.eox.at",
+        "title": "VirES",
+        "url": "http://vires.eox.at",
         "items": [{
             "name": "Layers",
             "icon": "fa-globe",
