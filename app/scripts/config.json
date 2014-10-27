@@ -20,8 +20,45 @@
         "center": [13.41, 52.52],
         "zoom": 5,
         "baseLayers": [{
-            "name": "Terrain",
+            "name": "Terrain-Light",
             "visible": true,
+            "views": [{
+                "id": "terrain-light",
+                "protocol": "WMTS",
+                "urls": [
+                    "http://a.tiles.maps.eox.at/wmts/",
+                    "http://b.tiles.maps.eox.at/wmts/",
+                    "http://c.tiles.maps.eox.at/wmts/",
+                    "http://d.tiles.maps.eox.at/wmts/",
+                    "http://e.tiles.maps.eox.at/wmts/"
+                ],
+                "matrixSet": "WGS84",
+                "style": "default",
+                "format": "image/png",
+                "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+                "resolutions": [0.70312500000000000000, 0.35156250000000000000, 0.17578125000000000000, 0.08789062500000000000, 0.04394531250000000000, 0.02197265625000000000, 0.01098632812500000000, 0.00549316406250000000, 0.00274658203125000000, 0.00137329101562500000, 0.00068664550781250000, 0.00034332275390625000, 0.00017166137695312500, 0.00008583068847656250, 0.00004291534423828120, 0.00002145767211914060, 0.00001072883605957030, 0.00000536441802978516],
+                "projection": "EPSG:4326",
+                "gutter": 0,
+                "buffer": 0,
+                "units": "dd",
+                "transitionEffect": "resize",
+                "isphericalMercator": false,
+                "wrapDateLine": true,
+                "zoomOffset": 0,
+                "attribution": "Terrain { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+            }, {
+                "id": "terrain-light",
+                "protocol": "WMS",
+                "urls": [
+                    "http://tiles.maps.eox.at/wms"
+                ],
+                "style": "default",
+                "format": "image/jpeg",
+                "crs": "EPSG:4326"
+            }]
+        },{
+            "name": "Terrain",
+            "visible": false,
             "views": [{
                 "id": "terrain",
                 "protocol": "WMTS",
@@ -95,286 +132,81 @@
             }]
         }],
         "products": [{
-            "name": "ALARO Temperature surface",
+            "name": "MAGA LR 1B",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "ALARO_Temperature_surface_201305150000",
+                "id": "SW_OPER_MAGA_LR_1B_outlines",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:3080/browse/ows"
+                    "http://vires2.eox.at/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
             }],
             "download": {
-                "id": "ALARO_Temperature_surface_201305150000",
+                "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:3080/browse/ows"
+                "url": "http://vires2.eox.at/vires00/ows"
             },
             "processes" : [
                 {
-                    "id": "getValuesThroughTime",
-                    "layer_id": "ALARO_Temperature_surface_201305150000"
-                },
-                {
-                    "id": "getCoverageData",
-                    "layer_id": "ALARO_Temperature_surface_201305150000"
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_MAGA_LR_1B"
                 }
-            ],
-            "unit": "Kelvin (K)"
+            ]
+
         },{
-            "name": "AROME Temperature surface",
+            "name": "MAGB LR 1B",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "AROME_Temperature_surface_201305150000",
+                "id": "SW_OPER_MAGB_LR_1B_outlines",
                 "protocol": "WMS",
                 "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
+                    "http://vires2.eox.at/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
             }],
             "download": {
-                "id": "AROME_Temperature_surface_201305150000",
+                "id": "SW_OPER_MAGB_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
+                "url": "http://vires2.eox.at/vires00/ows"
             },
             "processes" : [
                 {
-                    "id": "getValuesThroughTime",
-                    "layer_id": "AROME_Temperature_surface_201305150000"
-                },
-                {
-                    "id": "getCoverageData",
-                    "layer_id": "AROME_Temperature_surface_201305150000"
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_MAGB_LR_1B"
                 }
-            ],
-            "unit": "Kelvin (K)"
+            ]
         },{
-            "name": "AROME Temperature isobaric",
+            "name": "MAGC LR 1B",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "AROME_Temperature_isobaric_201305150000",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "AROME_Temperature_isobaric_201305150000_outlines",
+                "id": "SW_OPER_MAGC_LR_1B_outlines",
                 "protocol": "WMS",
                 "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
+                    "http://vires2.eox.at/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
             }],
             "download": {
-                "id": "AROME_Temperature_isobaric_201305150000",
+                "id": "SW_OPER_MAGC_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
+                "url": "http://vires2.eox.at/vires00/ows"
             },
-            "processes" : [{
-                "id": "getVolumePixelValues",
-                "layer_id": "AROME_Temperature_isobaric_201305150000"
-            }],
-            "unit": "Kelvin (K)"
-        },{
-            "name": "ALARO Temperature isobaric",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "ALARO_Temperature_isobaric_201305150000",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "ALARO_Temperature_isobaric_201305150000_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "ALARO_Temperature_isobaric_201305150000",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getVolumePixelValues",
-                "layer_id": "ALARO_Temperature_isobaric_201305150000"
-            }],
-            "unit": "Kelvin (K)"
-        },{
-            "name": "AROME Surface Pressure",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "AROME_Surface_Pressure_201305150000",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "AROME_Surface_Pressure_201305150000",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getCoverageData",
-                "layer_id": "AROME_Surface_Pressure_201305150000"
-            }],
-            "unit": "Pascal (Pa)"
-        },{
-            "name": "ALARO Surface Pressure",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "ALARO_Surface_Pressure_201305150000",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "ALARO_Surface_Pressure_201305150000",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            },
-            "processes" : [{
-                "id": "getCoverageData",
-                "layer_id": "ALARO_Surface_Pressure_201305150000"
-            }],
-            "unit": "Pascal (Pa)"
-        },{
-            "name": "Radar Bonn UH",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "Radar_Bonn_UH",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            }, {
-                "id": "Radar_Bonn_UH_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "Radar_Bonn_UH",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        },{
-            "name": "Cloudsat",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "Cloudsat",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "vertical_curtain"
-            }, {
-                "id": "Cloudsat_outlines",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "Cloudsat",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
-        },{
-            "name": "SPOT 4",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "SPOT4_View",
-                "protocol": "WMS",
-                "urls": [
-                    "https://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "SPOT4_View",
-                "protocol": "EOWCS",
-                "url": "https://demo.v-manip.eox.at/unsec/ows"
-            },
-            "processes" : [{
-                "id": "getData",
-                "layer_id": "SPOT4_Pente"
-            }]
-        },{
-            "name": "Tininnilik",
-            "visible": false,
-            "timeSlider": true,
-            "timeSliderProtocol": "WPS",
-            "views": [{
-                "id": "Tininnilik",
-                "protocol": "W3DS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "model/gltf",
-                "type": "volumetric"
-            },{
-                "id": "Tininnilik",
-                "protocol": "WMS",
-                "urls": [
-                    "http://demo.v-manip.eox.at/browse/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "Tininnilik",
-                "protocol": "EOWCS",
-                "url": "http://demo.v-manip.eox.at/browse/ows"
-            }
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_MAGC_LR_1B"
+                }
+            ]
         },{
             "name": "Digital Elevation Model",
             "visible": true,

@@ -22,6 +22,7 @@ define(['backbone.marionette',
 				this.isClosed = true;
 				this.selection_list = [];
 				this.plotdata = [];
+				this.request_url = "";
 				this.img = null;
 				this.overlay = null;
 				this.activeWPSproducts = [];
@@ -92,13 +93,24 @@ define(['backbone.marionette',
 				
 				var args = {
 					selector: this.$('.d3canvas')[0],
-					data: this.plotdata,
-					colors: colors
+					url: this.request_url
+					//data: this.plotdata,
+					//colors: colors
 				};
+
+
+				
 
 				switch (type){
 					case 'scatter':
-						analytics.scatterPlot(args);
+						if (args.url != ""){
+							var sp = new scatterPlot(args, function(){
+								//sp.absolute("id1","Latitude");
+								//sp.colatitude("undefined");
+							});
+						}
+						//analytics.scatterPlot(args);
+						
 						break;
 					case 'box':
 						analytics.boxPlot(args);
@@ -177,15 +189,16 @@ define(['backbone.marionette',
 				}else{
 					this.plotdata = [];
 					this.selection_list = [];
-					//this.render(this.plot_type);
-					this.checkSelections();
+					this.request_url = "";
+					//this.checkSelections();
 				}
 
 				
 			},
 
 			checkSelections: function(){
-				if (this.activeWPSproducts.length > 0 && this.selection_list.length > 0 && this.selected_time){
+				//if (this.activeWPSproducts.length > 0 && this.selection_list.length > 0 && this.selected_time){
+				if (this.activeWPSproducts.length > 0 && this.selected_time){
 					this.sendRequest();
 				}else{
 					this.$('.d3canvas').empty();
@@ -202,10 +215,13 @@ define(['backbone.marionette',
 
 				var that = this;
 
+				var map_crs_reverse_axes = true;
+
 				var getcoveragedifflist = [];
 				var getdatalist = [];
 				var getvolumepixelvaluelist = [];
 				var getvaluesthroughtimelist = [];
+				var retrieve_data = [];
 
 				globals.products.each(function(model) {
 	                if (model.get('visible')) {
@@ -225,6 +241,9 @@ define(['backbone.marionette',
 			                    	case "getValuesThroughTime":
 			                    		getvaluesthroughtimelist.push(process.layer_id);
 			                    	break;
+			                    	case "retrieve_data":
+			                    		retrieve_data.push(process.layer_id);
+			                    	break;
 			                    	
 			                    }
 			                }
@@ -232,7 +251,8 @@ define(['backbone.marionette',
 	                }
             	}, this);
 
-            	/*if (getcoveragedifflist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
+
+            	if (getcoveragedifflist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
 
             		var bbox = this.selection_list[0].geometry.getBounds().toBBOX();
 
@@ -272,7 +292,7 @@ define(['backbone.marionette',
 						console.log(req);
 					});
 
-            	}else */if (getdatalist.length == 1 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
+            	}else if (getdatalist.length == 1 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
             		var list = "";
 					for (var i=0;i<this.selection_list.length;i++){
 						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
@@ -334,6 +354,31 @@ define(['backbone.marionette',
 						that.render('line');
 					});
 
+            	}else if (retrieve_data.length > 0){
+
+            		if(this.selection_list.length > 0){
+            			if (this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
+            				this.request_url = 
+		            		"http://vires2.eox.at/vires00/ows?"+
+		            		"service=WPS&version=1.0.0&request=Execute&identifier=retrieve_data&"+
+		            		"DataInputs=collection_ids="+retrieve_data.join()+"%3B"+
+		            		"begin_time="+getISODateTimeString(this.selected_time.start)+"%3B"+
+		            		"end_time="+getISODateTimeString(this.selected_time.end)+"%3B"+
+		            		"bbox="+this.selection_list[0].geometry.getBounds().toBBOX(10,map_crs_reverse_axes)+
+		            		"&rawdataoutput=output";
+            			}
+            		}else{
+            			this.request_url = 
+		            		"http://vires2.eox.at/vires00/ows?"+
+		            		"service=WPS&version=1.0.0&request=Execute&identifier=retrieve_data&"+
+		            		"DataInputs=collection_ids="+retrieve_data.join()+"%3B"+
+		            		"begin_time="+getISODateTimeString(this.selected_time.start)+"%3B"+
+		            		"end_time="+getISODateTimeString(this.selected_time.end)+
+		            		"&rawdataoutput=output";
+            		}
+            		
+            		console.log(this.request_url);
+					this.render(this.plot_type);
             	}
 
 				
