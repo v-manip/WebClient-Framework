@@ -125,7 +125,8 @@ define(['backbone.marionette',
 
 				
 				// Go through all products and add them to the map
-				globals.products.each(function(product) {
+				_.each(globals.products.last(globals.products.length).reverse(), function(product){
+				//_.each(globals.products.reverse(),function(product){
 					var layer = this.createLayer(product);
 					if (layer) {
 						var imagerylayer = this.map.scene.imageryLayers.addImageryProvider(layer);
@@ -176,7 +177,11 @@ define(['backbone.marionette',
                 	var layer = this.createLayer(overlay);
 					if (layer) {
 						var imagerylayer = this.map.scene.imageryLayers.addImageryProvider(layer);
+						var index = this.map.scene.imageryLayers.indexOf(imagerylayer);
+						index += this.overlay_offset;
+						this.map.scene.imageryLayers.remove(imagerylayer, false);
 						imagerylayer.show = overlay.get("visible");
+						this.map.scene.imageryLayers.add(imagerylayer, index);
 						overlay.set("ces_layer", imagerylayer);
 					}
                 }, this);
@@ -239,30 +244,6 @@ define(['backbone.marionette',
 	                }
 	            }
                 
-                /*var shadedRelief = new Cesium.WebMapTileServiceImageryProvider({
-				    url : 'http://a.tiles.maps.eox.at/wmts/',
-				    layer : 'terrain-light',
-				    style : 'default',
-				    format : 'image/jpeg',
-				    tileMatrixSetID : 'WGS84',
-				    maximumLevel: 12,
-				    tilingScheme: new Cesium.GeographicTilingScheme({numberOfLevelZeroTilesX: 2, numberOfLevelZeroTilesY: 1})
-				    //credit : new Cesium.Credit('U. S. Geological Survey')
-				});
-				this.map.scene.imageryLayers.addImageryProvider(shadedRelief);
-
-				var overlay = new Cesium.WebMapTileServiceImageryProvider({
-				    url : 'http://a.tiles.maps.eox.at/wmts/',
-				    layer : 'overlay',
-				    style : 'default',
-				    format : 'image/png',
-				    tileMatrixSetID : 'WGS84',
-				    maximumLevel: 12,
-				    tilingScheme: new Cesium.GeographicTilingScheme({numberOfLevelZeroTilesX: 2, numberOfLevelZeroTilesY: 1})
-				    //credit : new Cesium.Credit('U. S. Geological Survey')
-				});
-				this.map.scene.imageryLayers.addImageryProvider(overlay);*/
-
                 switch(view.protocol){
                     case "WMTS":
                     	return_layer = new Cesium.WebMapTileServiceImageryProvider({
@@ -276,67 +257,19 @@ define(['backbone.marionette',
 						    credit : new Cesium.Credit(view.attribution),
 						    show: layerdesc.get("visible")
 						});
-                        /*return_layer = new OpenLayers.Layer.WMTS({
-                            name: layerdesc.get("name"),
-	                        layer: view.id,
-	                        protocol: view.protocol,
-	                        url: view.urls,
-	                        matrixSet: view.matrixSet,
-	                        style: view.style,
-	                        format: view.format,
-	                        maxExtent: view.maxExtent,
-	                        resolutions: view.resolutions,
-	                        projection: view.projection,
-	                        gutter: view.gutter,
-	                        buffer: view.buffer,
-	                        units: view.units,
-	                        transitionEffect: view.transitionEffect,
-	                        isphericalMercator: view.isphericalMercator,
-	                        isBaseLayer: view.isBaseLayer,
-	                        wrapDateLine: view.wrapDateLine,
-	                        zoomOffset: view.zoomOffset,
-	                        visibility: layerdesc.get("visible"),
-	                        time: layerdesc.get('time'),
-	                        attribution: view.attribution
-                        });*/
                     break;
 
                     case "WMS":
-                    	params = $.extend({time: layerdesc.get("time")},  Cesium.WebMapServiceImageryProvider.DefaultParameters)
+                    	params = $.extend({
+                    		time: layerdesc.get("time"),
+                    		transparent: 'true'
+                    	},  Cesium.WebMapServiceImageryProvider.DefaultParameters)
+                    	params.format = 'image/png';
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
 						    url: view.urls[0],
 						    layers : view.id,
 						    parameters: params
 						});
-                        /*return_layer = new OpenLayers.Layer.WMS(
-                            layerdesc.get("name"),
-                            view.urls[0],
-                            {
-                                layers: view.id,
-                                transparent: "true",
-                                format: "image/png",
-                                time: layerdesc.get('time')
-                            },
-                            {
-                                format: 'image/png',
-                                matrixSet: view.matrixSet,
-                                style: view.style,
-                                format: view.format,
-                                maxExtent: view.maxExtent,
-                                resolutions: view.resolutions,
-                                projection: view.projection,
-                                gutter: view.gutter,
-                                buffer: view.buffer,
-                                units: view.units,
-                                transitionEffect: view.transitionEffect,
-                                isphericalMercator: view.isphericalMercator,
-                                isBaseLayer: view.isBaseLayer,
-                                wrapDateLine: view.wrapDateLine,
-                                zoomOffset: view.zoomOffset,
-                                visibility: layerdesc.get("visible"),
-                                attribution: view.attribution
-                            }
-                        );*/
                     break;
 
                     default:
@@ -366,25 +299,50 @@ define(['backbone.marionette',
 			},
 
 			onSortProducts: function(productLayers) {
+
+
+				// Search for moved layer
+				var layer_moved = null;
+				var to_move = 0;
 				globals.products.each(function(product) {
-					//if (this.isModelCompatible(product)) {
-					// Another quick hack to exclude 'W3DS' layers. We should use the isModelCompatible() function!
-					_.each(product.get('views'), function(view){
-						if (view.protocol == 'WMS' || view.protocol == "WMTS"){
-							var productLayer = this.map.getLayersByName(product.get("name"))[0];
-							var index = globals.products.length - globals.products.indexOf(product);
-							this.map.setLayerIndex(productLayer, index);
-						}
-					},this);
+					var ces_layer = product.get("ces_layer");
+                	if (ces_layer){
+                		var product_index = globals.products.length-1 - globals.products.indexOf(product);
+                		var ces_index = this.map.scene.imageryLayers.indexOf(ces_layer);
+                		var cur_move = product_index - ces_index + globals.baseLayers.length-1;
+                		if (Math.abs(to_move)<Math.abs(cur_move)){
+                			to_move = cur_move;
+                			layer_moved = ces_layer;
+                		}
+                	}
 				}, this);
+
+				// Raise or Lower the layer depending on movement
+				for(var i=0; i<Math.abs(to_move); ++i){
+					if(to_move < 0)
+						this.map.scene.imageryLayers.lower(layer_moved);
+					else if(to_move>0)
+						this.map.scene.imageryLayers.raise(layer_moved);
+				}
+
+				
 				console.log("Map products sorted");
 			},
 
 			onUpdateOpacity: function(options) {
-                var layer = this.map.getLayersByName(options.model.get("name"))[0];
+				//var ces_layer = options.model.get("ces_layer");
+				globals.products.each(function(product) {
+                	if(product.get("name")==options.model.get("name")){
+                		var ces_layer = product.get("ces_layer");
+                		if(ces_layer){
+							ces_layer.alpha = options.value;
+						}
+					}
+				}, this);
+                /*var layer = this.map.getLayersByName(options.model.get("name"))[0];
                 if (layer){
                         layer.setOpacity(options.value);
-                }
+                }*/
             },
 
             changeLayer: function(options) {
@@ -552,8 +510,11 @@ define(['backbone.marionette',
                     	product.set("time",string);
                     	var ces_layer = product.get("ces_layer");
                     	ces_layer.imageryProvider._parameters["time"] = string;
-                       //  var productLayer = this.map.getLayersByName(product.get("name"))[0];
-                      	// productLayer.mergeNewParams({'time':string});
+                    	if (ces_layer.show){
+                    		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+                    		this.map.scene.imageryLayers.remove(ces_layer, false);
+                    		this.map.scene.imageryLayers.add(ces_layer, index);
+                    	}
                     }
 	            }, this);
             },

@@ -141,7 +141,7 @@
                 "id": "SW_OPER_MAGA_LR_1B_outlines",
                 "protocol": "WMS",
                 "urls": [
-                    "http://vires2.eox.at/vires00/ows"
+                    "http://vire2.eox.at/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -158,6 +158,46 @@
                 }
             ]
 
+        },{
+            "name": "AROME Temperature surface",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "AROME_Temperature_surface_201305150000",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "AROME_Temperature_surface_201305150000",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "unit": "Kelvin (K)"
+        },{
+            "name": "AROME Surface Pressure",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "AROME_Surface_Pressure_201305150000",
+                "protocol": "WMS",
+                "urls": [
+                    "http://demo.v-manip.eox.at/browse/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "AROME_Surface_Pressure_201305150000",
+                "protocol": "EOWCS",
+                "url": "http://demo.v-manip.eox.at/browse/ows"
+            },
+            "unit": "Pascal (Pa)"
         },{
             "name": "MAGB LR 1B",
             "visible": false,

@@ -43,8 +43,8 @@ define([
 			// this.cesiumView.listenTo(Communicator.mediator, "map:center", _.bind(this.cesiumView.centerMap, this.cesiumView));
 			// this.cesiumView.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.cesiumView.onSetExtent, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.cesiumView.changeLayer, this.cesiumView));
-			// this.cesiumView.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.cesiumView.onSortProducts, this.cesiumView));
-			// this.cesiumView.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.cesiumView.onUpdateOpacity, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.cesiumView.onSortProducts, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.cesiumView.onUpdateOpacity, this.cesiumView));
 			// this.cesiumView.listenTo(Communicator.mediator, "selection:activated", _.bind(this.cesiumView.onSelectionActivated, this.cesiumView));
 			// this.cesiumView.listenTo(Communicator.mediator, "selection:changed", _.bind(this.cesiumView.onSelectionChanged, this.cesiumView));
 			//this.cesiumView.listenTo(Communicator.mediator, "map:load:image", _.bind(this.cesiumView.onLoadImage, this.cesiumView));
