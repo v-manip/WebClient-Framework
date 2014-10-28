@@ -28,7 +28,7 @@ define([
 			},
 
 			'click .globeview-btn': function() {
-				var options = {window:this, viewer:'VirtualGlobeViewer'};
+				var options = {window:this, viewer:'CesiumViewer'};
 				Communicator.mediator.trigger('window:view:change', options);
 			},
 

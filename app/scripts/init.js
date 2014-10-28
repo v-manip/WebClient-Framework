@@ -54,6 +54,7 @@
         },
 
         paths: {
+            cesium: "../bower_components/Cesium-1.1/Build/Cesium",
             contrib: 'contrib',
             core: 'core',
             requirejs: '../bower_components/requirejs/require',
@@ -98,11 +99,13 @@
             //'openlayers': 'http://ol3js.org/en/master/build/ol',
 
             /* 3D viewer modules base libraries */
+
             virtualglobeviewer: "../bower_components/virtualglobeviewer/src",
             x3dom: "../scripts/vendor/x3dom-full.debug",
             keypress: '../bower_components/Keypress/keypress',
             xtk: '../scripts/vendor/xtk_edge',
             'xtk-gui': '../scripts/vendor/xtk_xdat.gui'
+
         },
 
         hbs: {
