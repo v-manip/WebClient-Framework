@@ -27,6 +27,8 @@ define(['backbone.marionette',
 				this.diff_overlay = null;
 				this.overlay_layers = [];
 				this.overlay_offset = 100;
+				this.camera_is_moving = false;
+				this.camera_last_position = null;
 
 				$(window).resize(function() {
 					if (this.map) {
@@ -59,9 +61,19 @@ define(['backbone.marionette',
 						navigationInstructionsInitiallyVisible: false,
 						animation: false,
 						imageryProvider: layer,
+						terrainProvider : new Cesium.CesiumTerrainProvider({
+					        url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
+					    }),
 						//creditContainer: ".cesium_attribution"
 					});
 				}
+
+				this.camera_last_position = {};
+				this.camera_last_position.x = this.map.scene.camera.position.x;
+				this.camera_last_position.y = this.map.scene.camera.position.y;
+				this.camera_last_position.z = this.map.scene.camera.position.z;
+
+				this.map.clock.onTick.addEventListener(this.handleTick.bind(this));
 				
 				globals.baseLayers.each(function(baselayer) {
 					if (baselayer.get("name") == name){
@@ -422,7 +434,45 @@ define(['backbone.marionette',
             },
 
             onGetMapExtent: function(){
-            	return this.map.getExtent();
+            	return this.getMapExtent();
+            },
+
+            getMapExtent: function(){
+            	var ellipsoid = this.map.scene.globe.ellipsoid;
+            	var c2 = new Cesium.Cartesian2(0, 0);
+			    var leftTop = this.map.scene.camera.pickEllipsoid(c2, ellipsoid);
+			    c2 = new Cesium.Cartesian2(this.map.scene.canvas.width, this.map.scene.canvas.height);
+			    var rightDown = this.map.scene.camera.pickEllipsoid(c2, ellipsoid);
+
+			    if (leftTop != null && rightDown != null) { //ignore jslint
+			        leftTop = ellipsoid.cartesianToCartographic(leftTop);
+			        rightDown = ellipsoid.cartesianToCartographic(rightDown);
+			        return {
+			        	left: Cesium.Math.toDegrees(leftTop.longitude),
+			        	bottom: Cesium.Math.toDegrees(rightDown.latitude),
+			        	right: Cesium.Math.toDegrees(rightDown.longitude),
+			        	top: Cesium.Math.toDegrees(leftTop.latitude)
+			        };
+			    } else {
+			        //The sky is visible in 3D
+			        // TODO: Not sure what the best way to calculate the extent is when sky is visible.
+			        //       This method is just an approximation, not actually correct
+			        // Try to get center point
+			        var center = new Cesium.Cartesian2(this.map.scene.canvas.width/2, this.map.scene.canvas.height/2);
+			        center = this.map.scene.camera.pickEllipsoid(center, ellipsoid);
+			        if (center != null){
+			        	center = ellipsoid.cartesianToCartographic(center);
+			        	return {
+				        	left: Cesium.Math.toDegrees(center.longitude) - 90,
+				        	bottom: Cesium.Math.toDegrees(center.latitude) - 45,
+				        	right: Cesium.Math.toDegrees(center.longitude) + 90,
+				        	top: Cesium.Math.toDegrees(center.latitude) + 45
+				        };
+			        }else{
+			        	// If everything fails assume whole world is visible which is wrong
+			        	return {left: -180, bottom: -90, right: 180, top: 90};
+			        }
+			    }
             },
            
 			onDone: function(evt) {
@@ -573,6 +623,34 @@ define(['backbone.marionette',
 					this.map.removeLayer(this.diff_overlay);
 					this.diff_overlay = null;
 				}
+			},
+
+			handleTick: function(clock) {
+				// TODO: Cesium does not provide a method to know when the camera has stopped, 
+				//       this approach is not ideal, when the movement mantains inertia difference 
+				//       values are very low and there are comparison errors.
+			    var camera = this.map.scene.camera;
+
+			    if (!this.camera_is_moving){
+			    	if (Math.abs(this.camera_last_position.x - camera.position.x) > 10000 &&
+			    		Math.abs(this.camera_last_position.y - camera.position.y) > 10000 &&
+			    		Math.abs(this.camera_last_position.z - camera.position.z) > 10000 ){
+
+			    		this.camera_is_moving = true;
+			    	}
+			    }else{
+			    	if (Math.abs(this.camera_last_position.x - camera.position.x) < 10000 &&
+			    		Math.abs(this.camera_last_position.y - camera.position.y) < 10000 &&
+			    		Math.abs(this.camera_last_position.z - camera.position.z) < 10000 ){
+
+			    		this.camera_is_moving = false;
+			    		Communicator.mediator.trigger("map:position:change", this.getMapExtent() );
+			    	}else{
+			    		this.camera_last_position.x = camera.position.x;
+			    		this.camera_last_position.y = camera.position.y;
+			    		this.camera_last_position.z = camera.position.z;
+			    	}
+			    }
 			}
 
 		});

@@ -61,7 +61,7 @@ define([
 			//this.listenTo(Communicator.mediator, "selection:changed", _.bind(this.cesiumView.onSelectionChanged, this.cesiumView));
 
 			//Communicator.reqres.setHandler('get:selection:json', _.bind(this.cesiumView.onGetGeoJSON, this.cesiumView));
-			//Communicator.reqres.setHandler('map:get:extent', _.bind(this.cesiumView.onGetMapExtent, this.cesiumView));
+			Communicator.reqres.setHandler('map:get:extent', _.bind(this.cesiumView.onGetMapExtent, this.cesiumView));
 
 			this.cesiumView.listenTo(this.cesiumView.model, 'change', function(model, options) {
 				/*Communicator.mediator.trigger("router:setUrl", {

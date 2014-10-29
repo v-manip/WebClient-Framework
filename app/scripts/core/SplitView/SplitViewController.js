@@ -53,7 +53,7 @@ define([
 			}
 			
 			
-			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
+			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
 		},
 
 		setSplitscreen: function() {
