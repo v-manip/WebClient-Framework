@@ -41,7 +41,7 @@ define([
 
 		connectToView: function() {
 			// this.cesiumView.listenTo(Communicator.mediator, "map:center", _.bind(this.cesiumView.centerMap, this.cesiumView));
-			// this.cesiumView.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.cesiumView.onSetExtent, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.cesiumView.onSetExtent, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.cesiumView.changeLayer, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.cesiumView.onSortProducts, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.cesiumView.onUpdateOpacity, this.cesiumView));

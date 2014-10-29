@@ -570,7 +570,10 @@ define(['backbone.marionette',
             },
 
             onSetExtent: function(bbox) {
-            	this.map.zoomToExtent(bbox);
+            	//this.map.zoomToExtent(bbox);
+            	this.map.scene.camera.flyToRectangle({
+            		destination: Cesium.Rectangle.fromDegrees(bbox[0], bbox[1], bbox[2], bbox[3])
+            	});
 
             },
 
