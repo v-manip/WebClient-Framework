@@ -40,6 +40,11 @@ define(['backbone.marionette',
 
 			createMap: function() {
 
+				this.$el.append("<div id='cesium_attribution'></div>");
+				this.$el.append("<div id='cesium_custom_attribution'></div>");
+				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
+					"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>");
+
 				var layer;
 				var name = "";
 
@@ -65,17 +70,11 @@ define(['backbone.marionette',
 						terrainProvider : new Cesium.CesiumTerrainProvider({
 					        url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
 					    }),
-						//creditContainer: ".cesium_attribution"
+						creditContainer: "cesium_attribution"
 					});
 				}
 
-				//this.$el.append("<div id='draw_helper_toolbar' style='position:absolute; z-index:5000; top:0px; left:0px'></div>");
-
 				this.drawhelper = new DrawHelper(this.map.cesiumWidget);
-
-		        /*this.toolbar = this.drawhelper.addToolbar(document.getElementById("draw_helper_toolbar"), {
-		            buttons: ['extent']
-		        });*/
 
 				this.camera_last_position = {};
 				this.camera_last_position.x = this.map.scene.camera.position.x;
@@ -264,7 +263,17 @@ define(['backbone.marionette',
                 		}
 	                }
 	            }
-                
+
+	            // Manage custom attribution element (add attribution for active layers)
+	            if(layerdesc.get("visible")){
+	            	if(view.attribution){
+	            		$("#cesium_custom_attribution").append(
+		            		"<div id='" + layerdesc.get("name") + "' style='float: left;'>"+
+		            		view.attribution +
+		            		"</div>");
+	            	}
+	            }
+	            
                 switch(view.protocol){
                     case "WMTS":
                     	return_layer = new Cesium.WebMapTileServiceImageryProvider({
@@ -375,16 +384,27 @@ define(['backbone.marionette',
 					globals.baseLayers.each(function(baselayer) {
 						var ces_layer = baselayer.get("ces_layer");
 						if (ces_layer) {
-							if(baselayer.get("name")==options.name)
+							if(baselayer.get("name")==options.name){
 								ces_layer.show = true;
+								// Manage custom attribution element (add attribution for active baselayer)
+				            	if(baselayer.get("views")[0].attribution){
+				            		$("#cesium_custom_attribution").append(
+					            		"<div id='" + baselayer.get("name") + "' style='float: left;'>"+
+					            		baselayer.get("views")[0].attribution +
+					            		"</div>");
+					            }
+							}
 						}
 					}, this);
 
 					globals.baseLayers.each(function(baselayer) {
 						var ces_layer = baselayer.get("ces_layer");
 						if (ces_layer) {
-							if(baselayer.get("name")!=options.name)
+							if(baselayer.get("name")!=options.name){
 								ces_layer.show = false;
+								//Manage custom attribution (remove deactivated layers)
+								$("#"+baselayer.get("name")).remove();
+							}
 						}
 					}, this);
 
@@ -393,6 +413,18 @@ define(['backbone.marionette',
                     	if(overlay.get("name")==options.name){
                     		var ces_layer = overlay.get("ces_layer");
 							ces_layer.show = options.visible;
+							if(options.visible){
+								// Manage custom attribution element (add attribution for active baselayer)
+				            	if(overlay.get("view").attribution){
+				            		$("#cesium_custom_attribution").append(
+					            		"<div id='" + overlay.get("name") + "' style='float: left;'>"+
+					            		overlay.get("view").attribution +
+					            		"</div>");
+					            }
+							}else{
+								//Manage custom attribution (remove deactivated layers)
+								$("#"+overlay.get("name")).remove();
+							}
 						}
 					}, this);
 
@@ -400,6 +432,18 @@ define(['backbone.marionette',
                     	if(product.get("name")==options.name){
                     		var ces_layer = product.get("ces_layer");
 							ces_layer.show = options.visible;
+							if(options.visible){
+								// Manage custom attribution element (add attribution for active baselayer)
+				            	if(product.get("views")[0].attribution){
+				            		$("#cesium_custom_attribution").append(
+					            		"<div id='" + product.get("name") + "' style='float: left;'>"+
+					            		product.get("views")[0].attribution +
+					            		"</div>");
+					            }
+							}else{
+								//Manage custom attribution (remove deactivated layers)
+								$("#"+product.get("name")).remove();
+							}
 						}
 					}, this);
                 }

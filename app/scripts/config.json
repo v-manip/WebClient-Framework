@@ -46,7 +46,7 @@
                 "isphericalMercator": false,
                 "wrapDateLine": true,
                 "zoomOffset": 0,
-                "attribution": "Terrain { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+                "attribution": "Terrain-Light { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
             }, {
                 "id": "terrain-light",
                 "protocol": "WMS",
@@ -268,7 +268,7 @@
             "name": "Streets",
             "id": "overlay",
             "protocol": "WMTS",
-            "visible": true,
+            "visible": false,
             "urls": [
                 "http://a.tiles.maps.eox.at/wmts/",
                 "http://b.tiles.maps.eox.at/wmts/",
