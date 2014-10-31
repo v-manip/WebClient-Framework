@@ -50,11 +50,16 @@
             },
             'xtk-gui': {
                 exports: 'dat'
+            },
+            drawhelper: {
+                deps: ['cesium/Cesium'],
+                exports: 'DrawHelper'
             }
         },
 
         paths: {
             cesium: "../bower_components/Cesium-1.1/Build/Cesium",
+            drawhelper: "../scripts/vendor/cesium_DrawHelper",
             contrib: 'contrib',
             core: 'core',
             requirejs: '../bower_components/requirejs/require',

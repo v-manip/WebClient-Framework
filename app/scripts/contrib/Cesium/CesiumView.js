@@ -9,6 +9,7 @@ define(['backbone.marionette',
 		'globals',
 		'openlayers',
 		'cesium/Cesium',
+		'drawhelper',
 		'filesaver'
 	],
 	function(Marionette, Communicator, App, MapModel, globals) {
@@ -67,6 +68,14 @@ define(['backbone.marionette',
 						//creditContainer: ".cesium_attribution"
 					});
 				}
+
+				//this.$el.append("<div id='draw_helper_toolbar' style='position:absolute; z-index:5000; top:0px; left:0px'></div>");
+
+				this.drawhelper = new DrawHelper(this.map.cesiumWidget);
+
+		        /*this.toolbar = this.drawhelper.addToolbar(document.getElementById("draw_helper_toolbar"), {
+		            buttons: ['extent']
+		        });*/
 
 				this.camera_last_position = {};
 				this.camera_last_position.x = this.map.scene.camera.position.x;
@@ -399,7 +408,36 @@ define(['backbone.marionette',
 			onSelectionActivated: function(arg) {
 				this.selectionType = arg.selectionType;
 				if (arg.active) {
-					for (key in this.drawControls) {
+
+					var that = this;
+					this.drawhelper.startDrawingExtent({
+	                    callback: function(extent) {
+
+				            console.log('Extent created (N: ' + extent.north.toFixed(3) +
+				            			 ', E: ' + extent.east.toFixed(3) + 
+				            			 ', S: ' + extent.south.toFixed(3) +
+				            			 ', W: ' + extent.west.toFixed(3) + ')');
+
+				            var material = Cesium.Material.fromType('Color');
+							material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
+
+				            var extentPrimitive = new DrawHelper.ExtentPrimitive({
+				                extent: extent,
+				                material: material
+				            });
+
+				            that.map.scene.primitives.add(extentPrimitive);
+				            extentPrimitive.setEditable();
+				            extentPrimitive.addListener('onEdited', function(event) {
+				                console.log('Extent edited: extent is (N: ' + event.extent.north.toFixed(3) +
+				                			 ', E: ' + event.extent.east.toFixed(3) + 
+				                			 ', S: ' + event.extent.south.toFixed(3) + 
+				                			 ', W: ' + event.extent.west.toFixed(3) + ')');
+				            });
+	                    }
+	                });
+
+					/*for (key in this.drawControls) {
 						var control = this.drawControls[key];
 						if (arg.id == key) {
 							control.activate();
@@ -408,15 +446,16 @@ define(['backbone.marionette',
 							control.deactivate();
 							Communicator.mediator.trigger("selection:changed", null);
 						}
-					}
+					}*/
 				} else {
-					for (key in this.drawControls) {
+					this.map.scene.primitives.removeAll();
+					/*for (key in this.drawControls) {
 						var control = this.drawControls[key];
 						control.layer.removeAllFeatures();
 						control.deactivate();
 						Communicator.mediator.trigger("selection:changed", null);
 
-					}
+					}*/
 				}
 			},
 
