@@ -48,6 +48,8 @@ define(['backbone.marionette',
 				var layer;
 				var name = "";
 
+				this.colors = globals.objects.get("color");
+
 				globals.baseLayers.each(function(baselayer) {
 					if (baselayer.get("visible")){
 						name = baselayer.get("name");
@@ -167,30 +169,11 @@ define(['backbone.marionette',
 				};
 
 				this.geojson = new OpenLayers.Format.GeoJSON(io_options);
-
-				// Add layers for different selection methods
-				this.vectorLayer = new OpenLayers.Layer.Vector("vectorLayer");
 				
 				this.map.addLayers([this.vectorLayer]);
 				this.map.addControl(new OpenLayers.Control.MousePosition());
 
-				this.drawControls = {
-					pointSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.Point),
-					lineSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.Path),
-					polygonSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.Polygon),
-					bboxSelection: new OpenLayers.Control.DrawFeature(this.vectorLayer,
-						OpenLayers.Handler.RegularPolygon, {
-							handlerOptions: {
-								sides: 4,
-								irregular: true,
-								keyMask: !OpenLayers.Handler.MOD_CTRL
-							}
-            			}
-					)
-				};*/
+				*/
 
 				// Go through all overlays and add them to the map
                 globals.overlays.each(function(overlay){
@@ -206,11 +189,7 @@ define(['backbone.marionette',
 					}
                 }, this);
 
-				/*for (var key in this.drawControls) {
-					this.map.addControl(this.drawControls[key]);
-					this.drawControls[key].events.register("featureadded", this, this.onDone);
-				}
-
+                /*
 				//Set attributes of map based on mapmodel attributes
 				var mapmodel = globals.objects.get('mapmodel');
 				this.map.setCenter(new OpenLayers.LonLat(mapmodel.get("center")), mapmodel.get("zoom"));*/
@@ -449,59 +428,6 @@ define(['backbone.marionette',
                 }
             },
 
-			onSelectionActivated: function(arg) {
-				this.selectionType = arg.selectionType;
-				if (arg.active) {
-
-					var that = this;
-					this.drawhelper.startDrawingExtent({
-	                    callback: function(extent) {
-
-				            console.log('Extent created (N: ' + extent.north.toFixed(3) +
-				            			 ', E: ' + extent.east.toFixed(3) + 
-				            			 ', S: ' + extent.south.toFixed(3) +
-				            			 ', W: ' + extent.west.toFixed(3) + ')');
-
-				            var material = Cesium.Material.fromType('Color');
-							material.uniforms.color = new Cesium.Color(1.0, 0.0, 0.0, 0.5);
-
-				            var extentPrimitive = new DrawHelper.ExtentPrimitive({
-				                extent: extent,
-				                material: material
-				            });
-
-				            that.map.scene.primitives.add(extentPrimitive);
-				            extentPrimitive.setEditable();
-				            extentPrimitive.addListener('onEdited', function(event) {
-				                console.log('Extent edited: extent is (N: ' + event.extent.north.toFixed(3) +
-				                			 ', E: ' + event.extent.east.toFixed(3) + 
-				                			 ', S: ' + event.extent.south.toFixed(3) + 
-				                			 ', W: ' + event.extent.west.toFixed(3) + ')');
-				            });
-	                    }
-	                });
-
-					/*for (key in this.drawControls) {
-						var control = this.drawControls[key];
-						if (arg.id == key) {
-							control.activate();
-						} else {
-							control.layer.removeAllFeatures();
-							control.deactivate();
-							Communicator.mediator.trigger("selection:changed", null);
-						}
-					}*/
-				} else {
-					this.map.scene.primitives.removeAll();
-					/*for (key in this.drawControls) {
-						var control = this.drawControls[key];
-						control.layer.removeAllFeatures();
-						control.deactivate();
-						Communicator.mediator.trigger("selection:changed", null);
-
-					}*/
-				}
-			},
 
 			onExportGeoJSON: function() {
 				var geojsonstring = this.geojson.write(this.vectorLayer.features, true);
@@ -538,7 +464,7 @@ define(['backbone.marionette',
 			        };
 			    } else {
 			        //The sky is visible in 3D
-			        // TODO: Not sure what the best way to calculate the extent is when sky is visible.
+			        // TODO: Not sure what the best way to calculate the extent is when sky/space is visible.
 			        //       This method is just an approximation, not actually correct
 			        // Try to get center point
 			        var center = new Cesium.Cartesian2(this.map.scene.canvas.width/2, this.map.scene.canvas.height/2);
@@ -557,47 +483,100 @@ define(['backbone.marionette',
 			        }
 			    }
             },
-           
-			onDone: function(evt) {
-				
-				// TODO: How to handle multiple draws etc has to be thought of
-				// as well as what exactly is comunicated out
-				//console.log(colors(evt.feature.layer.features.length-1),evt.feature.layer.features.length-1);
-				var colorindex = this.vectorLayer.features.length;
-				if(this.selectionType == "single"){
-					this.vectorLayer.removeAllFeatures();
-					colorindex = this.vectorLayer.features.length;
-					Communicator.mediator.trigger("selection:changed", null);
-				}
 
-				
-				//Communicator.mediator.trigger("selection:changed", evt.feature);
-				// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
-				// not have to be rewritten. This has to be changed somewhen...
-				var color = this.colors(colorindex);
-				Communicator.mediator.trigger("selection:changed", evt.feature, this._convertCoordsFromOpenLayers(evt.feature.geometry, 0), color);
-				
-				evt.feature.destroy();
+            onSelectionActivated: function(arg) {
+				this.selectionType = arg.selectionType;
+
+				if (arg.active) {
+
+					var that = this;
+					this.drawhelper.startDrawingExtent({
+	                    callback: function(extent) {
+
+				            /*console.log('Extent created (N: ' + extent.north.toFixed(3) +
+				            			 ', E: ' + extent.east.toFixed(3) + 
+				            			 ', S: ' + extent.south.toFixed(3) +
+				            			 ', W: ' + extent.west.toFixed(3) + ')');*/
+
+							var colorindex = that.map.scene.primitives.length+1;
+							if(that.selectionType == "single"){
+								//that.map.scene.primitives.removeAll();
+								colorindex = that.map.scene.primitives.length;
+								Communicator.mediator.trigger("selection:changed", null);
+							}
+
+							var color = that.colors(colorindex);
+
+							//Communicator.mediator.trigger("selection:changed", evt.feature);
+							// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
+							// not have to be rewritten. This has to be changed somewhen...
+							var coordinates = that._convertCoordsFromCesium(extent, 0);
+							var feature = that._convertCoordsToOpenLayers(coordinates);
+							Communicator.mediator.trigger("selection:changed", feature, coordinates, color);
+	                    }
+	                });
+
+					/*for (key in this.drawControls) {
+						var control = this.drawControls[key];
+						if (arg.id == key) {
+							control.activate();
+						} else {
+							control.layer.removeAllFeatures();
+							control.deactivate();
+							Communicator.mediator.trigger("selection:changed", null);
+						}
+					}*/
+				} else {
+					//this.map.scene.primitives.removeAll();
+					Communicator.mediator.trigger("selection:changed", null);
+					//this.drawhelper.muteHandlers(true);
+					//this.map.screenSpaceEventHandler.destroy();
+					this.drawhelper.stopDrawing();
+					/*for (key in this.drawControls) {
+						var control = this.drawControls[key];
+						control.layer.removeAllFeatures();
+						control.deactivate();
+						Communicator.mediator.trigger("selection:changed", null);
+
+					}*/
+				}
 			},
+           
 
 			onSelectionChanged: function(feature, coords, color){
 
 				if(feature){
-					var colorindex = this.vectorLayer.features.length+1;
+					var colorindex = this.map.scene.primitives.length+1;
 					if(this.selectionType == "single"){
-						this.vectorLayer.removeAllFeatures();
-						colorindex = this.vectorLayer.features.length;
+						this.map.scene.primitives.removeAll();
+						colorindex = this.map.scene.primitives.length;
 					}
-					/*if (color)
-						color = this.colors(this.vectorLayer.features.length-1);
-					else
-						color = this.colors(this.vectorLayer.features.length);*/
 
 					if(!color)
 						color = this.colors(colorindex);
-					feature.style = {fillColor: color, pointRadius: 6, strokeColor: color, fillOpacity: 0.5};
-					this.vectorLayer.addFeatures([feature.clone()]);
+
+					var material = Cesium.Material.fromType('Color');
+					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
+					material.uniforms.color.alpha = 0.6;
+
+					var e = new Cesium.Rectangle();
+
+			        e.west = Cesium.Math.toRadians(coords[0].x);
+			        e.east = Cesium.Math.toRadians(coords[2].x);
+			        e.south = Cesium.Math.toRadians(coords[0].y);
+			        e.north = Cesium.Math.toRadians(coords[2].y);
+
+		            var extentPrimitive = new DrawHelper.ExtentPrimitive({
+		                extent: e,
+		                material: material
+		            });
+
+		            this.map.scene.primitives.add(extentPrimitive);
+				}else{
+					this.map.scene.primitives.removeAll();
 				}
+
+
 			},
 
 			/*onSelectionChanged: function(coords) {
@@ -632,6 +611,47 @@ define(['backbone.marionette',
 	            coordinates.push(p);
 
 	            return coordinates;
+	        },
+
+	        _convertCoordsFromCesium: function(prim, altitude) {
+
+	            var coordinates = [];
+
+	            coordinates.push({
+	            	x: Cesium.Math.toDegrees(prim.west),
+	            	y: Cesium.Math.toDegrees(prim.south),
+	            	z: altitude
+	            });
+	            coordinates.push({
+	            	x: Cesium.Math.toDegrees(prim.west),
+	            	y: Cesium.Math.toDegrees(prim.north),
+	            	z: altitude
+	            });
+	            coordinates.push({
+	            	x: Cesium.Math.toDegrees(prim.east),
+	            	y: Cesium.Math.toDegrees(prim.north),
+	            	z: altitude
+	            });
+	            coordinates.push({
+	            	x: Cesium.Math.toDegrees(prim.east),
+	            	y: Cesium.Math.toDegrees(prim.south),
+	            	z: altitude
+	            });
+	            
+	            return coordinates;
+	        },
+
+	        _convertCoordsToOpenLayers: function(coords){
+	        	var points = [];
+                for (var idx = 0; idx < coords.length; idx++) {
+                    points.push(new OpenLayers.Geometry.Point(coords[idx].x, coords[idx].y));
+                };
+
+                var ring = new OpenLayers.Geometry.LinearRing(points);
+                var polygon = new OpenLayers.Geometry.Polygon([ring]);
+                var feature = new OpenLayers.Feature.Vector(polygon);
+
+                return feature;
 	        },
 
 			onTimeChange: function (time) {
