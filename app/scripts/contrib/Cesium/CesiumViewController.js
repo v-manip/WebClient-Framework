@@ -47,6 +47,11 @@ define([
 			this.cesiumView.listenTo(Communicator.mediator, "productCollection:updateOpacity", _.bind(this.cesiumView.onUpdateOpacity, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "selection:activated", _.bind(this.cesiumView.onSelectionActivated, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "selection:changed", _.bind(this.cesiumView.onSelectionChanged, this.cesiumView));
+
+			this.cesiumView.listenTo(Communicator.mediator, "layer:range:changed", _.bind(this.cesiumView.onLayerRangeChanged, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "layer:band:changed", _.bind(this.cesiumView.onLayerBandChanged, this.cesiumView));
+
+			
 			//this.cesiumView.listenTo(Communicator.mediator, "map:load:image", _.bind(this.cesiumView.onLoadImage, this.cesiumView));
 			//this.cesiumView.listenTo(Communicator.mediator, "map:clear:image", _.bind(this.cesiumView.onClearImage, this.cesiumView));
 

@@ -16,6 +16,7 @@ $iconWhiteSpritePath: "../images/glyphicons-halflings-white.png";
 @import "story";
 @import "tooltip";
 @import "cesium";
+@import "layersettings";
 
 /* Not used right now ;)
 #preloadedImages {
@@ -189,7 +190,7 @@ button[active=active] {
  * Layer control styles
  */
 .layercontrol {
-    width: 21.8em;
+    width: 23.8em;
     top: 10em;
     left: 3em;
     font-size: .9em;

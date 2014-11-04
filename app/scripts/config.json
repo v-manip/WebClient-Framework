@@ -138,7 +138,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "SW_OPER_MAGA_LR_1B_track",
+                "id": "SW_OPER_MAGA_LR_1B_measurement",
                 "protocol": "WMS",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
@@ -156,7 +156,18 @@
                     "id": "retrieve_data",
                     "layer_id": "SW_OPER_MAGA_LR_1B"
                 }
-            ]
+            ],
+            "parameters": {
+                "F_error": {
+                    "range": [0.0, 0.02],
+                    "colorscale": "rainbow"
+                },
+                "F": {
+                    "range": [30000, 60000],
+                    "colorscale": "rainbow",
+                    "selected": true
+                }
+            } 
 
         },{
             "name": "MAGB LR 1B",
@@ -343,7 +354,8 @@
         "core/ColorRamp/ColorRampView",
         "views/ToolItemView",
         "views/DownloadView",
-        "views/StoryBannerView"
+        "views/StoryBannerView",
+        "views/LayerSettings"
     ],
 
     "models": [

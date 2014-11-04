@@ -359,7 +359,8 @@ define(['backbone.marionette',
             		if(this.selection_list.length > 0){
             			if (this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
             				this.request_url = 
-		            		"http://vires2.eox.at/vires00/ows?"+
+		            		//"http://vires2.eox.at/vires00/ows?"+
+		            		"http://localhost:9000/vires00/ows?"+
 		            		"service=WPS&version=1.0.0&request=Execute&identifier=retrieve_data&"+
 		            		"DataInputs=collection_ids="+retrieve_data.join()+"%3B"+
 		            		"begin_time="+getISODateTimeString(this.selected_time.start)+"%3B"+
@@ -369,7 +370,8 @@ define(['backbone.marionette',
             			}
             		}else{
             			this.request_url = 
-		            		"http://vires2.eox.at/vires00/ows?"+
+		            		//"http://vires2.eox.at/vires00/ows?"+
+		            		"http://localhost:9000/vires00/ows?"+
 		            		"service=WPS&version=1.0.0&request=Execute&identifier=retrieve_data&"+
 		            		"DataInputs=collection_ids="+retrieve_data.join()+"%3B"+
 		            		"begin_time="+getISODateTimeString(this.selected_time.start)+"%3B"+

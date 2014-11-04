@@ -273,6 +273,23 @@ define(['backbone.marionette',
                     		time: layerdesc.get("time"),
                     		transparent: 'true'
                     	},  Cesium.WebMapServiceImageryProvider.DefaultParameters)
+
+                    	// Check if layer has additional parameters configured
+                    	var additional_parameters = {};
+                    	if(layerdesc.get("parameters")){
+                    		var options = layerdesc.get("parameters");
+                    		var keys = _.keys(options);
+                    		_.each(keys, function(key){
+								if(options[key].selected){
+									additional_parameters.dim_bands = key;
+									additional_parameters.range_min = options[key].range[0];
+									additional_parameters.range_max = options[key].range[1];
+									//additional_parameters.style = options[key].style;
+								}
+							});
+                    	}
+                    	params = $.extend(additional_parameters, params);
+
                     	params.format = 'image/png';
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
 						    url: view.urls[0],
@@ -427,6 +444,48 @@ define(['backbone.marionette',
 					}, this);
                 }
             },
+
+
+            onLayerRangeChanged: function(layer, range){
+
+            	globals.products.each(function(product) {
+                    
+                	if(product.get("name")==layer){
+                		// TODO: Do we need to update the model object here?
+	                	var ces_layer = product.get("ces_layer");
+	                	ces_layer.imageryProvider._parameters["range_min"] = range[0];
+	                	ces_layer.imageryProvider._parameters["range_max"] = range[1];
+
+	                	if (ces_layer.show){
+		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+		            		this.map.scene.imageryLayers.remove(ces_layer, false);
+		            		this.map.scene.imageryLayers.add(ces_layer, index);
+		            	}
+		            }
+                    
+	            }, this);
+            },
+
+			onLayerBandChanged: function(layer, band, range){
+				
+            	globals.products.each(function(product) {
+                    
+                	if(product.get("name")==layer){
+                		// TODO: Do we need to update the model object here?
+	                	var ces_layer = product.get("ces_layer");
+	                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
+	                	ces_layer.imageryProvider._parameters["range_min"] = range[0];
+	                	ces_layer.imageryProvider._parameters["range_max"] = range[1];
+
+	                	if (ces_layer.show){
+		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+		            		this.map.scene.imageryLayers.remove(ces_layer, false);
+		            		this.map.scene.imageryLayers.add(ces_layer, index);
+		            	}
+		            }
+                    
+	            }, this);
+			},
 
 
 			onExportGeoJSON: function() {

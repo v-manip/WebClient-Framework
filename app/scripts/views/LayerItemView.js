@@ -58,6 +58,20 @@
 			    $('.fa-adjust').popover({
         			trigger: 'manual'
     			});
+
+    			var that = this;
+
+    			if (this.$el.has( ".fa-gears" ).length){
+	    			this.$el.find('.fa-gears').click(function(){
+	    				
+	    				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+	    					App.layerSettings.setModel(that.model);
+							App.optionsBar.show(App.layerSettings);
+						} else {
+							App.optionsBar.close();
+						}
+	    			});
+	    		}
 			},
 
 

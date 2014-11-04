@@ -151,17 +151,18 @@
 							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
 							color: p_color,
 							//time: products.time, // Is set in TimeSliderView on time change.
-								opacity: 1,
-								views: product.views,
-								view: {isBaseLayer: false},
-								download: {
-									id: product.download.id,
-									protocol: product.download.protocol,
-									url: product.download.url
-								},
-								processes: product.processes,
-								unit: product.unit 
-							})
+							opacity: 1,
+							views: product.views,
+							view: {isBaseLayer: false},
+							download: {
+								id: product.download.id,
+								protocol: product.download.protocol,
+								url: product.download.url
+							},
+							processes: product.processes,
+							unit: product.unit,
+							parameters: product.parameters
+						})
 					);
 
 					if(product.processes){
@@ -288,6 +289,8 @@
                 	className: "check"
                 });
 
+
+
                 // Create layout that will hold the child views
                 this.layout = new LayerControlLayout();
 
@@ -370,9 +373,14 @@
                     })
                 });
 
+
+                this.layerSettings = new v.LayerSettings();
+
                 // Create layout to hold collection views
                 this.toolLayout = new ToolControlLayout();
                 this.optionsLayout = new OptionsLayout();
+
+                
 
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
