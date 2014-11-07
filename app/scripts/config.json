@@ -220,6 +220,24 @@
                 }
             ]
         },{
+            "name": "Fieldlines WMM 2010",
+            "visible": false,
+            "timeSlider": false,
+            "views": [{
+                "id": "data/field_lines.czml",
+                "protocol": "CZML",
+                "urls": [
+                    ""
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            }
+        },{
             "name": "Digital Elevation Model",
             "visible": true,
             "timeSlider": false,

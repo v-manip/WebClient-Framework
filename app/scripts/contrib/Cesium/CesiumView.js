@@ -36,6 +36,7 @@ define(['backbone.marionette',
 						this.onResize();
 					}
 				}.bind(this));
+
 			},
 
 			createMap: function() {
@@ -426,8 +427,19 @@ define(['backbone.marionette',
 
 					globals.products.each(function(product) {
                     	if(product.get("name")==options.name){
-                    		var ces_layer = product.get("ces_layer");
-							ces_layer.show = options.visible;
+                    		// TODO: This if method is only for testing, will be removed
+                    		if(product.get("views")[0].protocol == "CZML"){
+                    			if(options.visible){
+                    				var czmlSource = new Cesium.CzmlDataSource();
+	                    			czmlSource.loadUrl('data/field_lines.czml');
+			        				this.map.dataSources.add(czmlSource);
+			        			}else{
+			        				this.map.dataSources.removeAll();
+			        			}
+                    		}else{
+	                    		var ces_layer = product.get("ces_layer");
+								ces_layer.show = options.visible;
+							}
 							if(options.visible){
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(product.get("views")[0].attribution){
@@ -443,6 +455,9 @@ define(['backbone.marionette',
 						}
 					}, this);
                 }
+
+
+
             },
 
 
@@ -816,6 +831,10 @@ define(['backbone.marionette',
 			    		this.camera_last_position.z = camera.position.z;
 			    	}
 			    }
+			},
+
+			toggleDebug: function(){
+				this.map.scene.debugShowFramesPerSecond = !this.map.scene.debugShowFramesPerSecond;
 			}
 
 		});

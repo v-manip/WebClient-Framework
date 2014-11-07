@@ -39,6 +39,10 @@ define([
 			});
 		},
 
+		toggleDebug: function(){
+			this.cesiumView.toggleDebug();
+		},
+
 		connectToView: function() {
 			// this.cesiumView.listenTo(Communicator.mediator, "map:center", _.bind(this.cesiumView.centerMap, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.cesiumView.onSetExtent, this.cesiumView));

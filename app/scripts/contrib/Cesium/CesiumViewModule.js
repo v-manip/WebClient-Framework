@@ -69,9 +69,10 @@ define([
 
 		var setupKeyboardShortcuts = function(controller) {
 			var keypressListener = new keypress.Listener();
-			keypressListener.simple_combo("a", function() {
-				var pos = controller.getStartPosition();
-				controller.centerAndZoom(pos.x, pos.y, pos.l);
+			keypressListener.simple_combo("1", function() {
+				/*var pos = controller.getStartPosition();
+				controller.centerAndZoom(pos.x, pos.y, pos.l);*/
+				controller.toggleDebug();
 			});
 		};
 
