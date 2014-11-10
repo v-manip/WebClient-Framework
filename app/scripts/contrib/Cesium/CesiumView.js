@@ -1,6 +1,6 @@
 
 
-CESIUM_BASE_URL = "/bower_components/Cesium-1.1/Build/Cesium/"
+CESIUM_BASE_URL = "bower_components/Cesium-1.1/Build/Cesium/"
 
 define(['backbone.marionette',
 		'communicator',
@@ -30,6 +30,9 @@ define(['backbone.marionette',
 				this.overlay_offset = 100;
 				this.camera_is_moving = false;
 				this.camera_last_position = null;
+
+				this.begin_time = null;
+				this.end_time = null;
 
 				$(window).resize(function() {
 					if (this.map) {
@@ -277,19 +280,23 @@ define(['backbone.marionette',
 
                     	// Check if layer has additional parameters configured
                     	var additional_parameters = {};
+                    	var styles;
                     	if(layerdesc.get("parameters")){
                     		var options = layerdesc.get("parameters");
                     		var keys = _.keys(options);
                     		_.each(keys, function(key){
 								if(options[key].selected){
 									additional_parameters.dim_bands = key;
-									additional_parameters.range_min = options[key].range[0];
-									additional_parameters.range_max = options[key].range[1];
-									//additional_parameters.style = options[key].style;
+									// additional_parameters.range_min = options[key].range[0];
+									// additional_parameters.range_max = options[key].range[1];
+									additional_parameters.dim_range = options[key].range[0]+","+options[key].range[1];
+									//additional_parameters.styles = options[key].colorscale;
+									styles = options[key].colorscale;
 								}
 							});
                     	}
                     	params = $.extend(additional_parameters, params);
+                    	params.styles = styles; 
 
                     	params.format = 'image/png';
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
@@ -427,11 +434,22 @@ define(['backbone.marionette',
 
 					globals.products.each(function(product) {
                     	if(product.get("name")==options.name){
-                    		// TODO: This if method is only for testing, will be removed
+                    		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
                     			if(options.visible){
+                    				product.set("visible", true);
                     				var czmlSource = new Cesium.CzmlDataSource();
-	                    			czmlSource.loadUrl('data/field_lines.czml');
+                    				var url = product.get("views")[0].urls[0] + "?service=WPS&version=1.0.0&request=Execute&" +
+											  "identifier=retrieve_czml&" +
+											  "DataInputs="+
+											  "collection_ids="+ product.get("views")[0].id +"%3B"+
+											  "begin_time="+ getISODateTimeString(this.begin_time) +"%3B"+
+											  "end_time="+ getISODateTimeString(this.end_time)+"&"+
+											  "rawdataoutput=output";
+									//TODO: This is just for testing fieldlines czml file, will be removed
+									if(product.get("name")=="Fieldlines WMM 2010")
+                    					url = product.get("views")[0].id;
+	                    			czmlSource.loadUrl(url);
 			        				this.map.dataSources.add(czmlSource);
 			        			}else{
 			        				this.map.dataSources.removeAll();
@@ -468,8 +486,8 @@ define(['backbone.marionette',
                 	if(product.get("name")==layer){
                 		// TODO: Do we need to update the model object here?
 	                	var ces_layer = product.get("ces_layer");
-	                	ces_layer.imageryProvider._parameters["range_min"] = range[0];
-	                	ces_layer.imageryProvider._parameters["range_max"] = range[1];
+	                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+	                	//ces_layer.imageryProvider._parameters["range_max"] = range[1];
 
 	                	if (ces_layer.show){
 		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
@@ -489,8 +507,9 @@ define(['backbone.marionette',
                 		// TODO: Do we need to update the model object here?
 	                	var ces_layer = product.get("ces_layer");
 	                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
-	                	ces_layer.imageryProvider._parameters["range_min"] = range[0];
-	                	ces_layer.imageryProvider._parameters["range_max"] = range[1];
+	                	// ces_layer.imageryProvider._parameters["range_min"] = range[0];
+	                	// ces_layer.imageryProvider._parameters["range_max"] = range[1];
+	                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
 
 	                	if (ces_layer.show){
 		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
@@ -731,17 +750,42 @@ define(['backbone.marionette',
 			onTimeChange: function (time) {
 
 				var string = getISODateTimeString(time.start) + "/"+ getISODateTimeString(time.end);
+
+				this.begin_time = time.start;
+				this.end_time = time.end;
                                         
 	            globals.products.each(function(product) {
                     if(product.get("timeSlider")){
                     	product.set("time",string);
                     	var ces_layer = product.get("ces_layer");
-                    	ces_layer.imageryProvider._parameters["time"] = string;
-                    	if (ces_layer.show){
-                    		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-                    		this.map.scene.imageryLayers.remove(ces_layer, false);
-                    		this.map.scene.imageryLayers.add(ces_layer, index);
-                    	}
+
+                    	if(ces_layer){
+	                    	ces_layer.imageryProvider._parameters["time"] = string;
+	                    	if (ces_layer.show){
+	                    		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+	                    		this.map.scene.imageryLayers.remove(ces_layer, false);
+	                    		this.map.scene.imageryLayers.add(ces_layer, index);
+	                    	}
+	                    }
+
+	                    if(product.get("views")[0].protocol == "CZML"){
+                			if(product.get("visible")){
+                				this.map.dataSources.removeAll();
+                				var czmlSource = new Cesium.CzmlDataSource();
+                				var url = product.get("views")[0].urls[0] + "?service=WPS&version=1.0.0&request=Execute&" +
+										  "identifier=retrieve_czml&" +
+										  "DataInputs="+
+										  "collection_ids="+ product.get("views")[0].id +"%3B"+
+										  "begin_time="+ getISODateTimeString(this.begin_time) +"%3B"+
+										  "end_time="+ getISODateTimeString(this.end_time)+"&"+
+										  "rawdataoutput=output";
+                				//var url = product.get("views")[0].id;
+                    			czmlSource.loadUrl(url);
+		        				this.map.dataSources.add(czmlSource);
+		        			}/*}else{
+		        				this.map.dataSources.removeAll();
+		        			}*/
+		        		}
                     }
 	            }, this);
             },

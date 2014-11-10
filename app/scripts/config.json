@@ -138,8 +138,8 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "SW_OPER_MAGA_LR_1B_measurement",
-                "protocol": "WMS",
+                "id": "SW_OPER_MAGA_LR_1B",
+                "protocol": "CZML",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
                 ],
@@ -175,8 +175,8 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "SW_OPER_MAGB_LR_1B_outlines",
-                "protocol": "WMS",
+                "id": "SW_OPER_MAGB_LR_1B",
+                "protocol": "CZML",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
                 ],
@@ -200,8 +200,8 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
-                "id": "SW_OPER_MAGC_LR_1B_measurement",
-                "protocol": "WMS",
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "CZML",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
                 ],
@@ -219,6 +219,68 @@
                     "layer_id": "SW_OPER_MAGC_LR_1B"
                 }
             ]
+        },{
+            "name": "WMM",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "WMM",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "WMM",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F_error": {
+                    "range": [0.0, 0.02],
+                    "colorscale": "rainbow"
+                },
+                "F": {
+                    "range": [30000, 60000],
+                    "colorscale": "rainbow",
+                    "selected": true
+                }
+            } 
+
+        },{
+            "name": "IGRF",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "IGRF",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "IGRF",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F_error": {
+                    "range": [0.0, 0.02],
+                    "colorscale": "rainbow"
+                },
+                "F": {
+                    "range": [30000, 60000],
+                    "colorscale": "jet",
+                    "selected": true
+                }
+            } 
+
         },{
             "name": "Fieldlines WMM 2010",
             "visible": false,
