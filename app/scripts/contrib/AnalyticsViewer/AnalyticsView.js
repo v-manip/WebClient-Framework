@@ -107,6 +107,12 @@ define(['backbone.marionette',
 							var sp = new scatterPlot(args, function(){
 								//sp.absolute("id1","Latitude");
 								//sp.colatitude("undefined");
+							},
+							function (values) {
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
+							}, 
+							function(){
+								Communicator.mediator.trigger("cesium:highlight:removeAll");
 							});
 						}
 						//analytics.scatterPlot(args);

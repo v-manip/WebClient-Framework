@@ -10,7 +10,9 @@
         deps: ['backbone.marionette', 'bootstrap', 'marionette.handlebars', 'main'],
 
         shim: {
-            /*jqueryui: 'jquery',*/
+            jqueryui: {
+                deps:['jquery']
+            },
             handlebars: {
                 exports: 'Handlebars'
             },
@@ -54,10 +56,14 @@
             drawhelper: {
                 deps: ['cesium/Cesium'],
                 exports: 'DrawHelper'
+            },
+            analytics: {
+                deps: ['d3', 'jquery']
             }
         },
 
         paths: {
+            analytics: '../bower_components/analyticsviewer/lib/scripts/analytics.min',
             cesium: "../bower_components/Cesium-1.1/Build/Cesium",
             drawhelper: "../scripts/vendor/cesium_DrawHelper",
             contrib: 'contrib',
@@ -73,7 +79,6 @@
             libcoverage: '../bower_components/libcoverage/libcoverage.min',
             filesaver: '../bower_components/filesaver/FileSaver',
             lm: '../bower_components/lm.js/lm',
-            analytics: '../bower_components/analyticsviewer/lib/scripts/analytics.min',
             nv: '../bower_components/nvd3/nv.d3.min',
 
             /* alias all marionette libs */

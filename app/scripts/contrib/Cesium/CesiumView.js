@@ -30,6 +30,7 @@ define(['backbone.marionette',
 				this.overlay_offset = 100;
 				this.camera_is_moving = false;
 				this.camera_last_position = null;
+				this.billboards = null;
 
 				this.begin_time = null;
 				this.end_time = null;
@@ -43,6 +44,10 @@ define(['backbone.marionette',
 			},
 
 			createMap: function() {
+
+				// Problem arose in some browsers where aspect ratio was kept not adapting 
+				// to height; Added height style attribute to 100% to solve problem
+				this.$el.attr("style","height:100%;");
 
 				this.$el.append("<div id='cesium_attribution'></div>");
 				this.$el.append("<div id='cesium_custom_attribution'></div>");
@@ -79,6 +84,8 @@ define(['backbone.marionette',
 						creditContainer: "cesium_attribution"
 					});
 				}
+
+				this.billboards = this.map.scene.primitives.add(new Cesium.BillboardCollection());
 
 				this.drawhelper = new DrawHelper(this.map.cesiumWidget);
 
@@ -197,6 +204,65 @@ define(['backbone.marionette',
 				//Set attributes of map based on mapmodel attributes
 				var mapmodel = globals.objects.get('mapmodel');
 				this.map.setCenter(new OpenLayers.LonLat(mapmodel.get("center")), mapmodel.get("zoom"));*/
+
+				/////////////////////////////////////////////////////////////////////
+
+				var layers = this.map.scene.imageryLayers;
+
+				
+
+
+				var url1 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2010-01-01T15:53:44Z/2010-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
+				var url2 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2011-01-01T15:53:44Z/2011-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
+				var url3 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2012-01-01T15:53:44Z/2012-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
+				var url4 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2013-01-01T15:53:44Z/2013-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
+				var url5 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2014-01-01T15:53:44Z/2014-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
+				
+				var that = this;
+
+				// load several images in parallel
+				Cesium.when.all([Cesium.loadImage(url1),
+								 Cesium.loadImage(url2),
+								 Cesium.loadImage(url3),
+								 Cesium.loadImage(url4),
+								 Cesium.loadImageViaBlob(url5)]).then(function(images) {
+				    // images is an array containing all the loaded images
+
+				 //    layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
+					//     url : image[0],
+					//     rectangle : Cesium.Rectangle.fromDegrees(-180, -90, 180, 90)
+					// }));
+
+					// new ImageMaterialProperty()
+
+					// new RectangleGraphics()
+
+
+					// var material = Cesium.Material.fromType('Image', {
+					// 	image: url1
+					// });
+					// // material.uniforms.image = image[0];
+					// // material.uniforms.color = new Cesium.Color.fromCssColorString(color);
+					// // material.uniforms.color.alpha = 0.6;
+
+					// var e = new Cesium.Rectangle(-180,-90,180,90);
+
+			  //       var extentPrimitive = new DrawHelper.ExtentPrimitive({
+		   //              extent: e,
+		   //              material: material
+		   //          });
+
+		   //          that.map.scene.primitives.add(extentPrimitive);
+
+				 //    _.each(images, function(image){
+
+				 //    });
+				});
+
+
+
+
+				////////////////////////////////////////////////////////
 			},
 
 			onShow: function() {
@@ -450,9 +516,13 @@ define(['backbone.marionette',
 									if(product.get("name")=="Fieldlines WMM 2010")
                     					url = product.get("views")[0].id;
 	                    			czmlSource.loadUrl(url);
+	                    			product.set("czmlSource", czmlSource);
 			        				this.map.dataSources.add(czmlSource);
 			        			}else{
-			        				this.map.dataSources.removeAll();
+			        				//this.map.dataSources.removeAll();
+			        				if(product.get("czmlSource")){
+			        					this.map.dataSources.remove(product.get("czmlSource"), true);
+			        				}
 			        			}
                     		}else{
 	                    		var ces_layer = product.get("ces_layer");
@@ -670,6 +740,42 @@ define(['backbone.marionette',
 				}
 
 
+			},
+
+			onHighlightPoint: function(coords){
+
+			    var canvas = document.createElement('canvas');
+			    canvas.width = 32;
+			    canvas.height = 32;
+			    var context2D = canvas.getContext('2d');
+			    context2D.beginPath();
+			    context2D.arc(16, 16, 12, 0, Cesium.Math.TWO_PI, true);
+			    context2D.closePath();
+			    context2D.strokeStyle = 'rgb(255, 255, 255)';
+			    context2D.lineWidth = 3;
+			    context2D.stroke();
+
+			    context2D.beginPath();
+			    context2D.arc(16, 16, 9, 0, Cesium.Math.TWO_PI, true);
+			    context2D.closePath();
+			    context2D.strokeStyle = 'rgb(0, 0, 0)';
+			    context2D.lineWidth = 3;
+			    context2D.stroke();
+
+			    //var billboards = this.map.scene.primitives.add(new Cesium.BillboardCollection());
+			    this.billboards.add({
+			        imageId : 'custom canvas point',
+			        image : canvas,
+			        position : Cesium.Cartesian3.fromDegrees(coords[1], coords[0], parseInt(coords[2]-6384100)),
+			        radius: coords[2],
+			        //color : Cesium.Color.RED,
+			        scale : 1
+			    });
+			    
+			},
+
+			onRemoveHighlights: function(){
+				this.billboards.removeAll();
 			},
 
 			/*onSelectionChanged: function(coords) {
