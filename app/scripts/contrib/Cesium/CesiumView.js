@@ -1,6 +1,6 @@
 
 
-CESIUM_BASE_URL = "bower_components/Cesium-1.1/Build/Cesium/"
+CESIUM_BASE_URL = "bower_components/Cesium-1.5/Build/Cesium/"
 
 define(['backbone.marionette',
 		'communicator',
@@ -269,13 +269,21 @@ define(['backbone.marionette',
 				if (!this.map) {
 					this.createMap();
 				}
+				
 				this.isClosed = false;
-				this.onResize();
+				//this.onResize();
 				return this;
 			},
 
 			onResize: function() {
 				//this.map.updateSize();
+				if(this.map._sceneModePicker){
+					var container = this.map._sceneModePicker.container;
+					var scene = this.map._sceneModePicker.viewModel._scene;
+					this.map._sceneModePicker.destroy();
+					var modepicker = new Cesium.SceneModePicker(container, scene);
+					this.map._sceneModePicker = modepicker;
+				}
 			},
 
 			//method to create layer depending on protocol

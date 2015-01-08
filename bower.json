@@ -23,7 +23,7 @@
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.0.3",
     "analyticsviewer": "esa-vires/AnalyticsViewer#~0.1.4",
-    "Cesium-1.1": "http://cesiumjs.org/releases/Cesium-1.1.zip"
+    "Cesium-1.5": "http://cesiumjs.org/releases/Cesium-1.5.zip"
   },
   "devDependencies": {
     "Keypress": "~2.0.0"

@@ -355,7 +355,7 @@ module.exports = function (grunt) {
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
-                        'bower_components/Cesium-1.1/Build/Cesium/**',
+                        'bower_components/Cesium-1.5/Build/Cesium/**',
                         'scripts/vendor/**',
                         'scripts/core/ColorRamp/ColorRampControl.hbs'
                     ]
