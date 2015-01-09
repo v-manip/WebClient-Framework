@@ -286,10 +286,46 @@
             "visible": false,
             "timeSlider": false,
             "views": [{
-                "id": "data/field_lines.czml",
-                "protocol": "CZML",
+                "id": "wmm2010",
+                "protocol": "FL_CZML",
                 "urls": [
-                    ""
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            }
+        },{
+            "name": "CHAOS 5",
+            "visible": false,
+            "timeSlider": false,
+            "views": [{
+                "id": "chaos5",
+                "protocol": "FL_CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_MAGC_LR_1B",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            }
+        },{
+            "name": "IGRF 11",
+            "visible": false,
+            "timeSlider": false,
+            "views": [{
+                "id": "igrf11",
+                "protocol": "FL_CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"

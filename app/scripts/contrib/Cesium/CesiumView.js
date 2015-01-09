@@ -31,6 +31,10 @@ define(['backbone.marionette',
 				this.camera_is_moving = false;
 				this.camera_last_position = null;
 				this.billboards = null;
+				this.activeFL = [];
+				this.FL_czml_src = new Cesium.CzmlDataSource();
+				this.bboxsel = null;
+				this.extentPrimitive = null;
 
 				this.begin_time = null;
 				this.end_time = null;
@@ -205,64 +209,6 @@ define(['backbone.marionette',
 				var mapmodel = globals.objects.get('mapmodel');
 				this.map.setCenter(new OpenLayers.LonLat(mapmodel.get("center")), mapmodel.get("zoom"));*/
 
-				/////////////////////////////////////////////////////////////////////
-
-				var layers = this.map.scene.imageryLayers;
-
-				
-
-
-				var url1 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2010-01-01T15:53:44Z/2010-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
-				var url2 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2011-01-01T15:53:44Z/2011-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
-				var url3 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2012-01-01T15:53:44Z/2012-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
-				var url4 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2013-01-01T15:53:44Z/2013-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
-				var url5 = "http://localhost:9000/vires00/ows?service=WMS&version=1.1.1&request=GetMap&styles=rainbow&format=image/png&dim_bands=F&dim_range=30000,60000&transparent=true&time=2014-01-01T15:53:44Z/2014-01-01T17:27:36Z&layers=WMM&srs=EPSG:4326&bbox=-180,-90,180,90&width=1024&height=512&"
-				
-				var that = this;
-
-				// load several images in parallel
-				Cesium.when.all([Cesium.loadImage(url1),
-								 Cesium.loadImage(url2),
-								 Cesium.loadImage(url3),
-								 Cesium.loadImage(url4),
-								 Cesium.loadImageViaBlob(url5)]).then(function(images) {
-				    // images is an array containing all the loaded images
-
-				 //    layers.addImageryProvider(new Cesium.SingleTileImageryProvider({
-					//     url : image[0],
-					//     rectangle : Cesium.Rectangle.fromDegrees(-180, -90, 180, 90)
-					// }));
-
-					// new ImageMaterialProperty()
-
-					// new RectangleGraphics()
-
-
-					// var material = Cesium.Material.fromType('Image', {
-					// 	image: url1
-					// });
-					// // material.uniforms.image = image[0];
-					// // material.uniforms.color = new Cesium.Color.fromCssColorString(color);
-					// // material.uniforms.color.alpha = 0.6;
-
-					// var e = new Cesium.Rectangle(-180,-90,180,90);
-
-			  //       var extentPrimitive = new DrawHelper.ExtentPrimitive({
-		   //              extent: e,
-		   //              material: material
-		   //          });
-
-		   //          that.map.scene.primitives.add(extentPrimitive);
-
-				 //    _.each(images, function(image){
-
-				 //    });
-				});
-
-
-
-
-				////////////////////////////////////////////////////////
 			},
 
 			onShow: function() {
@@ -520,9 +466,6 @@ define(['backbone.marionette',
 											  "begin_time="+ getISODateTimeString(this.begin_time) +"%3B"+
 											  "end_time="+ getISODateTimeString(this.end_time)+"&"+
 											  "rawdataoutput=output";
-									//TODO: This is just for testing fieldlines czml file, will be removed
-									if(product.get("name")=="Fieldlines WMM 2010")
-                    					url = product.get("views")[0].id;
 	                    			czmlSource.loadUrl(url);
 	                    			product.set("czmlSource", czmlSource);
 			        				this.map.dataSources.add(czmlSource);
@@ -532,6 +475,19 @@ define(['backbone.marionette',
 			        					this.map.dataSources.remove(product.get("czmlSource"), true);
 			        				}
 			        			}
+			        		}else if (product.get("views")[0].protocol == "FL_CZML"){
+			        			if(options.visible){
+			        				product.set("visible", true);
+	                    			this.activeFL.push(product.get("name"));
+	                    		}else{
+	                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
+	                    				//TODO: Remove possibly loaded entity
+                						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+                					}
+
+	                    		}
+	                    		this.checkFieldLines();
+							
                     		}else{
 	                    		var ces_layer = product.get("ces_layer");
 								ces_layer.show = options.visible;
@@ -669,14 +625,16 @@ define(['backbone.marionette',
 				            			 ', S: ' + extent.south.toFixed(3) +
 				            			 ', W: ' + extent.west.toFixed(3) + ')');*/
 
-							var colorindex = that.map.scene.primitives.length+1;
+							//var colorindex = that.map.scene.primitives.length+1;
+							var colorindex = 0;
 							if(that.selectionType == "single"){
 								//that.map.scene.primitives.removeAll();
 								colorindex = that.map.scene.primitives.length;
 								Communicator.mediator.trigger("selection:changed", null);
 							}
 
-							var color = that.colors(colorindex);
+							//var color = that.colors(colorindex);
+							var color = null;
 
 							//Communicator.mediator.trigger("selection:changed", evt.feature);
 							// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
@@ -737,17 +695,72 @@ define(['backbone.marionette',
 			        e.south = Cesium.Math.toRadians(coords[0].y);
 			        e.north = Cesium.Math.toRadians(coords[2].y);
 
-		            var extentPrimitive = new DrawHelper.ExtentPrimitive({
+			        this.bboxsel = [coords[0].y, coords[0].x, coords[2].y, coords[2].x ];
+
+		            this.extentPrimitive = new DrawHelper.ExtentPrimitive({
 		                extent: e,
 		                material: material
 		            });
 
-		            this.map.scene.primitives.add(extentPrimitive);
+		            this.map.scene.primitives.add(this.extentPrimitive);
+
+		            this.checkFieldLines();
+		            
+
+
 				}else{
-					this.map.scene.primitives.removeAll();
+					this.bboxsel = null;
+					if(this.FL_czml_src)
+						this.map.dataSources.remove(this.FL_czml_src);
+					if(this.extentPrimitive)
+						this.map.scene.primitives.remove(this.extentPrimitive);
 				}
 
 
+			},
+
+			checkFieldLines: function(){
+
+				if(this.activeFL.length>0 && this.bboxsel){
+
+	            	var model_ids = "";
+	            	var colors = "";
+	            	var self = this;
+	            	var url = "";
+
+	            	globals.products.each(function(product) {
+                		if(self.activeFL.indexOf(product.get('name'))!=-1){
+                			url = product.get("views")[0].urls[0];
+                			model_ids += product.get("views")[0].id + ",";
+                			hexcolor = product.get("color");
+                			colors += hexcolor.substring(1, hexcolor.length) + ",";
+                		}
+                	});
+
+                	model_ids = model_ids.substring(0, model_ids.length-1);
+                	colors = colors.substring(0, colors.length-1);
+
+                	//console.log(model_ids, colors);
+
+	            	this.map.dataSources.remove(this.FL_czml_src);
+	            	this.FL_czml_src = new Cesium.CzmlDataSource();
+    				var url = url + "?service=WPS&version=1.0.0&request=Execute&" +
+							  "identifier=retrieve_fl_czml&" +
+							  "DataInputs="+
+							  "model_ids="+ model_ids +"%3B"+
+							  "begin_time="+ getISODateTimeString(this.begin_time) +"%3B"+
+							  "end_time="+ getISODateTimeString(this.end_time) +"%3B"+
+							  "colors="+ colors +"%3B"+
+							  "bbox="+ this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3] +"&"+
+							  "rawdataoutput=output";
+        			this.FL_czml_src.loadUrl(url);
+        			//product.set("czmlSource", czmlSource);
+    				this.map.dataSources.add(this.FL_czml_src);
+	            }else{
+	            	this.map.dataSources.remove(this.FL_czml_src);
+	            }
+
+				
 			},
 
 			onHighlightPoint: function(coords){
@@ -867,6 +880,8 @@ define(['backbone.marionette',
 
 				this.begin_time = time.start;
 				this.end_time = time.end;
+
+				this.map.dataSources.removeAll();
                                         
 	            globals.products.each(function(product) {
                     if(product.get("timeSlider")){
@@ -884,7 +899,7 @@ define(['backbone.marionette',
 
 	                    if(product.get("views")[0].protocol == "CZML"){
                 			if(product.get("visible")){
-                				this.map.dataSources.removeAll();
+                				
                 				var czmlSource = new Cesium.CzmlDataSource();
                 				var url = product.get("views")[0].urls[0] + "?service=WPS&version=1.0.0&request=Execute&" +
 										  "identifier=retrieve_czml&" +
@@ -895,6 +910,7 @@ define(['backbone.marionette',
 										  "rawdataoutput=output";
                 				//var url = product.get("views")[0].id;
                     			czmlSource.loadUrl(url);
+                    			product.set("czmlSource", czmlSource);
 		        				this.map.dataSources.add(czmlSource);
 		        			}/*}else{
 		        				this.map.dataSources.removeAll();
@@ -902,6 +918,8 @@ define(['backbone.marionette',
 		        		}
                     }
 	            }, this);
+
+				this.checkFieldLines();
             },
 
             onSetExtent: function(bbox) {
