@@ -318,6 +318,10 @@ define(['backbone.marionette',
                     	params = $.extend(additional_parameters, params);
                     	params.styles = styles; 
 
+                    	if(layerdesc.get("height")){
+	                    	params.elevation = layerdesc.get("height");
+	                    }
+
                     	params.format = 'image/png';
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
 						    url: view.urls[0],
@@ -808,6 +812,40 @@ define(['backbone.marionette',
 					console.dir(coords);
 				}
 			},*/
+
+			onLayerHeightChanged: function(layer, height){
+				globals.products.each(function(product) {
+                    
+                	if(product.get("name")==layer){
+	                	var ces_layer = product.get("ces_layer");
+	                	ces_layer.imageryProvider._parameters["elevation"] = height;
+
+	                	if (ces_layer.show){
+		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+		            		this.map.scene.imageryLayers.remove(ces_layer, false);
+		            		this.map.scene.imageryLayers.add(ces_layer, index);
+		            	}
+		            }
+                    
+	            }, this);
+			},
+
+			onLayerStyleChanged: function(layer, style){
+				globals.products.each(function(product) {
+                    
+                	if(product.get("name")==layer){
+	                	var ces_layer = product.get("ces_layer");
+	                	ces_layer.imageryProvider._parameters["styles"] = style;
+
+	                	if (ces_layer.show){
+		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+		            		this.map.scene.imageryLayers.remove(ces_layer, false);
+		            		this.map.scene.imageryLayers.add(ces_layer, index);
+		            	}
+		            }
+                    
+	            }, this);
+			},
 
 	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
 	            var verts = openlayer_geometry.getVertices();

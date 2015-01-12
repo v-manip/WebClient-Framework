@@ -3,23 +3,40 @@
     <h3 class="panel-title"><i class="fa fa-fw fa-gears"></i> Layer Settings</h3>
 </div>
 <div class="panel-body">
+
 	<div id="parameters">
 		<ul style="padding-left:0">
 		  <li>
-		  	Parameter:
-		  	<select id="options"></select>
+
+		  	<form>
+			  <label for="options" style="width:70px;">Parameter: </label>
+			  <select name="options" id="options"></select>
+			  <p id="description"></p>
+			  <p id="uom"></p>
+			</form>
+
+		  <li style="margin-top: 15px;">
+		  	<div id="colorscale">
+
+		  		<form>
+				  <label for="style" style="width:70px;">Style: </label>
+				  <select name="style" id="style"></select>
+				</form>
+
+		    	<div id="gradient"></div>
+		    </div>
 		  </li>
 
-		  <li>
+		  <li style="margin-top: 5px;">
 		  	<textarea rows="1" cols="10" id="range_min" style="resize: none;"></textarea>
-		  	<textarea rows="1" cols="10" id="range_max" style="resize: none;"></textarea>
+		  	<textarea rows="1" cols="10" id="range_max" style="resize: none; float: right;"></textarea>
 		  </li>
 		  
 		</ul>
 
 	</div>
-    <div id="colorscale">
-    	<select id="options"></select>
-    	<div id="gradient"></div>
+
+
+    <div id="height" style="margin-top: 15px;">
     </div>
 </div>

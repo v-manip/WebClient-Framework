@@ -239,16 +239,51 @@
                 "url": "http://localhost:9000/vires00/ows"
             },
             "parameters": {
-                "F_error": {
-                    "range": [0.0, 0.02],
-                    "colorscale": "rainbow"
-                },
                 "F": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "uom":"nT",
+                    "description": "Total field intensity",
+                    "colorscale": "jet",
                     "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "description": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "description": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "description": "East component",
+                    "colorscale": "jet"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "description": "Down component",
+                    "colorscale": "jet"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "description": "Inclination",
+                    "colorscale": "jet"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "description": "Declination",
+                    "colorscale": "jet"
                 }
-            } 
+            },
+            "height": 450
 
         },{
             "name": "IGRF",
@@ -270,16 +305,51 @@
                 "url": "http://localhost:9000/vires00/ows"
             },
             "parameters": {
-                "F_error": {
-                    "range": [0.0, 0.02],
-                    "colorscale": "rainbow"
-                },
                 "F": {
                     "range": [30000, 60000],
+                    "uom":"nT",
+                    "description": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "description": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "description": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "description": "East component",
+                    "colorscale": "jet"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "description": "Down component",
+                    "colorscale": "jet"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "description": "Inclination",
+                    "colorscale": "jet"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "description": "Declination",
+                    "colorscale": "jet"
                 }
-            } 
+            },
+            "height": 450
 
         },{
             "name": "Fieldlines WMM 2010",
@@ -300,7 +370,7 @@
                 "url": "http://localhost:9000/vires00/ows"
             }
         },{
-            "name": "CHAOS 5",
+            "name": "Fieldlines CHAOS 5",
             "visible": false,
             "timeSlider": false,
             "views": [{
@@ -318,7 +388,7 @@
                 "url": "http://localhost:9000/vires00/ows"
             }
         },{
-            "name": "IGRF 11",
+            "name": "Fieldlines IGRF 11",
             "visible": false,
             "timeSlider": false,
             "views": [{

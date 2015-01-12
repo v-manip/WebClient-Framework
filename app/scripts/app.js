@@ -161,7 +161,8 @@
 							},
 							processes: product.processes,
 							unit: product.unit,
-							parameters: product.parameters
+							parameters: product.parameters,
+							height: product.height
 						})
 					);
 

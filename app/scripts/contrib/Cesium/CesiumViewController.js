@@ -57,6 +57,9 @@ define([
 
 			this.cesiumView.listenTo(Communicator.mediator, "layer:range:changed", _.bind(this.cesiumView.onLayerRangeChanged, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "layer:band:changed", _.bind(this.cesiumView.onLayerBandChanged, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "layer:height:changed", _.bind(this.cesiumView.onLayerHeightChanged, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "layer:style:changed", _.bind(this.cesiumView.onLayerStyleChanged, this.cesiumView));
+			
 
 			
 			//this.cesiumView.listenTo(Communicator.mediator, "map:load:image", _.bind(this.cesiumView.onLoadImage, this.cesiumView));

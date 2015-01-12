@@ -68,7 +68,12 @@
 	    					App.layerSettings.setModel(that.model);
 							App.optionsBar.show(App.layerSettings);
 						} else {
-							App.optionsBar.close();
+							if(App.layerSettings.sameModel(that.model)){
+								App.optionsBar.close();
+							}else{
+								App.layerSettings.setModel(that.model);
+								App.optionsBar.show(App.layerSettings);
+							}
 						}
 	    			});
 	    		}
