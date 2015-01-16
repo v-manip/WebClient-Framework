@@ -7,12 +7,13 @@ define(['backbone.marionette',
 		'app',
 		'models/MapModel',
 		'globals',
+		'hbs!tmpl/wps_load_shc',
 		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
 		'filesaver'
 	],
-	function(Marionette, Communicator, App, MapModel, globals) {
+	function(Marionette, Communicator, App, MapModel, globals, Tmpl_load_shc) {
 
 		var CesiumView = Marionette.View.extend({
 
@@ -35,6 +36,7 @@ define(['backbone.marionette',
 				this.FL_czml_src = new Cesium.CzmlDataSource();
 				this.bboxsel = null;
 				this.extentPrimitive = null;
+				this.shc = null;
 
 				this.begin_time = null;
 				this.end_time = null;
@@ -89,6 +91,7 @@ define(['backbone.marionette',
 					});
 				}
 
+
 				this.billboards = this.map.scene.primitives.add(new Cesium.BillboardCollection());
 
 				this.drawhelper = new DrawHelper(this.map.cesiumWidget);
@@ -97,6 +100,19 @@ define(['backbone.marionette',
 				this.camera_last_position.x = this.map.scene.camera.position.x;
 				this.camera_last_position.y = this.map.scene.camera.position.y;
 				this.camera_last_position.z = this.map.scene.camera.position.z;
+
+				/*var maxRadii = this.map.scene.globe.ellipsoid.maximumRadius;
+
+				var frustum = new Cesium.OrthographicFrustum();
+				frustum.right = maxRadii * Cesium.Math.PI/2;
+				frustum.left = -frustum.right;
+				frustum.top = frustum.right * (this.map.scene.canvas.clientHeight / this.map.scene.canvas.clientWidth);
+				frustum.bottom = -frustum.top;
+
+				frustum.near = 0.01 * maxRadii;
+				frustum.far = 50.0 * maxRadii;
+
+				this.map.scene.camera.frustum = frustum;*/
 
 				this.map.clock.onTick.addEventListener(this.handleTick.bind(this));
 				
@@ -163,12 +179,25 @@ define(['backbone.marionette',
 				
 				// Go through all products and add them to the map
 				_.each(globals.products.last(globals.products.length).reverse(), function(product){
-				//_.each(globals.products.reverse(),function(product){
 					var layer = this.createLayer(product);
 					if (layer) {
 						var imagerylayer = this.map.scene.imageryLayers.addImageryProvider(layer);
-						imagerylayer.show = product.get("visible");
 						product.set("ces_layer", imagerylayer);
+						imagerylayer.show = product.get("visible");
+
+
+						// If product protocol is not WMS or WMTS they are shown differently so dont activate "dummy" layers
+						if(product.get("views")[0].protocol != "WMS" && product.get("views")[0].protocol != "WMTS")
+							imagerylayer.show = false;
+
+						// If the product is set to visible trigger its activation event which handles all protocols
+						if(product.get("visible")){
+							var options = { name: product.get('name'), isBaseLayer: false, visible: true };
+							// TODO: products made active from config are not working correctly
+							// The timeslider view is initialized afterwards and the product is not displayed
+
+							//Communicator.mediator.trigger('timeslider:add:layer', options);
+						}
 					}
 				}, this);
 /*
@@ -189,17 +218,16 @@ define(['backbone.marionette',
 				this.map.addControl(new OpenLayers.Control.MousePosition());
 
 				*/
-
 				// Go through all overlays and add them to the map
                 globals.overlays.each(function(overlay){
                 	var layer = this.createLayer(overlay);
 					if (layer) {
 						var imagerylayer = this.map.scene.imageryLayers.addImageryProvider(layer);
-						var index = this.map.scene.imageryLayers.indexOf(imagerylayer);
-						index += this.overlay_offset;
+						//var index = this.map.scene.imageryLayers.indexOf(imagerylayer);
+						//index += this.overlay_offset;
 						this.map.scene.imageryLayers.remove(imagerylayer, false);
 						imagerylayer.show = overlay.get("visible");
-						this.map.scene.imageryLayers.add(imagerylayer, index);
+						this.map.scene.imageryLayers.add(imagerylayer);
 						overlay.set("ces_layer", imagerylayer);
 					}
                 }, this);
@@ -332,7 +360,8 @@ define(['backbone.marionette',
 
                     default:
                     	// No supported view available
-                    	return null;
+                    	// Return dummy Image provider to help with with sorting of layers 
+                    	return  new Cesium.WebMapServiceImageryProvider();
                     break;
 
                 };
@@ -365,9 +394,9 @@ define(['backbone.marionette',
 				globals.products.each(function(product) {
 					var ces_layer = product.get("ces_layer");
                 	if (ces_layer){
-                		var product_index = globals.products.length-1 - globals.products.indexOf(product);
+                		var product_index = (globals.products.length-1 - globals.products.indexOf(product)) + globals.baseLayers.length;
                 		var ces_index = this.map.scene.imageryLayers.indexOf(ces_layer);
-                		var cur_move = product_index - ces_index + globals.baseLayers.length-1;
+                		var cur_move = product_index - ces_index;
                 		if (Math.abs(to_move)<Math.abs(cur_move)){
                 			to_move = cur_move;
                 			layer_moved = ces_layer;
@@ -460,18 +489,30 @@ define(['backbone.marionette',
                     	if(product.get("name")==options.name){
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
+
                     			if(options.visible){
+
                     				product.set("visible", true);
-                    				var czmlSource = new Cesium.CzmlDataSource();
-                    				var url = product.get("views")[0].urls[0] + "?service=WPS&version=1.0.0&request=Execute&" +
-											  "identifier=retrieve_czml&" +
-											  "DataInputs="+
-											  "collection_ids="+ product.get("views")[0].id +"%3B"+
-											  "begin_time="+ getISODateTimeString(this.begin_time) +"%3B"+
-											  "end_time="+ getISODateTimeString(this.end_time)+"&"+
-											  "rawdataoutput=output";
-	                    			czmlSource.loadUrl(url);
-	                    			product.set("czmlSource", czmlSource);
+                    				var hexcolor = product.get("color");
+	                				hexcolor = hexcolor.substring(1, hexcolor.length);
+		                			var parameters = product.get("parameters");
+		                			var band;
+		                			var keys = _.keys(parameters);
+									_.each(keys, function(key){
+										if(parameters[key].selected)
+											band = key;
+									});
+		                			var style = parameters[band].colorscale;
+		                			var outlines = product.get("outlines");
+		                			var range = parameters[band].range;
+	            				
+		            				var czmlSource = new Cesium.CzmlDataSource();
+		            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
+		            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
+		            						  band,range, style, hexcolor, outlines);
+
+		                			czmlSource.loadUrl(url);
+		                			product.set("czmlSource", czmlSource);
 			        				this.map.dataSources.add(czmlSource);
 			        			}else{
 			        				//this.map.dataSources.removeAll();
@@ -492,6 +533,66 @@ define(['backbone.marionette',
 	                    		}
 	                    		this.checkFieldLines();
 							
+                    		}else if (product.get("views")[0].protocol == "WPS"){
+
+                    			if(options.visible){
+
+                    				if(this.shc != null){
+
+                    					var parameters = product.get("parameters");
+			                			var band;
+			                			var keys = _.keys(parameters);
+										_.each(keys, function(key){
+											if(parameters[key].selected)
+												band = key;
+										});
+			                			var style = parameters[band].colorscale;
+			                			var range = parameters[band].range;
+
+
+                    					var imageURI;
+										var that = this;
+										var imagelayer;
+										product.set("visible", true);
+
+										var ces_layer = product.get("ces_layer");
+										var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+										
+
+										$.post( "http://localhost:9000/vires00/ows", Tmpl_load_shc({
+											"shc":this.shc,
+											"begin_time": getISODateTimeString(this.begin_time),
+											"end_time": getISODateTimeString(this.end_time),
+											"band": band,
+											"style": style,
+											"range_min": range[0],
+											"range_max": range[1]
+										}))
+
+											.done(function( data ) {	
+												that.map.scene.imageryLayers.remove(ces_layer);									
+											    imageURI = "data:image/gif;base64,"+data;
+											    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+												ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+												product.set("ces_layer", ces_layer);
+												// TODO: Hack to position layer at correct index, adding imagery provider  
+												// with index does not seem to be working
+												var ces_index = that.map.scene.imageryLayers.indexOf(ces_layer);
+												var to_move = index - ces_index;
+												for(var i=0; i<Math.abs(to_move); ++i){
+													if(to_move < 0)
+														that.map.scene.imageryLayers.lower(ces_layer);
+													else if(to_move>0)
+														that.map.scene.imageryLayers.raise(ces_layer);
+												}
+											});
+                    				}
+
+								}else{
+									var ces_layer = product.get("ces_layer");
+									ces_layer.show = options.visible;
+								}
+								
                     		}else{
 	                    		var ces_layer = product.get("ces_layer");
 								ces_layer.show = options.visible;
@@ -522,39 +623,195 @@ define(['backbone.marionette',
             	globals.products.each(function(product) {
                     
                 	if(product.get("name")==layer){
-                		// TODO: Do we need to update the model object here?
-	                	var ces_layer = product.get("ces_layer");
-	                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
-	                	//ces_layer.imageryProvider._parameters["range_max"] = range[1];
 
-	                	if (ces_layer.show){
-		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-		            		this.map.scene.imageryLayers.remove(ces_layer, false);
-		            		this.map.scene.imageryLayers.add(ces_layer, index);
-		            	}
-		            }
+                		if(product.get("views")[0].protocol == "CZML"){
+
+	            			if(product.get("visible")){
+
+	            				this.map.dataSources.remove(product.get("czmlSource"));
+
+	            				var hexcolor = product.get("color");
+	                				hexcolor = hexcolor.substring(1, hexcolor.length);
+	                			var parameters = product.get("parameters");
+	                			var band;
+	                			var keys = _.keys(parameters);
+								_.each(keys, function(key){
+									if(parameters[key].selected)
+										band = key;
+								});
+	                			var style = parameters[band].colorscale;
+								var outlines = product.get("outlines");
+	            				
+	            				var czmlSource = new Cesium.CzmlDataSource();
+	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
+	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
+	            						  band,range, style, hexcolor, outlines);
+
+	                			czmlSource.loadUrl(url);
+	                			product.set("czmlSource", czmlSource);
+		        				this.map.dataSources.add(czmlSource);
+		        			}
+
+                		}else if(product.get("views")[0].protocol == "WMS"){
+
+	                		// TODO: Do we need to update the model object here?
+		                	var ces_layer = product.get("ces_layer");
+		                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+		                	//ces_layer.imageryProvider._parameters["range_max"] = range[1];
+
+		                	if (ces_layer.show){
+			            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+			            		this.map.scene.imageryLayers.remove(ces_layer, false);
+			            		this.map.scene.imageryLayers.add(ces_layer, index);
+			            	}
+			            }else if (product.get("views")[0].protocol == "WPS"){
+
+                    			if(product.get("visible")){
+
+                    				if(this.shc != null){
+
+                    					var parameters = product.get("parameters");
+			                			var band;
+			                			var keys = _.keys(parameters);
+										_.each(keys, function(key){
+											if(parameters[key].selected)
+												band = key;
+										});
+			                			var style = parameters[band].colorscale;
+			                			var range = parameters[band].range;
+
+
+                    					var imageURI;
+										var that = this;
+										var imagelayer;
+										product.set("visible", true);
+
+										var ces_layer = product.get("ces_layer");
+										var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+										
+
+										$.post( "http://localhost:9000/vires00/ows", Tmpl_load_shc({
+											"shc":this.shc,
+											"begin_time": getISODateTimeString(this.begin_time),
+											"end_time": getISODateTimeString(this.end_time),
+											"band": band,
+											"style": style,
+											"range_min": range[0],
+											"range_max": range[1]
+										}))
+
+											.done(function( data ) {	
+												that.map.scene.imageryLayers.remove(ces_layer);									
+											    imageURI = "data:image/gif;base64,"+data;
+											    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+												ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+												product.set("ces_layer", ces_layer);
+											});
+                    				}
+
+								}
+							}
+
+
+
+			        }
                     
 	            }, this);
             },
 
 			onLayerBandChanged: function(layer, band, range){
 				
-            	globals.products.each(function(product) {
-                    
-                	if(product.get("name")==layer){
-                		// TODO: Do we need to update the model object here?
-	                	var ces_layer = product.get("ces_layer");
-	                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
-	                	// ces_layer.imageryProvider._parameters["range_min"] = range[0];
-	                	// ces_layer.imageryProvider._parameters["range_max"] = range[1];
-	                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
 
-	                	if (ces_layer.show){
-		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-		            		this.map.scene.imageryLayers.remove(ces_layer, false);
-		            		this.map.scene.imageryLayers.add(ces_layer, index);
-		            	}
-		            }
+            	globals.products.each(function(product) {
+
+            		if(product.get("name")==layer){
+
+						if(product.get("views")[0].protocol == "CZML"){
+
+	            			if(product.get("visible")){
+
+	            				this.map.dataSources.remove(product.get("czmlSource"));
+
+	            				var hexcolor = product.get("color");
+	                				hexcolor = hexcolor.substring(1, hexcolor.length);
+	                			var parameters = product.get("parameters");
+	                			var style = parameters[band].colorscale;
+								var outlines = product.get("outlines");
+	            				
+	            				var czmlSource = new Cesium.CzmlDataSource();
+	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
+	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
+	            						  band,range, style, hexcolor, outlines);
+
+	                			czmlSource.loadUrl(url);
+	                			product.set("czmlSource", czmlSource);
+		        				this.map.dataSources.add(czmlSource);
+		        			}
+
+	                	}else if(product.get("views")[0].protocol == "WMS"){
+	                    
+		                	if(product.get("name")==layer){
+		                		// TODO: Do we need to update the model object here?
+			                	var ces_layer = product.get("ces_layer");
+			                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
+			                	// ces_layer.imageryProvider._parameters["range_min"] = range[0];
+			                	// ces_layer.imageryProvider._parameters["range_max"] = range[1];
+			                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+
+			                	if (ces_layer.show){
+				            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+				            		this.map.scene.imageryLayers.remove(ces_layer, false);
+				            		this.map.scene.imageryLayers.add(ces_layer, index);
+				            	}
+				            }
+				        }else if (product.get("views")[0].protocol == "WPS"){
+
+                			if(product.get("visible")){
+
+                				if(this.shc != null){
+
+                					var parameters = product.get("parameters");
+		                			var band;
+		                			var keys = _.keys(parameters);
+									_.each(keys, function(key){
+										if(parameters[key].selected)
+											band = key;
+									});
+		                			var style = parameters[band].colorscale;
+		                			var range = parameters[band].range;
+
+
+                					var imageURI;
+									var that = this;
+									var imagelayer;
+									product.set("visible", true);
+
+									var ces_layer = product.get("ces_layer");
+									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+									
+
+									$.post( "http://localhost:9000/vires00/ows", Tmpl_load_shc({
+										"shc":this.shc,
+										"begin_time": getISODateTimeString(this.begin_time),
+										"end_time": getISODateTimeString(this.end_time),
+										"band": band,
+										"style": style,
+										"range_min": range[0],
+										"range_max": range[1]
+									}))
+
+										.done(function( data ) {
+											that.map.scene.imageryLayers.remove(ces_layer);										
+										    imageURI = "data:image/gif;base64,"+data;
+										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+											product.set("ces_layer", ces_layer);
+										});
+                				}
+
+							}
+						}
+				    }
                     
 	            }, this);
 			},
@@ -681,7 +938,11 @@ define(['backbone.marionette',
 				if(feature){
 					var colorindex = this.map.scene.primitives.length+1;
 					if(this.selectionType == "single"){
-						this.map.scene.primitives.removeAll();
+						if (this.extentPrimitive)
+							this.map.scene.primitives.remove(this.extentPrimitive);
+						if(this.FL_czml_src)
+							this.map.dataSources.remove(this.FL_czml_src);
+
 						colorindex = this.map.scene.primitives.length;
 					}
 
@@ -817,32 +1078,153 @@ define(['backbone.marionette',
 				globals.products.each(function(product) {
                     
                 	if(product.get("name")==layer){
-	                	var ces_layer = product.get("ces_layer");
-	                	ces_layer.imageryProvider._parameters["elevation"] = height;
+                		if(product.get("views")[0].protocol == "WMS"){
+		                	var ces_layer = product.get("ces_layer");
+		                	ces_layer.imageryProvider._parameters["elevation"] = height;
 
-	                	if (ces_layer.show){
-		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-		            		this.map.scene.imageryLayers.remove(ces_layer, false);
-		            		this.map.scene.imageryLayers.add(ces_layer, index);
-		            	}
-		            }
+		                	if (ces_layer.show){
+			            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+			            		this.map.scene.imageryLayers.remove(ces_layer, false);
+			            		this.map.scene.imageryLayers.add(ces_layer, index);
+			            	}
+			            }
+			        }
                     
 	            }, this);
 			},
 
 			onLayerStyleChanged: function(layer, style){
 				globals.products.each(function(product) {
-                    
-                	if(product.get("name")==layer){
-	                	var ces_layer = product.get("ces_layer");
-	                	ces_layer.imageryProvider._parameters["styles"] = style;
 
-	                	if (ces_layer.show){
-		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-		            		this.map.scene.imageryLayers.remove(ces_layer, false);
-		            		this.map.scene.imageryLayers.add(ces_layer, index);
-		            	}
-		            }
+					if(product.get("name")==layer){
+
+						if(product.get("views")[0].protocol == "CZML"){
+
+	            			if(product.get("visible")){
+
+	            				this.map.dataSources.remove(product.get("czmlSource"));
+
+	            				var hexcolor = product.get("color");
+	                				hexcolor = hexcolor.substring(1, hexcolor.length);
+	                			var parameters = product.get("parameters");
+	                			var band;
+	                			var keys = _.keys(parameters);
+								_.each(keys, function(key){
+									if(parameters[key].selected)
+										band = key;
+								});
+	                			var range = parameters[band].range;
+	            				var outlines = product.get("outlines");
+	            				
+	            				var czmlSource = new Cesium.CzmlDataSource();
+	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
+	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
+	            						  band,range, style, hexcolor, outlines);
+
+	                			czmlSource.loadUrl(url);
+	                			product.set("czmlSource", czmlSource);
+		        				this.map.dataSources.add(czmlSource);
+		        			}
+
+	                	}else if(product.get("views")[0].protocol == "WMS"){
+	                    
+		                	if(product.get("name")==layer){
+			                	var ces_layer = product.get("ces_layer");
+			                	ces_layer.imageryProvider._parameters["styles"] = style;
+
+			                	if (ces_layer.show){
+				            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+				            		this.map.scene.imageryLayers.remove(ces_layer, false);
+				            		this.map.scene.imageryLayers.add(ces_layer, index);
+				            	}
+				            }
+				        }else if (product.get("views")[0].protocol == "WPS"){
+
+                			if(product.get("visible")){
+
+                				if(this.shc != null){
+
+                					var parameters = product.get("parameters");
+		                			var band;
+		                			var keys = _.keys(parameters);
+									_.each(keys, function(key){
+										if(parameters[key].selected)
+											band = key;
+									});
+		                			var style = parameters[band].colorscale;
+		                			var range = parameters[band].range;
+
+
+                					var imageURI;
+									var that = this;
+									var imagelayer;
+									product.set("visible", true);
+
+									var ces_layer = product.get("ces_layer");
+									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+									
+
+									$.post( "http://localhost:9000/vires00/ows", Tmpl_load_shc({
+										"shc":this.shc,
+										"begin_time": getISODateTimeString(this.begin_time),
+										"end_time": getISODateTimeString(this.end_time),
+										"band": band,
+										"style": style,
+										"range_min": range[0],
+										"range_max": range[1]
+									}))
+
+										.done(function( data ) {
+											that.map.scene.imageryLayers.remove(ces_layer);										
+										    imageURI = "data:image/gif;base64,"+data;
+										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+											product.set("ces_layer", ces_layer);
+										});
+                				}
+
+							}
+						}
+				    }
+                    
+	            }, this);
+			},
+
+			onLayerOutlinesChanged: function(layer, outlines){
+				globals.products.each(function(product) {
+
+					if(product.get("name")==layer){
+
+						if(product.get("views")[0].protocol == "CZML"){
+
+	            			if(product.get("visible")){
+
+	            				this.map.dataSources.remove(product.get("czmlSource"));
+
+	            				var hexcolor = product.get("color");
+	                				hexcolor = hexcolor.substring(1, hexcolor.length);
+	                			var parameters = product.get("parameters");
+	                			var band;
+	                			var keys = _.keys(parameters);
+								_.each(keys, function(key){
+									if(parameters[key].selected)
+										band = key;
+								});
+	                			var range = parameters[band].range;
+	                			var style = parameters[band].colorscale;
+	            				
+	            				var czmlSource = new Cesium.CzmlDataSource();
+	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
+	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
+	            						  band,range, style, hexcolor, outlines);
+
+	                			czmlSource.loadUrl(url);
+	                			product.set("czmlSource", czmlSource);
+		        				this.map.dataSources.add(czmlSource);
+		        			}
+
+	                	}
+				    }
                     
 	            }, this);
 			},
@@ -918,8 +1300,6 @@ define(['backbone.marionette',
 
 				this.begin_time = time.start;
 				this.end_time = time.end;
-
-				this.map.dataSources.removeAll();
                                         
 	            globals.products.each(function(product) {
                     if(product.get("timeSlider")){
@@ -937,23 +1317,78 @@ define(['backbone.marionette',
 
 	                    if(product.get("views")[0].protocol == "CZML"){
                 			if(product.get("visible")){
-                				
-                				var czmlSource = new Cesium.CzmlDataSource();
-                				var url = product.get("views")[0].urls[0] + "?service=WPS&version=1.0.0&request=Execute&" +
-										  "identifier=retrieve_czml&" +
-										  "DataInputs="+
-										  "collection_ids="+ product.get("views")[0].id +"%3B"+
-										  "begin_time="+ getISODateTimeString(this.begin_time) +"%3B"+
-										  "end_time="+ getISODateTimeString(this.end_time)+"&"+
-										  "rawdataoutput=output";
-                				//var url = product.get("views")[0].id;
-                    			czmlSource.loadUrl(url);
-                    			product.set("czmlSource", czmlSource);
+
+	            				this.map.dataSources.remove(product.get("czmlSource"));
+
+	            				var hexcolor = product.get("color");
+	                				hexcolor = hexcolor.substring(1, hexcolor.length);
+	                			var parameters = product.get("parameters");
+	                			var band;
+	                			var keys = _.keys(parameters);
+								_.each(keys, function(key){
+									if(parameters[key].selected)
+										band = key;
+								});
+	                			var range = parameters[band].range;
+	                			var style = parameters[band].colorscale;
+	                			var outlines = product.get("outlines");
+	            				
+	            				var czmlSource = new Cesium.CzmlDataSource();
+	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
+	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
+	            						  band,range, style, hexcolor, outlines);
+
+	                			czmlSource.loadUrl(url);
+	                			product.set("czmlSource", czmlSource);
 		        				this.map.dataSources.add(czmlSource);
-		        			}/*}else{
-		        				this.map.dataSources.removeAll();
-		        			}*/
-		        		}
+		        			}
+		        		}else if (product.get("views")[0].protocol == "WPS"){
+
+                			if(product.get("visible")){
+
+                				if(this.shc != null){
+
+                					var parameters = product.get("parameters");
+		                			var band;
+		                			var keys = _.keys(parameters);
+									_.each(keys, function(key){
+										if(parameters[key].selected)
+											band = key;
+									});
+		                			var style = parameters[band].colorscale;
+		                			var range = parameters[band].range;
+
+
+                					var imageURI;
+									var that = this;
+									var imagelayer;
+									product.set("visible", true);
+
+									var ces_layer = product.get("ces_layer");
+									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+									
+
+									$.post( "http://localhost:9000/vires00/ows", Tmpl_load_shc({
+										"shc":this.shc,
+										"begin_time": getISODateTimeString(this.begin_time),
+										"end_time": getISODateTimeString(this.end_time),
+										"band": band,
+										"style": style,
+										"range_min": range[0],
+										"range_max": range[1]
+									}))
+
+										.done(function( data ) {	
+											that.map.scene.imageryLayers.remove(ces_layer);									
+										    imageURI = "data:image/gif;base64,"+data;
+										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+											product.set("ces_layer", ces_layer);
+										});
+                				}
+
+							}
+						}
                     }
 	            }, this);
 
@@ -966,6 +1401,33 @@ define(['backbone.marionette',
             		destination: Cesium.Rectangle.fromDegrees(bbox[0], bbox[1], bbox[2], bbox[3])
             	});
 
+            },
+
+            getURL: function(url, id, begin_time, end_time, band, range, style, color, outlines){
+
+        		if(!outlines && band != "B_NEC"){
+        			return url + "?service=WPS&version=1.0.0&request=Execute&" +
+							  "identifier=retrieve_czml&" +
+							  "DataInputs="+
+							  "collection_ids="+ id +"%3B"+
+							  "begin_time="+ begin_time +"%3B"+
+							  "end_time="+ end_time +"%3B"+
+							  "band="+ band +"%3B"+
+							  "dim_range="+ range[0] +","+ range[1] +"%3B"+
+							  "style="+ style +"&"+
+							  "rawdataoutput=output";
+        		}
+        		return url + "?service=WPS&version=1.0.0&request=Execute&" +
+							  "identifier=retrieve_czml&" +
+							  "DataInputs="+
+							  "collection_ids="+ id +"%3B"+
+							  "begin_time="+ begin_time +"%3B"+
+							  "end_time="+ end_time +"%3B"+
+							  "band="+ band +"%3B"+
+							  "dim_range="+ range[0] +","+ range[1] +"%3B"+
+							  "style="+ style +"%3B"+
+							  "colors="+ color +"&"+
+							  "rawdataoutput=output";
             },
 
 			onClose: function(){
@@ -1045,6 +1507,23 @@ define(['backbone.marionette',
 			    		this.camera_last_position.z = camera.position.z;
 			    	}
 			    }
+			},
+
+			onFileSHCLoaded: function(layer, shc){
+				this.shc = shc;
+				var options = { name: layer, isBaseLayer: false, visible: true };
+				var layer_id;
+				globals.products.each(function(product) {
+					if(product.get("name")==layer){
+						layer_id = product.get("views")[0].id;
+						product.set("shc", shc);
+						// TODO: When calling layer:activate the visibility is inverted
+						// this seems contra-productive and should be addressed
+						product.set("visible", false);
+					}
+				});
+				//Communicator.mediator.trigger('map:layer:change', options);
+				Communicator.mediator.trigger("layer:activate", layer_id);
 			},
 
 			toggleDebug: function(){

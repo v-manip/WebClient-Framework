@@ -158,8 +158,8 @@
                 }
             ],
             "parameters": {
-                "F_error": {
-                    "range": [0.0, 0.02],
+                "B_NEC": {
+                    "range": [30000, 60000],
                     "colorscale": "rainbow"
                 },
                 "F": {
@@ -167,7 +167,8 @@
                     "colorscale": "rainbow",
                     "selected": true
                 }
-            } 
+            },
+            "outlines": true
 
         },{
             "name": "MAGB LR 1B",
@@ -193,7 +194,19 @@
                     "id": "retrieve_data",
                     "layer_id": "SW_OPER_MAGB_LR_1B"
                 }
-            ]
+            ],
+            "parameters": {
+                "B_NEC": {
+                    "range": [30000, 60000],
+                    "colorscale": "rainbow"
+                },
+                "F": {
+                    "range": [30000, 60000],
+                    "colorscale": "rainbow",
+                    "selected": true
+                }
+            },
+            "outlines": false
         },{
             "name": "MAGC LR 1B",
             "visible": false,
@@ -218,7 +231,19 @@
                     "id": "retrieve_data",
                     "layer_id": "SW_OPER_MAGC_LR_1B"
                 }
-            ]
+            ],
+            "parameters": {
+                "B_NEC": {
+                    "range": [30000, 60000],
+                    "colorscale": "rainbow"
+                },
+                "F": {
+                    "range": [30000, 60000],
+                    "colorscale": "rainbow",
+                    "selected": true
+                }
+            },
+            "outlines": false
         },{
             "name": "WMM",
             "visible": false,
@@ -352,6 +377,99 @@
             "height": 450
 
         },{
+            "name": "CHAOS 5",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "CHAOS-5-Combined",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "CHAOS-5-Combined",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [30000, 60000],
+                    "uom":"nT",
+                    "description": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "description": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "description": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "description": "East component",
+                    "colorscale": "jet"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "description": "Down component",
+                    "colorscale": "jet"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "description": "Inclination",
+                    "colorscale": "jet"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "description": "Declination",
+                    "colorscale": "jet"
+                }
+            },
+            "height": 450
+
+        },{
+            "name": "Custom Model",
+            "visible": false,
+            "timeSlider": false,
+            "views": [{
+                "id": "shc",
+                "protocol": "WPS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ]
+            }],
+            "download": {
+                "id": "shc",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [30000, 60000],
+                    "uom":"nT",
+                    "description": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                }
+            },
+            "height": 450
+
+        },{
             "name": "Fieldlines WMM 2010",
             "visible": false,
             "timeSlider": false,
@@ -407,7 +525,7 @@
             }
         },{
             "name": "Digital Elevation Model",
-            "visible": true,
+            "visible": false,
             "timeSlider": false,
             "color": "lightgray",
             "views": [{
@@ -522,8 +640,8 @@
             "end": "2014-10-17T11:45:00Z"
         },
         "brush": {
-            "start": "2014-10-17T01:00:00Z",
-            "end": "2014-10-17T05:17:00Z"
+            "start": "2014-07-17T01:00:00Z",
+            "end": "2014-07-17T05:00:00Z"
         }
     },
 

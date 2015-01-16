@@ -21,6 +21,10 @@
 				this.selected = null;
 			},
 
+			events: {
+		        "change #upload-selection": "onUploadSelectionChanged"
+	      	},
+
 			onShow: function(view){
 
 				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-gears"></i> ' + this.model.get("name") + ' Settings</h3>');
@@ -33,6 +37,8 @@
 	    		});
 		    	var options = this.model.get("parameters");
 		    	var height = this.model.get("height");
+		    	var outlines = this.model.get("outlines");
+		    	var protocol = this.model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
 
@@ -58,9 +64,12 @@
 				}
 
 				this.$("#options").change(function(evt){
+					delete options[that.selected].selected;
 					that.selected = $(evt.target).find("option:selected").text();
 					that.$("#range_min").val(options[that.selected].range[0]);
 					that.$("#range_max").val(options[that.selected].range[1]);
+
+					options[that.selected].selected = true;
 
 					if(options[that.selected].description){
 						that.$("#description").text(options[that.selected].description);
@@ -80,9 +89,9 @@
 					if(evt.keyCode == 13){ //Enter pressed
 						evt.preventDefault();
 						var range = [parseFloat($(this).val()), options[that.selected].range[1]];
-						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
 						options[that.selected].range[0] = range[0];
 						that.model.set("parameters", options);
+						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
 					}
 				});
 
@@ -90,9 +99,10 @@
 					if(evt.keyCode == 13){ //Enter pressed
 						evt.preventDefault();
 						var range = [options[that.selected].range[0], parseFloat($(this).val())];
-						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
 						options[that.selected].range[1] = range[1];
 						that.model.set("parameters", options);
+						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
+						
 					}
 				});
 
@@ -116,6 +126,8 @@
 					var selected = $(evt.target).find("option:selected").text();
 					selected_colorscale = selected;
 					that.$("#gradient").attr("class", selected_colorscale);
+					options[that.selected].colorscale = selected;
+					that.model.set("parameters", options);
 					Communicator.mediator.trigger("layer:style:changed", that.model.get("name"), selected_colorscale);
 				});
 
@@ -139,8 +151,39 @@
 							that.model.set("height", new_height);
 						}
 					});
-				}
+				} 
 
+				if(!(typeof outlines === 'undefined')){
+					var checked = "";
+					if (outlines)
+						checked = "checked";
+
+					this.$("#outlines").append(
+						'<form style="vertical-align: middle;">'+
+						'<label for="outlines" style="width: 70px;">Outlines: </label>'+
+						'<input type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
+						'</form>'
+					);
+
+					this.$("#outlines input").change(function(evt){
+						var outlines = !that.model.get("outlines");
+						that.model.set("outlines", outlines);
+						Communicator.mediator.trigger("layer:outlines:changed", that.model.get("name"), outlines);
+					});
+				}	
+
+
+				if (protocol == "WPS"){
+					this.$("#shc").append(
+						'<p>Spherical Harmonics Coefficients</p>'+
+						'<div class="myfileupload-buttonbar ">'+
+					    	'<label class="btn btn-default shcbutton">'+
+					        '<span><i class="fa fa-fw fa-upload"></i> Upload SHC File</span>'+
+					        '<input id="upload-selection" type="file" name="files[]" />'+
+					      '</label>'+
+					  '</div>'
+					);
+				}
 		    },
 
 			onClose: function() {
@@ -153,7 +196,18 @@
 
 			sameModel: function(model){
 				return this.model.get("name") == model.get("name");
-			}
+			},
+
+			onUploadSelectionChanged: function(evt) {
+				var that = this;
+	      		var reader = new FileReader();
+				reader.onloadend = function(evt) {
+					//console.log(evt.target.result);
+					Communicator.mediator.trigger("file:shc:loaded", that.model.get("name"), evt.target.result);
+				}
+
+				reader.readAsText(evt.target.files[0]);
+	      	},
 
 		});
 

@@ -128,6 +128,35 @@
 							    	}
 							    }
 							});
+	                    }else if(this.model.get('views')[0].protocol == "WPS"){
+	                    	if(this.model.get('shc')){
+	                    		// If an shc file was loaded acticate/deactivate layer as normal
+	                    		Communicator.mediator.trigger('map:layer:change', options);
+	                    	}else{
+	                    		// If ans shc file is not loaded open settings and show message to select shc file
+	                    		if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+			    					App.layerSettings.setModel(this.model);
+									App.optionsBar.show(App.layerSettings);
+								} else {
+									if(App.layerSettings.sameModel(this.model)){
+										App.optionsBar.close();
+									}else{
+										App.layerSettings.setModel(this.model);
+										App.optionsBar.show(App.layerSettings);
+									}
+								}
+								$("#error-messages").append(
+			                              '<div class="alert alert-info">'+
+			                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+			                              'Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer' +
+			                            '</div>'
+			                    );
+
+			                    var checkbox = $( "input[type$='checkbox']", this.$el);
+		    					checkbox.attr('checked', false);
+		    					//checkbox.disableSelection();
+	                    	}
+
 	                    }else{
 	                    	Communicator.mediator.trigger('map:layer:change', options);
 	                    }
@@ -168,9 +197,9 @@
 
 		    layerActivate: function(layer){
 		    	if(this.model.get('views') && this.model.get('views')[0].id == layer){
-		    		this.model.set("visible", true);
+		    		//this.model.set("visible", true);
 		    		var checkbox = $( "input[type$='checkbox']", this.$el);
-		    		checkbox.click();
+		    		checkbox.attr('checked', true);
 		    	}
 		    },
 

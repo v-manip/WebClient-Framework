@@ -162,7 +162,8 @@
 							processes: product.processes,
 							unit: product.unit,
 							parameters: product.parameters,
-							height: product.height
+							height: product.height,
+							outlines: product.outlines
 						})
 					);
 

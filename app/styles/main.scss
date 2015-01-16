@@ -378,6 +378,14 @@ button[active=active] {
     cursor: pointer;
 }
 
+.shcbutton{
+  width: 100%;
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+  overflow: hidden;
+}
+
  .myui-button
 {
     position: relative;
