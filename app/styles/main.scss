@@ -65,6 +65,11 @@ hr {
   user-select: none;
 }
 
+
+/*
+ * Color legend attributes 
+ */
+
 .colorlegend{
   position: absolute;
   height: 75px;
@@ -87,6 +92,22 @@ hr {
 
 .colorlegend img{
   border-radius: 5px;
+}
+
+#colorlegend g.axis line, #colorlegend g.axis path {
+    fill:none;
+    stroke: white;
+    shape-rendering:crispEdges;
+}
+
+#colorlegend g.axis text{
+    fill: white;
+    font-family:sans-serif;
+}
+
+#colorlegend > g.axis path {
+    stroke-width:2;
+    stroke: white;
 }
 
 

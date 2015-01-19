@@ -57,9 +57,6 @@ define(['backbone.marionette',
 				this.$el.append(
 					"<div class='d3canvas'></div>" +
 					"<div class='gui'>" +
-						"<div class='scatter-btn highlight '><i class='sprite sprite-scatter' style='widht:22px'></i></div>" +
-						"<div class='box-btn highlight '><i class='sprite sprite-box'></i></div>" +
-						"<div class='parallel-btn highlight '><i class='sprite sprite-parallel'></i></div>" +
 					"</div> ");
 
 

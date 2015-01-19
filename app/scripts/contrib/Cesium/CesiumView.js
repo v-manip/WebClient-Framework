@@ -8,12 +8,13 @@ define(['backbone.marionette',
 		'models/MapModel',
 		'globals',
 		'hbs!tmpl/wps_load_shc',
+		'hbs!tmpl/wps_calc_diff',
 		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
 		'filesaver'
 	],
-	function(Marionette, Communicator, App, MapModel, globals, Tmpl_load_shc) {
+	function(Marionette, Communicator, App, MapModel, globals, Tmpl_load_shc, Tmpl_calc_diff) {
 
 		var CesiumView = Marionette.View.extend({
 
@@ -37,6 +38,8 @@ define(['backbone.marionette',
 				this.bboxsel = null;
 				this.extentPrimitive = null;
 				this.shc = null;
+				this.activeModels = [];
+				this.difference_image = null;
 
 				this.begin_time = null;
 				this.end_time = null;
@@ -609,6 +612,129 @@ define(['backbone.marionette',
 								//Manage custom attribution (remove deactivated layers)
 								$("#"+product.get("name")).remove();
 							}
+						}
+						if(product.get("model") && product.get("name") == options.name){
+							if(options.visible){
+								this.activeModels.push(product.get("name"));
+							}else{
+								if (this.activeModels.indexOf(product.get('name'))!=-1)
+                					this.activeModels.splice(this.activeModels.indexOf(product.get('name')), 1);
+
+                				if (this.activeModels.length != 2){
+                					if(this.difference_image)	
+										this.map.scene.imageryLayers.remove(this.difference_image);
+									this.difference_image = null;
+
+									if($("#colorlegend").is(":visible"))
+										$("#colorlegend").hide();
+                				}
+
+							}
+
+							// Compare models if two are selected
+							if (this.activeModels.length == 2){
+
+								var that = this;
+
+								var model1 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[0];});
+								var model2 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[1];});
+
+								var models = [model1.get("views")[0].id, model2.get("views")[0].id];
+
+								// Remove custom model with id shc if selected
+								if (models.indexOf("shc")!=-1)
+                					models.splice(models.indexOf("shc"), 1);
+
+								models = models.join(",");
+
+								// Custom model was selected
+								/*if (!model1 || !model2){
+									// Check that shc file was loaded
+									if(that.shc){
+
+									}
+								}*/
+
+								/*var parameters = product.get("parameters");
+	                			var band;
+	                			var keys = _.keys(parameters);
+								_.each(keys, function(key){
+									if(parameters[key].selected)
+										band = key;
+								});
+	                			var style = parameters[band].colorscale;
+	                			var range = parameters[band].range;
+
+
+            					var imageURI;
+								var that = this;
+								var imagelayer;
+
+								var ces_layer = product.get("ces_layer");
+								var index = this.map.scene.imageryLayers.indexOf(ces_layer);*/
+								
+
+								$.post( "http://localhost:8000/vires00/ows", Tmpl_calc_diff({
+									"model_ids": models,
+									"shc":that.shc,
+									/*"begin_time": getISODateTimeString(this.begin_time),
+									"end_time": getISODateTimeString(this.end_time),
+									"band": band,
+									"style": style,
+									"range_min": range[0],
+									"range_max": range[1]*/
+								}), "xml")
+
+									.done(function( data ) {
+
+										if(that.difference_image)	
+											that.map.scene.imageryLayers.remove(that.difference_image);
+
+										var img64 = $(data.getElementsByTagName("ComplexData")).text();
+									    imageURI = "data:image/gif;base64,"+img64;
+									    var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
+										that.difference_image = that.map.scene.imageryLayers.addImageryProvider(prov);
+										that.map.scene.imageryLayers.lower(that.difference_image);
+
+										var style = $(data.getElementsByTagName("LiteralData")).text().split(",");
+
+
+										
+										var margin = 20;
+										var width = $("#colorlegend").width();
+										var scalewidth =  width - margin *2;
+
+										$("#colorlegend").append(
+											'<div class="'+style[0]+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
+										);
+
+										var svgContainer = d3.select("#colorlegend").append("svg")
+											.attr("width", width)
+											.attr("height", 50);
+
+
+										var axisScale = d3.scale.linear();
+
+										axisScale.domain([parseFloat(style[1]), parseFloat(style[2])]);
+										axisScale.range([0, scalewidth]);
+
+										var xAxis = d3.svg.axis()
+											.scale(axisScale);
+
+
+										xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+										xAxis.tickFormat(d3.format('.02f'));
+
+
+									    svgContainer.append("g")
+									        .attr("class", "x axis")
+									        .attr("transform", "translate(" + [margin, 3]+")")
+									        .call(xAxis);
+										$("#colorlegend").show();
+
+									});
+							}
+
 						}
 					}, this);
                 }
@@ -1511,7 +1637,7 @@ define(['backbone.marionette',
 
 			onFileSHCLoaded: function(layer, shc){
 				this.shc = shc;
-				var options = { name: layer, isBaseLayer: false, visible: true };
+				var options = { name: layer, isBaseLayer: false, visible: false };
 				var layer_id;
 				globals.products.each(function(product) {
 					if(product.get("name")==layer){
@@ -1522,7 +1648,8 @@ define(['backbone.marionette',
 						product.set("visible", false);
 					}
 				});
-				//Communicator.mediator.trigger('map:layer:change', options);
+
+				Communicator.mediator.trigger('map:layer:change', options);
 				Communicator.mediator.trigger("layer:activate", layer_id);
 			},
 

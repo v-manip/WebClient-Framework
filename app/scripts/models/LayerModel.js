@@ -48,7 +48,8 @@
 			processes : [],
 			unit: "",
 			parameters:[],
-			height: 0
+			height: 0,
+			model: false
 			
 			
 		});

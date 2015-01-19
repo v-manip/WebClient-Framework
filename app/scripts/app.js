@@ -163,7 +163,8 @@
 							unit: product.unit,
 							parameters: product.parameters,
 							height: product.height,
-							outlines: product.outlines
+							outlines: product.outlines,
+							model: product.model
 						})
 					);
 

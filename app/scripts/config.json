@@ -308,7 +308,8 @@
                     "colorscale": "jet"
                 }
             },
-            "height": 450
+            "height": 450,
+            "model": true
 
         },{
             "name": "IGRF",
@@ -374,7 +375,8 @@
                     "colorscale": "jet"
                 }
             },
-            "height": 450
+            "height": 450,
+            "model": true
 
         },{
             "name": "CHAOS 5",
@@ -440,7 +442,8 @@
                     "colorscale": "jet"
                 }
             },
-            "height": 450
+            "height": 450,
+            "model": true
 
         },{
             "name": "Custom Model",
@@ -467,7 +470,8 @@
                     "selected": true
                 }
             },
-            "height": 450
+            "height": 450,
+            "model": true
 
         },{
             "name": "Fieldlines WMM 2010",
