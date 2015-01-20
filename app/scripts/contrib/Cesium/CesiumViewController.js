@@ -61,10 +61,7 @@ define([
 			this.cesiumView.listenTo(Communicator.mediator, "layer:style:changed", _.bind(this.cesiumView.onLayerStyleChanged, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "layer:outlines:changed", _.bind(this.cesiumView.onLayerOutlinesChanged, this.cesiumView));
 
-			
-			this.cesiumView.listenTo(Communicator.mediator, "file:shc:loaded", _.bind(this.cesiumView.onFileSHCLoaded, this.cesiumView));			
-
-			
+		
 			//this.cesiumView.listenTo(Communicator.mediator, "map:load:image", _.bind(this.cesiumView.onLoadImage, this.cesiumView));
 			//this.cesiumView.listenTo(Communicator.mediator, "map:clear:image", _.bind(this.cesiumView.onClearImage, this.cesiumView));
 

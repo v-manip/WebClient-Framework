@@ -17,13 +17,13 @@
     <wps:Input>
       <ows:Identifier>begin_time</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>2014-09-01T01:01:00Z</wps:LiteralData>
+        <wps:LiteralData>{{begin_time}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
       <ows:Identifier>end_time</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>2014-09-01T10:11:00Z</wps:LiteralData>
+        <wps:LiteralData>{{end_time}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
     <wps:Input>
@@ -35,7 +35,13 @@
     <wps:Input>
       <ows:Identifier>style</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>rainbow</wps:LiteralData>
+        <wps:LiteralData>{{style}}</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>
+    <wps:Input>
+      <ows:Identifier>height</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>{{height}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
   </wps:DataInputs>

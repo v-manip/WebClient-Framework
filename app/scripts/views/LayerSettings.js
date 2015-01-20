@@ -21,11 +21,13 @@
 				this.selected = null;
 			},
 
-			events: {
+			/*events: {
 		        "change #upload-selection": "onUploadSelectionChanged"
-	      	},
+	      	},*/
 
 			onShow: function(view){
+
+				
 
 				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-gears"></i> ' + this.model.get("name") + ' Settings</h3>');
 
@@ -179,10 +181,12 @@
 						'<div class="myfileupload-buttonbar ">'+
 					    	'<label class="btn btn-default shcbutton">'+
 					        '<span><i class="fa fa-fw fa-upload"></i> Upload SHC File</span>'+
-					        '<input id="upload-selection" type="file" name="files[]" />'+
+					        '<input id="upload-selection" type="file" accept=".shc" name="files[]" />'+
 					      '</label>'+
 					  '</div>'
 					);
+
+					this.$("#upload-selection").change(this.onUploadSelectionChanged.bind(this));
 				}
 		    },
 
@@ -203,7 +207,14 @@
 	      		var reader = new FileReader();
 				reader.onloadend = function(evt) {
 					//console.log(evt.target.result);
-					Communicator.mediator.trigger("file:shc:loaded", that.model.get("name"), evt.target.result);
+					that.model.set('shc', evt.target.result);
+					Communicator.mediator.trigger("file:shc:loaded", evt.target.result);
+
+					var options = { name: that.model.get("name"), isBaseLayer: false, visible: false };
+					Communicator.mediator.trigger('map:layer:change', options);
+					Communicator.mediator.trigger("layer:activate", that.model.get("views")[0].id);
+
+
 				}
 
 				reader.readAsText(evt.target.files[0]);

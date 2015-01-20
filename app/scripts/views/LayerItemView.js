@@ -81,13 +81,23 @@
 
 
 			onChange: function(evt){
+
                 var isBaseLayer = false;
                 if (this.model.get('view').isBaseLayer)
                 	isBaseLayer = true;
+
                 var options = { name: this.model.get('name'), isBaseLayer: isBaseLayer, visible: evt.target.checked };
+
                 if( !isBaseLayer && evt.target.checked ){
+
                 	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
                     if (layer != -1  && !(typeof layer === 'undefined')) {
+
+                    	if(options.visible)
+                    		this.model.set("visible", true);
+                    	else
+                    		this.model.set("visible", false);
+
                     	// TODO: Here we should go through all views, or maybe only url is necessary?
                     	var url = layer.get('views')[0].urls[0]+"?";
                     	
@@ -130,7 +140,7 @@
 							});
 	                    }else if(this.model.get('views')[0].protocol == "WPS"){
 	                    	if(this.model.get('shc')){
-	                    		// If an shc file was loaded acticate/deactivate layer as normal
+	                    		// If an shc file was loaded acticate layer as normal
 	                    		Communicator.mediator.trigger('map:layer:change', options);
 	                    	}else{
 	                    		// If ans shc file is not loaded open settings and show message to select shc file
@@ -153,7 +163,8 @@
 			                    );
 
 			                    var checkbox = $( "input[type$='checkbox']", this.$el);
-		    					checkbox.attr('checked', false);
+		    					//checkbox.attr('checked', false);
+		    					checkbox.prop( "checked", false );
 		    					//checkbox.disableSelection();
 	                    	}
 
@@ -164,6 +175,10 @@
 	                	Communicator.mediator.trigger('map:layer:change', options);
 	                }
                 } else if (!evt.target.checked){
+
+                	if(this.model.get('shc'))
+                		this.model.set('shc',null);
+                	
                 	Communicator.mediator.trigger('map:layer:change', options);
                 } else if (isBaseLayer && evt.target.checked){
                 	Communicator.mediator.trigger('map:layer:change', options);
@@ -199,7 +214,8 @@
 		    	if(this.model.get('views') && this.model.get('views')[0].id == layer){
 		    		//this.model.set("visible", true);
 		    		var checkbox = $( "input[type$='checkbox']", this.$el);
-		    		checkbox.attr('checked', true);
+		    		//checkbox.attr('checked', true);
+		    		checkbox.prop( "checked", true );
 		    	}
 		    },
 
