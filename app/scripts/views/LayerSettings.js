@@ -65,11 +65,22 @@
 					this.$("#uom").text('Unit of measurement: '+ options[this.selected].uom);
 				}
 
+				if(options[that.selected].hasOwnProperty("logarithmic")){
+					this.addLogOption(options);
+				}
+
 				this.$("#options").change(function(evt){
 					delete options[that.selected].selected;
 					that.selected = $(evt.target).find("option:selected").text();
 					that.$("#range_min").val(options[that.selected].range[0]);
 					that.$("#range_max").val(options[that.selected].range[1]);
+
+					if(options[that.selected].hasOwnProperty("logarithmic")){
+						that.addLogOption(options);
+
+					}else{
+						that.$("#logarithmic").empty();
+					}
 
 					options[that.selected].selected = true;
 
@@ -219,6 +230,27 @@
 
 				reader.readAsText(evt.target.files[0]);
 	      	},
+
+	      	addLogOption: function(options){
+	      		if(options[this.selected].hasOwnProperty("logarithmic")){
+					var checked = "";
+					if (options[this.selected].logarithmic)
+						checked = "checked";
+
+					this.$("#logarithmic").append(
+						'<form style="vertical-align: middle;">'+
+						'<label for="outlines" style="width: 100px;">Log10 Scale: </label>'+
+						'<input type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
+						'</form>'
+					);
+
+					this.$("#logarithmic input").change(function(evt){
+						/*var logarithmic = !this.model.get("outlines");
+						this.model.set("outlines", options[this.selected].logarithmic);
+						Communicator.mediator.trigger("layer:outlines:changed", this.model.get("name"), outlines);*/
+					});
+				}
+	      	}
 
 		});
 

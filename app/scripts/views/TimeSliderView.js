@@ -38,8 +38,7 @@
 
         this.activeWPSproducts = [];
 
-        this.slider = new TimeSlider(this.el, {
-
+        var initopt = {
           domain: {
             start: new Date(this.options.domain.start),
             end: new Date(this.options.domain.end)
@@ -50,10 +49,17 @@
           },
           debounce: 300,
           ticksize: 8,
-
           datasets: []
+        };
 
-        });
+        if (this.options.display){
+          initopt["display"] = {
+            start: new Date(this.options.display.start),
+            end: new Date(this.options.display.end)
+          };
+        }
+
+        this.slider = new TimeSlider(this.el, initopt);
 
         Communicator.mediator.trigger('time:change', {start:selectionstart, end:selectionend});
 
@@ -125,6 +131,36 @@
                   // Withouth this update the first time activating a layer after the first map move
                   // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
                   this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+                  break;
+                case "INDEX":
+                  this.slider.addDataset({
+                    id: product.get('download').id,
+                    color: product.get('color'),
+                    data: new TimeSlider.Plugin.WPS({
+                        url: product.get('download').url,
+                        eoid: product.get('download').id,
+                        dataset: product.get('download').id,
+                        indices: true,
+                        processid: "get_indices",
+                        collectionid: "index_id",
+                        output: "output"
+                     })
+                  });
+
+                  /*{
+                    id: 'dst',
+                    color: 'purple',
+                    lineplot: true,
+                    data: new TimeSlider.Plugin.WPS({ 
+                      url: 'http://localhost:8000/vires00/ows', 
+                      eoid: 'dst', 
+                      dataset: 'dst',
+                      indices: true,
+                      processid: "get_indices",
+                      collectionid: "index_id",
+                      output: "output"
+                    })
+                  },*/
                   break;
               }
               

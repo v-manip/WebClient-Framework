@@ -114,7 +114,8 @@
             x3dom: "../scripts/vendor/x3dom-full.debug",
             keypress: '../bower_components/Keypress/keypress',
             xtk: '../scripts/vendor/xtk_edge',
-            'xtk-gui': '../scripts/vendor/xtk_xdat.gui'
+            'xtk-gui': '../scripts/vendor/xtk_xdat.gui',
+            papaparse: '../bower_components/papaparse/papaparse.min'
 
         },
 

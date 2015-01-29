@@ -18,12 +18,13 @@
     "d3": "~3.3.5",
     "filesaver": "https://github.com/eligrey/FileSaver.js.git",
     "virtualglobeviewer": "https://github.com/v-manip/VirtualGlobeViewer.git",
-    "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.13/d3.TimeSlider.zip",
+    "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.14/d3.TimeSlider.zip",
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.0.3",
-    "analyticsviewer": "esa-vires/AnalyticsViewer#~0.1.5",
-    "Cesium-1.5": "http://cesiumjs.org/releases/Cesium-1.5.zip"
+    "analyticsviewer": "esa-vires/AnalyticsViewer#~0.1.6",
+    "Cesium-1.5": "http://cesiumjs.org/releases/Cesium-1.5.zip",
+    "papaparse": "~4.1.0"
   },
   "devDependencies": {
     "Keypress": "~2.0.0"

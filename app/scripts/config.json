@@ -253,7 +253,7 @@
                 "id": "WMM",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -261,7 +261,7 @@
             "download": {
                 "id": "WMM",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -306,6 +306,13 @@
                     "uom":"degree",
                     "description": "Declination",
                     "colorscale": "jet"
+                },
+                "Fieldlines":{
+                    "range": [0, 4],
+                    "uom":"nT",
+                    "description": "Declination",
+                    "colorscale": "jet",
+                    "logarithmic": true
                 }
             },
             "height": 450,
@@ -320,7 +327,7 @@
                 "id": "IGRF",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -328,7 +335,7 @@
             "download": {
                 "id": "IGRF",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -373,6 +380,13 @@
                     "uom":"degree",
                     "description": "Declination",
                     "colorscale": "jet"
+                },
+                "Fieldlines":{
+                    "range": [0, 4],
+                    "uom":"nT",
+                    "description": "Declination",
+                    "colorscale": "jet",
+                    "logarithmic": true
                 }
             },
             "height": 450,
@@ -440,6 +454,13 @@
                     "uom":"degree",
                     "description": "Declination",
                     "colorscale": "jet"
+                },
+                "Fieldlines":{
+                    "range": [0, 4],
+                    "uom":"nT",
+                    "description": "Declination",
+                    "colorscale": "jet",
+                    "logarithmic": true
                 }
             },
             "height": 450,
@@ -468,11 +489,54 @@
                     "description": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
+                },
+                "Fieldlines":{
+                    "range": [0, 4],
+                    "uom":"nT",
+                    "description": "Declination",
+                    "colorscale": "jet",
+                    "logarithmic": true
                 }
             },
             "height": 450,
             "model": true
 
+        },{
+            "name": "Dst Index",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "INDEX",
+            "views": [{
+                "id": "dst",
+                "protocol": "INDEX",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ]
+            }],
+            "download": {
+                "id": "dst",
+                "protocol": "INDEX",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "index": true
+        },{
+            "name": "Kp Index",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "INDEX",
+            "views": [{
+                "id": "kp",
+                "protocol": "INDEX",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ]
+            }],
+            "download": {
+                "id": "kp",
+                "protocol": "INDEX",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "index": true
         },{
             "name": "Fieldlines WMM 2010",
             "visible": false,
@@ -646,6 +710,10 @@
         "brush": {
             "start": "2014-07-17T01:00:00Z",
             "end": "2014-07-17T05:00:00Z"
+        },
+        "display": {
+            "start": "2014-07-12T01:00:00Z",
+            "end": "2014-07-22T01:00:00Z"
         }
     },
 

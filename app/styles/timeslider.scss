@@ -3,6 +3,7 @@
 #timeslider svg.timeslider {
   z-index: $layer-gui;
   position: relative;
-
-  height: 3em;
+  opacity: 1;
+  border: 1px solid black;
+  height: 7em;
 }
