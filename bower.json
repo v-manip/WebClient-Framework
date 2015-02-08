@@ -15,7 +15,7 @@
     "require-handlebars-plugin": "~0.4.0",
     "backbone.marionette.handlebars": "~0.2.0",
     "libcoverage": "https://github.com/EOX-A/libcoverage.js/releases/download/v0.1.5/libcoverage.js.v0.1.5.zip",
-    "d3": "~3.3.5",
+    "d3": "~3.5.3",
     "filesaver": "https://github.com/eligrey/FileSaver.js.git",
     "virtualglobeviewer": "https://github.com/v-manip/VirtualGlobeViewer.git",
     "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.14/d3.TimeSlider.zip",
@@ -28,5 +28,8 @@
   },
   "devDependencies": {
     "Keypress": "~2.0.0"
+  },
+  "resolutions": {
+    "d3": "~3.5.3"
   }
 }

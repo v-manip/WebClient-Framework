@@ -141,7 +141,7 @@
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -149,7 +149,7 @@
             "download": {
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "processes" : [
                 {
@@ -160,12 +160,14 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow"
+                    "colorscale": "rainbow",
+                    "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
                     "colorscale": "rainbow",
-                    "selected": true
+                    "selected": true,
+                    "name": "Magnetic field intensity"
                 }
             },
             "outlines": true
@@ -198,12 +200,14 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow"
+                    "colorscale": "rainbow",
+                    "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
                     "colorscale": "rainbow",
-                    "selected": true
+                    "selected": true,
+                    "name": "Magnetic field intensity"
                 }
             },
             "outlines": false
@@ -235,12 +239,14 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow"
+                    "colorscale": "rainbow",
+                    "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
                     "colorscale": "rainbow",
-                    "selected": true
+                    "selected": true,
+                    "name": "Magnetic field intensity"
                 }
             },
             "outlines": false
@@ -267,50 +273,51 @@
                 "F": {
                     "range": [30000, 60000],
                     "uom":"nT",
-                    "description": "Total field intensity",
+                    "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
                     "range": [10000, 23000],
                     "uom":"nT",
-                    "description": "Horizontal intensity",
+                    "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
                     "range": [10000, 23000],
                     "uom":"nT",
-                    "description": "North component",
+                    "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
                     "range": [-7000, 7000],
                     "uom":"nT",
-                    "description": "East component",
+                    "name": "East component",
                     "colorscale": "jet"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
-                    "description": "Down component",
+                    "name": "Down component",
                     "colorscale": "jet"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
-                    "description": "Inclination",
+                    "name": "Inclination",
                     "colorscale": "jet"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
-                    "description": "Declination",
+                    "name": "Declination",
                     "colorscale": "jet"
                 },
                 "Fieldlines":{
-                    "range": [0, 4],
+                    "range": [0.9, 40000],
                     "uom":"nT",
-                    "description": "Declination",
+                    "name": "Fieldlines",
+                    "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
                 }
@@ -341,50 +348,51 @@
                 "F": {
                     "range": [30000, 60000],
                     "uom":"nT",
-                    "description": "Total field intensity",
+                    "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
                     "range": [10000, 23000],
                     "uom":"nT",
-                    "description": "Horizontal intensity",
+                    "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
                     "range": [10000, 23000],
                     "uom":"nT",
-                    "description": "North component",
+                    "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
                     "range": [-7000, 7000],
                     "uom":"nT",
-                    "description": "East component",
+                    "name": "East component",
                     "colorscale": "jet"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
-                    "description": "Down component",
+                    "name": "Down component",
                     "colorscale": "jet"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
-                    "description": "Inclination",
+                    "name": "Inclination",
                     "colorscale": "jet"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
-                    "description": "Declination",
+                    "name": "Declination",
                     "colorscale": "jet"
                 },
                 "Fieldlines":{
-                    "range": [0, 4],
+                    "range": [0.9, 40000],
                     "uom":"nT",
-                    "description": "Declination",
+                    "name": "Fieldlines",
+                    "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
                 }
@@ -393,7 +401,7 @@
             "model": true
 
         },{
-            "name": "CHAOS 5",
+            "name": "CHAOS-5",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -415,50 +423,51 @@
                 "F": {
                     "range": [30000, 60000],
                     "uom":"nT",
-                    "description": "Total field intensity",
+                    "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
                     "range": [10000, 23000],
                     "uom":"nT",
-                    "description": "Horizontal intensity",
+                    "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
                     "range": [10000, 23000],
                     "uom":"nT",
-                    "description": "North component",
+                    "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
                     "range": [-7000, 7000],
                     "uom":"nT",
-                    "description": "East component",
+                    "name": "East component",
                     "colorscale": "jet"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
-                    "description": "Down component",
+                    "name": "Down component",
                     "colorscale": "jet"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
-                    "description": "Inclination",
+                    "name": "Inclination",
                     "colorscale": "jet"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
-                    "description": "Declination",
+                    "name": "Declination",
                     "colorscale": "jet"
                 },
                 "Fieldlines":{
-                    "range": [0, 4],
+                    "range": [0.9, 40000],
                     "uom":"nT",
-                    "description": "Declination",
+                    "name": "Fieldlines",
+                    "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
                 }
@@ -486,14 +495,15 @@
                 "F": {
                     "range": [30000, 60000],
                     "uom":"nT",
-                    "description": "Total field intensity",
+                    "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "Fieldlines":{
-                    "range": [0, 4],
+                    "range": [0.9, 40000],
                     "uom":"nT",
-                    "description": "Declination",
+                    "name": "Fieldlines",
+                    "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
                 }
@@ -537,60 +547,6 @@
                 "url": "http://localhost:9000/vires00/ows"
             },
             "index": true
-        },{
-            "name": "Fieldlines WMM 2010",
-            "visible": false,
-            "timeSlider": false,
-            "views": [{
-                "id": "wmm2010",
-                "protocol": "FL_CZML",
-                "urls": [
-                    "http://localhost:9000/vires00/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "SW_OPER_MAGC_LR_1B",
-                "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
-            }
-        },{
-            "name": "Fieldlines CHAOS 5",
-            "visible": false,
-            "timeSlider": false,
-            "views": [{
-                "id": "chaos5",
-                "protocol": "FL_CZML",
-                "urls": [
-                    "http://localhost:9000/vires00/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "SW_OPER_MAGC_LR_1B",
-                "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
-            }
-        },{
-            "name": "Fieldlines IGRF 11",
-            "visible": false,
-            "timeSlider": false,
-            "views": [{
-                "id": "igrf11",
-                "protocol": "FL_CZML",
-                "urls": [
-                    "http://localhost:9000/vires00/ows"
-                ],
-                "style": "default",
-                "format": "image/png"
-            }],
-            "download": {
-                "id": "SW_OPER_MAGC_LR_1B",
-                "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
-            }
         },{
             "name": "Digital Elevation Model",
             "visible": false,
@@ -708,12 +664,12 @@
             "end": "2014-10-17T11:45:00Z"
         },
         "brush": {
-            "start": "2014-07-17T01:00:00Z",
-            "end": "2014-07-17T05:00:00Z"
+            "start": "2014-10-01T01:00:00Z",
+            "end": "2014-10-01T05:00:00Z"
         },
         "display": {
-            "start": "2014-07-12T01:00:00Z",
-            "end": "2014-07-22T01:00:00Z"
+            "start": "2014-09-12T01:00:00Z",
+            "end": "2014-10-22T01:00:00Z"
         }
     },
 

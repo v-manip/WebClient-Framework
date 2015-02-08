@@ -10,13 +10,14 @@ define(['backbone.marionette',
 		'hbs!tmpl/wps_load_shc',
 		'hbs!tmpl/wps_calc_diff',
 		'hbs!tmpl/wps_get_field_lines',
+		'hbs!tmpl/wps_retrieve_swarm_features',
 		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
 		'filesaver',
 		'papaparse'
 	],
-	function(Marionette, Communicator, App, MapModel, globals, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines) {
+	function(Marionette, Communicator, App, MapModel, globals, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
 
 		var CesiumView = Marionette.View.extend({
 
@@ -36,8 +37,8 @@ define(['backbone.marionette',
 				this.camera_last_position = null;
 				this.billboards = null;
 				this.activeFL = [];
-				//this.FL_czml_src = new Cesium.CzmlDataSource();
-				this.FL_collection = null;
+				this.features_collection = {};
+				this.FL_collection = {};
 				this.bboxsel = null;
 				this.extentPrimitive = null;
 				this.activeModels = [];
@@ -500,37 +501,8 @@ define(['backbone.marionette',
                     	if(product.get("name")==options.name){
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
+                    			this.checkLayerFeatures(product, options.visible);
 
-                    			if(options.visible){
-
-                    				// product.set("visible", true);
-                    				var hexcolor = product.get("color");
-	                				hexcolor = hexcolor.substring(1, hexcolor.length);
-		                			var parameters = product.get("parameters");
-		                			var band;
-		                			var keys = _.keys(parameters);
-									_.each(keys, function(key){
-										if(parameters[key].selected)
-											band = key;
-									});
-		                			var style = parameters[band].colorscale;
-		                			var outlines = product.get("outlines");
-		                			var range = parameters[band].range;
-	            				
-		            				var czmlSource = new Cesium.CzmlDataSource();
-		            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
-		            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
-		            						  band,range, style, hexcolor, outlines);
-
-		                			czmlSource.loadUrl(url);
-		                			product.set("czmlSource", czmlSource);
-			        				this.map.dataSources.add(czmlSource);
-			        			}else{
-			        				//this.map.dataSources.removeAll();
-			        				if(product.get("czmlSource")){
-			        					this.map.dataSources.remove(product.get("czmlSource"), true);
-			        				}
-			        			}
 			        		}else if (product.get("views")[0].protocol == "FL_CZML"){
 			        			if(options.visible){
 			        				//product.set("visible", true);
@@ -680,6 +652,8 @@ define(['backbone.marionette',
 
 								var models = [model1.get("views")[0].id, model2.get("views")[0].id];
 
+								var shc = null;
+
 								// Remove custom model with id shc if selected
 								if (models.indexOf("shc")!=-1){
 									shc = _.find(globals.products.models, function(p){return p.get("shc") != null;}).get("shc");
@@ -777,6 +751,132 @@ define(['backbone.marionette',
             },
 
 
+            checkLayerFeatures: function (product, visible) {
+
+				var id = product.get("views")[0].id;
+
+				if(this.features_collection.hasOwnProperty(id)){
+            		this.map.scene.primitives.remove(this.features_collection[id]);
+            		delete this.features_collection[id];
+            	}
+
+            	if(visible){
+					var color = product.get("color");
+					color = color.substring(1, color.length);
+
+	    			var parameters = product.get("parameters");
+	    			var keys = _.keys(parameters);
+	    			var band;
+					_.each(keys, function(key){
+						if(parameters[key].selected)
+							band = key;
+					});
+	    			var style = parameters[band].colorscale;
+	    			var outlines = product.get("outlines");
+	    			var range = parameters[band].range;
+	    			var url = product.get("views")[0].urls[0];
+
+	            	var that = this;
+
+	            	this.activeModels
+
+
+	            	$.post( url, Tmpl_retrive_swarm_features({
+						//"shc": product.get('shc'),
+						"model_ids": this.activeModels.join(),
+						"collection_id": id,
+						"begin_time": getISODateTimeString(this.begin_time),
+						"end_time": getISODateTimeString(this.end_time),
+						"band": band,
+						//"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
+						"style": style,
+						"dim_range": (range[0]+","+range[1]),
+					}))
+
+					.done(function( data ) {
+						Papa.parse(data, {
+							header: true,
+							dynamicTyping: true,
+							complete: function(results) {
+								that.createFeatures(results, id, band)
+							}
+						});
+					});
+				}
+               
+            },
+
+            createFeatures: function (results, identifier, band){
+
+				if(band == "B_NEC"){
+
+					this.features_collection[identifier] = new Cesium.PrimitiveCollection();
+					
+
+					_.each(results.data, function(row){
+
+						var arrowmat = 	new Cesium.Material.fromType('PolylineArrow');			
+						arrowmat.uniforms.color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, 255);
+
+						this.features_collection[identifier].add(new Cesium.Primitive({
+						    geometryInstances : new Cesium.GeometryInstance({
+						        geometry : new Cesium.PolylineGeometry({
+						            positions : [
+							            new Cesium.Cartesian3(row.pos1_x, row.pos1_y, row.rad1),
+							            new Cesium.Cartesian3(row.pos2_x, row.pos2_y, row.rad2)
+						            ],
+						            width : 5.0,
+						            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+						        })
+						    }),
+						    //appearance : new Cesium.PolylineColorAppearance()
+						    appearance : new Cesium.PolylineMaterialAppearance({
+						    	material : arrowmat
+						  	})
+						}));
+
+					}, this);
+
+	        		this.map.scene.primitives.add(this.features_collection[identifier]);
+
+				}else{
+
+
+					this.features_collection[identifier] = new Cesium.BillboardCollection();
+
+					var canvas = document.createElement('canvas');
+				    canvas.width = 16;
+				    canvas.height = 16;
+				    var context2D = canvas.getContext('2d');
+				    context2D.beginPath();
+				    context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
+				    context2D.closePath();
+				    context2D.fillStyle = 'rgb(255, 255, 255)';
+				    context2D.fill();
+
+
+				    _.each(results.data, function(row){
+
+						var ident = row.id;
+
+						this.features_collection[identifier].add({
+					        imageId : 'custom canvas point',
+					        image : canvas,
+					        position : new Cesium.Cartesian3(row.pos_x, row.pos_y, row.rad),
+					        color : Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, 255),
+					        scale : 0.5
+					    });
+
+					}, this);
+
+					this.map.scene.primitives.add(this.features_collection[identifier]);
+
+				}
+
+        		
+            },
+
+
             onLayerRangeChanged: function(layer, range){
 
             	globals.products.each(function(product) {
@@ -797,33 +897,21 @@ define(['backbone.marionette',
 						var outlines = product.get("outlines");
 
                 		if(product.get("views")[0].protocol == "CZML"){
-
-	            			if(product.get("visible")){
-
-	            				this.map.dataSources.remove(product.get("czmlSource"));
-         				
-	            				var czmlSource = new Cesium.CzmlDataSource();
-	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
-	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
-	            						  band,range, style, hexcolor, outlines);
-
-	                			czmlSource.loadUrl(url);
-	                			product.set("czmlSource", czmlSource);
-		        				this.map.dataSources.add(czmlSource);
-		        			}
+                			this.checkLayerFeatures(product, product.get("visible"));
 
                 		}else if(product.get("views")[0].protocol == "WMS"){
+                			if (band == "Fieldlines" ){
+		                			this.checkFieldLines();
+							}else{
+			                	var ces_layer = product.get("ces_layer");
+			                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
 
-	                		// TODO: Do we need to update the model object here?
-		                	var ces_layer = product.get("ces_layer");
-		                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
-		                	//ces_layer.imageryProvider._parameters["range_max"] = range[1];
-
-		                	if (ces_layer.show){
-			            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-			            		this.map.scene.imageryLayers.remove(ces_layer, false);
-			            		this.map.scene.imageryLayers.add(ces_layer, index);
-			            	}
+			                	if (ces_layer.show){
+				            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+				            		this.map.scene.imageryLayers.remove(ces_layer, false);
+				            		this.map.scene.imageryLayers.add(ces_layer, index);
+				            	}
+				            }
 			            }else if (product.get("views")[0].protocol == "WPS"){
 
                     			if(product.get("visible")){
@@ -892,19 +980,7 @@ define(['backbone.marionette',
             			var outlines = product.get("outlines");
 
 						if(product.get("views")[0].protocol == "CZML"){
-
-	            			if(product.get("visible")){
-
-	            				this.map.dataSources.remove(product.get("czmlSource"));
-	            				var czmlSource = new Cesium.CzmlDataSource();
-	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
-	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
-	            						  band,range, style, hexcolor, outlines);
-
-	                			czmlSource.loadUrl(url);
-	                			product.set("czmlSource", czmlSource);
-		        				this.map.dataSources.add(czmlSource);
-		        			}
+							this.checkLayerFeatures(product, product.get("visible"));
 
 	                	}else if(product.get("views")[0].protocol == "WMS"){
 
@@ -1138,10 +1214,12 @@ define(['backbone.marionette',
 
 				}else{
 					this.bboxsel = null;
-					if(this.FL_czml_src)
-						this.map.dataSources.remove(this.FL_czml_src);
 					if(this.extentPrimitive)
 						this.map.scene.primitives.remove(this.extentPrimitive);
+					_.each(_.keys(this.FL_collection), function(key){
+	            		this.map.scene.primitives.remove(this.FL_collection[key]);
+                		delete this.FL_collection[key];
+	            	}, this);
 				}
 
 
@@ -1151,15 +1229,11 @@ define(['backbone.marionette',
 
 				if(this.activeFL.length>0 && this.bboxsel){
 
-	            	/*var model_ids = "";
-	            	var colors = "";
-	            	var self = this;
-	            	var url = "";*/
-
 	            	var url, model_id, color, band, style, range, logarithmic;
 
 	            	globals.products.each(function(product) {
                 		if(this.activeFL.indexOf(product.get('name'))!=-1){
+                			var name = product.get('name');
                 			url = product.get("views")[0].urls[0];
                 			model_id = product.get("views")[0].id;
                 			color = product.get("color");
@@ -1173,48 +1247,92 @@ define(['backbone.marionette',
 	            			style = parameters[band].colorscale;
 	            			range = parameters[band].range;
 	            			logarithmic = parameters[band].logarithmic;
+
+	            			if(this.FL_collection.hasOwnProperty( name )) {
+		                		this.map.scene.primitives.remove(this.FL_collection[name]);
+		                		delete this.FL_collection[name];
+		                	}
+
+		                	var that = this;
+
+		                	$.post( url, Tmpl_get_field_lines({
+								//"shc": product.get('shc'),
+								"model_ids": model_id,
+								"begin_time": getISODateTimeString(this.begin_time),
+								"end_time": getISODateTimeString(this.end_time),
+								"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
+								"style": style,
+								"dim_range": (range[0]+","+range[1]),
+								"logarithmic": logarithmic
+							}))
+
+							.done(function( data ) {
+								Papa.parse(data, {
+									header: true,
+									dynamicTyping: true,
+									//name: name,
+									complete: function(results) {
+										that.createPrimitives(results, name)
+									}
+								});
+							});
+
+
+
                 		}
                 	}, this);
 
-                	/*model_ids = model_ids.substring(0, model_ids.length-1);
-                	colors = colors.substring(0, colors.length-1);*/
-
-                	if(this.FL_collection){
-                		this.map.scene.primitives.remove(this.FL_collection);
-                		this.FL_collection = null;
-                	}
-
-                	var that = this;
-
-                	$.post( url, Tmpl_get_field_lines({
-										//"shc": product.get('shc'),
-										"model_ids": model_id,
-										"begin_time": getISODateTimeString(this.begin_time),
-										"end_time": getISODateTimeString(this.end_time),
-										"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
-										"style": style,
-										"dim_range": (range[0]+","+range[1]),
-										"logarithmic": logarithmic
-									}))
-
-										.done(function( data ) {
-											Papa.parse(data, {
-												header: true,
-												dynamicTyping: true,
-												arg: "test",
-												complete: function(results) {
-													that.createPrimitives(results, this.arg)
-												}
-											});
-										});
+                	
 
 	            }else{
-	            	if(this.FL_collection){
-                		this.map.scene.primitives.remove(this.FL_collection);
-                		this.FL_collection = null;
-                	}
+	            	_.each(_.keys(this.FL_collection), function(key){
+	            		this.map.scene.primitives.remove(this.FL_collection[key]);
+                		delete this.FL_collection[key];
+	            	}, this);
 	            }
 
+				
+			},
+
+			onFieldlinesChanged: function(){
+				this.checkFieldLines();
+			},
+
+			createPrimitives: function(results, name){
+
+				var parseddata = {};
+				this.FL_collection[name] = new Cesium.PrimitiveCollection();
+
+				_.each(results.data, function(row){
+					if(parseddata.hasOwnProperty(row.id)){
+						parseddata[row.id].colors.push(Cesium.Color.fromBytes(row.color_r, row.color_g, row.color_b, 255));
+						parseddata[row.id].positions.push(new Cesium.Cartesian3(row.pos_x, row.pos_y, row.pos_z));
+					}else{
+						parseddata[row.id] = {
+							colors:[Cesium.Color.fromBytes(row.color_r, row.color_g, row.color_b, 255)],
+							positions:[new Cesium.Cartesian3(row.pos_x, row.pos_y, row.pos_z)]
+						};
+					}
+				});
+
+        		_.each(_.keys(parseddata), function(key){
+
+					this.FL_collection[name].add(new Cesium.Primitive({
+					    geometryInstances : new Cesium.GeometryInstance({
+					        geometry : new Cesium.PolylineGeometry({
+					            positions : parseddata[key].positions,
+					            width : 2.0,
+					            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
+					            colors : parseddata[key].colors,
+					            colorsPerVertex : true
+					        })
+					    }),
+					    appearance : new Cesium.PolylineColorAppearance()
+					}));
+
+				}, this);
+
+        		this.map.scene.primitives.add(this.FL_collection[name]);
 				
 			},
 
@@ -1350,32 +1468,23 @@ define(['backbone.marionette',
         				var outlines = product.get("outlines");
 
 						if(product.get("views")[0].protocol == "CZML"){
-
-	            			if(product.get("visible")){
-
-	            				this.map.dataSources.remove(product.get("czmlSource"));
-	            				
-	            				var czmlSource = new Cesium.CzmlDataSource();
-	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
-	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
-	            						  band,range, style, hexcolor, outlines);
-
-	                			czmlSource.loadUrl(url);
-	                			product.set("czmlSource", czmlSource);
-		        				this.map.dataSources.add(czmlSource);
-		        			}
+							this.checkLayerFeatures(product, product.get("visible"));
 
 	                	}else if(product.get("views")[0].protocol == "WMS"){
-	                    
-		                	if(product.get("name")==layer){
-			                	var ces_layer = product.get("ces_layer");
-			                	ces_layer.imageryProvider._parameters["styles"] = style;
 
-			                	if (ces_layer.show){
-				            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-				            		this.map.scene.imageryLayers.remove(ces_layer, false);
-				            		this.map.scene.imageryLayers.add(ces_layer, index);
-				            	}
+		                	if(product.get("name")==layer){
+		                		if (band == "Fieldlines" ){
+		                			this.checkFieldLines();
+								}else{
+				                	var ces_layer = product.get("ces_layer");
+				                	ces_layer.imageryProvider._parameters["styles"] = style;
+
+				                	if (ces_layer.show){
+					            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+					            		this.map.scene.imageryLayers.remove(ces_layer, false);
+					            		this.map.scene.imageryLayers.add(ces_layer, index);
+					            	}
+					            }
 				            }
 				        }else if (product.get("views")[0].protocol == "WPS"){
 
@@ -1426,8 +1535,8 @@ define(['backbone.marionette',
 					if(product.get("name")==layer){
 
 						if(product.get("views")[0].protocol == "CZML"){
-
-	            			if(product.get("visible")){
+							this.checkLayerFeatures(product, product.get("visible"));
+	            			/*if(product.get("visible")){
 
 	            				this.map.dataSources.remove(product.get("czmlSource"));
 
@@ -1451,7 +1560,7 @@ define(['backbone.marionette',
 	                			czmlSource.loadUrl(url);
 	                			product.set("czmlSource", czmlSource);
 		        				this.map.dataSources.add(czmlSource);
-		        			}
+		        			}*/
 
 	                	}
 				    }
@@ -1546,32 +1655,8 @@ define(['backbone.marionette',
 	                    }
 
 	                    if(product.get("views")[0].protocol == "CZML"){
-                			if(product.get("visible")){
-
-	            				this.map.dataSources.remove(product.get("czmlSource"));
-
-	            				var hexcolor = product.get("color");
-	                				hexcolor = hexcolor.substring(1, hexcolor.length);
-	                			var parameters = product.get("parameters");
-	                			var band;
-	                			var keys = _.keys(parameters);
-								_.each(keys, function(key){
-									if(parameters[key].selected)
-										band = key;
-								});
-	                			var range = parameters[band].range;
-	                			var style = parameters[band].colorscale;
-	                			var outlines = product.get("outlines");
-	            				
-	            				var czmlSource = new Cesium.CzmlDataSource();
-	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
-	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
-	            						  band,range, style, hexcolor, outlines);
-
-	                			czmlSource.loadUrl(url);
-	                			product.set("czmlSource", czmlSource);
-		        				this.map.dataSources.add(czmlSource);
-		        			}
+	                    	this.checkLayerFeatures(product, product.get("visible"));
+                			
 		        		}else if (product.get("views")[0].protocol == "WPS"){
 
                 			if(product.get("visible")){
@@ -1843,45 +1928,6 @@ define(['backbone.marionette',
 
 			toggleDebug: function(){
 				this.map.scene.debugShowFramesPerSecond = !this.map.scene.debugShowFramesPerSecond;
-			},
-
-			createPrimitives: function(results, arg){
-
-				var parseddata = {};
-				this.FL_collection = new Cesium.PrimitiveCollection();
-				//var primitiveCollection = new Cesium.PrimitiveCollection();
-
-				_.each(results.data, function(row){
-					if(parseddata.hasOwnProperty(row.id)){
-						parseddata[row.id].colors.push(Cesium.Color.fromBytes(row.color_r, row.color_g, row.color_b, 255));
-						parseddata[row.id].positions.push(new Cesium.Cartesian3(row.pos_x, row.pos_y, row.pos_z));
-					}else{
-						parseddata[row.id] = {
-							colors:[Cesium.Color.fromBytes(row.color_r, row.color_g, row.color_b, 255)],
-							positions:[new Cesium.Cartesian3(row.pos_x, row.pos_y, row.pos_z)]
-						};
-					}
-				});
-
-        		_.each(_.keys(parseddata), function(key){
-
-					this.FL_collection.add(new Cesium.Primitive({
-					    geometryInstances : new Cesium.GeometryInstance({
-					        geometry : new Cesium.PolylineGeometry({
-					            positions : parseddata[key].positions,
-					            width : 2.0,
-					            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
-					            colors : parseddata[key].colors,
-					            colorsPerVertex : true
-					        })
-					    }),
-					    appearance : new Cesium.PolylineColorAppearance()
-					}));
-
-				}, this);
-
-        		this.map.scene.primitives.add(this.FL_collection);
-				
 			}
 
 		});

@@ -49,9 +49,9 @@
 				_.each(keys, function(key){
 					if(options[key].selected){
 						that.selected = key;
-				   		option += '<option value="'+ key + '" selected>' + key + '</option>';
+				   		option += '<option value="'+ key + '" selected>' + options[key].name + '</option>';
 				   	}else{
-				   		option += '<option value="'+ key + '">' + key + '</option>';
+				   		option += '<option value="'+ key + '">' + options[key].name + '</option>';
 				   	}
 				});
 
@@ -61,17 +61,13 @@
 					this.$("#description").text(options[this.selected].description);
 				}
 
-				if(options[this.selected].uom){
-					this.$("#uom").text('Unit of measurement: '+ options[this.selected].uom);
-				}
-
 				if(options[that.selected].hasOwnProperty("logarithmic")){
 					this.addLogOption(options);
 				}
 
 				this.$("#options").change(function(evt){
 					delete options[that.selected].selected;
-					that.selected = $(evt.target).find("option:selected").text();
+					that.selected = $(evt.target).find("option:selected").val();
 					that.$("#range_min").val(options[that.selected].range[0]);
 					that.$("#range_max").val(options[that.selected].range[1]);
 
@@ -88,9 +84,12 @@
 						that.$("#description").text(options[that.selected].description);
 					}
 
-					if(options[that.selected].uom){
-						that.$("#uom").text('Unit of measurement: '+ options[that.selected].uom);
-					}
+					if(options[that.selected].hasOwnProperty("logarithmic"))
+						that.createScale(options[that.selected].logarithmic);
+					else
+						that.createScale();
+
+					that.createHeightTextbox(height);
 
 					Communicator.mediator.trigger("layer:band:changed", that.model.get("name"), that.selected, options[that.selected].range);
 				});
@@ -104,6 +103,12 @@
 						var range = [parseFloat($(this).val()), options[that.selected].range[1]];
 						options[that.selected].range[0] = range[0];
 						that.model.set("parameters", options);
+
+						if(options[that.selected].hasOwnProperty("logarithmic"))
+							that.createScale(options[that.selected].logarithmic);
+						else
+							that.createScale();
+
 						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
 					}
 				});
@@ -114,6 +119,12 @@
 						var range = [options[that.selected].range[0], parseFloat($(this).val())];
 						options[that.selected].range[1] = range[1];
 						that.model.set("parameters", options);
+
+						if(options[that.selected].hasOwnProperty("logarithmic"))
+							that.createScale(options[that.selected].logarithmic);
+						else
+							that.createScale();
+						
 						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
 						
 					}
@@ -141,30 +152,16 @@
 					that.$("#gradient").attr("class", selected_colorscale);
 					options[that.selected].colorscale = selected;
 					that.model.set("parameters", options);
+
+					if(options[that.selected].hasOwnProperty("logarithmic"))
+						that.createScale(options[that.selected].logarithmic);
+					else
+						that.createScale();
+
 					Communicator.mediator.trigger("layer:style:changed", that.model.get("name"), selected_colorscale);
 				});
 
-				if(height){
-					this.$("#height").append(
-						'<form style="vertical-align: middle;">'+
-						'<label for="heightvalue" style="width: 70px;">Height: </label>'+
-						'<textarea rows="1" cols="10" id="heightvalue" style="resize: none;margin:0;vertical-align: middle;"></textarea>'+
-						'</form>'
-					);
-					this.$("#heightvalue").val(height);
-					this.$("#height").append(
-						'<p style="font-size:0.85em; margin-left: 70px;">Above ellipsoid (Km)</p>'
-					);
-
-					this.$("#heightvalue").keypress(function(evt) {
-						if(evt.keyCode == 13){ //Enter pressed
-							evt.preventDefault();
-							var new_height = parseInt($(this).val());
-							Communicator.mediator.trigger("layer:height:changed", that.model.get("name"), new_height);
-							that.model.set("height", new_height);
-						}
-					});
-				} 
+				
 
 				if(!(typeof outlines === 'undefined')){
 					var checked = "";
@@ -199,6 +196,14 @@
 
 					this.$("#upload-selection").change(this.onUploadSelectionChanged.bind(this));
 				}
+
+				if(options[this.selected].hasOwnProperty("logarithmic"))
+					this.createScale(options[that.selected].logarithmic);
+				else
+					this.createScale();
+
+				this.createHeightTextbox(height);
+
 		    },
 
 			onClose: function() {
@@ -232,6 +237,7 @@
 	      	},
 
 	      	addLogOption: function(options){
+	      		var that = this;
 	      		if(options[this.selected].hasOwnProperty("logarithmic")){
 					var checked = "";
 					if (options[this.selected].logarithmic)
@@ -239,15 +245,119 @@
 
 					this.$("#logarithmic").append(
 						'<form style="vertical-align: middle;">'+
-						'<label for="outlines" style="width: 100px;">Log10 Scale: </label>'+
+						'<label for="outlines" style="width: 100px;">Log. Scale: </label>'+
 						'<input type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
 						'</form>'
 					);
 
 					this.$("#logarithmic input").change(function(evt){
-						/*var logarithmic = !this.model.get("outlines");
-						this.model.set("outlines", options[this.selected].logarithmic);
-						Communicator.mediator.trigger("layer:outlines:changed", this.model.get("name"), outlines);*/
+						var options = that.model.get("parameters");
+						options[that.selected].logarithmic = !options[that.selected].logarithmic;
+						Communicator.mediator.trigger("layer:fieldlines:changed");
+
+						if(options[that.selected].hasOwnProperty("logarithmic"))
+							that.createScale(options[that.selected].logarithmic);
+						else
+							that.createScale();
+					});
+				}
+	      	},
+
+	      	createScale: function(logscale){
+
+	      		var superscript = "⁰¹²³⁴⁵⁶⁷⁸⁹",
+    			formatPower = function(d) { 
+    				if (d>=0)
+    					return (d + "").split("").map(function(c) { return superscript[c]; }).join("");
+    				else if (d<0)
+    					return "⁻"+(d + "").split("").map(function(c) { return superscript[c]; }).join("");
+    			};
+
+	      		$("#setting_colorscale").empty();
+	      		var margin = 20;
+				var width = $("#setting_colorscale").width();
+				var scalewidth =  width - margin *2;
+
+				var range_min = this.model.get("parameters")[this.selected].range[0];
+				var range_max = this.model.get("parameters")[this.selected].range[1];
+				var uom = this.model.get("parameters")[this.selected].uom;
+				var style = this.model.get("parameters")[this.selected].colorscale;
+
+				$("#setting_colorscale").append(
+					'<div class="'+style+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
+				);
+
+
+
+				var svgContainer = d3.select("#setting_colorscale").append("svg")
+					.attr("width", width)
+					.attr("height", 40);
+
+				var axisScale;
+				
+				if(logscale){
+					axisScale = d3.scale.log();
+					if (range_min == 0)
+						range_min = 0.001;
+				}else{
+					axisScale = d3.scale.linear();
+				}
+
+				axisScale.domain([range_min, range_max]);
+				axisScale.range([0, scalewidth]);
+
+				var xAxis = d3.svg.axis()
+					.scale(axisScale)
+					.ticks(8, function(d) { 
+						return 10 + formatPower(Math.round(Math.log(d) / Math.LN10)); 
+					});
+
+				//axisScale.tickFormat(5,'e');
+				//xAxis.tickFormat(function(d) { return "e" + formatPower(Math.round(Math.log(d))); });
+
+				xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+
+
+			    var g = svgContainer.append("g")
+			        .attr("class", "x axis")
+			        .attr("transform", "translate(" + [margin, 3]+")")
+			        .call(xAxis);
+			       
+
+				if(uom){
+					g.append("text")
+						.style("text-anchor", "middle")
+						.style("font-size", "1.1em")
+						.attr("transform", "translate(" + [scalewidth/2, 35]+")")
+						.text(uom);
+				}
+
+				svgContainer.selectAll(".tick").select("line")
+					.attr("stroke", "black");
+	      	},
+
+	      	createHeightTextbox: function(height){
+	      		var that = this;
+	      		this.$("#height").empty();
+	      		if(height && this.selected != "Fieldlines"){
+					this.$("#height").append(
+						'<form style="vertical-align: middle;">'+
+						'<label for="heightvalue" style="width: 70px;">Height: </label>'+
+						'<textarea rows="1" cols="10" id="heightvalue" style="resize: none;margin:0;vertical-align: middle;"></textarea>'+
+						'</form>'
+					);
+					this.$("#heightvalue").val(height);
+					this.$("#height").append(
+						'<p style="font-size:0.85em; margin-left: 70px;">Above ellipsoid (Km)</p>'
+					);
+
+					this.$("#heightvalue").keypress(function(evt) {
+						if(evt.keyCode == 13){ //Enter pressed
+							evt.preventDefault();
+							var new_height = parseInt($(this).val());
+							Communicator.mediator.trigger("layer:height:changed", that.model.get("name"), new_height);
+							that.model.set("height", new_height);
+						}
 					});
 				}
 	      	}
