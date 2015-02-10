@@ -180,7 +180,51 @@
 						that.model.set("outlines", outlines);
 						Communicator.mediator.trigger("layer:outlines:changed", that.model.get("name"), outlines);
 					});
+				}
+
+
+
+
+
+				
+				if(!(typeof this.model.get("coefficients_range") === 'undefined')){
+
+					this.$("#coefficients_range").append(
+					'<li style="margin-top: 5px;">'+
+						'<label for="coefficients_range_min" style="width: 120px;">Coefficients range: </label>'+
+						'<textarea rows="1" cols="10" id="coefficients_range_min" style="resize: none;"></textarea>'+
+						'<textarea rows="1" cols="10" id="coefficients_range_max" style="resize: none;margin-left:8px"></textarea>'+
+					'</li>'+
+					'<p style="font-size:0.85em; margin-left:130px;"> [-1,-1]: No range limitation</p>'
+					);
+
+					this.$("#coefficients_range_min").val(this.model.get("coefficients_range") [0]);
+					this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
+
+					this.$("#coefficients_range_min").keypress(function(evt) {
+						if(evt.keyCode == 13){ //Enter pressed
+							evt.preventDefault();
+							var coefficients_range = that.model.get("coefficients_range");
+							var range = [parseFloat($(this).val()), coefficients_range[1]];
+							that.model.set("coefficients_range", range);
+							Communicator.mediator.trigger("coefficients:range:changed", that.model);
+						}
+					});
+
+					this.$("#coefficients_range_max").keypress(function(evt) {
+						if(evt.keyCode == 13){ //Enter pressed
+							evt.preventDefault();
+							var coefficients_range = that.model.get("coefficients_range");
+							var range = [coefficients_range[0], parseFloat($(this).val())];
+							that.model.set("coefficients_range", range);
+							Communicator.mediator.trigger("coefficients:range:changed", that.model);
+							
+						}
+					});
 				}	
+
+
+
 
 
 				if (protocol == "WPS"){

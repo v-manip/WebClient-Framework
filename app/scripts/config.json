@@ -483,21 +483,57 @@
                 "id": "shc",
                 "protocol": "WPS",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ]
             }],
             "download": {
                 "id": "shc",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "parameters": {
                 "F": {
                     "range": [30000, 60000],
                     "uom":"nT",
                     "name": "Total field intensity",
+                    "colorscale": "jet"
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "jet"
+                },
+                "Z": {
+                    "range": [-200, 200],
+                    "uom":"nT",
+                    "name": "Down component",
                     "colorscale": "jet",
                     "selected": true
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "jet"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "jet"
                 },
                 "Fieldlines":{
                     "range": [0.9, 40000],
@@ -508,8 +544,9 @@
                     "logarithmic": true
                 }
             },
-            "height": 450,
-            "model": true
+            "height": 0,
+            "model": true,
+            "coefficients_range": [14,65]
 
         },{
             "name": "Dst Index",

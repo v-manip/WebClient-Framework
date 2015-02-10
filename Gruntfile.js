@@ -356,6 +356,7 @@ module.exports = function (grunt) {
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
                         'bower_components/Cesium-1.5/Build/Cesium/**',
+                        'bower_components/papaparse/papaparse.min.js',
                         'scripts/vendor/**',
                         'scripts/core/ColorRamp/ColorRampControl.hbs'
                     ]

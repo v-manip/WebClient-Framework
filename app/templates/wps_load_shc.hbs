@@ -44,6 +44,12 @@
         <wps:LiteralData>{{height}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
+    {{#if coefficients_range}}<wps:Input>
+      <ows:Identifier>coefficients_range</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>{{coefficients_range}}</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>{{/if}}
   </wps:DataInputs>
   <wps:ResponseForm>
     <wps:RawDataOutput mimeType="image/png" encoding="base64">

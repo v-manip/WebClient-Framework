@@ -164,7 +164,8 @@
 							parameters: product.parameters,
 							height: product.height,
 							outlines: product.outlines,
-							model: product.model
+							model: product.model,
+							coefficients_range: product.coefficients_range
 						})
 					);
 

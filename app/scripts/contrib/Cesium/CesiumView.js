@@ -517,66 +517,7 @@ define(['backbone.marionette',
 	                    		this.checkFieldLines();
 							
                     		}else if (product.get("views")[0].protocol == "WPS"){
-
-                    			if(options.visible){
-
-                    				if(product.get('shc') != null){
-
-                    					var parameters = product.get("parameters");
-			                			var band;
-			                			var keys = _.keys(parameters);
-										_.each(keys, function(key){
-											if(parameters[key].selected)
-												band = key;
-										});
-			                			var style = parameters[band].colorscale;
-			                			var range = parameters[band].range;
-
-
-                    					var imageURI;
-										var that = this;
-										var imagelayer;
-										//product.set("visible", true);
-
-										var ces_layer = product.get("ces_layer");
-										var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-										
-										var url = product.get("views")[0].urls[0];
-
-										$.post( url, Tmpl_load_shc({
-											"shc":product.get('shc'),
-											"begin_time": getISODateTimeString(this.begin_time),
-											"end_time": getISODateTimeString(this.end_time),
-											"band": band,
-											"style": style,
-											"range_min": range[0],
-											"range_max": range[1],
-											"height": product.get("height")
-										}))
-
-											.done(function( data ) {	
-												that.map.scene.imageryLayers.remove(ces_layer);									
-											    imageURI = "data:image/gif;base64,"+data;
-											    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-												ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-												product.set("ces_layer", ces_layer);
-												// TODO: Hack to position layer at correct index, adding imagery provider  
-												// with index does not seem to be working
-												var ces_index = that.map.scene.imageryLayers.indexOf(ces_layer);
-												var to_move = index - ces_index;
-												for(var i=0; i<Math.abs(to_move); ++i){
-													if(to_move < 0)
-														that.map.scene.imageryLayers.lower(ces_layer);
-													else if(to_move>0)
-														that.map.scene.imageryLayers.raise(ces_layer);
-												}
-											});
-                    				}
-
-								}else{
-									var ces_layer = product.get("ces_layer");
-									ces_layer.show = options.visible;
-								}
+                    			this.checkShc(product, options.visible);
 								
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
 
@@ -751,6 +692,68 @@ define(['backbone.marionette',
             },
 
 
+            checkShc: function(product, visible){
+            	if(visible){
+
+    				if(product.get('shc') != null){
+
+    					var parameters = product.get("parameters");
+            			var band;
+            			var keys = _.keys(parameters);
+						_.each(keys, function(key){
+							if(parameters[key].selected)
+								band = key;
+						});
+            			var style = parameters[band].colorscale;
+            			var range = parameters[band].range;
+    					var imageURI;
+						var that = this;
+						var imagelayer;
+
+						var ces_layer = product.get("ces_layer");
+						var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+						
+						var url = product.get("views")[0].urls[0];
+
+						var coefficients_range = product.get("coefficients_range");
+
+						$.post( url, Tmpl_load_shc({
+							"shc":product.get('shc'),
+							"begin_time": getISODateTimeString(this.begin_time),
+							"end_time": getISODateTimeString(this.end_time),
+							"band": band,
+							"style": style,
+							"range_min": range[0],
+							"range_max": range[1],
+							"height": product.get("height"),
+							"coefficients_range": coefficients_range.join()
+						}))
+
+							.done(function( data ) {	
+								that.map.scene.imageryLayers.remove(ces_layer);									
+							    imageURI = "data:image/gif;base64,"+data;
+							    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+								ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+								product.set("ces_layer", ces_layer);
+								// TODO: Hack to position layer at correct index, adding imagery provider  
+								// with index does not seem to be working
+								var ces_index = that.map.scene.imageryLayers.indexOf(ces_layer);
+								var to_move = index - ces_index;
+								for(var i=0; i<Math.abs(to_move); ++i){
+									if(to_move < 0)
+										that.map.scene.imageryLayers.lower(ces_layer);
+									else if(to_move>0)
+										that.map.scene.imageryLayers.raise(ces_layer);
+								}
+							});
+    				}
+    			}else{
+    				var ces_layer = product.get("ces_layer");
+					ces_layer.show = visible;
+    			}
+            },
+
+
             checkLayerFeatures: function (product, visible) {
 
 				var id = product.get("views")[0].id;
@@ -914,46 +917,8 @@ define(['backbone.marionette',
 				            }
 			            }else if (product.get("views")[0].protocol == "WPS"){
 
-                    			if(product.get("visible")){
-
-                    				if(product.get('shc') != null){
-
-                    					var imageURI;
-										var that = this;
-										var imagelayer;
-										//product.set("visible", true);
-
-										var ces_layer = product.get("ces_layer");
-										var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-
-										var url = product.get("views")[0].urls[0];
-										
-
-										$.post( url, Tmpl_load_shc({
-											"shc":product.get('shc'),
-											"begin_time": getISODateTimeString(this.begin_time),
-											"end_time": getISODateTimeString(this.end_time),
-											"band": band,
-											"style": style,
-											"range_min": range[0],
-											"range_max": range[1],
-											"height": product.get("height")
-										}))
-
-											.done(function( data ) {	
-												that.map.scene.imageryLayers.remove(ces_layer);									
-											    imageURI = "data:image/gif;base64,"+data;
-											    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-												ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-												product.set("ces_layer", ces_layer);
-											});
-                    				}
-
-								}
-							}
-
-
-
+							this.checkShc(product, product.get("visible"));
+						}
 			        }
                     
 	            }, this);
@@ -1013,42 +978,7 @@ define(['backbone.marionette',
 					            }
 							}
 				        }else if (product.get("views")[0].protocol == "WPS"){
-
-                			if(product.get("visible")){
-
-                				if(product.get('shc') != null){
-
-                					var imageURI;
-									var that = this;
-									var imagelayer;
-									//product.set("visible", true);
-
-									var ces_layer = product.get("ces_layer");
-									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-									
-									var url = product.get("views")[0].urls[0];
-
-									$.post( url, Tmpl_load_shc({
-										"shc": product.get('shc'),
-										"begin_time": getISODateTimeString(this.begin_time),
-										"end_time": getISODateTimeString(this.end_time),
-										"band": band,
-										"style": style,
-										"range_min": range[0],
-										"range_max": range[1],
-										"height": product.get("height")
-									}))
-
-										.done(function( data ) {
-											that.map.scene.imageryLayers.remove(ces_layer);										
-										    imageURI = "data:image/gif;base64,"+data;
-										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-											product.set("ces_layer", ces_layer);
-										});
-                				}
-
-							}
+							this.checkShc(product, product.get("visible"));
 						}
 				    }
                     
@@ -1296,6 +1226,10 @@ define(['backbone.marionette',
 
 			onFieldlinesChanged: function(){
 				this.checkFieldLines();
+			},
+
+			onCoefficientsRangeChanged: function (product) {
+				this.checkShc(product, product.get("visible"));
 			},
 
 			createPrimitives: function(results, name){
