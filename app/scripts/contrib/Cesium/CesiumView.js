@@ -522,12 +522,16 @@ define(['backbone.marionette',
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
 
                     			var parameters = product.get("parameters");
+
                     			if (parameters){
                     				var band;
-									_.each(_.keys(parameters), function(key){
+			            			var keys = _.keys(parameters);
+									_.each(keys, function(key){
 										if(parameters[key].selected)
 											band = key;
 									});
+			            			var style = parameters[band].colorscale;
+			            			var range = parameters[band].range;
 
 									if (band == "Fieldlines"){
 										if(options.visible){
@@ -540,6 +544,13 @@ define(['backbone.marionette',
 			                    		this.checkFieldLines();
 									}else{
 										var ces_layer = product.get("ces_layer");
+										if(band)
+					                		ces_layer.imageryProvider._parameters["dim_bands"] = band;
+					                	if(range)
+					                		ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+					                	if(style)
+					                		ces_layer.imageryProvider._parameters["styles"] = style;
+
 										ces_layer.show = options.visible;
 									}
                     			}else{
@@ -1421,42 +1432,7 @@ define(['backbone.marionette',
 					            }
 				            }
 				        }else if (product.get("views")[0].protocol == "WPS"){
-
-                			if(product.get("visible")){
-
-                				if(product.get('shc') != null){
-
-                					var imageURI;
-									var that = this;
-									var imagelayer;
-									//product.set("visible", true);
-
-									var ces_layer = product.get("ces_layer");
-									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-									
-									var url = product.get("views")[0].urls[0];
-
-									$.post( url, Tmpl_load_shc({
-										"shc": product.get('shc'),
-										"begin_time": getISODateTimeString(this.begin_time),
-										"end_time": getISODateTimeString(this.end_time),
-										"band": band,
-										"style": style,
-										"range_min": range[0],
-										"range_max": range[1],
-										"height": product.get("height")
-									}))
-
-										.done(function( data ) {
-											that.map.scene.imageryLayers.remove(ces_layer);										
-										    imageURI = "data:image/gif;base64,"+data;
-										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-											product.set("ces_layer", ces_layer);
-										});
-                				}
-
-							}
+				        	this.checkShc(product, product.get("visible"));
 						}
 				    }
                     
@@ -1470,32 +1446,6 @@ define(['backbone.marionette',
 
 						if(product.get("views")[0].protocol == "CZML"){
 							this.checkLayerFeatures(product, product.get("visible"));
-	            			/*if(product.get("visible")){
-
-	            				this.map.dataSources.remove(product.get("czmlSource"));
-
-	            				var hexcolor = product.get("color");
-	                				hexcolor = hexcolor.substring(1, hexcolor.length);
-	                			var parameters = product.get("parameters");
-	                			var band;
-	                			var keys = _.keys(parameters);
-								_.each(keys, function(key){
-									if(parameters[key].selected)
-										band = key;
-								});
-	                			var range = parameters[band].range;
-	                			var style = parameters[band].colorscale;
-	            				
-	            				var czmlSource = new Cesium.CzmlDataSource();
-	            				var url = this.getURL(product.get("views")[0].urls[0], product.get("views")[0].id,
-	            						  getISODateTimeString(this.begin_time),getISODateTimeString(this.end_time),
-	            						  band,range, style, hexcolor, outlines);
-
-	                			czmlSource.loadUrl(url);
-	                			product.set("czmlSource", czmlSource);
-		        				this.map.dataSources.add(czmlSource);
-		        			}*/
-
 	                	}
 				    }
                     

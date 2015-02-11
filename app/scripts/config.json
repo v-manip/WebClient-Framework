@@ -160,12 +160,12 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
                 }
@@ -181,7 +181,7 @@
                 "id": "SW_OPER_MAGB_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -189,7 +189,7 @@
             "download": {
                 "id": "SW_OPER_MAGB_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "processes" : [
                 {
@@ -200,12 +200,12 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
                 }
@@ -220,7 +220,7 @@
                 "id": "SW_OPER_MAGC_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -228,7 +228,7 @@
             "download": {
                 "id": "SW_OPER_MAGC_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "processes" : [
                 {
@@ -239,12 +239,12 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
-                    "colorscale": "rainbow",
+                    "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
                 }
@@ -293,25 +293,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Fieldlines":{
                     "range": [0.9, 40000],
@@ -368,25 +368,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Fieldlines":{
                     "range": [0.9, 40000],
@@ -409,7 +409,7 @@
                 "id": "CHAOS-5-Combined",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -417,7 +417,7 @@
             "download": {
                 "id": "CHAOS-5-Combined",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -443,25 +443,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Fieldlines":{
                     "range": [0.9, 40000],
@@ -514,26 +514,26 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Z": {
                     "range": [-200, 200],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "jet",
+                    "colorscale": "custom1",
                     "selected": true
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "jet"
+                    "colorscale": "custom1"
                 },
                 "Fieldlines":{
                     "range": [0.9, 40000],
@@ -546,7 +546,7 @@
             },
             "height": 0,
             "model": true,
-            "coefficients_range": [14,65]
+            "coefficients_range": [13,65]
 
         },{
             "name": "Dst Index",
@@ -557,13 +557,13 @@
                 "id": "dst",
                 "protocol": "INDEX",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ]
             }],
             "download": {
                 "id": "dst",
                 "protocol": "INDEX",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "index": true
         },{
@@ -575,13 +575,13 @@
                 "id": "kp",
                 "protocol": "INDEX",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ]
             }],
             "download": {
                 "id": "kp",
                 "protocol": "INDEX",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "index": true
         },{

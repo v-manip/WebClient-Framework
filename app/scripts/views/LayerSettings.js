@@ -43,6 +43,7 @@
 		    	var protocol = this.model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
+				var colorscaletypes = ["coolwarm", "rainbow", "jet", "custom1", "custom2"];
 
 				var that = this;
 
@@ -66,8 +67,24 @@
 				}
 
 				this.$("#options").change(function(evt){
+
 					delete options[that.selected].selected;
 					that.selected = $(evt.target).find("option:selected").val();
+
+					that.$("#style").empty();
+					var colorscale_options = "";
+					var selected_colorscale;
+					_.each(colorscaletypes, function(colorscale){
+						if(options[that.selected].colorscale == colorscale){
+							selected_colorscale = colorscale;
+					   		colorscale_options += '<option value="'+ colorscale + '" selected>' + colorscale + '</option>';
+					   	}else{
+					   		colorscale_options += '<option value="'+ colorscale + '">' + colorscale + '</option>';
+					   	}
+					});
+
+					that.$("#style").append(colorscale_options);
+
 					that.$("#range_min").val(options[that.selected].range[0]);
 					that.$("#range_max").val(options[that.selected].range[1]);
 
@@ -130,7 +147,7 @@
 					}
 				});
 
-				var colorscaletypes = ["redblue", "bluered", "rainbow", "jet"];
+				
 
 				var colorscale_options = "";
 				var selected_colorscale;
