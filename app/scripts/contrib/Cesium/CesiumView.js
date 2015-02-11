@@ -980,6 +980,9 @@ define(['backbone.marionette',
 				                	var ces_layer = product.get("ces_layer");
 				                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
 				                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+				                	var ces_layer = product.get("ces_layer");
+				                	if(style)
+				                		ces_layer.imageryProvider._parameters["styles"] = style;
 
 				                	if (ces_layer.show){
 					            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
