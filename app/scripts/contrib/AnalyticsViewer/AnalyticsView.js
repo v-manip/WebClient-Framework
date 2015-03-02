@@ -28,6 +28,7 @@ define(['backbone.marionette',
 				//this.shc = null;
 				this.shc_active = false;
 				this.activeModels = [];
+				this.sp = null;
 
 				$(window).resize(function() {
 					this.onResize();
@@ -62,6 +63,25 @@ define(['backbone.marionette',
 	                }
             	}, this);
 
+            	var args = {
+					selector: this.$('.d3canvas')[0]
+				};
+
+            	this.sp = new scatterPlot(args, function(){
+								//sp.absolute("id1","Latitude");
+								//sp.colatitude("undefined");
+							},
+							function (values) {
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
+							}, 
+							function(){
+								Communicator.mediator.trigger("cesium:highlight:removeAll");
+							},
+							function(filter){
+								console.log(filter);
+								//Communicator.mediator.trigger("cesium:highlight:removeAll");
+							});
+
 
 				this.render('scatter');
 
@@ -81,47 +101,19 @@ define(['backbone.marionette',
 
 				if(type!="overlay")
 					this.$('.d3canvas').empty();
-				
+
 				var args = {
 					selector: this.$('.d3canvas')[0],
 					//url: this.request_url
 					data: this.plotdata,
 					//colors: colors
 				};
-
-
 				
 
 				switch (type){
 					case 'scatter':
-						if (args.url != ""){
-							var sp = new scatterPlot(args, function(){
-								//sp.absolute("id1","Latitude");
-								//sp.colatitude("undefined");
-							},
-							function (values) {
-								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
-							}, 
-							function(){
-								Communicator.mediator.trigger("cesium:highlight:removeAll");
-							});
-						}
-
-						if (args.data != null){
-							var sp = new scatterPlot(args, function(){
-								//sp.absolute("id1","Latitude");
-								//sp.colatitude("undefined");
-							},
-							function (values) {
-								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
-							}, 
-							function(){
-								Communicator.mediator.trigger("cesium:highlight:removeAll");
-							});
-						}
-						//analytics.scatterPlot(args);
-						
-						break;
+						this.sp.loadData(args);
+					break;
 				}
 
 				this.onResize();

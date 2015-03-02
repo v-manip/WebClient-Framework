@@ -141,7 +141,7 @@
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -149,7 +149,7 @@
             "download": {
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "processes" : [
                 {
@@ -334,7 +334,7 @@
                 "id": "IGRF",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -342,7 +342,7 @@
             "download": {
                 "id": "IGRF",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -701,8 +701,8 @@
             "end": "2014-10-17T11:45:00Z"
         },
         "brush": {
-            "start": "2014-10-01T01:00:00Z",
-            "end": "2014-10-01T05:00:00Z"
+            "start": "2014-09-30T01:00:00Z",
+            "end": "2014-09-30T05:00:00Z"
         },
         "display": {
             "start": "2014-09-12T01:00:00Z",
