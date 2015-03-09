@@ -188,6 +188,16 @@ div#preload {
   overflow-y: hidden !important; 
 }
 
+#about .modal-content{
+ width:900px !important;
+ margin-left:-150px !important;
+
+}
+
+#about ul li {
+  list-style-position: outside;
+}
+
 
 /*
  * Buttons
