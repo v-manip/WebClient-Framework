@@ -228,9 +228,11 @@
 
         options.filters = filters.join(";");
 
+        // TODO: Just getting last URL here think of how different urls should be handled
+        var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];
 
         var xml = wps_requestTmpl(options);
-        var url = "http://localhost:9000/vires00/ows"
+        
         var $form = $(CoverageDownloadPostTmpl({
               url: url, xml: xml
             }));

@@ -141,7 +141,7 @@
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:9000/vires00/ows"
+                    "http://localhost:8000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -149,7 +149,7 @@
             "download": {
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:9000/vires00/ows"
+                "url": "http://localhost:8000/vires00/ows"
             },
             "processes" : [
                 {
@@ -400,7 +400,7 @@
             },
             "height": 450,
             "model": true,
-            "coefficients_range": [10,20]
+            "coefficients_range": [-1,-1]
 
         },{
             "name": "CHAOS-5",
