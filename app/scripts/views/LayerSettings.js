@@ -256,7 +256,14 @@
 					);
 
 					this.$("#upload-selection").change(this.onUploadSelectionChanged.bind(this));
+
+					if(this.model.get('shc_name')){
+						that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+this.model.get('shc_name')+'</p>');
+					}
+					
 				}
+
+
 
 				if(options[this.selected].hasOwnProperty("logarithmic"))
 					this.createScale(options[that.selected].logarithmic);
@@ -282,9 +289,13 @@
 			onUploadSelectionChanged: function(evt) {
 				var that = this;
 	      		var reader = new FileReader();
+	      		var filename = evt.target.files[0].name;
 				reader.onloadend = function(evt) {
 					//console.log(evt.target.result);
 					that.model.set('shc', evt.target.result);
+					that.model.set('shc_name', filename);
+					that.$("#shc").find("#filename").remove();
+					that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+filename+'</p>');
 					Communicator.mediator.trigger("file:shc:loaded", evt.target.result);
 
 					var options = { name: that.model.get("name"), isBaseLayer: false, visible: false };

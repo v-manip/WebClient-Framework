@@ -143,7 +143,7 @@
 	                    		// If an shc file was loaded acticate layer as normal
 	                    		Communicator.mediator.trigger('map:layer:change', options);
 	                    	}else{
-	                    		// If ans shc file is not loaded open settings and show message to select shc file
+	                    		// If an shc file is not loaded open settings and show message to select shc file
 	                    		if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
 			    					App.layerSettings.setModel(this.model);
 									App.optionsBar.show(App.layerSettings);
@@ -175,11 +175,8 @@
 	                	Communicator.mediator.trigger('map:layer:change', options);
 	                }
                 } else if (!evt.target.checked){
-
-                	if(this.model.get('shc'))
-                		this.model.set('shc',null);
-                	
                 	Communicator.mediator.trigger('map:layer:change', options);
+
                 } else if (isBaseLayer && evt.target.checked){
                 	Communicator.mediator.trigger('map:layer:change', options);
                 }

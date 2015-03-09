@@ -9,10 +9,11 @@
     	'globals',
 		'app',
 		'views/DownloadView',
+		'views/DownloadFilterView',
     	'models/DownloadModel'
 	],
 
-	function( Backbone, Communicator, globals, App, v, m ) {
+	function( Backbone, Communicator, globals, App, v, v2, m ) {
 
 		var DownloadController = Backbone.Marionette.Controller.extend({
 			model: new m.DownloadModel(),
@@ -24,6 +25,8 @@
 	        this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
 	        this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChange);
 	        this.listenTo(Communicator.mediator, "dialog:open:download", this.onDownloadToolOpen);
+	        this.listenTo(Communicator.mediator, "download:set:filter", this.onDownloadSetFilter);
+	        this.listenTo(Communicator.mediator, "dialog:open:download:filter", this.onDownloadToolFilterOpen);
 		},
 
 		onChangeLayer: function (options) {
@@ -45,6 +48,10 @@
 	    onTimeChange: function(time) {
 	        this.model.set('ToI',time);
             this.checkDownload();
+		},
+
+		onDownloadSetFilter: function(filter){
+			this.model.set('filter', filter);
 		},
 
 	    onSelectionChange: function(selection) {
@@ -71,12 +78,22 @@
 
 		onDownloadToolOpen: function(toOpen) {
             if(toOpen){
-              //App.downloadView.model = this.model;
               App.viewContent.show(new v.DownloadView({model:this.model}));
             }else{
               App.viewContent.close();
             }
-          }
+        },
+
+          
+        onDownloadToolFilterOpen: function(toOpen) {
+            if(toOpen){
+              App.viewContent.show(new v2.DownloadFilterView({model:this.model}));
+            }else{
+              App.viewContent.close();
+            }
+        }
+
+
 		});
 		return new DownloadController();
 	});

@@ -35,18 +35,30 @@ define(['backbone.marionette',
 				}.bind(this));
 			},
 
-			events: {
+			/*events: {
 				'click .scatter-btn': function() {
 					this.render('scatter');
 				},
 
-			},
+			},*/
 
 			onShow: function() {
 				
 				//this.delegateEvents();
 				this.isClosed = false;
 				//this.triggerMethod('view:connect');
+
+				// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
+				var download = d3.select(this.el).append("button")   
+			        .attr("type", "button")
+			        .attr("id", "tmp_download_button")
+			        .attr("class", "btn btn-success")
+			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 8000;")
+			        .text("Download");
+
+				$("#tmp_download_button").click(function(evt){
+					Communicator.mediator.trigger("dialog:open:download:filter", true);
+				});
 				
 
 				this.$el.append(
@@ -55,11 +67,14 @@ define(['backbone.marionette',
 					"</div> ");
 
 
-				globals.products.each(function(model) {
-	                if (model.get('visible')) {
-	                    if (model.get("processes")) {
-	                        this.activeWPSproducts.push(model.get('processes')[0].layer_id)
-	                    } 
+				globals.products.each(function(product) {
+	                if (product.get('visible')) {
+	                    if (product.get("processes")) {
+	                        this.activeWPSproducts.push(product.get('processes')[0].layer_id)
+	                    }
+	                    if (product.get("model")){
+		              		this.activeModels.push(product.get("views")[0].id);
+		              	}
 	                }
             	}, this);
 
@@ -78,8 +93,7 @@ define(['backbone.marionette',
 								Communicator.mediator.trigger("cesium:highlight:removeAll");
 							},
 							function(filter){
-								console.log(filter);
-								//Communicator.mediator.trigger("cesium:highlight:removeAll");
+								Communicator.mediator.trigger("download:set:filter", filter);
 							});
 
 

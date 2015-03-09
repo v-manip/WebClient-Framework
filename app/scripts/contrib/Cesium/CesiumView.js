@@ -66,6 +66,8 @@ define(['backbone.marionette',
 				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
 					"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>");
 
+				this.$el.append('<div style="position:absolute; right:86px; top:5px; height:32px; z-index:5;" type="button" class="btn btn-success" id="cesium_save">Save as Image</div>');
+
 				var layer;
 				var name = "";
 
@@ -93,9 +95,23 @@ define(['backbone.marionette',
 						terrainProvider : new Cesium.CesiumTerrainProvider({
 					        url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
 					    }),
-						creditContainer: "cesium_attribution"
+						creditContainer: "cesium_attribution",
+						contextOptions: {webgl: {preserveDrawingBuffer: true}}
 					});
 				}
+
+			    var canvas = this.map.canvas;
+			    
+			    $("#cesium_save").on("click", function(){
+			    	var dataUrl = canvas.toDataURL("image/jpeg");
+					
+					var a = document.createElement("a");
+					a.download = "VirES_virtual_globe.jpeg";
+					a.href = dataUrl;
+					var jpgimg = '<img src="'+a.href+'">'; 
+					d3.select("#pngdataurl").html(jpgimg);
+					a.click();
+				});
 
 				//this.map.scene.fxaaOrderIndependentTranslucency = false;
 
@@ -522,6 +538,7 @@ define(['backbone.marionette',
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
 
                     			var parameters = product.get("parameters");
+                    			var coeff_range = product.get("coefficients_range");
 
                     			if (parameters){
                     				var band;
@@ -550,6 +567,8 @@ define(['backbone.marionette',
 					                		ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
 					                	if(style)
 					                		ces_layer.imageryProvider._parameters["styles"] = style;
+					                	if(coeff_range)
+					                		ces_layer.imageryProvider._parameters["dim_coeff"] = coeff_range[0]+","+coeff_range[1];
 
 										ces_layer.show = options.visible;
 									}
@@ -955,6 +974,8 @@ define(['backbone.marionette',
             			var range = parameters[band].range;
             			var outlines = product.get("outlines");
 
+            			var coeff_range = product.get("coefficients_range");
+
 						if(product.get("views")[0].protocol == "CZML"){
 							this.checkLayerFeatures(product, product.get("visible"));
 
@@ -983,6 +1004,8 @@ define(['backbone.marionette',
 				                	var ces_layer = product.get("ces_layer");
 				                	if(style)
 				                		ces_layer.imageryProvider._parameters["styles"] = style;
+				                	if(coeff_range)
+					        			ces_layer.imageryProvider._parameters["dim_coeff"] = coeff_range[0]+","+coeff_range[1];
 
 				                	if (ces_layer.show){
 					            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
@@ -1244,6 +1267,32 @@ define(['backbone.marionette',
 
 			onCoefficientsRangeChanged: function (product) {
 				this.checkShc(product, product.get("visible"));
+
+				var parameters = product.get("parameters");
+    			var band;
+    			var keys = _.keys(parameters);
+				_.each(keys, function(key){
+					if(parameters[key].selected)
+						band = key;
+				});
+
+            	if(product.get("views")[0].protocol == "WMS"){
+
+					if (band != "Fieldlines" ){
+
+						var coeff_range = product.get("coefficients_range");
+
+						var ces_layer = product.get("ces_layer");
+						if(coeff_range)
+					        ces_layer.imageryProvider._parameters["dim_coeff"] = coeff_range[0]+","+coeff_range[1];
+							                	
+	                	if (ces_layer.show){
+		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+		            		this.map.scene.imageryLayers.remove(ces_layer, false);
+		            		this.map.scene.imageryLayers.add(ces_layer, index);
+		            	}
+		            }
+				}
 			},
 
 			createPrimitives: function(results, name){

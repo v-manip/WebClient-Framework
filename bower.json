@@ -22,7 +22,7 @@
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.0.3",
-    "analyticsviewer": "esa-vires/AnalyticsViewer#~0.1.8",
+    "analyticsviewer": "esa-vires/AnalyticsViewer#~0.2.3",
     "Cesium-1.5": "http://cesiumjs.org/releases/Cesium-1.5.zip",
     "papaparse": "~4.1.0"
   },

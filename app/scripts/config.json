@@ -181,7 +181,7 @@
                 "id": "SW_OPER_MAGB_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -189,7 +189,7 @@
             "download": {
                 "id": "SW_OPER_MAGB_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "processes" : [
                 {
@@ -220,7 +220,7 @@
                 "id": "SW_OPER_MAGC_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -228,7 +228,7 @@
             "download": {
                 "id": "SW_OPER_MAGC_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "processes" : [
                 {
@@ -259,7 +259,7 @@
                 "id": "WMM",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -267,7 +267,7 @@
             "download": {
                 "id": "WMM",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -323,7 +323,8 @@
                 }
             },
             "height": 450,
-            "model": true
+            "model": true,
+            "coefficients_range": [-1,-1]
 
         },{
             "name": "IGRF",
@@ -398,7 +399,8 @@
                 }
             },
             "height": 450,
-            "model": true
+            "model": true,
+            "coefficients_range": [10,20]
 
         },{
             "name": "CHAOS-5",
@@ -409,7 +411,7 @@
                 "id": "CHAOS-5-Combined",
                 "protocol": "WMS",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -417,7 +419,7 @@
             "download": {
                 "id": "CHAOS-5-Combined",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -473,7 +475,8 @@
                 }
             },
             "height": 450,
-            "model": true
+            "model": true,
+            "coefficients_range": [-1,-1]
 
         },{
             "name": "Custom Model",
@@ -483,13 +486,13 @@
                 "id": "shc",
                 "protocol": "WPS",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ]
             }],
             "download": {
                 "id": "shc",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "parameters": {
                 "F": {
@@ -557,13 +560,13 @@
                 "id": "dst",
                 "protocol": "INDEX",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ]
             }],
             "download": {
                 "id": "dst",
                 "protocol": "INDEX",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "index": true
         },{
@@ -575,13 +578,13 @@
                 "id": "kp",
                 "protocol": "INDEX",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ]
             }],
             "download": {
                 "id": "kp",
                 "protocol": "INDEX",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "index": true
         },{
@@ -658,7 +661,7 @@
 
     "navBarConfig": {
         "title": "VirES",
-        "url": "http://vires.eox.at",
+        "url": "http://vires2.eox.at",
         "items": [{
             "name": "Layers",
             "icon": "fa-globe",
@@ -669,11 +672,6 @@
             "icon": "fa-wrench",
             "eventToRaise": "ui:open:toolselection",
             "template": "ToolSelection"
-        }, {
-            "name": "Options",
-            "icon": "fa-tasks",
-            "eventToRaise": "ui:open:options",
-            "template": "OptionsControl"
         }, {
             "name": "Tutorial",
             "icon": "fa-book",
@@ -723,6 +721,7 @@
         "core/ColorRamp/ColorRampView",
         "views/ToolItemView",
         "views/DownloadView",
+        "views/DownloadFilterView",
         "views/StoryBannerView",
         "views/LayerSettings"
     ],
@@ -775,21 +774,6 @@
     }],
 
     "selectionTools": [{
-        "id": "pointSelection",
-        "description": "Point selection tool - Click on the map to select a point",
-        "icon": "icon-large icon-screenshot",
-        "selectionType":"single"
-    }, {
-        "id": "lineSelection",
-        "description": "Line selection tool - Click on the map for each line point you want to set; double click to finalize selection",
-        "icon": "icon-large icon-vector-path-line",
-        "selectionType":"multi"
-    }, {
-        "id": "polygonSelection",
-        "description": "Polygon selection tool - Click on the map for each polygon point you want to set; double click to finalize selection. Shift Key modifier allows free hand draw mode",
-        "icon": "icon-large icon-vector-path-polygon",
-        "selectionType":"single"
-    }, {
         "id": "bboxSelection",
         "description": "Bounding box selection tool - Click and drag to create a selection",
         "icon": "icon-large icon-vector-path-square",
@@ -827,13 +811,6 @@
             "eventToRaise": "layout:switch:splitview",
             "description": "Splits screen to visualize two maps side by side",
             "icon": "fa fa-pause fa-2x",
-            "enabled": true,
-            "active": false
-        }, {
-            "id": "QuadView",
-            "eventToRaise": "layout:switch:quadview",
-            "description": "Splits screen into four windows displaying one map on each corner",
-            "icon": "fa fa-th-large fa-2x",
             "enabled": true,
             "active": false
         }
