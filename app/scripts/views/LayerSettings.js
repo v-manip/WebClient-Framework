@@ -43,7 +43,7 @@
 		    	var protocol = this.model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
-				var colorscaletypes = ["coolwarm", "rainbow", "jet", "custom1", "custom2"];
+				var colorscaletypes = ["coolwarm", "rainbow", "jet", "custom1", "custom2", "blackwhite"];
 
 				var that = this;
 

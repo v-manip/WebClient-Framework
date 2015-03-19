@@ -34,3 +34,7 @@
   font-family: 'Lucida Grande', Verdana, Geneva, Lucida, Arial, Helvetica, sans-serif;
   z-index: $layer-gui;
 }
+
+.cesium-viewer-toolbar{
+  right: 127px !important;
+}

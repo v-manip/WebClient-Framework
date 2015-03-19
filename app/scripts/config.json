@@ -160,11 +160,13 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
+                    "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
+                    "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
@@ -200,11 +202,13 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
+                    "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
+                    "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
@@ -239,11 +243,13 @@
             "parameters": {
                 "B_NEC": {
                     "range": [30000, 60000],
+                    "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
                     "range": [30000, 60000],
+                    "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
@@ -320,6 +326,24 @@
                     "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "custom1"
                 }
             },
             "height": 450,
@@ -396,6 +420,24 @@
                     "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "custom1"
                 }
             },
             "height": 450,
@@ -472,6 +514,24 @@
                     "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
                     "colorscale": "jet",
                     "logarithmic": true
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "custom1"
                 }
             },
             "height": 450,
@@ -538,13 +598,23 @@
                     "name": "Declination",
                     "colorscale": "custom1"
                 },
-                "Fieldlines":{
-                    "range": [0.9, 40000],
-                    "uom":"nT",
-                    "name": "Fieldlines",
-                    "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
-                    "colorscale": "jet",
-                    "logarithmic": true
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "custom1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "custom1"
                 }
             },
             "height": 0,
