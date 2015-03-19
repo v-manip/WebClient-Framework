@@ -66,7 +66,7 @@ define(['backbone.marionette',
 				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
 					"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>");
 
-				this.$el.append('<div style="position:absolute; right:5px; top:5px; height:32px; z-index:5;" type="button" class="btn btn-success" id="cesium_save">Save as Image</div>');
+				this.$el.append('<div style="position:absolute; right:46px; top:5px; height:32px; z-index:5;" type="button" class="btn btn-success" id="cesium_save">Save as Image</div>');
 
 				var layer;
 				var name = "";
