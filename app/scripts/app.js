@@ -83,6 +83,9 @@
 					t[tmplDef.id] = Tmpl;
 				}, this);
 
+				this.templates = t;
+				this.views = v;
+
 
 				//Map attributes are loaded and added to the global map model
 				globals.objects.add('mapmodel', new m.MapModel({
@@ -165,7 +168,8 @@
 							height: product.height,
 							outlines: product.outlines,
 							model: product.model,
-							coefficients_range: product.coefficients_range
+							coefficients_range: product.coefficients_range,
+							satellite: product.satellite
 						})
 					);
 
@@ -226,11 +230,8 @@
 
 					_.each(config.navBarConfig.items, function(list_item){
 						navBarItemCollection.add(
-							new m.NavBarItemModel({
-								name:list_item.name,
-                                icon:list_item.icon,
-								eventToRaise:list_item.eventToRaise
-							}));
+							new m.NavBarItemModel(list_item)
+						);
 					}, this);
 
 					this.topBar.show(new v.NavBarCollectionView(
@@ -390,12 +391,6 @@
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
                 this.colorRampView = new v.ColorRampView(config.colorRamp);
 
-                // Instance StoryBanner view
-                if(config.storyTemplate){
-                	this.storyBanner = new v.StoryBannerView({
-	                	template: t[config.storyTemplate]
-	                });
-                }
 
 			},
 

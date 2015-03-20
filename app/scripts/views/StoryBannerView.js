@@ -86,6 +86,10 @@
         // Set a body class for the active section.
         document.body.className = 'section-' + index;
 
+        if(this.sections[index].hasAttribute('data-reset')) {
+            Communicator.mediator.trigger("app:reset");
+        }
+
         // Do we need to zoom?
         var doZoom = false;
         if(this.sections[index].hasAttribute('data-zoom')) {

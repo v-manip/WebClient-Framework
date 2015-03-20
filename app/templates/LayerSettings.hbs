@@ -23,13 +23,13 @@
 				  <select name="style" id="style"></select>
 				</form>
 
-		    	<div id="setting_colorscale" style="width:100%;"></div>
+		    	<div id="setting_colorscale" style="width:100%; pointer-events: none;"></div>
 		    </div>
 		  </li>
 
-		  <li style="margin-top: 5px;">
-		  	<textarea rows="1" cols="10" id="range_min" style="resize: none;"></textarea>
-		  	<textarea rows="1" cols="10" id="range_max" style="resize: none; float: right;"></textarea>
+		  <li style="margin-top: -15px; z-index: 1000;">
+		  	<input id="range_min" type="text" style="width:60px;"/>
+		  	<input id="range_max" type="text" style="width:60px; float:right;"/>
 		  </li>
 		  
 		</ul>
@@ -38,8 +38,8 @@
 
 	<div id="coefficients_range" style="margin-top: 15px;"></div>
 
-
     <div id="height" style="margin-top: 15px;"></div>
+    <div id="applychanges"></div>
     <div id="outlines" style="margin-top: 5px;"></div>
     <div id="shc" style="margin-top: 5px;"></div>
     <div id="logarithmic" style="margin-top: 5px;"></div>

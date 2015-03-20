@@ -18,6 +18,7 @@
             	this.listenTo(Communicator.mediator, "ui:open:toolselection", this.onToolSelectionOpen);
 				this.listenTo(Communicator.mediator, "ui:open:options", this.onOptionsOpen);
 				this.listenTo(Communicator.mediator, "ui:open:storybanner", this.StoryBannerOpen);
+				this.listenTo(Communicator.mediator, "app:reset", this.OnAppReset);
 			},
 
 			onDialogOpenAbout: function(event){
@@ -56,14 +57,31 @@
 			},
 
 			StoryBannerOpen: function(event){
-				if(App.storyBanner){
-					//$( "body" ).append( "<div id="storyView"></div>" );
-					if (_.isUndefined(App.storyView.isClosed) || App.storyView.isClosed) {
-						App.storyView.show(App.storyBanner);
-					} else {
-						App.storyView.close();
-					}
+
+				// Instance StoryBanner view
+                /*if(config.storyTemplate){
+                	this.storyBanner = new v.StoryBannerView({
+	                	template: t[config.storyTemplate]
+	                });
+                }*/
+
+                App.storyBanner = new App.views.StoryBannerView({
+                	template: App.templates[event]
+                });
+                
+				if (_.isUndefined(App.storyView.isClosed) || App.storyView.isClosed) {
+					App.storyView.show(App.storyBanner);
+				} else {
+					App.storyView.close();
 				}
+
+			},
+
+			OnAppReset: function(){
+				App.layout.close();
+				App.toolLayout.close();
+				App.optionsLayout.close();
+				App.optionsBar.close();
 			}
 		});
 		return new ContentController();

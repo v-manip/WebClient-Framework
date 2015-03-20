@@ -54,6 +54,8 @@ define([
 			
 			
 			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
+			this.windowViews.tr.close();
+			//this.windowViews.tr.triggerMethod('view:disconnect');
 		},
 
 		setSplitscreen: function() {

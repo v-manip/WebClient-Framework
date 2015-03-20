@@ -141,7 +141,7 @@
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "CZML",
                 "urls": [
-                    "http://localhost:8000/vires00/ows"
+                    "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -149,7 +149,7 @@
             "download": {
                 "id": "SW_OPER_MAGA_LR_1B",
                 "protocol": "EOWCS",
-                "url": "http://localhost:8000/vires00/ows"
+                "url": "http://localhost:9000/vires00/ows"
             },
             "processes" : [
                 {
@@ -172,7 +172,8 @@
                     "name": "Magnetic field intensity"
                 }
             },
-            "outlines": true
+            "outlines": true,
+            "satellite": "Swarm"
 
         },{
             "name": "MAGB LR 1B",
@@ -214,7 +215,8 @@
                     "name": "Magnetic field intensity"
                 }
             },
-            "outlines": false
+            "outlines": false,
+            "satellite": "Swarm"
         },{
             "name": "MAGC LR 1B",
             "visible": false,
@@ -255,7 +257,8 @@
                     "name": "Magnetic field intensity"
                 }
             },
-            "outlines": false
+            "outlines": false,
+            "satellite": "Swarm"
         },{
             "name": "WMM",
             "visible": false,
@@ -743,23 +746,25 @@
             "eventToRaise": "ui:open:toolselection",
             "template": "ToolSelection"
         }, {
-            "name": "Tutorial",
+            "name": "Tutorials",
             "icon": "fa-book",
-            "eventToRaise": "ui:open:storybanner",
-            "template": "UseCaseTestTemplate"
+            "subitems": [{
+                "name": "Swarm Analytics",
+                "eventToRaise": "ui:open:storybanner",
+                "template": "UseCase_SwarmAnalytics"
+            }, {
+                "name": "Geomagnetic Field Models",
+                "eventToRaise": "ui:open:storybanner",
+                "template": "UseCase_MagneticModels"
+            }, {
+                "name": "Field Lines",
+                "eventToRaise": "ui:open:storybanner",
+                "template": "UseCase_FieldLines"
+            }]
         }, {
             "name": "About",
             "icon": "fa-info-circle",
-            "eventToRaise": "dialog:open:about",
-            "subitems": [{
-                "name": "Info",
-                "eventToRaise": "dialog:open:info",
-                "template": "info"
-            }, {
-                "name": "Help",
-                "eventToRaise": "dialog:open:help",
-                "template": "help"
-            }]
+            "eventToRaise": "dialog:open:about"
         }]
     },
 
@@ -841,6 +846,15 @@
     }, {
         "id": "UseCaseTestTemplate",
         "template": "hbs!tmpl/UseCaseTestTemplate"
+    }, {
+        "id": "UseCase_SwarmAnalytics",
+        "template": "hbs!tmpl/UseCase_SwarmAnalytics"
+    }, {
+        "id": "UseCase_FieldLines",
+        "template": "hbs!tmpl/UseCase_FieldLines"
+    }, {
+        "id": "UseCase_MagneticModels",
+        "template": "hbs!tmpl/UseCase_MagneticModels"
     }],
 
     "selectionTools": [{

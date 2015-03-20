@@ -108,45 +108,16 @@
 
 					that.createHeightTextbox(height);
 
-					Communicator.mediator.trigger("layer:band:changed", that.model.get("name"), that.selected, options[that.selected].range);
+					Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
 				});
 
+				// Set values for color scale ranges
 				this.$("#range_min").val(options[this.selected].range[0]);
 				this.$("#range_max").val(options[this.selected].range[1]);
-
-				this.$("#range_min").keypress(function(evt) {
-					if(evt.keyCode == 13){ //Enter pressed
-						evt.preventDefault();
-						var range = [parseFloat($(this).val()), options[that.selected].range[1]];
-						options[that.selected].range[0] = range[0];
-						that.model.set("parameters", options);
-
-						if(options[that.selected].hasOwnProperty("logarithmic"))
-							that.createScale(options[that.selected].logarithmic);
-						else
-							that.createScale();
-
-						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
-					}
-				});
-
-				this.$("#range_max").keypress(function(evt) {
-					if(evt.keyCode == 13){ //Enter pressed
-						evt.preventDefault();
-						var range = [options[that.selected].range[0], parseFloat($(this).val())];
-						options[that.selected].range[1] = range[1];
-						that.model.set("parameters", options);
-
-						if(options[that.selected].hasOwnProperty("logarithmic"))
-							that.createScale(options[that.selected].logarithmic);
-						else
-							that.createScale();
-						
-						Communicator.mediator.trigger("layer:range:changed", that.model.get("name"), range);
-						
-					}
-				});
-
+				
+				// Register necessary key events
+				this.registerKeyEvents(this.$("#range_min"));
+				this.registerKeyEvents(this.$("#range_max"));
 				
 
 				var colorscale_options = "";
@@ -175,12 +146,12 @@
 					else
 						that.createScale();
 
-					Communicator.mediator.trigger("layer:style:changed", that.model.get("name"), selected_colorscale);
+					Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
 				});
 
 				
 
-				if(!(typeof outlines === 'undefined')){
+				/*if(!(typeof outlines === 'undefined')){
 					var checked = "";
 					if (outlines)
 						checked = "checked";
@@ -197,20 +168,16 @@
 						that.model.set("outlines", outlines);
 						Communicator.mediator.trigger("layer:outlines:changed", that.model.get("name"), outlines);
 					});
-				}
+				}*/
 
 
-
-
-
-				
 				if(!(typeof this.model.get("coefficients_range") === 'undefined')){
 
 					this.$("#coefficients_range").append(
 					'<li style="margin-top: 5px;">'+
 						'<label for="coefficients_range_min" style="width: 120px;">Coefficients range: </label>'+
-						'<textarea rows="1" cols="10" id="coefficients_range_min" style="resize: none;"></textarea>'+
-						'<textarea rows="1" cols="10" id="coefficients_range_max" style="resize: none;margin-left:8px"></textarea>'+
+						'<input id="coefficients_range_min" type="text" style="width:30px;"/>'+
+						'<input id="coefficients_range_max" type="text" style="width:30px; margin-left:8px"/>'+
 					'</li>'+
 					'<p style="font-size:0.85em; margin-left:130px;"> [-1,-1]: No range limitation</p>'
 					);
@@ -218,29 +185,11 @@
 					this.$("#coefficients_range_min").val(this.model.get("coefficients_range") [0]);
 					this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
 
-					this.$("#coefficients_range_min").keypress(function(evt) {
-						if(evt.keyCode == 13){ //Enter pressed
-							evt.preventDefault();
-							var coefficients_range = that.model.get("coefficients_range");
-							var range = [parseFloat($(this).val()), coefficients_range[1]];
-							that.model.set("coefficients_range", range);
-							Communicator.mediator.trigger("coefficients:range:changed", that.model);
-						}
-					});
-
-					this.$("#coefficients_range_max").keypress(function(evt) {
-						if(evt.keyCode == 13){ //Enter pressed
-							evt.preventDefault();
-							var coefficients_range = that.model.get("coefficients_range");
-							var range = [coefficients_range[0], parseFloat($(this).val())];
-							that.model.set("coefficients_range", range);
-							Communicator.mediator.trigger("coefficients:range:changed", that.model);
-							
-						}
-					});
+					// Register necessary key events
+					this.registerKeyEvents(this.$("#coefficients_range_min"));
+					this.registerKeyEvents(this.$("#coefficients_range_max"));
+					
 				}	
-
-
 
 
 
@@ -263,8 +212,6 @@
 					
 				}
 
-
-
 				if(options[this.selected].hasOwnProperty("logarithmic"))
 					this.createScale(options[that.selected].logarithmic);
 				else
@@ -277,6 +224,105 @@
 			onClose: function() {
 				this.close();
 			}, 
+
+			registerKeyEvents: function(el){
+				var that = this;
+				el.keypress(function(evt) {
+					if(evt.keyCode == 13){ //Enter pressed
+						evt.preventDefault();
+						that.applyChanges();
+					}else{
+						that.createApplyButton();
+					}
+				});
+
+				el.keyup(function(evt) {
+					if(evt.keyCode == 8){ //Backspace clicked
+						that.createApplyButton();
+					}
+				});
+
+				// Add click event to select text when clicking or tabbing into textfield
+				el.click(function () { $(this).select(); });
+			},
+
+			createApplyButton: function(){
+				var that = this;
+				if($("#changesbutton").length == 0){
+					$("#applychanges").append('<button type="button" class="btn btn-default" id="changesbutton" style="width: 100%;"> Apply changes </button>');
+					$("#changesbutton").click(function(evt){
+						that.applyChanges();
+					});
+				}
+			},
+
+			applyChanges: function(){
+
+				var options = this.model.get("parameters");
+
+					//this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
+
+				var error = false;
+
+				// Check color ranges
+				var range_min = parseFloat($("#range_min").val());
+				error = error || this.checkValue(range_min,$("#range_min"));
+
+				var range_max = parseFloat($("#range_max").val());
+				error = error || this.checkValue(range_max,$("#range_max"));
+
+				
+				
+				// Set parameters and redraw color scale
+				if(!error){
+					options[this.selected].range = [range_min, range_max];
+
+					if(options[this.selected].hasOwnProperty("logarithmic"))
+						this.createScale(options[this.selected].logarithmic);
+					else
+						this.createScale();
+				}
+
+				// Check coefficient ranges
+				if ($("#coefficients_range_min").length && $("#coefficients_range_max").length){
+					var coef_range_min = parseFloat($("#coefficients_range_min").val());
+					error = error || this.checkValue(coef_range_min,$("#coefficients_range_min"));
+
+					var coef_range_max = parseFloat($("#coefficients_range_max").val());
+					error = error || this.checkValue(coef_range_max,$("#coefficients_range_max"));
+
+					if(!error)
+						this.model.set("coefficients_range", [coef_range_min, coef_range_max]);
+				}
+
+				// Check for height attribute
+				if ($("#heightvalue").length){
+					var height = parseFloat($("#heightvalue").val());
+					error = error || this.checkValue(height,$("#heightvalue"));
+
+					if (!error)
+						this.model.set("height", height);
+				}
+
+				if(!error){
+					// Remove button
+					$("#applychanges").empty();
+
+					//Apply changes
+					this.model.set("parameters", options);
+					Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+				}
+			},
+
+			checkValue: function(value, textfield){
+				if (isNaN(value)){
+					textfield.addClass("text_error");
+					return true;
+				}else{
+					textfield.removeClass("text_error");
+					return false;
+				}
+			},
 
 			setModel: function(model){
 				this.model = model;
@@ -298,8 +344,8 @@
 					that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+filename+'</p>');
 					Communicator.mediator.trigger("file:shc:loaded", evt.target.result);
 
-					var options = { name: that.model.get("name"), isBaseLayer: false, visible: false };
-					Communicator.mediator.trigger('map:layer:change', options);
+					var params = { name: that.model.get("name"), isBaseLayer: false, visible: false };
+					Communicator.mediator.trigger('map:layer:change', params);
 					Communicator.mediator.trigger("layer:activate", that.model.get("views")[0].id);
 
 
@@ -325,7 +371,9 @@
 					this.$("#logarithmic input").change(function(evt){
 						var options = that.model.get("parameters");
 						options[that.selected].logarithmic = !options[that.selected].logarithmic;
-						Communicator.mediator.trigger("layer:fieldlines:changed");
+						
+						that.model.set("parameters", options);
+						Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
 
 						if(options[that.selected].hasOwnProperty("logarithmic"))
 							that.createScale(options[that.selected].logarithmic);
@@ -359,8 +407,6 @@
 					'<div class="'+style+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
 				);
 
-
-
 				var svgContainer = d3.select("#setting_colorscale").append("svg")
 					.attr("width", width)
 					.attr("height", 40);
@@ -384,17 +430,12 @@
 						return 10 + formatPower(Math.round(Math.log(d) / Math.LN10)); 
 					});
 
-				//axisScale.tickFormat(5,'e');
-				//xAxis.tickFormat(function(d) { return "e" + formatPower(Math.round(Math.log(d))); });
-
 				xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
-
 
 			    var g = svgContainer.append("g")
 			        .attr("class", "x axis")
 			        .attr("transform", "translate(" + [margin, 3]+")")
 			        .call(xAxis);
-			       
 
 				if(uom){
 					g.append("text")
@@ -411,11 +452,11 @@
 	      	createHeightTextbox: function(height){
 	      		var that = this;
 	      		this.$("#height").empty();
-	      		if(height && this.selected != "Fieldlines"){
+	      		if(this.selected != "Fieldlines"){
 					this.$("#height").append(
 						'<form style="vertical-align: middle;">'+
 						'<label for="heightvalue" style="width: 70px;">Height: </label>'+
-						'<textarea rows="1" cols="10" id="heightvalue" style="resize: none;margin:0;vertical-align: middle;"></textarea>'+
+						'<input id="heightvalue" type="text" style="width:30px; margin-left:8px"/>'+
 						'</form>'
 					);
 					this.$("#heightvalue").val(height);
@@ -423,14 +464,8 @@
 						'<p style="font-size:0.85em; margin-left: 70px;">Above ellipsoid (Km)</p>'
 					);
 
-					this.$("#heightvalue").keypress(function(evt) {
-						if(evt.keyCode == 13){ //Enter pressed
-							evt.preventDefault();
-							var new_height = parseInt($(this).val());
-							Communicator.mediator.trigger("layer:height:changed", that.model.get("name"), new_height);
-							that.model.set("height", new_height);
-						}
-					});
+					// Register necessary key events
+					this.registerKeyEvents(this.$("#heightvalue"));
 				}
 	      	}
 

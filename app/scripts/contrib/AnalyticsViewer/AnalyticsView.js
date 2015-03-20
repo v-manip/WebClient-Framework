@@ -48,6 +48,14 @@ define(['backbone.marionette',
 				this.isClosed = false;
 				//this.triggerMethod('view:connect');
 
+				this.selection_list = [];
+				this.plotdata = [];
+				this.request_url = "";
+				this.img = null;
+				this.overlay = null;
+				this.activeWPSproducts = [];
+				this.plot_type = 'scatter';
+
 				// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
 				var download = d3.select(this.el).append("button")   
 			        .attr("type", "button")

@@ -61,6 +61,8 @@ define([
 			if (view.onResize) {
 				view.onResize();
 			}
+
+			this.delegateEvents();
 		}
 
 	});

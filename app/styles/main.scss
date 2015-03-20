@@ -388,6 +388,10 @@ button[active=active] {
 	 cursor: pointer;
 }
 
+.dropdown{
+  cursor: pointer;
+}
+
 .sidepane {
 	width: 100px;
 	height: 100px;
@@ -439,3 +443,5 @@ button[active=active] {
 .popover {
   position: fixed;
 }
+
+

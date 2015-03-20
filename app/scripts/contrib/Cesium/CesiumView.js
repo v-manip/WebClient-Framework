@@ -596,6 +596,11 @@ define(['backbone.marionette',
 						if(product.get("model") && product.get("name") == options.name){
 							if(options.visible){
 								this.activeModels.push(product.get("name"));
+								// Iterate over active Swarm products
+								globals.products.each(function(product) {
+									if(product.get("satellite") == "Swarm")
+										this.checkLayerFeatures(product, product.get("visible"));
+								},this);
 							}else{
 								if (this.activeModels.indexOf(product.get('name'))!=-1)
                 					this.activeModels.splice(this.activeModels.indexOf(product.get('name')), 1);
@@ -659,6 +664,7 @@ define(['backbone.marionette',
 
 									.done(function( data ) {
 
+										data = $.parseXML(data);
 										if(that.difference_image)	
 											that.map.scene.imageryLayers.remove(that.difference_image);
 
@@ -811,9 +817,6 @@ define(['backbone.marionette',
 
 	            	var that = this;
 
-	            	this.activeModels
-
-
 	            	$.post( url, Tmpl_retrive_swarm_features({
 						//"shc": product.get('shc'),
 						"model_ids": this.activeModels.join(),
@@ -909,54 +912,7 @@ define(['backbone.marionette',
         		
             },
 
-
-            onLayerRangeChanged: function(layer, range){
-
-            	globals.products.each(function(product) {
-                    
-                	if(product.get("name")==layer){
-
-                		var hexcolor = product.get("color");
-            				hexcolor = hexcolor.substring(1, hexcolor.length);
-            			var parameters = product.get("parameters");
-            			var band;
-            			var keys = _.keys(parameters);
-						_.each(keys, function(key){
-							if(parameters[key].selected)
-								band = key;
-						});
-            			var style = parameters[band].colorscale;
-            			var range = parameters[band].range;
-						var outlines = product.get("outlines");
-
-                		if(product.get("views")[0].protocol == "CZML"){
-                			this.checkLayerFeatures(product, product.get("visible"));
-
-                		}else if(product.get("views")[0].protocol == "WMS"){
-                			if (band == "Fieldlines" ){
-		                			this.checkFieldLines();
-							}else{
-			                	var ces_layer = product.get("ces_layer");
-			                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
-
-			                	if (ces_layer.show){
-				            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-				            		this.map.scene.imageryLayers.remove(ces_layer, false);
-				            		this.map.scene.imageryLayers.add(ces_layer, index);
-				            	}
-				            }
-			            }else if (product.get("views")[0].protocol == "WPS"){
-
-							this.checkShc(product, product.get("visible"));
-						}
-			        }
-                    
-	            }, this);
-            },
-
-			onLayerBandChanged: function(layer, band, range){
-				
-
+            OnLayerParametersChanged: function(layer){
             	globals.products.each(function(product) {
 
             		if(product.get("name")==layer){
@@ -973,6 +929,7 @@ define(['backbone.marionette',
             			var style = parameters[band].colorscale;
             			var range = parameters[band].range;
             			var outlines = product.get("outlines");
+            			var height = product.get("height");
 
             			var coeff_range = product.get("coefficients_range");
 
@@ -1001,6 +958,7 @@ define(['backbone.marionette',
 				                	var ces_layer = product.get("ces_layer");
 				                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
 				                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+				                	ces_layer.imageryProvider._parameters["elevation"] = height;
 				                	var ces_layer = product.get("ces_layer");
 				                	if(style)
 				                		ces_layer.imageryProvider._parameters["styles"] = style;
@@ -1020,7 +978,7 @@ define(['backbone.marionette',
 				    }
                     
 	            }, this);
-			},
+            },
 
 
 			onExportGeoJSON: function() {
@@ -1265,35 +1223,6 @@ define(['backbone.marionette',
 				this.checkFieldLines();
 			},
 
-			onCoefficientsRangeChanged: function (product) {
-				this.checkShc(product, product.get("visible"));
-
-				var parameters = product.get("parameters");
-    			var band;
-    			var keys = _.keys(parameters);
-				_.each(keys, function(key){
-					if(parameters[key].selected)
-						band = key;
-				});
-
-            	if(product.get("views")[0].protocol == "WMS"){
-
-					if (band != "Fieldlines" ){
-
-						var coeff_range = product.get("coefficients_range");
-
-						var ces_layer = product.get("ces_layer");
-						if(coeff_range)
-					        ces_layer.imageryProvider._parameters["dim_coeff"] = coeff_range[0]+","+coeff_range[1];
-							                	
-	                	if (ces_layer.show){
-		            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-		            		this.map.scene.imageryLayers.remove(ces_layer, false);
-		            		this.map.scene.imageryLayers.add(ces_layer, index);
-		            	}
-		            }
-				}
-			},
 
 			createPrimitives: function(results, name){
 
@@ -1379,119 +1308,8 @@ define(['backbone.marionette',
 				}
 			},*/
 
-			onLayerHeightChanged: function(layer, height){
-				globals.products.each(function(product) {
-                    
-                	if(product.get("name")==layer){
-                		if(product.get("views")[0].protocol == "WMS"){
-		                	var ces_layer = product.get("ces_layer");
-		                	ces_layer.imageryProvider._parameters["elevation"] = height;
 
-		                	if (ces_layer.show){
-			            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-			            		this.map.scene.imageryLayers.remove(ces_layer, false);
-			            		this.map.scene.imageryLayers.add(ces_layer, index);
-			            	}
-			            }else if (product.get("views")[0].protocol == "WPS"){
-
-                			if(product.get("visible")){
-
-                				if(product.get('shc') != null){
-
-                					var parameters = product.get("parameters");
-		                			var band;
-		                			var keys = _.keys(parameters);
-									_.each(keys, function(key){
-										if(parameters[key].selected)
-											band = key;
-									});
-		                			var style = parameters[band].colorscale;
-		                			var range = parameters[band].range;
-
-
-                					var imageURI;
-									var that = this;
-									var imagelayer;
-									//product.set("visible", true);
-
-									var ces_layer = product.get("ces_layer");
-									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-									
-									var url = product.get("views")[0].urls[0];
-
-									$.post( url, Tmpl_load_shc({
-										"shc": product.get('shc'),
-										"begin_time": getISODateTimeString(this.begin_time),
-										"end_time": getISODateTimeString(this.end_time),
-										"band": band,
-										"style": style,
-										"range_min": range[0],
-										"range_max": range[1],
-										"height": product.get("height")
-									}))
-
-										.done(function( data ) {
-											that.map.scene.imageryLayers.remove(ces_layer);										
-										    imageURI = "data:image/gif;base64,"+data;
-										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-											product.set("ces_layer", ces_layer);
-										});
-                				}
-
-							}
-						}
-			        }
-                    
-	            }, this);
-			},
-
-			onLayerStyleChanged: function(layer, style){
-				globals.products.each(function(product) {
-
-					if(product.get("name")==layer){
-
-						var hexcolor = product.get("color");
-            				hexcolor = hexcolor.substring(1, hexcolor.length);
-            			var parameters = product.get("parameters");
-            			var band;
-            			var keys = _.keys(parameters);
-						_.each(keys, function(key){
-							if(parameters[key].selected)
-								band = key;
-						});
-            			var range = parameters[band].range;
-            			var style = parameters[band].colorscale;
-        				var outlines = product.get("outlines");
-
-						if(product.get("views")[0].protocol == "CZML"){
-							this.checkLayerFeatures(product, product.get("visible"));
-
-	                	}else if(product.get("views")[0].protocol == "WMS"){
-
-		                	if(product.get("name")==layer){
-		                		if (band == "Fieldlines" ){
-		                			this.checkFieldLines();
-								}else{
-				                	var ces_layer = product.get("ces_layer");
-				                	ces_layer.imageryProvider._parameters["styles"] = style;
-
-				                	if (ces_layer.show){
-					            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-					            		this.map.scene.imageryLayers.remove(ces_layer, false);
-					            		this.map.scene.imageryLayers.add(ces_layer, index);
-					            	}
-					            }
-				            }
-				        }else if (product.get("views")[0].protocol == "WPS"){
-				        	this.checkShc(product, product.get("visible"));
-						}
-				    }
-                    
-	            }, this);
-			},
-
-			onLayerOutlinesChanged: function(layer, outlines){
+			/*onLayerOutlinesChanged: function(layer, outlines){
 				globals.products.each(function(product) {
 
 					if(product.get("name")==layer){
@@ -1502,7 +1320,7 @@ define(['backbone.marionette',
 				    }
                     
 	            }, this);
-			},
+			},*/
 
 	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
 	            var verts = openlayer_geometry.getVertices();
@@ -1644,7 +1462,7 @@ define(['backbone.marionette',
                     }
 	            }, this);
 
-								// Compare models if two are selected
+				// Compare models if two are selected
 				if (this.activeModels.length == 2){
 
 					var that = this;
