@@ -6,10 +6,11 @@
 	root.require([
 		'backbone',
 		'communicator',
-		'app'
+		'app',
+		'globals'
 	],
 
-	function( Backbone, Communicator, App ) {
+	function( Backbone, Communicator, App , globals) {
 
 		var ContentController = Backbone.Marionette.Controller.extend({
             initialize: function(options){
@@ -19,6 +20,7 @@
 				this.listenTo(Communicator.mediator, "ui:open:options", this.onOptionsOpen);
 				this.listenTo(Communicator.mediator, "ui:open:storybanner", this.StoryBannerOpen);
 				this.listenTo(Communicator.mediator, "app:reset", this.OnAppReset);
+				this.listenTo(Communicator.mediator, "layer:open:settings", this.onOpenLayerSettings);
 			},
 
 			onDialogOpenAbout: function(event){
@@ -59,12 +61,6 @@
 			StoryBannerOpen: function(event){
 
 				// Instance StoryBanner view
-                /*if(config.storyTemplate){
-                	this.storyBanner = new v.StoryBannerView({
-	                	template: t[config.storyTemplate]
-	                });
-                }*/
-
                 App.storyBanner = new App.views.StoryBannerView({
                 	template: App.templates[event]
                 });
@@ -82,7 +78,28 @@
 				App.toolLayout.close();
 				App.optionsLayout.close();
 				App.optionsBar.close();
-			}
+			},
+
+			onOpenLayerSettings: function(layer){
+
+				globals.products.each(function(product) {
+
+            		if(product.get("views")[0].id==layer){
+            			if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+							App.layerSettings.setModel(product);
+							App.optionsBar.show(App.layerSettings);
+						} else {
+							if(App.layerSettings.sameModel(product)){
+								App.optionsBar.close();
+							}else{
+								App.layerSettings.setModel(product);
+								App.optionsBar.show(App.layerSettings);
+							}
+						}
+            		}
+            	});
+            }
+
 		});
 		return new ContentController();
 	});

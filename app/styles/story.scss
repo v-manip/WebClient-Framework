@@ -46,7 +46,8 @@
 }
 #story section .close {
     float: right;
-    color: rgb(128, 128, 128);
+    color: white;
+    text-shadow: none;
 }
 #story section.active .close {
     cursor: pointer;

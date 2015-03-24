@@ -11,7 +11,7 @@
 <ul class="dropdown-menu" role="menu">
 	{{#each subitems}}
     	<li>
-    		<a href="javascript:require(['communicator'], function(Communicator){Communicator.mediator.trigger('{{this.eventToRaise}}', '{{this.template}}');});">{{this.name}}</a>
+    		<a href="javascript:void(0);" onclick="require(['communicator'], function(Communicator){Communicator.mediator.trigger('{{this.eventToRaise}}', '{{this.template}}');});">{{this.name}}</a>
     	</li>
  	{{/each}}
 </ul>

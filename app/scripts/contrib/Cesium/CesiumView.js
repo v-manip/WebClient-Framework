@@ -212,6 +212,7 @@ define(['backbone.marionette',
 						var imagerylayer = this.map.scene.imageryLayers.addImageryProvider(layer);
 						product.set("ces_layer", imagerylayer);
 						imagerylayer.show = product.get("visible");
+						imagerylayer.alpha = product.get("opacity");
 
 
 						// If product protocol is not WMS or WMTS they are shown differently so dont activate "dummy" layers
@@ -363,10 +364,7 @@ define(['backbone.marionette',
                     		_.each(keys, function(key){
 								if(options[key].selected){
 									additional_parameters.dim_bands = key;
-									// additional_parameters.range_min = options[key].range[0];
-									// additional_parameters.range_max = options[key].range[1];
 									additional_parameters.dim_range = options[key].range[0]+","+options[key].range[1];
-									//additional_parameters.styles = options[key].colorscale;
 									styles = options[key].colorscale;
 								}
 							});
@@ -384,6 +382,7 @@ define(['backbone.marionette',
 						    layers : view.id,
 						    parameters: params
 						});
+
                     break;
 
                     default:
@@ -449,7 +448,22 @@ define(['backbone.marionette',
 				globals.products.each(function(product) {
                 	if(product.get("name")==options.model.get("name")){
                 		var ces_layer = product.get("ces_layer");
-                		if(ces_layer){
+
+                		if( _.has(this.features_collection, options.model.get("views")[0].id) ){
+                			var fc = this.features_collection[options.model.get("views")[0].id];
+                			for (var i = fc.length - 1; i >= 0; i--) {
+                				var b = fc.get(i);
+                				if(b.color){
+	                				var c = b.color.clone();
+	                				c.alpha = options.value;
+	  								b.color = c;
+	  							}else if(b.appearance){
+	  								var c = b.appearance.material.uniforms.color.clone();
+	                				c.alpha = options.value;
+	  								b.appearance.material.uniforms.color = c;
+	  							}
+                			};
+                		}else if(ces_layer){
 							ces_layer.alpha = options.value;
 						}
 					}
@@ -813,6 +827,7 @@ define(['backbone.marionette',
 	    			var style = parameters[band].colorscale;
 	    			var outlines = product.get("outlines");
 	    			var range = parameters[band].range;
+	    			var alpha = product.get("opacity");
 	    			var url = product.get("views")[0].urls[0];
 
 	            	var that = this;
@@ -824,6 +839,7 @@ define(['backbone.marionette',
 						"begin_time": getISODateTimeString(this.begin_time),
 						"end_time": getISODateTimeString(this.end_time),
 						"band": band,
+						"alpha": alpha,
 						//"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
 						"style": style,
 						"dim_range": (range[0]+","+range[1]),
@@ -834,7 +850,7 @@ define(['backbone.marionette',
 							header: true,
 							dynamicTyping: true,
 							complete: function(results) {
-								that.createFeatures(results, id, band)
+								that.createFeatures(results, id, band, alpha)
 							}
 						});
 					});
@@ -842,7 +858,19 @@ define(['backbone.marionette',
                
             },
 
-            createFeatures: function (results, identifier, band){
+            createFeatures: function (results, identifier, band, alpha){
+
+            	// The feature collection is removed directly when a change happens
+            	// because of the asynchronous behavior it can happen that a collection
+            	// is added between removing it and adding another one so here we make sure
+            	// it is empty before overwriting it, which would lead to a not referenced
+            	// collection which is no longer deleted.
+            	// I remove it before the response because a direct feedback to the user is important
+            	// There is probably a cleaner way to do this
+            	if(this.features_collection.hasOwnProperty(identifier)){
+            		this.map.scene.primitives.remove(this.features_collection[identifier]);
+            		delete this.features_collection[identifier];
+            	}
 
 				if(band == "B_NEC"){
 
@@ -852,7 +880,7 @@ define(['backbone.marionette',
 					_.each(results.data, function(row){
 
 						var arrowmat = 	new Cesium.Material.fromType('PolylineArrow');			
-						arrowmat.uniforms.color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, 255);
+						arrowmat.uniforms.color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255);
 
 						this.features_collection[identifier].add(new Cesium.Primitive({
 						    geometryInstances : new Cesium.GeometryInstance({
@@ -899,7 +927,7 @@ define(['backbone.marionette',
 					        imageId : 'custom canvas point',
 					        image : canvas,
 					        position : new Cesium.Cartesian3(row.pos_x, row.pos_y, row.rad),
-					        color : Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, 255),
+					        color : Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255),
 					        scale : 0.5
 					    });
 

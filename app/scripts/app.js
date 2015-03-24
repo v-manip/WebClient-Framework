@@ -154,7 +154,7 @@
 							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
 							color: p_color,
 							//time: products.time, // Is set in TimeSliderView on time change.
-							opacity: 1,
+							opacity: (product.opacity) ? product.opacity : 1,
 							views: product.views,
 							view: {isBaseLayer: false},
 							download: {

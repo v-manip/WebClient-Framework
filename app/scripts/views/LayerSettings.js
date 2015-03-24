@@ -16,6 +16,7 @@
 
 			template: {type: 'handlebars', template: LayerSettingsTmpl},
 			className: "panel panel-default optionscontrol not-selectable",
+			colorscaletypes : ["coolwarm", "rainbow", "jet", "custom1", "custom2", "blackwhite"],
 
 			initialize: function(options) {
 				this.selected = null;
@@ -27,7 +28,9 @@
 
 			onShow: function(view){
 
-				
+				// Event handler to check if tutorial banner made changes to a model in order to redraw settings
+				// If settings open rerender view to update changes
+				this.listenTo(Communicator.mediator, "layer:settings:changed", this.onParameterChange);
 
 				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-gears"></i> ' + this.model.get("name") + ' Settings</h3>');
 
@@ -43,7 +46,7 @@
 		    	var protocol = this.model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
-				var colorscaletypes = ["coolwarm", "rainbow", "jet", "custom1", "custom2", "blackwhite"];
+				//var 
 
 				var that = this;
 
@@ -56,6 +59,8 @@
 				   	}
 				});
 
+				this.$("#options").empty();
+
 				this.$("#options").append(option);
 
 				if(options[this.selected].description){
@@ -66,50 +71,8 @@
 					this.addLogOption(options);
 				}
 
-				this.$("#options").change(function(evt){
-
-					delete options[that.selected].selected;
-					that.selected = $(evt.target).find("option:selected").val();
-
-					that.$("#style").empty();
-					var colorscale_options = "";
-					var selected_colorscale;
-					_.each(colorscaletypes, function(colorscale){
-						if(options[that.selected].colorscale == colorscale){
-							selected_colorscale = colorscale;
-					   		colorscale_options += '<option value="'+ colorscale + '" selected>' + colorscale + '</option>';
-					   	}else{
-					   		colorscale_options += '<option value="'+ colorscale + '">' + colorscale + '</option>';
-					   	}
-					});
-
-					that.$("#style").append(colorscale_options);
-
-					that.$("#range_min").val(options[that.selected].range[0]);
-					that.$("#range_max").val(options[that.selected].range[1]);
-
-					if(options[that.selected].hasOwnProperty("logarithmic")){
-						that.addLogOption(options);
-
-					}else{
-						that.$("#logarithmic").empty();
-					}
-
-					options[that.selected].selected = true;
-
-					if(options[that.selected].description){
-						that.$("#description").text(options[that.selected].description);
-					}
-
-					if(options[that.selected].hasOwnProperty("logarithmic"))
-						that.createScale(options[that.selected].logarithmic);
-					else
-						that.createScale();
-
-					that.createHeightTextbox(height);
-
-					Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
-				});
+				// Add event handler for change in drop down selection
+				this.$("#options").change(this.onOptionsChanged.bind(this));
 
 				// Set values for color scale ranges
 				this.$("#range_min").val(options[this.selected].range[0]);
@@ -122,7 +85,7 @@
 
 				var colorscale_options = "";
 				var selected_colorscale;
-				_.each(colorscaletypes, function(colorscale){
+				_.each(this.colorscaletypes, function(colorscale){
 					if(options[that.selected].colorscale == colorscale){
 						selected_colorscale = colorscale;
 				   		colorscale_options += '<option value="'+ colorscale + '" selected>' + colorscale + '</option>';
@@ -131,6 +94,7 @@
 				   	}
 				});
 
+				this.$("#style").empty();
 				this.$("#style").append(colorscale_options);
 				this.$("#gradient").attr("class", selected_colorscale);
 
@@ -173,6 +137,8 @@
 
 				if(!(typeof this.model.get("coefficients_range") === 'undefined')){
 
+					this.$("#coefficients_range").empty();
+
 					this.$("#coefficients_range").append(
 					'<li style="margin-top: 5px;">'+
 						'<label for="coefficients_range_min" style="width: 120px;">Coefficients range: </label>'+
@@ -191,9 +157,8 @@
 					
 				}	
 
-
-
 				if (protocol == "WPS"){
+					this.$("#shc").empty();
 					this.$("#shc").append(
 						'<p>Spherical Harmonics Coefficients</p>'+
 						'<div class="myfileupload-buttonbar ">'+
@@ -217,13 +182,66 @@
 				else
 					this.createScale();
 
-				this.createHeightTextbox(height);
+				this.createHeightTextbox(this.model.get("height"));
 
 		    },
 
 			onClose: function() {
 				this.close();
 			}, 
+
+			onParameterChange: function(){
+				this.onShow();
+			},
+
+			onOptionsChanged: function(){
+
+				var options = this.model.get("parameters");
+
+				delete options[this.selected].selected;
+				this.selected = $("#options").find("option:selected").val();
+
+				this.$("#style").empty();
+				var colorscale_options = "";
+				var selected_colorscale;
+				_.each(this.colorscaletypes, function(colorscale){
+					if(options[this.selected].colorscale == colorscale){
+						selected_colorscale = colorscale;
+				   		colorscale_options += '<option value="'+ colorscale + '" selected>' + colorscale + '</option>';
+				   	}else{
+				   		colorscale_options += '<option value="'+ colorscale + '">' + colorscale + '</option>';
+				   	}
+				}, this);
+
+				this.$("#style").append(colorscale_options);
+
+				this.$("#range_min").val(options[this.selected].range[0]);
+				this.$("#range_max").val(options[this.selected].range[1]);
+
+				if(options[this.selected].hasOwnProperty("logarithmic")){
+					this.addLogOption(options);
+
+				}else{
+					this.$("#logarithmic").empty();
+				}
+
+				options[this.selected].selected = true;
+
+				if(options[this.selected].description){
+					this.$("#description").text(options[this.selected].description);
+				}
+
+				if(options[this.selected].hasOwnProperty("logarithmic"))
+					this.createScale(options[this.selected].logarithmic);
+				else
+					this.createScale();
+
+				this.createHeightTextbox(this.model.get("height"));
+
+				this.model.set("parameters", options);
+
+				Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+			},
 
 			registerKeyEvents: function(el){
 				var that = this;
@@ -452,7 +470,7 @@
 	      	createHeightTextbox: function(height){
 	      		var that = this;
 	      		this.$("#height").empty();
-	      		if(this.selected != "Fieldlines"){
+	      		if( (height || height==0) && this.selected != "Fieldlines"){
 					this.$("#height").append(
 						'<form style="vertical-align: middle;">'+
 						'<label for="heightvalue" style="width: 70px;">Height: </label>'+
