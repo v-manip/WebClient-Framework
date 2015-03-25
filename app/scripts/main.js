@@ -71,7 +71,7 @@
 
 			_.each(values.modules, function(module) {
 				modules.push(module);
-				console.log("[V-MANIP] Registered module from: " + module + ".js");
+				console.log("Registered module from: " + module + ".js");
 			});
 
 			_.each(values.views, function(view) {

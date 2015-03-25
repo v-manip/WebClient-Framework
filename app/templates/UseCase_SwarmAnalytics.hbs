@@ -37,33 +37,43 @@
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h2>Geomagnetic Field Model</h2>
     <p>As you can see on the virtual globe we now activated a Geomagnetic Field Model product (more information about this can be found in the "Geomagnetic Field Model" Tutorial).</p>
-    <p>When a Swarm product is selected in combination with one of the Geomagnetic Field Model products it is also possible to see the Horizontal Magnetic Field Residuals by selecting the Magnetic Field Vector parameter in the Settings window. Please keep on scrolling we will do this on the next step.</p>
+    <p>This allows a visual comparison between model and measurements.</p>
 </section>
 <section data-parameter="SW_OPER_MAGA_LR_1B:B_NEC:range:-20,20" data-set-parameter="SW_OPER_MAGA_LR_1B:B_NEC">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h2>Residuals</h2>
+    <p>When a Swarm product is selected in combination with one of the Geomagnetic Field Model products it is also possible to see the Horizontal Magnetic Field Residuals by selecting the Magnetic Field Vector parameter in the Settings window (which we have done right now).</p>
     <p>As you can see now the Horizontal Magnetic Field Residuals are visualised on the virtual globe.</p>
-    <p>Further analysis of the data can be done with the use of the Analytics Viewer in split screen mode.</p>
-    <p>The split view can be opened by opening the <i class="fa fa-wrench"/> Tools widget on the navigation bar on the top and clicking on the <i class="fa fa-pause"/> Split screen button.</p>
-    <p>We will open the split screen with the Analytics Viewer on the next step.</p>
 </section>
 <section data-events="layout:switch:splitview" data-settings="SW_OPER_MAGA_LR_1B">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h3>Analytics Viewer</h3>
+    <p>We now opened the split screen mode which allows further analysis of the data.</p>
+    <p>The split view can be opened by opening the <i class="fa fa-wrench"/> Tools widget on the navigation bar on the top and clicking on the <i class="fa fa-pause"/> Split screen button.</p>
     <p>The Analytics Viewer (right side of the screen) is divided into two sections.</p>
     <p> On the top half there is an interactive Scatter Plot of the selected data (right now residuals of Swarm A L1b and WMM).
         At the Drop-Down element situated on the top of the left axis, the parameter(s) to be plotted on that axis can be selected. At the Drop-Down element situated on the right of the bottom axis, the parameter to plot against can be selected.</p>
     <p>On the bottom half of the Analytics Viewer axes are represented for each parameter and a histogramm which visualises the amount of data at different ranges.
         It is possible to click and drag on the axes to create filters for the visualised data.</p>
-    <p>The buttons on the top right allow adding a grid to the Scatter plot (Toggle Grid), save the plot as png (Save as Image) and Download the original Swarm data based on the created filters(Download).</p>
-    <p>When only a Swarm product is selected the original data will be shown on the Analytics Viewer, we deactivate the WMM model in the next step.</p>
+    <p>The buttons on the top right allow adding a grid to the Scatter plot (Toggle Grid), save the plot as png (Save as Image) and Download the original Swarm data based on the created filters (Download).</p>
 </section>
-<section data-set-parameter="SW_OPER_MAGA_LR_1B:F" data-layers="WMM">
+<section data-layers="WMM" data-set-parameter="SW_OPER_MAGA_LR_1B:F">
     <span class="close"><i class="fa fa-times-circle"/></span>
-    <p>In both views (Virtual Globe and Analytics) now show Swarm measurement data. Feel free to move the time interval selection in the time line to browse through the Swarm data, activate other models, try out the download functionality or just try out the Prototype functionality.</p>
-    <p>If you want to see functionality related to Geomagnetic Field Models try the "Geomagnetic Field Model" Tutorial.</p>
-    <p>As also displayed in the "About" section any feedback is welcome under <a href="mailto:vires@eox.at">vires@eox.at</a></p>
+    <h2>Swarm Product</h2>
+    <p>We now deactivated the WMM model. This updates both views to show the original Swarm product data, as you can see in the virtual globe as well as in the Analytics Viewer.</p>
+    <p>You can modify the selected time interval on the bottom time-slider if you wish to browse through the Swarm data a little further.</p>
 </section>
+<section data-layers="SW_OPER_MAGC_LR_1B">
+    <span class="close"><i class="fa fa-times-circle"/></span>
+    <h3>Satellite differences</h3>
+    <p>As demonstrated before by selecting a Swarm and Model product we can see the residuals. It is also possible to see the differences in measurements between two Swarm satellites by activating two Swarm products. This is what we have done now.</p>
+    <p>The difference is calculated by searching for the nearest (based on position) measurement of the second selected satellite product. The time difference between both measurements is used as offset for the selected time span to select which measurement is substracted with which of the second Satellite product.</p>
+    <p></p>
+    <p>This are the main features related to Swarm Analytics. Feel free to move the time interval selection in the time line to browse through the Swarm data, activate other models, try out the download functionality or just play around with the Prototype.</p>
+    <p>If you want to see functionality related to Geomagnetic Field Models try the "Geomagnetic Field Model" Tutorial.</p>
+    <p>As mentioned in the "About" section any feedback is welcome under <a href="mailto:vires@eox.at">vires@eox.at</a></p>
+</section>
+
 
 
 <div style="height: 25em;"><!-- FIXME --></div>

@@ -61,6 +61,10 @@ define(['backbone.marionette',
 				// to height; Added height style attribute to 100% to solve problem
 				this.$el.attr("style","height:100%;");
 
+				// TODO: We dont use bing maps layer, but it still reports use of default key in console.
+				// For now we just set it to something else just in case.
+				Cesium.BingMapsApi.defaultKey = "NOTHING";
+
 				this.$el.append("<div id='cesium_attribution'></div>");
 				this.$el.append("<div id='cesium_custom_attribution'></div>");
 				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
@@ -509,7 +513,7 @@ define(['backbone.marionette',
                     			this.checkLayerFeatures(product, options.visible);
 
 			        		}else if (product.get("views")[0].protocol == "FL_CZML"){
-			        			if(options.visible){
+			        			/*if(options.visible){
 			        				//product.set("visible", true);
 	                    			this.activeFL.push(product.get("name"));
 	                    		}else{
@@ -519,7 +523,7 @@ define(['backbone.marionette',
                 					}
 
 	                    		}
-	                    		this.checkFieldLines();
+	                    		this.checkFieldLines();*/
 							
                     		}else if (product.get("views")[0].protocol == "WPS"){
                     			this.checkShc(product, options.visible);
@@ -945,7 +949,13 @@ define(['backbone.marionette',
 								if(product.get("visible")){
 									var ces_layer = product.get("ces_layer");
 									this.map.scene.imageryLayers.remove(ces_layer, false);
-	                    			this.activeFL.push(product.get("name"));
+
+									// When changing height or coefficient range and fieldlienes is selected
+									// model would be added multiple times, need to check if model already 
+									// marked as active and avoid adding it to list
+									if (this.activeFL.indexOf(product.get('name'))==-1)
+	                    				this.activeFL.push(product.get("name"));
+
 	                    		}else{
 	                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
                 						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
@@ -1161,6 +1171,7 @@ define(['backbone.marionette',
 			},
 
 			checkFieldLines: function(){
+				console.log(this.activeFL);
 
 				if(this.activeFL.length>0 && this.bboxsel){
 
