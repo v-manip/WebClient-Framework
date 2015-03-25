@@ -70,9 +70,7 @@ define(['backbone.marionette',
 				
 
 				this.$el.append(
-					"<div class='d3canvas'></div>" +
-					"<div class='gui'>" +
-					"</div> ");
+					"<div class='d3canvas'></div>");
 
 
 				globals.products.each(function(product) {

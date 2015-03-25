@@ -147,9 +147,9 @@
 
           // Configure Layers
            if(this.sections[index].hasAttribute('data-parameter')) {
-              var parameters = this.sections[index].getAttribute('data-parameter').split(';');
+              var params = this.sections[index].getAttribute('data-parameter').split(';');
               
-              _.each(parameters, function(config){
+              _.each(params, function(config){
                 config = config.split(":");
                 var product = _.find(globals.products.models, function(p){return p.get("views")[0].id == config[0];});
 
@@ -161,37 +161,57 @@
                     selected = key;
                 });
 
-                if(selected != config[1]){
-                  // Delete previously selected and select new parameter
-                  delete options[selected].selected;
-                  options[config[1]].selected = true;
-
-                  // If length is 4 additional parameter name and value is provided
-                  if(config.length == 4){
-                    switch(config[2]){
-                      case "range":
-                        var range = config[3].split(",");
-                        range = [parseFloat(range[0]), parseFloat(range[1])];
-                        options[config[1]].range = range;
-                        break;
-                      case "height":
-                        product.set("height", parseFloat(config[3]));
-                        break;
-                      case "coefficients_range":
-                        var coef_range = config[3].split(",");
-                        coef_range = [parseFloat(range[0]), parseFloat(range[1])];
-                        product.set("coefficients_range", coef_range);
-                        break;
-                    }
+                // If length is 4 additional parameter name and value is provided
+                if(config.length == 4){
+                  switch(config[2]){
+                    case "range":
+                      var range = config[3].split(",");
+                      range = [parseFloat(range[0]), parseFloat(range[1])];
+                      options[config[1]].range = range;
+                      break;
+                    case "height":
+                      product.set("height", parseFloat(config[3]));
+                      break;
+                    case "coefficients_range":
+                      var coef_range = config[3].split(",");
+                      coef_range = [parseFloat(coef_range[0]), parseFloat(coef_range[1])];
+                      product.set("coefficients_range", coef_range);
+                      break;
                   }
                 }
-
+                
                 product.set("parameters", options);
 
                 Communicator.mediator.trigger("layer:parameters:changed", product.get("name"));
                 Communicator.mediator.trigger("layer:settings:changed", product.get("name"));
 
               }, this);
+
+          }
+
+          // Set active layer paramenter
+          if(this.sections[index].hasAttribute('data-set-parameter')) {
+              
+              var config = this.sections[index].getAttribute('data-set-parameter').split(":");
+              var product = _.find(globals.products.models, function(p){return p.get("views")[0].id == config[0];});
+
+              var options = product.get("parameters");
+              var selected;
+
+              _.each(_.keys(options), function(key){
+                if(options[key].selected)
+                  selected = key;
+              });
+
+              if(selected != config[1]){
+                // Delete previously selected and select new parameter
+                delete options[selected].selected;
+                options[config[1]].selected = true;
+              }
+
+              Communicator.mediator.trigger("layer:parameters:changed", product.get("name"));
+              Communicator.mediator.trigger("layer:settings:changed", product.get("name"));
+
 
           }
 
@@ -240,6 +260,20 @@
             });
             
           }
+
+          // Create bbox selection
+          if(this.sections[index].hasAttribute('data-bbox')){
+            var coords = this.sections[index].getAttribute('data-bbox').split(",");
+            // Coordinates structure is created as expected by Cesium View
+            var bbox = [
+              {x:coords[0], y:coords[1], z:0},
+              {},//Not needed in Cesium View
+              {x:coords[2], y:coords[3], z:0},
+              {},//Not needed in Cesium View
+            ];
+            Communicator.mediator.trigger("selection:changed", null, bbox, null);
+          }
+          
 
           // Add was Active attribute to not repeat events of already activated sections
           this.sections[index].wasActive = true;

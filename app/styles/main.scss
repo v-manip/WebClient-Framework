@@ -17,6 +17,7 @@ $iconWhiteSpritePath: "../images/glyphicons-halflings-white.png";
 @import "tooltip";
 @import "cesium";
 @import "layersettings";
+@import "spinner";
 
 /* Not used right now ;)
 #preloadedImages {
@@ -196,6 +197,10 @@ div#preload {
 
 #about ul li {
   list-style-position: outside;
+}
+
+.panel-default {
+  border-color: #818080 !important;
 }
 
 

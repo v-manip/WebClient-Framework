@@ -65,3 +65,17 @@ text.nvd3.nv-noData {
     margin-right: auto; 
     width: auto;
 }
+
+
+#tmp_download_button, #save, #grid, #download_button{
+	background-color: #333 !important;
+ 	border-color: #444 !important;
+ 	height:32px;
+}
+
+#tmp_download_button:hover, #save:hover, #grid:hover{
+    background-color: #48b !important;
+  	border-color: #aef !important;
+}
+
+

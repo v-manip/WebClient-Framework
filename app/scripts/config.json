@@ -20,6 +20,11 @@
         ],
         "center": [13.41, 52.52],
         "zoom": 5,
+        "showSun": false,
+        "showMoon": false,
+        "showSkyBox": false,
+        "skyAtmosphere": false,
+        "backgroundColor": "#fff",
         "baseLayers": [{
             "name": "Terrain-Light",
             "visible": true,

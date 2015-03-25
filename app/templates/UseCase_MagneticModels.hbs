@@ -3,45 +3,60 @@
     <span class="close"><i class="fa fa-times-circle"/></span>
     <small class='scroll'>Scroll ▼</small>
     <h2>Geomagnetic Field Models</h2>
-    <p>This Tutorial demonstrates the necessary steps in order to visualize and explore Swarm data.</p>
+    <p>This Tutorial demonstrates available features for provided Geomagnetic Field Models.</p>
     <p>It is an interactive Tutorial so you just need to scroll down to see the prototypes functionality.</p>
-    <p>As with all tutorials you can always close this banner and play around with the system to get acquanted to it.</p>
+    <p>The tutorial can be closed at any point in time.</p>
     <small class='scroll'>Scroll ▼</small>
 </section>
 <section data-events="ui:open:layercontrol">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h3>Layer Selection</h3>
-    <p>In order to visualise a product we first have to activate it in the Layer Selection Window.</p>
+    <p>In order to visualise a field model product we first have to activate it in the Layer Selection Window.</p>
+    <p>We have just opened it, you can see it on the left side of the screen.</p>
     <p>You can open and close it at any time by clicking in the navigation bar (top of the screen) on the Layers button with the symbol <i class="fa fa-fw fa-globe"></i>.</p>
-    <p>The Layer/Product Widget allows activating and deactivating the configured products, which are then visualized in the different viewers.</p>
-    <p>You can move the widget to another position by clicking and dragging on its header, give that a try.</p>
-    <p>The Widget shows base layers (e.g. Terrain and Blue Marble), overlay layers (e.g. Streets) and product layer.</p>
-    <p>It is possible to sort the layers by clicking and dragging on the two triangle symbol.</p>
-    <p>Transparency can be set by slider that appears by clicking on the circle icon of the product.</p>
+    <p>The available Geomagnetic Field Models are:</p>
+    <ul>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">World Magnetic Model (WMM)</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">International Geomagnetic Reference Field (IGRF11)</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">CHAOS-5</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Custom Model (upload of model coefficients in .shc format)</li>
+    </ul>
 </section>
-<section data-events="ui:open:toolselection">
+<section  data-layers="WMM" data-settings="WMM">
     <span class="close"><i class="fa fa-times-circle"/></span>
-    <h3>Tools</h3>
-    <p>On the right i now opened the <strong>Tools</strong> Widget. This widget has Tools for selection, management and Layout separated in three groups</p>
-    <p>The <strong>selection</strong> tools are on the upper button group, which are from top to bottom, point, line. polygon and bounding box selection.</p>
-    <p>In the middle button group we have the <strong>Download Tool</strong> and the <strong>Selection Manager Tool</strong></p>
-    <p>The <strong>Layout</strong> Tools are available at the bottom, these allow setting the client as split screen or quad screen. </p>
-    <p>We will go into more detail of each of these components. As with the Layer Widget you can open and close the Tool Widget by clicking on the Tools button with the icon <i class="fa fa-fw fa-wrench"></i>.</p>
+    <h3>Settings</h3>
+    <p>We now activated the WMM model Layer which is visualised on the virtual globe.</p>
+    <p>Additionally we opened the product settings window (on the right). Product settings can be accessed by clicking on the <i class="fa fa-gears"/>-symbol of a product.</p>
+    <p>In the product settings you can select which parameter to visualise, what color scale to use and the range for the color scale.</p>
+    <p>Geomagnetic Field Models have the following parameters for visualisation:</p>
+    <ul>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Total field intensity</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Horizontal intensity</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">North component</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">East component</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Down component</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Inclination</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Declination</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Fieldlines</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">North component (East-West Gradient)</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">East component (East-West Gradient)</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Down component (East-West Gradient)</li>
+    </ul>
+    <p>You can now try out different parameters for visualisation if you like.</p>
+    <p>At any point you can use the "Save as Image" button of the Virtual Globe (top right) to save the current visualisation.</p>
 </section>
-<section data-layers="SW_OPER_MAGA_LR_1B">
+<section data-parameter="WMM:Y:range:-50,50;WMM::coefficients_range:10,-1" data-set-parameter="WMM:Y">
     <span class="close"><i class="fa fa-times-circle"/></span>
-    <h3>Time Selection</h3>
-    <p>We activated now a Swarm L1b product and a time interval on the 30. September 2014 for you </p>
-    <p>Did you notice the <strong>time slider</strong> at the bottom of the page? You can see the availability of the selected product there.</p>
-    <p>Try stretching the time interval at its ends or draw a new one and watch how the Swarm data visualisation is updated on the globe.</p>
-    <p>You can zoom in/out in time by using the mouse wheel over the time slider as well as pan by clicking and dragging where the dates are displayed.</p>
-    <p>A more in depth analysis of the data can be done with the analytics viewer, keep on scrolling to see it in action.</p>
+    <h3>Additional parameters</h3>
+    <p>Field model settings have additional parameters for coefficient range and height above ellipsoid for the visualised resulting model.</p>
+    <p>As an example we just selected the East Component parameter, changed the coefficient ranges to [10,-1] (-1 being with no limit, i.e. using all available coefficients starting at 10).</p>
+    <p>The range of values is reduced and therefore we reduced the color scale range also.</p>
 </section>
-<section data-events="layout:switch:splitview">
+<section data-set-parameter="WMM:Fieldlines" data-bbox="-141,63,-79,76">
     <span class="close"><i class="fa fa-times-circle"/></span>
-    <h3>Analytics Viewer</h3>
-    <p>We now opened the split view. It can be switched in the <strong>Tools</strong> Widget by clicking on the Split Screen button.</p>
-    <p>As you can see the selected Swarm data (product and time) is displayed as scatter plot.</p>
+    <h3>Field Lines</h3>
+    <p>Bounding box selection with icon <i class="icon-large icon-vector-path-square"></i></p>
+    <p>The split view can be opened by opening the <i class="fa fa-wrench"/> Tools widget on the navigation bar on the top and clicking on the <i class="fa fa-pause"/> Split screen button.</p>
     <p>You can select multiple parameters for visualisation on the y Axis as well as against which parameter you want them to be plotted on the x Axis.</p>
     <p>Play around with the Analytics Viewer to get accostumed to the available functionality.</p>
     <p>This is just the initial tutorial for the VirES Prototype, additional explanation of available features will be added soon!</p>

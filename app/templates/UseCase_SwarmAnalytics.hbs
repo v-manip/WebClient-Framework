@@ -8,7 +8,7 @@
     <p>The tutorial can be closed at any point in time.</p>
     <small class='scroll'>Scroll ▼</small>
 </section>
-<section data-events="ui:open:layercontrol">
+<section data-events="ui:open:layercontrol" data-parameter="WMM:Y:range:-7000,7000;WMM::coefficients_range:-1,-1">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h3>Layer Selection</h3>
     <p>In order to visualise a product we first have to activate it in the Layer Selection Window.</p>
@@ -39,7 +39,7 @@
     <p>As you can see on the virtual globe we now activated a Geomagnetic Field Model product (more information about this can be found in the "Geomagnetic Field Model" Tutorial).</p>
     <p>When a Swarm product is selected in combination with one of the Geomagnetic Field Model products it is also possible to see the Horizontal Magnetic Field Residuals by selecting the Magnetic Field Vector parameter in the Settings window. Please keep on scrolling we will do this on the next step.</p>
 </section>
-<section data-parameter="SW_OPER_MAGA_LR_1B:B_NEC:range:-20,20">
+<section data-parameter="SW_OPER_MAGA_LR_1B:B_NEC:range:-20,20" data-set-parameter="SW_OPER_MAGA_LR_1B:B_NEC">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h2>Residuals</h2>
     <p>As you can see now the Horizontal Magnetic Field Residuals are visualised on the virtual globe.</p>
@@ -58,7 +58,7 @@
     <p>The buttons on the top right allow adding a grid to the Scatter plot (Toggle Grid), save the plot as png (Save as Image) and Download the original Swarm data based on the created filters(Download).</p>
     <p>When only a Swarm product is selected the original data will be shown on the Analytics Viewer, we deactivate the WMM model in the next step.</p>
 </section>
-<section data-parameter="SW_OPER_MAGA_LR_1B:F" data-layers="WMM">
+<section data-set-parameter="SW_OPER_MAGA_LR_1B:F" data-layers="WMM">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <p>In both views (Virtual Globe and Analytics) now show Swarm measurement data. Feel free to move the time interval selection in the time line to browse through the Swarm data, activate other models, try out the download functionality or just try out the Prototype functionality.</p>
     <p>If you want to see functionality related to Geomagnetic Field Models try the "Geomagnetic Field Model" Tutorial.</p>

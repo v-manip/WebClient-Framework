@@ -379,6 +379,8 @@
 					if (options[this.selected].logarithmic)
 						checked = "checked";
 
+					this.$("#logarithmic").empty();
+
 					this.$("#logarithmic").append(
 						'<form style="vertical-align: middle;">'+
 						'<label for="outlines" style="width: 100px;">Log. Scale: </label>'+

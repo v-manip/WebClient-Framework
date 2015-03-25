@@ -80,6 +80,16 @@ define(['backbone.marionette',
 					}
 				}, this);
 
+				var clock = new Cesium.Clock({
+				   startTime : Cesium.JulianDate.fromIso8601("2014-01-01"),
+				   currentTime : Cesium.JulianDate.fromIso8601("2014-01-02"),
+				   stopTime : Cesium.JulianDate.fromIso8601("2014-01-03"),
+				   clockRange : Cesium.ClockRange.LOOP_STOP,
+				   clockStep : Cesium.ClockStep.SYSTEM_CLOCK_MULTIPLIER,
+				   canAnimate: false,
+				   shouldAnimate: false
+				});
+
 				if (layer){
 					this.map = new Cesium.Viewer(this.el,
 					{
@@ -96,22 +106,24 @@ define(['backbone.marionette',
 					        url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
 					    }),
 						creditContainer: "cesium_attribution",
-						contextOptions: {webgl: {preserveDrawingBuffer: true}}
+						contextOptions: {webgl: {preserveDrawingBuffer: true}},
+						clock: clock
 					});
 				}
 
+				var mm = globals.objects.get('mapmodel');
+
 			    var canvas = this.map.canvas;
+
+			    this.map.scene.skyBox.show = mm.get('skyBox');
+			    this.map.scene.sun.show = mm.get('sun');
+			    this.map.scene.moon.show = mm.get('moon');
+			    this.map.scene.skyAtmosphere.show = mm.get('skyAtmosphere');
+			    this.map.scene.backgroundColor = new Cesium.Color.fromCssColorString(mm.get('backgroundColor'));
+
+			    // Show Wireframe
+			    //this.map.scene.globe._surface._tileProvider._debug.wireframe = true;
 			    
-			    $("#cesium_save").on("click", function(){
-			    	var dataUrl = canvas.toDataURL("image/jpeg");
-					
-					var a = document.createElement("a");
-					a.download = "VirES_virtual_globe.jpeg";
-					a.href = dataUrl;
-					var jpgimg = '<img src="'+a.href+'">'; 
-					d3.select("#pngdataurl").html(jpgimg);
-					a.click();
-				});
 
 				//this.map.scene.fxaaOrderIndependentTranslucency = false;
 
@@ -152,22 +164,7 @@ define(['backbone.marionette',
 					}
 				}, this);
 
-				//this.map.scene.imageryLayers.removeAll(true);
-
-				// FIXXME: MH: For some reason the map is only displayed if the div's id is "map". Removing the next line
-				// causes the map not to be displayed...
-				/*this.$el.attr('id', 'map');
-				this.map = new OpenLayers.Map({
-					div: this.el,
-					fallThrough: true,
-					tileManager: this.tileManager,
-					 controls: [
-					 	new OpenLayers.Control.Navigation(),
-                        new OpenLayers.Control.Zoom( { zoomInId: "zoomIn", zoomOutId: "zoomOut" } ),
-                        new OpenLayers.Control.Attribution( { displayClass: 'olControlAttribution' } )
-                    ]
-				});
-
+				/*
 				this.colors = globals.objects.get("color");
 
 				this.map.events.register("move", this.map, function(data) {
@@ -229,24 +226,7 @@ define(['backbone.marionette',
 						}
 					}
 				}, this);
-/*
-				
 
-				// Order (sort) the product layers based on collection order
-				this.onSortProducts();
-
-				// Openlayers format readers for loading geojson selections
-				var io_options = {
-					'internalProjection': this.map.baseLayer.projection,
-					'externalProjection': new OpenLayers.Projection('EPSG:4326')
-				};
-
-				this.geojson = new OpenLayers.Format.GeoJSON(io_options);
-				
-				this.map.addLayers([this.vectorLayer]);
-				this.map.addControl(new OpenLayers.Control.MousePosition());
-
-				*/
 				// Go through all overlays and add them to the map
                 globals.overlays.each(function(overlay){
                 	var layer = this.createLayer(overlay);
@@ -261,11 +241,6 @@ define(['backbone.marionette',
 					}
                 }, this);
 
-                /*
-				//Set attributes of map based on mapmodel attributes
-				var mapmodel = globals.objects.get('mapmodel');
-				this.map.setCenter(new OpenLayers.LonLat(mapmodel.get("center")), mapmodel.get("zoom"));*/
-
 			},
 
 			onShow: function() {
@@ -274,12 +249,12 @@ define(['backbone.marionette',
 				}
 				
 				this.isClosed = false;
+				$("#cesium_save").on("click", this.onSaveImage.bind(this));
 				//this.onResize();
 				return this;
 			},
 
 			onResize: function() {
-				//this.map.updateSize();
 				if(this.map._sceneModePicker){
 					var container = this.map._sceneModePicker.container;
 					var scene = this.map._sceneModePicker.viewModel._scene;
@@ -1127,8 +1102,13 @@ define(['backbone.marionette',
 
 			onSelectionChanged: function(feature, coords, color){
 
-				if(feature){
-					var colorindex = this.map.scene.primitives.length+1;
+				if(coords){
+					// TODO: Color index is needed for multiple selections
+					// this feature is not used in VirES and deactivated right now
+					// as the colorindex is not correctly implemented
+					// Need to look into this code
+
+					/*var colorindex = this.map.scene.primitives.length+1;
 					if(this.selectionType == "single"){
 						if (this.extentPrimitive)
 							this.map.scene.primitives.remove(this.extentPrimitive);
@@ -1139,7 +1119,9 @@ define(['backbone.marionette',
 					}
 
 					if(!color)
-						color = this.colors(colorindex);
+						color = this.colors(colorindex);*/
+
+					var color = "#6699FF";
 
 					var material = Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
@@ -1671,6 +1653,16 @@ define(['backbone.marionette',
 
 				this.diff_overlay.setZIndex(minzindex-1);
 	
+			},
+
+			onSaveImage: function(){
+				var dataUrl = this.map.canvas.toDataURL("image/jpeg");
+				var a = document.createElement("a");
+				a.download = "VirES_virtual_globe.jpeg";
+				a.href = dataUrl;
+				$('#pngdataurl').append(a);
+				a.click();
+				$('#pngdataurl').empty();
 			},
 
 			onClearImage: function(){

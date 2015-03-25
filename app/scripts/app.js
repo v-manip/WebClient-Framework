@@ -91,7 +91,12 @@
 				globals.objects.add('mapmodel', new m.MapModel({
 						visualizationLibs : config.mapConfig.visualizationLibs,
 						center: config.mapConfig.center,
-						zoom: config.mapConfig.zoom
+						zoom: config.mapConfig.zoom,
+						sun: _.has(config.mapConfig, 'showSun') ? config.mapConfig.showSun: true,
+						moon: _.has(config.mapConfig, 'showMoon') ? config.mapConfig.showMoon: true,
+						skyBox: _.has(config.mapConfig, 'showSkyBox') ? config.mapConfig.showSkyBox: true,
+						skyAtmosphere: _.has(config.mapConfig, 'skyAtmosphere') ? config.mapConfig.skyAtmosphere: true,
+						backgroundColor: _.has(config.mapConfig, 'backgroundColor') ? config.mapConfig.backgroundColor: "#000"
 					})
 				);
 
