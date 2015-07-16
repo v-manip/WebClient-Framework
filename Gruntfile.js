@@ -76,6 +76,11 @@ module.exports = function (grunt) {
             proxies: [{
                 context: '/vires00',
                 host: 'vires2.eox.at',
+                /*host: 'localhost',
+                port: 8001,
+                rewrite: {
+                    '^/vires00': ''
+                },*/
                 https: false,
                 changeOrigin: true,
                 xforward: false
@@ -355,7 +360,7 @@ module.exports = function (grunt) {
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
-                        'bower_components/Cesium-1.5/Build/Cesium/**',
+                        'bower_components/cesium/Build/Cesium/**',
                         'bower_components/papaparse/papaparse.min.js',
                         'scripts/vendor/**',
                         'scripts/core/ColorRamp/ColorRampControl.hbs'

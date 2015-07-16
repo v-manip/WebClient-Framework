@@ -71,7 +71,7 @@ hr {
  * Color legend attributes 
  */
 
-.colorlegend{
+#colorlegend{
   position: absolute;
   height: 75px;
   top: 60px;
@@ -91,24 +91,24 @@ hr {
 
 }
 
-.colorlegend img{
+#colorlegend img{
   border-radius: 5px;
 }
 
 #colorlegend g.axis line, #colorlegend g.axis path {
     fill:none;
-    stroke: white;
+    stroke: black;
     shape-rendering:crispEdges;
 }
 
 #colorlegend g.axis text{
-    fill: white;
+    fill: black;
     font-family:sans-serif;
 }
 
 #colorlegend > g.axis path {
     stroke-width:2;
-    stroke: white;
+    stroke: black;
 }
 
 
@@ -258,6 +258,10 @@ button[active=active] {
 .layercontrol .sortable-layer .form-control {
   font-size: 1em;
   line-height: 1.1em;
+}
+.form-control {
+  padding-right: 6px !important;
+  padding-left: 6px !important;
 }
 .fa-sort {
     cursor: ns-resize;

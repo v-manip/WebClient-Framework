@@ -5,8 +5,7 @@ define(['backbone.marionette',
 		'globals',
 		'hbs!tmpl/wps_getdata',
 		'd3',
-		'analytics',
-		'nv'
+		'analytics'
 	],
 	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl) {
 

@@ -64,7 +64,7 @@
 
         paths: {
             analytics: '../bower_components/analyticsviewer/lib/scripts/analytics.min',
-            cesium: "../bower_components/Cesium-1.5/Build/Cesium",
+            cesium: "../bower_components/cesium/Build/Cesium",
             drawhelper: "../scripts/vendor/cesium_DrawHelper",
             contrib: 'contrib',
             core: 'core',
@@ -79,7 +79,7 @@
             libcoverage: '../bower_components/libcoverage/libcoverage.min',
             filesaver: '../bower_components/filesaver/FileSaver',
             lm: '../bower_components/lm.js/lm',
-            nv: '../bower_components/nvd3/nv.d3.min',
+            //nv: '../bower_components/nvd3/nv.d3.min',
 
             /* alias all marionette libs */
             'backbone.marionette': '../bower_components/backbone.marionette/lib/core/amd/backbone.marionette.min',
@@ -110,11 +110,11 @@
 
             /* 3D viewer modules base libraries */
 
-            virtualglobeviewer: "../bower_components/virtualglobeviewer/src",
-            x3dom: "../scripts/vendor/x3dom-full.debug",
+            //virtualglobeviewer: "../bower_components/virtualglobeviewer/src",
+            //x3dom: "../scripts/vendor/x3dom-full.debug",
             keypress: '../bower_components/Keypress/keypress',
-            xtk: '../scripts/vendor/xtk_edge',
-            'xtk-gui': '../scripts/vendor/xtk_xdat.gui',
+            //xtk: '../scripts/vendor/xtk_edge',
+            //'xtk-gui': '../scripts/vendor/xtk_xdat.gui',
             papaparse: '../bower_components/papaparse/papaparse.min'
 
         },

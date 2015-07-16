@@ -19,7 +19,7 @@
             <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.min.css" />
             <link rel="stylesheet" href="bower_components/font-awesome/css/font-awesome.min.css">
             <link rel="stylesheet" href="bower_components/analyticsviewer/lib/styles/analytics.min.css">
-            <link rel="stylesheet" href="bower_components/Cesium-1.5/Build/Cesium/Widgets/widgets.css">
+            <link rel="stylesheet" href="bower_components/cesium/Build/Cesium/Widgets/widgets.css">
             <link rel="stylesheet" href="scripts/vendor/cesium_DrawHelper.css">
         <!-- endbuild -->
         <!-- build:js scripts/vendor/modernizr.js -->
@@ -28,9 +28,9 @@
 
         <script type="text/javascript" src="scripts/vendor/vmanip-core/vmanip-core-deps.debug.js"></script>
         <script type="text/javascript" src="scripts/vendor/vmanip-core/vmanip-core.debug.js"></script>
-        <script type="text/javascript" src="scripts/vendor/K3D.js"></script>
+        <!--<script type="text/javascript" src="scripts/vendor/K3D.js"></script>
         <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer-deps.debug.js"></script>
-        <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer.debug.js"></script>
+        <script type="text/javascript" src="scripts/vendor/rectangularboxviewer/RectangularBoxViewer.debug.js"></script>-->
         <script type="text/javascript" src="bower_components/Keypress/keypress.js"></script>          
     </head>
     <body>
@@ -104,8 +104,6 @@
 
         <div id="error-messages"></div>
 
-        <div id="colorlegend" class="colorlegend"></div>
-
         <div id="pngdataurl"></div>
 
 
@@ -134,5 +132,24 @@
         <!-- build:js scripts/init.js -->
         <script data-main="scripts/init" src="bower_components/requirejs/require.js"></script>     
         <!-- endbuild -->
+
+
+        <!-- Piwik -->
+        <script type="text/javascript">
+          var _paq = _paq || [];
+          _paq.push(['trackPageView']);
+          _paq.push(['enableLinkTracking']);
+          (function() {
+            var u="//nix.eox.at/piwik/";
+            _paq.push(['setTrackerUrl', u+'piwik.php']);
+            _paq.push(['setSiteId', 4]);
+            var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+            g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+          })();
+        </script>
+        <noscript><p><img src="//nix.eox.at/piwik/piwik.php?idsite=4" style="border:0;" alt="" /></p></noscript>
+        <!-- End Piwik Code -->
+
+
     </body>
 </html>

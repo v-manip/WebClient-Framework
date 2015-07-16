@@ -1,6 +1,6 @@
 
 
-CESIUM_BASE_URL = "bower_components/Cesium-1.5/Build/Cesium/"
+CESIUM_BASE_URL = "bower_components/cesium/Build/Cesium/"
 
 define(['backbone.marionette',
 		'communicator',
@@ -657,6 +657,10 @@ define(['backbone.marionette',
 
 									.done(function( data ) {
 
+										// Remove previous and add colorlegend to cesium view
+										$("#colorlegend").remove();
+										$(".cesium-viewer").append('<div id="colorlegend"></div>');
+
 										data = $.parseXML(data);
 										if(that.difference_image)	
 											that.map.scene.imageryLayers.remove(that.difference_image);
@@ -674,7 +678,9 @@ define(['backbone.marionette',
 										var margin = 20;
 										var width = $("#colorlegend").width();
 										var scalewidth =  width - margin *2;
+										console.log(width);
 
+										
 										$("#colorlegend").append(
 											'<div class="'+style[0]+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
 										);
@@ -880,34 +886,52 @@ define(['backbone.marionette',
 
 					}, this);
 
+					// TODO: Explored increasing performance using color instance attribute
+					//  Was not able to make it work with materials, maybe there is a solution
+					/*
+					var instances = [];
+					_.each(results.data, function(row){
+						instances.push(
+							new Cesium.GeometryInstance({
+						        geometry : new Cesium.PolylineGeometry({
+						            positions : [
+							            new Cesium.Cartesian3(row.pos1_x, row.pos1_y, row.rad1),
+							            new Cesium.Cartesian3(row.pos2_x, row.pos2_y, row.rad2)
+						            ],
+						            width : 5.0,
+						            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
+						        }),
+						        attributes: {
+						        	color: new Cesium.ColorGeometryInstanceAttribute(row.col_r/255, row.col_g/255, row.col_b/255, alpha)
+						        }
+						    })
+					    );	
+
+					}, this);
+
+					this.features_collection[identifier].add(new Cesium.Primitive({
+					    geometryInstances : instances,
+					    appearance : new Cesium.PolylineColorAppearance()
+					}));
+					*/
+
+
 	        		this.map.scene.primitives.add(this.features_collection[identifier]);
 
 				}else{
 
 
-					this.features_collection[identifier] = new Cesium.BillboardCollection();
-
-					var canvas = document.createElement('canvas');
-				    canvas.width = 16;
-				    canvas.height = 16;
-				    var context2D = canvas.getContext('2d');
-				    context2D.beginPath();
-				    context2D.arc(8, 8, 8, 0, Cesium.Math.TWO_PI, true);
-				    context2D.closePath();
-				    context2D.fillStyle = 'rgb(255, 255, 255)';
-				    context2D.fill();
-
+					this.features_collection[identifier] = new Cesium.PointPrimitiveCollection();
 
 				    _.each(results.data, function(row){
-
-						var ident = row.id;
-
+				    	var color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255);
 						this.features_collection[identifier].add({
-					        imageId : 'custom canvas point',
-					        image : canvas,
 					        position : new Cesium.Cartesian3(row.pos_x, row.pos_y, row.rad),
-					        color : Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255),
-					        scale : 0.5
+					        //outlineWidth: 1,
+					        //outlineColor: color,
+					        //scaleByDistance: new Cesium.NearFarScalar(1.5e2, 10, 15.0e6, 0.5),
+					        color : color,
+					        pixelSize : 8
 					    });
 
 					}, this);
@@ -1546,6 +1570,7 @@ define(['backbone.marionette',
 							var margin = 20;
 							var width = $("#colorlegend").width();
 							var scalewidth =  width - margin *2;
+
 
 							$("#colorlegend").append(
 								'<div class="'+style[0]+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'

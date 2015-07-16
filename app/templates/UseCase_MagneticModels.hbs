@@ -16,17 +16,17 @@
     <p>You can open and close it at any time by clicking in the navigation bar (top of the screen) on the Layers button with the symbol <i class="fa fa-fw fa-globe"></i>.</p>
     <p>The available Geomagnetic Field Models are:</p>
     <ul>
-        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">World Magnetic Model (WMM)</li>
-        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">International Geomagnetic Reference Field (IGRF11)</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Swarm Initial Field Model (SIFM)</li>
+        <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">International Geomagnetic Reference Field (IGRF12)</li>
         <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">CHAOS-5</li>
         <li style="list-style-type: circle; margin-left:-20px; list-style-position:outside;">Custom Model (upload of model coefficients in .shc format)</li>
     </ul>
     <p>In the Custom Model Settings (<i class="fa fa-gears"/>) it is possible to upload your own (local) Geomagnetic Field Model as .shc file.</p>
 </section>
-<section  data-layers="WMM" data-settings="WMM">
+<section  data-layers="SIFM" data-settings="SIFM">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h3>Settings</h3>
-    <p>We now activated the WMM model Layer which is visualised on the virtual globe.</p>
+    <p>We now activated the SIFM model Layer which is visualised on the virtual globe.</p>
     <p>Additionally we opened the product settings window (on the right). Product settings can be accessed by clicking on the <i class="fa fa-gears"/>-symbol of a product.</p>
     <p>In the product settings you can select which parameter to visualise, what color scale to use and the range for the color scale.</p>
     <p>Geomagnetic Field Models have the following parameters for visualisation:</p>
@@ -46,14 +46,14 @@
     <p>You can now try out different parameters for visualisation if you like.</p>
     <p>At any point you can use the "Save as Image" button of the Virtual Globe (top right) to save the current visualisation.</p>
 </section>
-<section data-parameter="WMM:Y:range:-50,50;WMM::coefficients_range:10,-1" data-set-parameter="WMM:Y">
+<section data-parameter="SIFM:Y:range:-50,50;SIFM::coefficients_range:10,-1" data-set-parameter="SIFM:Y">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h3>Additional parameters</h3>
     <p>Field model settings have additional parameters for coefficient range and height above ellipsoid for the visualised resulting model.</p>
     <p>As an example we just selected the East Component parameter, changed the coefficient ranges to [10,-1] (-1 meaning no limit, i.e. using all available coefficients starting at 10).</p>
     <p>The range of values is reduced and therefore we also reduced the color scale range.</p>
 </section>
-<section data-set-parameter="WMM:Fieldlines" data-bbox="-141,63,-79,76">
+<section data-set-parameter="SIFM:Fieldlines" data-bbox="-141,63,-79,76">
     <span class="close"><i class="fa fa-times-circle"/></span>
     <h3>Field Lines</h3>
     <p>Field lines can be visualized for a selected area on the virtual globe. We already created a selection to display them. A selection can be done by opening the <i class="fa fa-wrench"/> Tools widget and clicking on the Bounding box selection button with the icon <i class="icon-large icon-vector-path-square" style="top:10px; position:relative;"></i>.</p>

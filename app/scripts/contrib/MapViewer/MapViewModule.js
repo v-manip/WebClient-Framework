@@ -11,7 +11,8 @@ define([
 
 	App.module('MapViewer', function(Module) {
 
-		this.startsWithParent = true;
+		// Disabled module for now as it is not needed
+		this.startsWithParent = false;
 
 		// This is the start routine of the module, called automatically by Marionette
 		// after the core system is loaded. The module is responsible for creating its
