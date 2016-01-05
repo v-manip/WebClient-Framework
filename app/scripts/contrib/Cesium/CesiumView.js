@@ -7,6 +7,7 @@ define(['backbone.marionette',
 		'app',
 		'models/MapModel',
 		'globals',
+		'papaparse',
 		'hbs!tmpl/wps_load_shc',
 		'hbs!tmpl/wps_calc_diff',
 		'hbs!tmpl/wps_get_field_lines',
@@ -14,10 +15,9 @@ define(['backbone.marionette',
 		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
-		'filesaver',
-		'papaparse'
+		'filesaver'
 	],
-	function(Marionette, Communicator, App, MapModel, globals, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
+	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
 
 		var CesiumView = Marionette.View.extend({
 
@@ -65,6 +65,22 @@ define(['backbone.marionette',
 				// For now we just set it to something else just in case.
 				Cesium.BingMapsApi.defaultKey = "NOTHING";
 
+				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(-5.0, -40.0, 40.0, 90.0);
+
+
+				Cesium.WebMapServiceImageryProvider.prototype.updateProperties = function(property, value) {
+
+			        property = "&"+property+"=";
+			        value = ""+value;
+			        var i = _.indexOf(this._tileProvider._urlParts, property);
+			        if (i>=0){
+			        	this._tileProvider._urlParts[i+1] = value;
+			        }else{
+			        	this._tileProvider._urlParts.push(property);
+			        	this._tileProvider._urlParts.push(encodeURIComponent(value));
+			        }
+			    };
+
 				this.$el.append("<div id='cesium_attribution'></div>");
 				this.$el.append("<div id='cesium_custom_attribution'></div>");
 				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
@@ -107,7 +123,7 @@ define(['backbone.marionette',
 						animation: false,
 						imageryProvider: layer,
 						terrainProvider : new Cesium.CesiumTerrainProvider({
-					        url : 'http://cesiumjs.org/stk-terrain/tilesets/world/tiles'
+					        url : 'https://tiles.maps.eox.at/dem'
 					    }),
 						creditContainer: "cesium_attribution",
 						contextOptions: {webgl: {preserveDrawingBuffer: true}},
@@ -124,6 +140,11 @@ define(['backbone.marionette',
 			    this.map.scene.moon.show = mm.get('moon');
 			    this.map.scene.skyAtmosphere.show = mm.get('skyAtmosphere');
 			    this.map.scene.backgroundColor = new Cesium.Color.fromCssColorString(mm.get('backgroundColor'));
+
+			    // TODO: Removes fog for now as it is not very good at this point
+			    if(this.map.scene.hasOwnProperty('fog')){
+			      this.map.scene.fog.enabled = false;  
+			    }
 
 			    // Show Wireframe
 			    //this.map.scene.globe._surface._tileProvider._debug.wireframe = true;
@@ -342,7 +363,7 @@ define(['backbone.marionette',
                     		var keys = _.keys(options);
                     		_.each(keys, function(key){
 								if(options[key].selected){
-									additional_parameters.dim_bands = key;
+									//additional_parameters.dim_bands = key;
 									additional_parameters.dim_range = options[key].range[0]+","+options[key].range[1];
 									styles = options[key].colorscale;
 								}
@@ -367,7 +388,8 @@ define(['backbone.marionette',
                     default:
                     	// No supported view available
                     	// Return dummy Image provider to help with with sorting of layers 
-                    	return  new Cesium.WebMapServiceImageryProvider();
+                    	//return  new Cesium.WebMapServiceImageryProvider();
+                    	return false;
                     break;
 
                 };
@@ -555,13 +577,13 @@ define(['backbone.marionette',
 									}else{
 										var ces_layer = product.get("ces_layer");
 										if(band)
-					                		ces_layer.imageryProvider._parameters["dim_bands"] = band;
+					                		ces_layer.imageryProvider.updateProperties("dim_bands", band);
 					                	if(range)
-					                		ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
+					                		ces_layer.imageryProvider.updateProperties("dim_range", (range[0]+","+range[1]));
 					                	if(style)
-					                		ces_layer.imageryProvider._parameters["styles"] = style;
+					                		ces_layer.imageryProvider.updateProperties("styles", style);
 					                	if(coeff_range)
-					                		ces_layer.imageryProvider._parameters["dim_coeff"] = coeff_range[0]+","+coeff_range[1];
+					                		ces_layer.imageryProvider.updateProperties("dim_coeff", (coeff_range[0]+","+coeff_range[1]));
 
 										ces_layer.show = options.visible;
 									}
@@ -993,14 +1015,17 @@ define(['backbone.marionette',
             					this.checkFieldLines();
 								if(product.get("name")==layer){
 				                	var ces_layer = product.get("ces_layer");
-				                	ces_layer.imageryProvider._parameters["dim_bands"] = band;
-				                	ces_layer.imageryProvider._parameters["dim_range"] = range[0]+","+range[1];
-				                	ces_layer.imageryProvider._parameters["elevation"] = height;
-				                	var ces_layer = product.get("ces_layer");
+
+				                	ces_layer.imageryProvider.updateProperties("dim_bands", band);
+
+				                	ces_layer.imageryProvider.updateProperties("dim_range", (range[0]+","+range[1]));
+
+				                	ces_layer.imageryProvider.updateProperties("elevation", height);
+
 				                	if(style)
-				                		ces_layer.imageryProvider._parameters["styles"] = style;
+				                		ces_layer.imageryProvider.updateProperties("styles", style);
 				                	if(coeff_range)
-					        			ces_layer.imageryProvider._parameters["dim_coeff"] = coeff_range[0]+","+coeff_range[1];
+					        			ces_layer.imageryProvider.updateProperties("dim_coeff", (coeff_range[0]+","+coeff_range[1]));
 
 				                	if (ces_layer.show){
 					            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
@@ -1445,7 +1470,7 @@ define(['backbone.marionette',
                     	var ces_layer = product.get("ces_layer");
 
                     	if(ces_layer){
-	                    	ces_layer.imageryProvider._parameters["time"] = string;
+	                    	ces_layer.imageryProvider.updateProperties("time", string);
 	                    	if (ces_layer.show){
 	                    		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
 	                    		this.map.scene.imageryLayers.remove(ces_layer, false);

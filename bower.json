@@ -23,7 +23,7 @@
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.0.3",
     "analyticsviewer": "esa-vires/AnalyticsViewer#~0.2.4",
-    "cesium": "http://cesiumjs.org/releases/Cesium-1.9.zip",
+    "cesium": "http://cesiumjs.org/releases/Cesium-1.16.zip",
     "papaparse": "~4.1.0"
   },
   "devDependencies": {
