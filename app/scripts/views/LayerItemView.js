@@ -58,17 +58,46 @@
 			    $('.fa-adjust').popover({
         			trigger: 'manual'
     			});
+
+    			var that = this;
+
+    			if (this.$el.has( ".fa-gears" ).length){
+	    			this.$el.find('.fa-gears').click(function(){
+	    				
+	    				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+	    					App.layerSettings.setModel(that.model);
+							App.optionsBar.show(App.layerSettings);
+						} else {
+							if(App.layerSettings.sameModel(that.model)){
+								App.optionsBar.close();
+							}else{
+								App.layerSettings.setModel(that.model);
+								App.optionsBar.show(App.layerSettings);
+							}
+						}
+	    			});
+	    		}
 			},
 
 
 			onChange: function(evt){
+
                 var isBaseLayer = false;
                 if (this.model.get('view').isBaseLayer)
                 	isBaseLayer = true;
+
                 var options = { name: this.model.get('name'), isBaseLayer: isBaseLayer, visible: evt.target.checked };
+
                 if( !isBaseLayer && evt.target.checked ){
+
                 	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
                     if (layer != -1  && !(typeof layer === 'undefined')) {
+
+                    	if(options.visible)
+                    		this.model.set("visible", true);
+                    	else
+                    		this.model.set("visible", false);
+
                     	// TODO: Here we should go through all views, or maybe only url is necessary?
                     	var url = layer.get('views')[0].urls[0]+"?";
                     	
@@ -109,6 +138,36 @@
 							    	}
 							    }
 							});
+	                    }else if(this.model.get('views')[0].protocol == "WPS"){
+	                    	if(this.model.get('shc')){
+	                    		// If an shc file was loaded acticate layer as normal
+	                    		Communicator.mediator.trigger('map:layer:change', options);
+	                    	}else{
+	                    		// If an shc file is not loaded open settings and show message to select shc file
+	                    		if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+			    					App.layerSettings.setModel(this.model);
+									App.optionsBar.show(App.layerSettings);
+								} else {
+									if(App.layerSettings.sameModel(this.model)){
+										App.optionsBar.close();
+									}else{
+										App.layerSettings.setModel(this.model);
+										App.optionsBar.show(App.layerSettings);
+									}
+								}
+								$("#error-messages").append(
+			                              '<div class="alert alert-info">'+
+			                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+			                              'Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer' +
+			                            '</div>'
+			                    );
+
+			                    var checkbox = $( "input[type$='checkbox']", this.$el);
+		    					//checkbox.attr('checked', false);
+		    					checkbox.prop( "checked", false );
+		    					//checkbox.disableSelection();
+	                    	}
+
 	                    }else{
 	                    	Communicator.mediator.trigger('map:layer:change', options);
 	                    }
@@ -117,6 +176,7 @@
 	                }
                 } else if (!evt.target.checked){
                 	Communicator.mediator.trigger('map:layer:change', options);
+
                 } else if (isBaseLayer && evt.target.checked){
                 	Communicator.mediator.trigger('map:layer:change', options);
                 }
@@ -149,9 +209,10 @@
 
 		    layerActivate: function(layer){
 		    	if(this.model.get('views') && this.model.get('views')[0].id == layer){
-		    		this.model.set("visible", true);
+		    		//this.model.set("visible", true);
 		    		var checkbox = $( "input[type$='checkbox']", this.$el);
-		    		checkbox.click();
+		    		//checkbox.attr('checked', true);
+		    		checkbox.prop( "checked", true );
 		    	}
 		    },
 

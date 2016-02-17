@@ -15,7 +15,11 @@
 		var MapModel = Backbone.Model.extend({
 			visualizationLibs : [],
 			center: [],
-			zoom: 0
+			zoom: 0,
+			moon: true,
+			sun: true,
+			skyBox: true,
+			backgroundColor: "#000"
 		});
 
 		return {"MapModel":MapModel};

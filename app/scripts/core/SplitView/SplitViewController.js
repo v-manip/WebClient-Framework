@@ -53,7 +53,9 @@ define([
 			}
 			
 			
-			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
+			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
+			this.windowViews.tr.close();
+			//this.windowViews.tr.triggerMethod('view:disconnect');
 		},
 
 		setSplitscreen: function() {
@@ -62,8 +64,8 @@ define([
 			this.view.showViewInRegion('tr', 'view2');
 			this.view.setSplitscreen();
 
-			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
-			this.windowViews.tr.showView(App.module('VirtualGlobeViewer').createController().getView());
+			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
+			this.windowViews.tr.showView(App.module('AnalyticsViewer').createController().getView());
 
 			$(".view1").resizable({
 				handles: 'e'

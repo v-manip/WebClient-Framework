@@ -20,11 +20,19 @@
             },
             tagName: 'li', 
             cursor: 'pointer',
-            events: {'click': 'itemClicked'},
+            //events: {'click': 'itemClicked'},
 
             itemClicked: function(){
                 Communicator.mediator.trigger(this.model.get('eventToRaise'), this);
-            }
+            },
+
+            initialize: function(options){
+	        	if(this.model.get("subitems")){
+	        		this.$el.attr("class", "dropdown");
+	        	}else{
+	        		this.$el.on("click", $.proxy(this.itemClicked, this));
+	        	}
+	      	}
             
 		});
 		return {'NavBarItemView' : NavBarItemView};

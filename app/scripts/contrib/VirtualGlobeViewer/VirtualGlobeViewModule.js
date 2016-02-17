@@ -10,7 +10,8 @@ define([
 
     App.module('VirtualGlobeViewer', function(Module) {
 
-        this.startsWithParent = true;
+        // Disabled module for now as it is not needed
+        this.startsWithParent = false;
 
         // I like the idea of a 'module' that holds together the controllers and
         // views. The module-controller-view concept allows to delegate the responsibilities of

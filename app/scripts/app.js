@@ -83,12 +83,20 @@
 					t[tmplDef.id] = Tmpl;
 				}, this);
 
+				this.templates = t;
+				this.views = v;
+
 
 				//Map attributes are loaded and added to the global map model
 				globals.objects.add('mapmodel', new m.MapModel({
 						visualizationLibs : config.mapConfig.visualizationLibs,
 						center: config.mapConfig.center,
-						zoom: config.mapConfig.zoom
+						zoom: config.mapConfig.zoom,
+						sun: _.has(config.mapConfig, 'showSun') ? config.mapConfig.showSun: true,
+						moon: _.has(config.mapConfig, 'showMoon') ? config.mapConfig.showMoon: true,
+						skyBox: _.has(config.mapConfig, 'showSkyBox') ? config.mapConfig.showSkyBox: true,
+						skyAtmosphere: _.has(config.mapConfig, 'skyAtmosphere') ? config.mapConfig.skyAtmosphere: true,
+						backgroundColor: _.has(config.mapConfig, 'backgroundColor') ? config.mapConfig.backgroundColor: "#000"
 					})
 				);
 
@@ -151,17 +159,23 @@
 							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
 							color: p_color,
 							//time: products.time, // Is set in TimeSliderView on time change.
-								opacity: 1,
-								views: product.views,
-								view: {isBaseLayer: false},
-								download: {
-									id: product.download.id,
-									protocol: product.download.protocol,
-									url: product.download.url
-								},
-								processes: product.processes,
-								unit: product.unit 
-							})
+							opacity: (product.opacity) ? product.opacity : 1,
+							views: product.views,
+							view: {isBaseLayer: false},
+							download: {
+								id: product.download.id,
+								protocol: product.download.protocol,
+								url: product.download.url
+							},
+							processes: product.processes,
+							unit: product.unit,
+							parameters: product.parameters,
+							height: product.height,
+							outlines: product.outlines,
+							model: product.model,
+							coefficients_range: product.coefficients_range,
+							satellite: product.satellite
+						})
 					);
 
 					if(product.processes){
@@ -221,11 +235,8 @@
 
 					_.each(config.navBarConfig.items, function(list_item){
 						navBarItemCollection.add(
-							new m.NavBarItemModel({
-								name:list_item.name,
-                                icon:list_item.icon,
-								eventToRaise:list_item.eventToRaise
-							}));
+							new m.NavBarItemModel(list_item)
+						);
 					}, this);
 
 					this.topBar.show(new v.NavBarCollectionView(
@@ -287,6 +298,8 @@
                 	}),
                 	className: "check"
                 });
+
+
 
                 // Create layout that will hold the child views
                 this.layout = new LayerControlLayout();
@@ -370,20 +383,19 @@
                     })
                 });
 
+
+                this.layerSettings = new v.LayerSettings();
+
                 // Create layout to hold collection views
                 this.toolLayout = new ToolControlLayout();
                 this.optionsLayout = new OptionsLayout();
+
+                
 
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
                 this.colorRampView = new v.ColorRampView(config.colorRamp);
 
-                // Instance StoryBanner view
-                if(config.storyTemplate){
-                	this.storyBanner = new v.StoryBannerView({
-	                	template: t[config.storyTemplate]
-	                });
-                }
 
 			},
 

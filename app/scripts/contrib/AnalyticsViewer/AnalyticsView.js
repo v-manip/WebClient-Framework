@@ -4,14 +4,10 @@ define(['backbone.marionette',
 		'models/AnalyticsModel',
 		'globals',
 		'hbs!tmpl/wps_getdata',
-		'hbs!tmpl/wps_getCoverageDifference',
-		'hbs!tmpl/wps_getVolumePixelValues',
-		'hbs!tmpl/wps_getValuesThroughTime',
 		'd3',
-		'analytics',
-		'nv'
+		'analytics'
 	],
-	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl, wps_getCovDiffTmpl, wps_getVolumePixelValuesTmpl, wps_getValuesThroughTimeTmpl) {
+	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl) {
 
 		var AnalyticsView = Marionette.View.extend({
 
@@ -28,48 +24,82 @@ define(['backbone.marionette',
 				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
 				this.selected_time = Communicator.reqres.request('get:time');
+				//this.shc = null;
+				this.shc_active = false;
+				this.activeModels = [];
+				this.sp = null;
+
 				$(window).resize(function() {
 					this.onResize();
 				}.bind(this));
 			},
 
-			events: {
+			/*events: {
 				'click .scatter-btn': function() {
 					this.render('scatter');
 				},
 
-				'click .box-btn': function() {
-					this.render('box');	
-				},
-
-				'click .parallel-btn': function() {
-					this.render('parallel');
-				}
-			},
+			},*/
 
 			onShow: function() {
 				
 				//this.delegateEvents();
 				this.isClosed = false;
 				//this.triggerMethod('view:connect');
+
+				this.selection_list = [];
+				this.plotdata = [];
+				this.request_url = "";
+				this.img = null;
+				this.overlay = null;
+				this.activeWPSproducts = [];
+				this.plot_type = 'scatter';
+
+				// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
+				var download = d3.select(this.el).append("button")   
+			        .attr("type", "button")
+			        .attr("id", "tmp_download_button")
+			        .attr("class", "btn btn-success")
+			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 8000;")
+			        .text("Download");
+
+				$("#tmp_download_button").click(function(evt){
+					Communicator.mediator.trigger("dialog:open:download:filter", true);
+				});
 				
 
 				this.$el.append(
-					"<div class='d3canvas'></div>" +
-					"<div class='gui'>" +
-						"<div class='scatter-btn highlight '><i class='sprite sprite-scatter' style='widht:22px'></i></div>" +
-						"<div class='box-btn highlight '><i class='sprite sprite-box'></i></div>" +
-						"<div class='parallel-btn highlight '><i class='sprite sprite-parallel'></i></div>" +
-					"</div> ");
+					"<div class='d3canvas'></div>");
 
 
-				globals.products.each(function(model) {
-	                if (model.get('visible')) {
-	                    if (model.get("processes")) {
-	                        this.activeWPSproducts.push(model.get('processes')[0].layer_id)
-	                    } 
+				globals.products.each(function(product) {
+	                if (product.get('visible')) {
+	                    if (product.get("processes")) {
+	                        this.activeWPSproducts.push(product.get('processes')[0].layer_id)
+	                    }
+	                    if (product.get("model")){
+		              		this.activeModels.push(product.get("views")[0].id);
+		              	}
 	                }
             	}, this);
+
+            	var args = {
+					selector: this.$('.d3canvas')[0]
+				};
+
+            	this.sp = new scatterPlot(args, function(){
+								//sp.absolute("id1","Latitude");
+								//sp.colatitude("undefined");
+							},
+							function (values) {
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
+							}, 
+							function(){
+								Communicator.mediator.trigger("cesium:highlight:removeAll");
+							},
+							function(filter){
+								Communicator.mediator.trigger("download:set:filter", filter);
+							});
 
 
 				this.render('scatter');
@@ -90,66 +120,19 @@ define(['backbone.marionette',
 
 				if(type!="overlay")
 					this.$('.d3canvas').empty();
-				
+
 				var args = {
 					selector: this.$('.d3canvas')[0],
-					url: this.request_url
-					//data: this.plotdata,
+					//url: this.request_url
+					data: this.plotdata,
 					//colors: colors
 				};
-
-
 				
 
 				switch (type){
 					case 'scatter':
-						if (args.url != ""){
-							var sp = new scatterPlot(args, function(){
-								//sp.absolute("id1","Latitude");
-								//sp.colatitude("undefined");
-							});
-						}
-						//analytics.scatterPlot(args);
-						
-						break;
-					case 'box':
-						analytics.boxPlot(args);
-						break;
-					case 'parallel':
-						analytics.parallelsPlot(args);
-						break;
-					case 'stacked':
-						analytics.stackedPlot(args);
-						break;
-					case 'line':
-						analytics.linePlot(args);
-						break;
-					case 'diff':
-						this.$('.d3canvas').html(
-							'<div class="outer">'+
-								'<div class="middle">'+
-									'<div class="inner">'+
-										'<img id="diffimg" style="width:100%; height:100%;" src="data:image/png;base64,' + this.img + '" />'+
-									'</div>'+
-								'</div>'+
-							'</div>'
-						);
-
-							
-						this.img = null;
-						break;
-					case 'overlay':
-						this.$('.d3canvas').append(
-							'<div class="outer">'+
-								'<div class="middle">'+
-									'<div class="inner">'+
-										'<img style="width:100%; height:100%;z-index=800"; background:transparent; src="' + this.overlay + '" />'+
-									'</div>'+
-								'</div>'+
-							'</div>'
-						);	
-						this.overlay = null;
-						break;
+						this.sp.loadData(args);
+					break;
 				}
 
 				this.onResize();
@@ -166,6 +149,10 @@ define(['backbone.marionette',
 		            			this.activeWPSproducts.push(process.layer_id);
 		            		},this);
 		              	}
+		              	if (product.get("model")){
+		              		//this.activeModels.push({id: product.get("views")[0].id, url: product.get("views")[0.urls[0]]});
+		              		this.activeModels.push(product.get("views")[0].id);
+		              	}
 		              			              
 		            }else{
 		            	_.each(product.get("processes"), function(process){
@@ -173,7 +160,18 @@ define(['backbone.marionette',
 			                	this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
 			              	console.log(this.activeWPSproducts);
 	            		},this);
+
+	            		if (product.get("model")){
+		              		//this.activeModels.push({id: product.get("views")[0].id, url: product.get("views")[0.urls[0]]});
+		              		if (this.activeModels.indexOf(product.get("views")[0].id)!=-1)
+		              			this.activeModels.splice(this.activeModels.indexOf(product.get("views")[0].id), 1);
+		              	}
 		            }
+		            if(options.visible && product.get("views")[0].id == "shc")
+		            	this.shc_active = true;
+		            else if (!options.visible && product.get("views")[0].id == "shc")
+		            	this.shc_active = false;
+
 		            this.checkSelections();
 		          }
 		        }
@@ -190,7 +188,7 @@ define(['backbone.marionette',
 					this.plotdata = [];
 					this.selection_list = [];
 					this.request_url = "";
-					//this.checkSelections();
+					this.checkSelections();
 				}
 
 				
@@ -217,10 +215,6 @@ define(['backbone.marionette',
 
 				var map_crs_reverse_axes = true;
 
-				var getcoveragedifflist = [];
-				var getdatalist = [];
-				var getvolumepixelvaluelist = [];
-				var getvaluesthroughtimelist = [];
 				var retrieve_data = [];
 
 				globals.products.each(function(model) {
@@ -229,20 +223,11 @@ define(['backbone.marionette',
 	                	_.each(processes, function(process){
 	                		if(process){
 			                    switch (process.id){
-			                    	case "getData":
-			                    		getdatalist.push(process.layer_id);
-			                    	break;
-			                    	case "getCoverageData":
-			                    		getcoveragedifflist.push(process.layer_id);
-			                    	break;
-			                    	case "getVolumePixelValues":
-			                    		getvolumepixelvaluelist.push(process.layer_id);
-			                    	break;
-			                    	case "getValuesThroughTime":
-			                    		getvaluesthroughtimelist.push(process.layer_id);
-			                    	break;
 			                    	case "retrieve_data":
-			                    		retrieve_data.push(process.layer_id);
+			                    		retrieve_data.push({
+			                    			layer:process.layer_id,
+			                    			url: model.get("views")[0].urls[0]
+			                    		});
 			                    	break;
 			                    	
 			                    }
@@ -252,133 +237,34 @@ define(['backbone.marionette',
             	}, this);
 
 
-            	if (getcoveragedifflist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
+            	if (retrieve_data.length > 0){
 
-            		var bbox = this.selection_list[0].geometry.getBounds().toBBOX();
+            		var options = {
+        				"collection_ids": retrieve_data.map(function(e){return e.layer;}).join(),
+        				"begin_time": getISODateTimeString(this.selected_time.start),
+        				"end_time": getISODateTimeString(this.selected_time.end)
+        			};
 
-					var request_process = wps_getCovDiffTmpl({
-						layer: getcoveragedifflist,
-						start: getISODateTimeString(this.selected_time.start),
-						end: getISODateTimeString(this.selected_time.end),
-						bbox: bbox,
-						srid: "4326"
-					});
-
-					var url = "http://demo.v-manip.eox.at/browse/ows" + "?service=WPS&version=1.0.0&request=Execute&" +
-							  "identifier=getCoverageDifference&" +
-							  "DataInputs="+
-							  "collections="+ getcoveragedifflist +"%3B"+
-							  "begin_time="+ getISODateTimeString(this.selected_time.start) +"%3B"+
-							  "end_time="+ getISODateTimeString(this.selected_time.end) +"%3B"+
-							  "bbox="+ bbox +"%3B"+
-							  "crs=4326&"+
-							  "rawdataoutput=processed";
-
-					//Communicator.mediator.trigger("map:load:image", url);
-
-					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
-						that.img = data;
-						Communicator.mediator.trigger("map:load:image", data);
-						that.render("diff");
-						var url = "http://a.tiles.maps.eox.at/wms/?"
-						var req = "LAYERS=overlay&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
-						//var BBOX=33.75,45,39.375,50.625&
-						req = req + "&BBOX=" + that.selection_list[0].geometry.getBounds().toBBOX();
-						var img = document.getElementById('diffimg');
-						req = req + "&WIDTH=" + img.clientWidth;
-						req = req + "&HEIGHT=" + img.clientHeight;
-						that.overlay = url + req;
-						that.render("overlay");
-						console.log(req);
-					});
-
-            	}else if (getdatalist.length == 1 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
-            		var list = "";
-					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
-					}
-					list = list.substring(0, list.length - 1);
-
-					// TODO: Need to go over all possible layers that have this process
-					//       and need to change how the response data is saved, probably array
-
-					var request_process = wps_getdataTmpl({
-						layer: getdatalist[0],
-						start: getISODateTimeString(this.selected_time.start),
-						end: getISODateTimeString(this.selected_time.end),
-						list: list,
-						srid: "4326"
-					});
-
-					$.post( "https://demo.v-manip.eox.at/unsec/ows", request_process, function( data ) {
-						that.plotdata = data;
-						that.render(that.plot_type);
-					});
-            	}else if (getvolumepixelvaluelist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
-
-            		var list = "";
-					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
-					}
-					list = list.substring(0, list.length - 1);
-
-					var request_process = wps_getVolumePixelValuesTmpl({
-						layers: getvolumepixelvaluelist,
-						start: getISODateTimeString(this.selected_time.start),
-						end: getISODateTimeString(this.selected_time.end),
-						list: list,
-						srid: "4326"
-					});
-					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
-						that.plotdata = data;
-						that.render(that.plot_type);
-					});
-
-            	}else if (getvaluesthroughtimelist.length > 0 && this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Point"){
-
-            		var list = "";
-					for (var i=0;i<this.selection_list.length;i++){
-						list += this.selection_list[i].geometry.x +','+ this.selection_list[i].geometry.y + ';';
-					}
-					list = list.substring(0, list.length - 1);
-
-					var request_process = wps_getValuesThroughTimeTmpl({
-						layers: getvaluesthroughtimelist,
-						start: getISODateTimeString(this.selected_time.start),
-						end: getISODateTimeString(this.selected_time.end),
-						list: list,
-						srid: "4326"
-					});
-					$.post( "http://demo.v-manip.eox.at/browse/ows", request_process, function( data ) {
-						that.plotdata = data;
-						that.render('line');
-					});
-
-            	}else if (retrieve_data.length > 0){
-
-            		if(this.selection_list.length > 0){
-            			if (this.selection_list[0].geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
-            				this.request_url = 
-		            		"http://vires2.eox.at/vires00/ows?"+
-		            		"service=WPS&version=1.0.0&request=Execute&identifier=retrieve_data&"+
-		            		"DataInputs=collection_ids="+retrieve_data.join()+"%3B"+
-		            		"begin_time="+getISODateTimeString(this.selected_time.start)+"%3B"+
-		            		"end_time="+getISODateTimeString(this.selected_time.end)+"%3B"+
-		            		"bbox="+this.selection_list[0].geometry.getBounds().toBBOX(10,map_crs_reverse_axes)+
-		            		"&rawdataoutput=output";
-            			}
-            		}else{
-            			this.request_url = 
-		            		"http://vires2.eox.at/vires00/ows?"+
-		            		"service=WPS&version=1.0.0&request=Execute&identifier=retrieve_data&"+
-		            		"DataInputs=collection_ids="+retrieve_data.join()+"%3B"+
-		            		"begin_time="+getISODateTimeString(this.selected_time.start)+"%3B"+
-		            		"end_time="+getISODateTimeString(this.selected_time.end)+
-		            		"&rawdataoutput=output";
-            		}
+            		if(this.selection_list.length > 0)
+            			options["bbox"] = this.selection_list[0].geometry.getBounds().toBBOX(10,map_crs_reverse_axes);	
             		
-            		console.log(this.request_url);
-					this.render(this.plot_type);
+            		var shc_model = _.find(globals.products.models, function(p){return p.get("shc") != null;});
+            		if(shc_model){
+            			options["shc"] = shc_model.get("shc");
+            		}
+
+            		if(this.activeModels.length > 0)
+            			options["model_ids"] = this.activeModels.join();
+
+            		var req_data = wps_getdataTmpl(options);
+
+        			var that = this;
+
+        			$.post( retrieve_data[0].url, req_data, "xml")
+						.done(function( data ) {
+							that.plotdata = data;
+							that.render(that.plot_type);
+						});
             	}
 
 				

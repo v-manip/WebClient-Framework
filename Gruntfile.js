@@ -74,38 +74,17 @@ module.exports = function (grunt) {
                 hostname: '0.0.0.0'
             },
             proxies: [{
-                context: '/ows',
-                host: 'localhost',
-                // host: 'http://demo.v-manip.eox.at',
-                port: 38000,
-                // port: 80,
+                context: '/vires00',
+                host: 'vires2.eox.at',
+                /*host: 'localhost',
+                port: 8001,
+                rewrite: {
+                    '^/vires00': ''
+                },*/
                 https: false,
                 changeOrigin: true,
                 xforward: false
-            }, {
-                context: '/c',
-                host: 'localhost',
-                port: 3080,
-                https: false,
-                changeOrigin: true,
-                xforward: false
-            }, {
-                context: '/gltf',
-                host: 'localhost',
-                port: 3080,
-                https: false,
-                changeOrigin: true,
-            }
-            // MH: This setting is not working for W3DS. Port 38000 has to be taken in that case, see above!
-            // ,{
-            //     context: '/browse/ows',
-            //     host: 'localhost',
-            //     port: 3080,
-            //     https: false,
-            //     changeOrigin: true,
-            //     xforward: false
-            // }
-            ],            
+            }],            
             livereload: {
                 options: {
                     middleware: function (connect) {
@@ -381,6 +360,8 @@ module.exports = function (grunt) {
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/analyticsviewer/lib/scripts/box.js',
                         'bower_components/virtualglobeviewer/src/**',
+                        'bower_components/cesium/Build/Cesium/**',
+                        'bower_components/papaparse/papaparse.min.js',
                         'scripts/vendor/**',
                         'scripts/core/ColorRamp/ColorRampControl.hbs'
                     ]
