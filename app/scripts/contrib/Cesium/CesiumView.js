@@ -1,6 +1,6 @@
 
 
-CESIUM_BASE_URL = "bower_components/cesium/Build/Cesium/"
+
 
 define(['backbone.marionette',
 		'communicator',

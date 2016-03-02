@@ -30,7 +30,15 @@
 	        	if(this.model.get("subitems")){
 	        		this.$el.attr("class", "dropdown");
 	        	}else{
-	        		this.$el.on("click", $.proxy(this.itemClicked, this));
+	        		var event = this.model.get("eventToRaise").split(':');
+	        		if(event && event[0] === 'modal'){
+	        			this.$el.on("click", function () {
+	        				$(('#'+event[1])).modal('toggle');
+	        			});
+		        		
+		        	}else{
+		        		this.$el.on("click", $.proxy(this.itemClicked, this));
+		        	}
 	        	}
 	      	}
             
