@@ -33,7 +33,7 @@
 	        		var event = this.model.get("eventToRaise").split(':');
 	        		if(event && event[0] === 'modal'){
 	        			this.$el.on("click", function () {
-	        				$(('#'+event[1])).modal('toggle');
+	        				$(('#'+event[1])).modal('show');
 	        			});
 		        		
 		        	}else{

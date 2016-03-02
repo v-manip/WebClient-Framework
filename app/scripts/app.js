@@ -225,17 +225,12 @@
 					}, this);
 
 
-				this.NAVBARITEMS = [{
-            "name": "Log-in",
-            "icon": "fa-user",
-            "eventToRaise": "modal:accountSettingsModal",
-        }];
 				// If Navigation Bar is set in configuration go trhough the 
 				// defined elements creating a item collection to rendered
 				// by the marionette collection view
 				if (config.navBarConfig) {
 
-					var addNavBarItems = defaultFor(this.NAVBARITEMS, []);
+					var addNavBarItems = defaultFor(self.NAVBARITEMS, []);
 					config.navBarConfig.items = config.navBarConfig.items.concat(addNavBarItems);
 					var navBarItemCollection = new m.NavBarCollection;
 
