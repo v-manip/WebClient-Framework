@@ -146,6 +146,9 @@ define(['backbone.marionette',
 			      this.map.scene.fog.enabled = false;  
 			    }
 
+			    // Remove gazetteer field
+			    $('.cesium-viewer-geocoderContainer').remove();
+
 			    // Show Wireframe
 			    //this.map.scene.globe._surface._tileProvider._debug.wireframe = true;
 			    
