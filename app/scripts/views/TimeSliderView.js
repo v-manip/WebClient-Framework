@@ -147,20 +147,6 @@
                      })
                   });
 
-                  /*{
-                    id: 'dst',
-                    color: 'purple',
-                    lineplot: true,
-                    data: new TimeSlider.Plugin.WPS({ 
-                      url: 'http://localhost:8000/vires00/ows', 
-                      eoid: 'dst', 
-                      dataset: 'dst',
-                      indices: true,
-                      processid: "get_indices",
-                      collectionid: "index_id",
-                      output: "output"
-                    })
-                  },*/
                   break;
               }
               
@@ -168,7 +154,7 @@
               this.slider.removeDataset(product.get('download').id);
               if (this.activeWPSproducts.indexOf(product.get('download').id)!=-1)
                 this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(product.get('download').id), 1);
-              console.log(this.activeWPSproducts);
+              //console.log(this.activeWPSproducts);
             }
           }
         }
@@ -181,7 +167,7 @@
       updateExtent: function(extent){
         
         for (var i=0; i<this.activeWPSproducts.length; i++){
-          console.log(this.activeWPSproducts[i]);
+          //console.log(this.activeWPSproducts[i]);
           this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
         }
       },

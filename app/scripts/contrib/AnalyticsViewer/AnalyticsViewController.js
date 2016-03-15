@@ -27,10 +27,10 @@ define([
 		},
 
 		connectToView: function() {
-			this.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.analyticsView.changeLayer, this.analyticsView));
+			/*this.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.analyticsView.changeLayer, this.analyticsView));
 			this.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.analyticsView.onSortProducts, this.analyticsView));
 			this.listenTo(Communicator.mediator, "selection:changed", _.bind(this.analyticsView.onSelectionChanged, this.analyticsView));
-			this.listenTo(Communicator.mediator, 'time:change', _.bind(this.analyticsView.onTimeChange, this.analyticsView));
+			this.listenTo(Communicator.mediator, 'time:change', _.bind(this.analyticsView.onTimeChange, this.analyticsView));*/
 
 			this.listenTo(this.analyticsView, 'view:disconnect', function() {
                 this.stopListening();

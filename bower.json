@@ -22,9 +22,10 @@
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.0.3",
-    "analyticsviewer": "esa-vires/AnalyticsViewer#~0.2.4",
+    "analyticsviewer": "ESA-VirES/AnalyticsViewer#928b3f68214e284840ad9429d1697f54b9d162bc",
     "cesium": "http://cesiumjs.org/releases/Cesium-1.16.zip",
-    "papaparse": "~4.1.0"
+    "papaparse": "~4.1.0",
+    "plotty": "santilland/plotty#^0.1.1"
   },
   "devDependencies": {
     "Keypress": "~2.0.0"

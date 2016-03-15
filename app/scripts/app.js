@@ -20,6 +20,7 @@
 			'controller/LayerController',
 			'controller/SelectionController',
 			'controller/DifferenceController',
+			'controller/DataController',
 			'vendor/colorlegend'
 		],
 
