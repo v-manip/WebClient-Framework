@@ -32,6 +32,21 @@
 
         Communicator.reqres.setHandler('get:time', this.returnTime);
 
+        // Try to get CSRF token, if available set it for necesary ajax requests
+
+        this.csrftoken = false;
+        var name = 'csrftoken';
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    this.csrftoken = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
 
         var selectionstart = new Date(this.options.brush.start);
         var selectionend = new Date(this.options.brush.end);
@@ -123,7 +138,8 @@
                         url: product.get('download').url,
                         eoid: product.get('download').id,
                         dataset: product.get('download').id ,
-                        bbox: [extent.left, extent.bottom, extent.right, extent.top]
+                        bbox: [extent.left, extent.bottom, extent.right, extent.top],
+                        csrftoken: this.csrftoken
                      })
                   });
                   this.activeWPSproducts.push(product.get('download').id);
