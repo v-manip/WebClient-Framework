@@ -75,7 +75,7 @@ define(['backbone.marionette',
 				// For now we just set it to something else just in case.
 				Cesium.BingMapsApi.defaultKey = "NOTHING";
 
-				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(0.0, -10.0, 30.0, 50.0);
+				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(0.0, -10.0, 30.0, 55.0);
 
 
 				Cesium.WebMapServiceImageryProvider.prototype.updateProperties = function(property, value) {
@@ -133,7 +133,7 @@ define(['backbone.marionette',
 						animation: false,
 						imageryProvider: layer,
 						terrainProvider : new Cesium.CesiumTerrainProvider({
-					        url : 'https://tiles.maps.eox.at/dem'
+					        url : '//tiles.maps.eox.at/dem'
 					    }),
 						creditContainer: "cesium_attribution",
 						contextOptions: {webgl: {preserveDrawingBuffer: true}},

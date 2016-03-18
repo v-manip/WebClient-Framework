@@ -28,11 +28,11 @@
                 "id": "terrain-light",
                 "protocol": "WMTS",
                 "urls": [
-                    "http://a.tiles.maps.eox.at/wmts/",
-                    "http://b.tiles.maps.eox.at/wmts/",
-                    "http://c.tiles.maps.eox.at/wmts/",
-                    "http://d.tiles.maps.eox.at/wmts/",
-                    "http://e.tiles.maps.eox.at/wmts/"
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -52,7 +52,7 @@
                 "id": "terrain-light",
                 "protocol": "WMS",
                 "urls": [
-                    "http://tiles.maps.eox.at/wms"
+                    "//tiles.maps.eox.at/wms"
                 ],
                 "style": "default",
                 "format": "image/jpeg",
@@ -65,11 +65,11 @@
                 "id": "terrain",
                 "protocol": "WMTS",
                 "urls": [
-                    "http://a.tiles.maps.eox.at/wmts/",
-                    "http://b.tiles.maps.eox.at/wmts/",
-                    "http://c.tiles.maps.eox.at/wmts/",
-                    "http://d.tiles.maps.eox.at/wmts/",
-                    "http://e.tiles.maps.eox.at/wmts/"
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -89,7 +89,7 @@
                 "id": "terrain",
                 "protocol": "WMS",
                 "urls": [
-                    "http://tiles.maps.eox.at/wms"
+                    "//tiles.maps.eox.at/wms"
                 ],
                 "style": "default",
                 "format": "image/jpeg",
@@ -102,11 +102,11 @@
                 "id": "bluemarble",
                 "protocol": "WMTS",
                 "urls": [
-                    "http://a.tiles.maps.eox.at/wmts/",
-                    "http://b.tiles.maps.eox.at/wmts/",
-                    "http://c.tiles.maps.eox.at/wmts/",
-                    "http://d.tiles.maps.eox.at/wmts/",
-                    "http://e.tiles.maps.eox.at/wmts/"
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -126,7 +126,7 @@
                 "id": "bluemarble",
                 "protocol": "WMS",
                 "urls": [
-                    "http://tiles.maps.eox.at/wms"
+                    "//tiles.maps.eox.at/wms"
                 ],
                 "style": "default",
                 "format": "image/jpeg",
@@ -673,7 +673,7 @@
                 "id": "Wireframe",
                 "protocol": "DEM",
                 "urls": [
-                    "http://data.eox.at/elevation?"
+                    "//data.eox.at/elevation?"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -686,11 +686,11 @@
             "protocol": "WMTS",
             "visible": false,
             "urls": [
-                "http://a.tiles.maps.eox.at/wmts/",
-                "http://b.tiles.maps.eox.at/wmts/",
-                "http://c.tiles.maps.eox.at/wmts/",
-                "http://d.tiles.maps.eox.at/wmts/",
-                "http://e.tiles.maps.eox.at/wmts/"
+                "//a.tiles.maps.eox.at/wmts/",
+                "//b.tiles.maps.eox.at/wmts/",
+                "//c.tiles.maps.eox.at/wmts/",
+                "//d.tiles.maps.eox.at/wmts/",
+                "//e.tiles.maps.eox.at/wmts/"
             ],
             "matrixSet": "WGS84",
             "style": "default",
@@ -713,11 +713,11 @@
             "protocol": "WMTS",
             "visible": false,
             "urls": [
-                "http://a.tiles.maps.eox.at/wmts/",
-                "http://b.tiles.maps.eox.at/wmts/",
-                "http://c.tiles.maps.eox.at/wmts/",
-                "http://d.tiles.maps.eox.at/wmts/",
-                "http://e.tiles.maps.eox.at/wmts/"
+                "//a.tiles.maps.eox.at/wmts/",
+                "//b.tiles.maps.eox.at/wmts/",
+                "//c.tiles.maps.eox.at/wmts/",
+                "//d.tiles.maps.eox.at/wmts/",
+                "//e.tiles.maps.eox.at/wmts/"
             ],
             "matrixSet": "WGS84",
             "style": "default",
