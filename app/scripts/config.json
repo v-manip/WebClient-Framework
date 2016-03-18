@@ -899,15 +899,7 @@
             "icon": "fa fa-download fa-2x",
             "enabled": false,
             "active": false
-        }, {
-            "id": "selectionManager",
-            "eventToRaise": "ui:open:selectionManager",
-            "description": "Import, export and saving functionality for selections",
-            "icon": "fa fa-edit fa-2x",
-            "enabled": true,
-            "active": false
         }
-
     ],
 
     "visualizationModes": [{
