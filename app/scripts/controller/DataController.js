@@ -153,6 +153,15 @@
                     if(dat[i].hasOwnProperty('Timestamp')) {
                       dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']);
                     }
+                    if(dat[i].hasOwnProperty('B_NEC')) {
+                      var bnec = dat[i]['B_NEC'];
+                      bnec = bnec.slice(1,-1).split(';').map(Number);
+                      bnec.spl
+                      delete dat[i]['B_NEC'];
+                      dat[i]['B_N'] = bnec[0];
+                      dat[i]['B_E'] = bnec[1];
+                      dat[i]['B_C'] = bnec[2];
+                    }
                   }
                   globals.swarm.set({data: results.data});
                 }

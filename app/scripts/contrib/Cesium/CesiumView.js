@@ -75,7 +75,7 @@ define(['backbone.marionette',
 				// For now we just set it to something else just in case.
 				Cesium.BingMapsApi.defaultKey = "NOTHING";
 
-				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(-5.0, -40.0, 40.0, 90.0);
+				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(0.0, -10.0, 30.0, 50.0);
 
 
 				Cesium.WebMapServiceImageryProvider.prototype.updateProperties = function(property, value) {
@@ -299,17 +299,21 @@ define(['backbone.marionette',
 				globals.swarm.on('change:data', function(model, data) {
 					var that = this;
 					if (data.length && data.length>0){
-						that.createPointCollection(data, 'pointcollection', 'band');
+						that.createDataFeatures(data, 'pointcollection', 'band');
 					  }else{
 					  	if(this.features_collection.hasOwnProperty('pointcollection')){
 		            		this.map.scene.primitives.remove(this.features_collection['pointcollection']);
 		            		delete this.features_collection['pointcollection'];
 		            	}
+		            	if(this.features_collection.hasOwnProperty('linecollection')){
+		            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
+		            		delete this.features_collection['linecollection'];
+		            	}
 					  }
 				}, this);
 
 				globals.swarm.on('change:filters', function(model, filters) {
-					this.createPointCollection(globals.swarm.get('data'), 'pointcollection', 'band');
+					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 				}, this);
 
 				//this.onResize();
@@ -573,7 +577,7 @@ define(['backbone.marionette',
 
 			        		}else if (product.get("views")[0].protocol == "FL_CZML"){
 			        			this.plot.setColorScale(style);
-								this.createPointCollection(globals.swarm.get('data'), 'pointcollection', 'band');
+								this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 			        			/*if(options.visible){
 			        				//product.set("visible", true);
 	                    			this.activeFL.push(product.get("name"));
@@ -904,7 +908,7 @@ define(['backbone.marionette',
                
             },
 
-            createPointCollection: function (results, identifier, band, alpha){
+            createDataFeatures: function (results, identifier, band, alpha){
 
             	// The feature collection is removed directly when a change happens
             	// because of the asynchronous behavior it can happen that a collection
@@ -918,39 +922,111 @@ define(['backbone.marionette',
             		delete this.features_collection[identifier];
             	}
 
+            	if(this.features_collection.hasOwnProperty('linecollection')){
+            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
+            		delete this.features_collection['linecollection'];
+            	}
+
+            	var settings = {};
+
+            	globals.products.each(function(product) {
+            		if(product.get('visible')){
+            			var params = product.get('parameters')
+            			for (k in params){
+            				if(params[k].selected){
+            					settings[product.get('views')[0].id] = params[k];
+            					settings[product.get('views')[0].id]['band'] = k;
+            				}
+            			}
+            		}
+            	});
+
 
 				this.features_collection[identifier] = new Cesium.PointPrimitiveCollection();
 
+				// Warning: Use of _private variables is undocumented and may change without warning.
+				this.features_collection[identifier]._rs = Cesium.RenderState.fromCache({
+				    depthTest : {
+				        enabled : true,
+				        func : Cesium.DepthFunction.LESS
+				    },
+				    depthMask : false,
+				    blending : Cesium.BlendingState.ALPHA_BLEND
+				});
+
 				var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
 				var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
+				var previous_collection = '';
+				var line_primitives = [];
 
-				    _.each(results, function(row){
-				    	var show = true;
-				    	var filters = globals.swarm.get('filters');
-				    	if(filters){
-				    		for (k in filters){
-				    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
-				    				show = false;
-				    			}
-				    		}
-				    	}
+			    _.each(results, function(row){
+			    	var show = true;
+			    	var filters = globals.swarm.get('filters');
+			    	if(filters){
+			    		for (k in filters){
+			    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
+			    				show = false;
+			    			}
+			    		}
+			    	}
 
-				    	if (show){
+			    	if (show){
+			    		if (previous_collection != row.id){
+			    			previous_collection = row.id
+			    			this.plot.setColorScale(settings[row.id].colorscale);
+			    		}
+			    		if (settings[row.id].band == 'F') {
 				    		var color = this.plot.getColor(row['F']);
 							this.features_collection[identifier].add({
-						        //position : new Cesium.Cartesian3(row.Longitude, row.Latitude, row.Radius),
 						        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
-						        //color : color,
 						        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], 255),
 						        //outlineColor : Cesium.Color.BLUE,
 						        pixelSize : 8,
 						        scaleByDistance : scaltype
 						    });
-				    	}
+						}else if(settings[row.id].band == 'B_NEC'){
+							var v_len = Math.sqrt(Math.pow(row['B_N'],2)+Math.pow(row['B_E'],2)+Math.pow(row['B_C'],2));
+							var color = this.plot.getColor(v_len);
+							var add_len = 10;
+							var v_e = (row['B_E']/v_len)*add_len;
+							var v_n = (row['B_N']/v_len)*add_len;
+							var v_c = (row['B_C']/v_len)*add_len;
+							line_primitives.push( 
+							  	new Cesium.GeometryInstance({
+							    	geometry : new Cesium.SimplePolylineGeometry({
+							      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+							        		row.Longitude, row.Latitude, (row.Radius-max_rad),
+							        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
+							      		]),
+							      		followSurface: false
+							    	}),
+							    	attributes : {
+							      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+							      			new Cesium.Color.fromBytes(color[0], color[1], color[2], 255)
+							      		)
+							    	}
+							  	})
+								
+							);
 
-					}, this);
+						}
+			    	}
 
-					this.map.scene.primitives.add(this.features_collection[identifier]);
+				}, this);
+
+			    if(line_primitives.length>0){
+			    	this.features_collection['linecollection'] = new Cesium.Primitive({
+					  	geometryInstances : line_primitives,
+					  	appearance : new Cesium.PerInstanceColorAppearance({
+					    	flat : true,
+					    	translucent : false
+					  	})
+					});
+					this.map.scene.primitives.add(this.features_collection['linecollection']);
+			    }
+			    
+
+				this.map.scene.primitives.add(this.features_collection[identifier]);
 			},
 
             createFeatures: function (results, identifier, band, alpha){
@@ -995,36 +1071,6 @@ define(['backbone.marionette',
 						}));
 
 					}, this);
-
-					// TODO: Explored increasing performance using color instance attribute
-					//  Was not able to make it work with materials, maybe there is a solution
-					/*
-					var instances = [];
-					_.each(results.data, function(row){
-						instances.push(
-							new Cesium.GeometryInstance({
-						        geometry : new Cesium.PolylineGeometry({
-						            positions : [
-							            new Cesium.Cartesian3(row.pos1_x, row.pos1_y, row.rad1),
-							            new Cesium.Cartesian3(row.pos2_x, row.pos2_y, row.rad2)
-						            ],
-						            width : 5.0,
-						            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
-						        }),
-						        attributes: {
-						        	color: new Cesium.ColorGeometryInstanceAttribute(row.col_r/255, row.col_g/255, row.col_b/255, alpha)
-						        }
-						    })
-					    );	
-
-					}, this);
-
-					this.features_collection[identifier].add(new Cesium.Primitive({
-					    geometryInstances : instances,
-					    appearance : new Cesium.PolylineColorAppearance()
-					}));
-					*/
-
 
 	        		this.map.scene.primitives.add(this.features_collection[identifier]);
 
@@ -1076,9 +1122,9 @@ define(['backbone.marionette',
 
 						if(product.get("views")[0].protocol == "CZML"){
 							//this.checkLayerFeatures(product, product.get("visible"));
-							this.plot.setDomain(range);
-							this.plot.setColorScale(style);
-							this.createPointCollection(globals.swarm.get('data'), 'pointcollection', 'band');
+							//this.plot.setDomain(range);
+							//this.plot.setColorScale(style);
+							this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 	                	}else if(product.get("views")[0].protocol == "WMS"){
 
@@ -1280,7 +1326,7 @@ define(['backbone.marionette',
 
 					var material = Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
-					material.uniforms.color.alpha = 0.6;
+					material.uniforms.color.alpha = 0.2;
 
 					var e = new Cesium.Rectangle();
 
@@ -1735,9 +1781,9 @@ define(['backbone.marionette',
 
             onSetExtent: function(bbox) {
             	//this.map.zoomToExtent(bbox);
-            	this.map.scene.camera.flyToRectangle({
+            	/*this.map.scene.camera.flyToRectangle({
             		destination: Cesium.Rectangle.fromDegrees(bbox[0], bbox[1], bbox[2], bbox[3])
-            	});
+            	});*/
 
             },
 

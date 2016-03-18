@@ -72,7 +72,7 @@ define(['backbone.marionette',
 					selection_x: 'Latitude',
 					selection_y: ['F'],
 					margin: {top: 10, right: 20, bottom: 10, left: 50},
-					toIgnoreHistogram: ['id','Timestamp','SyncStatus','dF_AOCS','dF_other','B_VFM','B_NEC','dB_AOCS','dB_other','B_error','q_NEC_CRF','Att_error','Flags_F','Flags_B','Flags_q','Flags_Platform','ASM_Freq_Dev']
+					toIgnoreHistogram: ['B_error', 'Latitude', 'Longitude', 'Radius']
 				};
 
 				
