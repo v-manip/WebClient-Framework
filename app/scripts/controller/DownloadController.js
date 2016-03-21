@@ -25,7 +25,7 @@
 	        this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
 	        this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChange);
 	        this.listenTo(Communicator.mediator, "dialog:open:download", this.onDownloadToolOpen);
-	        this.listenTo(Communicator.mediator, "download:set:filter", this.onDownloadSetFilter);
+	        this.listenTo(Communicator.mediator, "analytics:set:filter", this.onDownloadSetFilter);
 	        this.listenTo(Communicator.mediator, "dialog:open:download:filter", this.onDownloadToolFilterOpen);
 		},
 

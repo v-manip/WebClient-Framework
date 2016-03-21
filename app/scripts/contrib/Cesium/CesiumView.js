@@ -15,7 +15,8 @@ define(['backbone.marionette',
 		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
-		'filesaver'
+		'filesaver',
+		'plotty'
 	],
 	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
 
@@ -43,15 +44,24 @@ define(['backbone.marionette',
 				this.extentPrimitive = null;
 				this.activeModels = [];
 				this.difference_image = null;
+				this.data_filters = {};
 
 				this.begin_time = null;
 				this.end_time = null;
 
+				this.plot = null;
 				$(window).resize(function() {
 					if (this.map) {
 						this.onResize();
 					}
 				}.bind(this));
+
+
+				plotty.addColorScale("redblue", ["#ff0000", "#0000ff"], [0, 1]);
+				plotty.addColorScale("coolwarm", ["#ff0000", "#ffffff", "#0000ff"], [0, 0.5, 1]);
+				plotty.addColorScale("custom1", ["#400040","#3b004d","#36005b","#320068","#2d0076","#290084","#240091","#20009f","#1b00ad","#1600ba","#1200c8","#0d00d6","#0900e3","#0400f1","#0000ff","#0217ff","#042eff","#0645ff","#095cff","#0b73ff","#0d8bff","#10a2ff","#12b9ff","#14d0ff","#17e7ff","#19ffff","#3fffff","#66ffff","#8cffff","#b2ffff","#d8ffff","#ffffff","#ffffd4","#ffffaa","#ffff7f","#ffff54","#ffff2a","#ffff00","#ffed00","#ffdd00","#ffcc00","#ffba00","#ffaa00","#ff9900","#ff8700","#ff7700","#ff6600","#ff5400","#ff4400","#ff3300","#ff2100","#ff1100","#ff0000","#ff0017","#ff002e","#ff0045","#ff005c","#ff0073","#ff008b","#ff00a2","#ff00b9","#ff00d0","#ff00e7","#ff00ff"], [0.0,0.01587301587,0.03174603174,0.04761904761,0.06349206348,0.07936507935,0.09523809522,0.11111111109,0.12698412696,0.14285714283,0.15873015870,0.17460317457,0.19047619044,0.20634920631,0.22222222218,0.23809523805,0.25396825392,0.26984126979,0.28571428566,0.30158730153,0.31746031740,0.33333333327,0.34920634914,0.36507936501,0.38095238088,0.39682539675,0.41269841262,0.42857142849,0.44444444436,0.46031746023,0.47619047610,0.49206349197,0.50793650784,0.52380952371,0.53968253958,0.55555555545,0.57142857132,0.58730158719,0.60317460306,0.61904761893,0.63492063480,0.65079365067,0.66666666654,0.68253968241,0.69841269828,0.71428571415,0.73015873002,0.74603174589,0.76190476176,0.77777777763,0.79365079350,0.80952380937,0.82539682524,0.84126984111,0.85714285698,0.87301587285,0.88888888872,0.90476190459,0.92063492046,0.93650793633,0.95238095220,0.96825396807,0.98412698394,1]);
+				plotty.addColorScale("custom2", ["#000000", "#030aff", "#204aff", "#3c8aff", "#77c4ff", "#f0ffff", "#f0ffff", "#f2ff7f", "#ffff00", "#ff831e", "#ff083d", "#ff00ff"], [0, 0.0000000001, 0.1, 0.2, 0.3333, 0.4666, 0.5333, 0.6666, 0.8, 0.9, 0.999999999999, 1]);
+				plotty.addColorScale("blackwhite", ["#000000", "#ffffff"], [0, 1]);
 
 			},
 
@@ -65,7 +75,7 @@ define(['backbone.marionette',
 				// For now we just set it to something else just in case.
 				Cesium.BingMapsApi.defaultKey = "NOTHING";
 
-				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(-5.0, -40.0, 40.0, 90.0);
+				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(0.0, -10.0, 30.0, 55.0);
 
 
 				Cesium.WebMapServiceImageryProvider.prototype.updateProperties = function(property, value) {
@@ -123,7 +133,7 @@ define(['backbone.marionette',
 						animation: false,
 						imageryProvider: layer,
 						terrainProvider : new Cesium.CesiumTerrainProvider({
-					        url : 'https://tiles.maps.eox.at/dem'
+					        url : '//tiles.maps.eox.at/dem'
 					    }),
 						creditContainer: "cesium_attribution",
 						contextOptions: {webgl: {preserveDrawingBuffer: true}},
@@ -275,9 +285,37 @@ define(['backbone.marionette',
 				if (!this.map) {
 					this.createMap();
 				}
-				
+
+				this.plot = new plotty.plot({
+					colorScale: 'jet',
+					domain: [30000,60000]
+				});
+
+				this.plot.setClamp(true, true);
+
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
+
+				globals.swarm.on('change:data', function(model, data) {
+					var that = this;
+					if (data.length && data.length>0){
+						that.createDataFeatures(data, 'pointcollection', 'band');
+					  }else{
+					  	if(this.features_collection.hasOwnProperty('pointcollection')){
+		            		this.map.scene.primitives.remove(this.features_collection['pointcollection']);
+		            		delete this.features_collection['pointcollection'];
+		            	}
+		            	if(this.features_collection.hasOwnProperty('linecollection')){
+		            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
+		            		delete this.features_collection['linecollection'];
+		            	}
+					  }
+				}, this);
+
+				globals.swarm.on('change:filters', function(model, filters) {
+					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
+				}, this);
+
 				//this.onResize();
 				return this;
 			},
@@ -535,9 +573,11 @@ define(['backbone.marionette',
                     	if(product.get("name")==options.name){
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
-                    			this.checkLayerFeatures(product, options.visible);
+                    			//this.checkLayerFeatures(product, options.visible);
 
 			        		}else if (product.get("views")[0].protocol == "FL_CZML"){
+			        			this.plot.setColorScale(style);
+								this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 			        			/*if(options.visible){
 			        				//product.set("visible", true);
 	                    			this.activeFL.push(product.get("name"));
@@ -616,8 +656,8 @@ define(['backbone.marionette',
 								this.activeModels.push(product.get("name"));
 								// Iterate over active Swarm products
 								globals.products.each(function(product) {
-									if(product.get("satellite") == "Swarm")
-										this.checkLayerFeatures(product, product.get("visible"));
+									//if(product.get("satellite") == "Swarm")
+										//this.checkLayerFeatures(product, product.get("visible"));
 								},this);
 							}else{
 								if (this.activeModels.indexOf(product.get('name'))!=-1)
@@ -856,17 +896,138 @@ define(['backbone.marionette',
 					}))
 
 					.done(function( data ) {
-						Papa.parse(data, {
+						/*Papa.parse(data, {
 							header: true,
 							dynamicTyping: true,
 							complete: function(results) {
 								that.createFeatures(results, id, band, alpha)
 							}
-						});
+						});*/
 					});
 				}
                
             },
+
+            createDataFeatures: function (results, identifier, band, alpha){
+
+            	// The feature collection is removed directly when a change happens
+            	// because of the asynchronous behavior it can happen that a collection
+            	// is added between removing it and adding another one so here we make sure
+            	// it is empty before overwriting it, which would lead to a not referenced
+            	// collection which is no longer deleted.
+            	// I remove it before the response because a direct feedback to the user is important
+            	// There is probably a cleaner way to do this
+            	if(this.features_collection.hasOwnProperty(identifier)){
+            		this.map.scene.primitives.remove(this.features_collection[identifier]);
+            		delete this.features_collection[identifier];
+            	}
+
+            	if(this.features_collection.hasOwnProperty('linecollection')){
+            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
+            		delete this.features_collection['linecollection'];
+            	}
+
+            	var settings = {};
+
+            	globals.products.each(function(product) {
+            		if(product.get('visible')){
+            			var params = product.get('parameters')
+            			for (k in params){
+            				if(params[k].selected){
+            					settings[product.get('views')[0].id] = params[k];
+            					settings[product.get('views')[0].id]['band'] = k;
+            				}
+            			}
+            		}
+            	});
+
+
+				this.features_collection[identifier] = new Cesium.PointPrimitiveCollection();
+
+				// Warning: Use of _private variables is undocumented and may change without warning.
+				this.features_collection[identifier]._rs = Cesium.RenderState.fromCache({
+				    depthTest : {
+				        enabled : true,
+				        func : Cesium.DepthFunction.LESS
+				    },
+				    depthMask : false,
+				    blending : Cesium.BlendingState.ALPHA_BLEND
+				});
+
+				var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
+				var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
+				var previous_collection = '';
+				var line_primitives = [];
+
+			    _.each(results, function(row){
+			    	var show = true;
+			    	var filters = globals.swarm.get('filters');
+			    	if(filters){
+			    		for (k in filters){
+			    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
+			    				show = false;
+			    			}
+			    		}
+			    	}
+
+			    	if (show){
+			    		if (previous_collection != row.id){
+			    			previous_collection = row.id
+			    			this.plot.setColorScale(settings[row.id].colorscale);
+			    		}
+			    		if (settings[row.id].band == 'F') {
+				    		var color = this.plot.getColor(row['F']);
+							this.features_collection[identifier].add({
+						        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
+						        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], 255),
+						        //outlineColor : Cesium.Color.BLUE,
+						        pixelSize : 8,
+						        scaleByDistance : scaltype
+						    });
+						}else if(settings[row.id].band == 'B_NEC'){
+							var v_len = Math.sqrt(Math.pow(row['B_N'],2)+Math.pow(row['B_E'],2)+Math.pow(row['B_C'],2));
+							var color = this.plot.getColor(v_len);
+							var add_len = 10;
+							var v_e = (row['B_E']/v_len)*add_len;
+							var v_n = (row['B_N']/v_len)*add_len;
+							var v_c = (row['B_C']/v_len)*add_len;
+							line_primitives.push( 
+							  	new Cesium.GeometryInstance({
+							    	geometry : new Cesium.SimplePolylineGeometry({
+							      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+							        		row.Longitude, row.Latitude, (row.Radius-max_rad),
+							        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
+							      		]),
+							      		followSurface: false
+							    	}),
+							    	attributes : {
+							      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+							      			new Cesium.Color.fromBytes(color[0], color[1], color[2], 255)
+							      		)
+							    	}
+							  	})
+								
+							);
+
+						}
+			    	}
+
+				}, this);
+
+			    if(line_primitives.length>0){
+			    	this.features_collection['linecollection'] = new Cesium.Primitive({
+					  	geometryInstances : line_primitives,
+					  	appearance : new Cesium.PerInstanceColorAppearance({
+					    	flat : true,
+					    	translucent : false
+					  	})
+					});
+					this.map.scene.primitives.add(this.features_collection['linecollection']);
+			    }
+			    
+
+				this.map.scene.primitives.add(this.features_collection[identifier]);
+			},
 
             createFeatures: function (results, identifier, band, alpha){
 
@@ -910,36 +1071,6 @@ define(['backbone.marionette',
 						}));
 
 					}, this);
-
-					// TODO: Explored increasing performance using color instance attribute
-					//  Was not able to make it work with materials, maybe there is a solution
-					/*
-					var instances = [];
-					_.each(results.data, function(row){
-						instances.push(
-							new Cesium.GeometryInstance({
-						        geometry : new Cesium.PolylineGeometry({
-						            positions : [
-							            new Cesium.Cartesian3(row.pos1_x, row.pos1_y, row.rad1),
-							            new Cesium.Cartesian3(row.pos2_x, row.pos2_y, row.rad2)
-						            ],
-						            width : 5.0,
-						            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
-						        }),
-						        attributes: {
-						        	color: new Cesium.ColorGeometryInstanceAttribute(row.col_r/255, row.col_g/255, row.col_b/255, alpha)
-						        }
-						    })
-					    );	
-
-					}, this);
-
-					this.features_collection[identifier].add(new Cesium.Primitive({
-					    geometryInstances : instances,
-					    appearance : new Cesium.PolylineColorAppearance()
-					}));
-					*/
-
 
 	        		this.map.scene.primitives.add(this.features_collection[identifier]);
 
@@ -990,7 +1121,10 @@ define(['backbone.marionette',
             			var coeff_range = product.get("coefficients_range");
 
 						if(product.get("views")[0].protocol == "CZML"){
-							this.checkLayerFeatures(product, product.get("visible"));
+							//this.checkLayerFeatures(product, product.get("visible"));
+							//this.plot.setDomain(range);
+							//this.plot.setColorScale(style);
+							this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 	                	}else if(product.get("views")[0].protocol == "WMS"){
 
@@ -1043,6 +1177,11 @@ define(['backbone.marionette',
 				    }
                     
 	            }, this);
+            },
+
+
+            onAnalyticsFilterChanged: function(filter){
+            	console.log(filter);
             },
 
 
@@ -1120,7 +1259,7 @@ define(['backbone.marionette',
 							if(that.selectionType == "single"){
 								//that.map.scene.primitives.removeAll();
 								colorindex = that.map.scene.primitives.length;
-								Communicator.mediator.trigger("selection:changed", null);
+								//Communicator.mediator.trigger("selection:changed", null);
 							}
 
 							//var color = that.colors(colorindex);
@@ -1187,7 +1326,7 @@ define(['backbone.marionette',
 
 					var material = Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
-					material.uniforms.color.alpha = 0.6;
+					material.uniforms.color.alpha = 0.2;
 
 					var e = new Cesium.Rectangle();
 
@@ -1265,14 +1404,14 @@ define(['backbone.marionette',
 							}))
 
 							.done(function( data ) {
-								Papa.parse(data, {
+								/*Papa.parse(data, {
 									header: true,
 									dynamicTyping: true,
 									//name: name,
 									complete: function(results) {
 										that.createPrimitives(results, name)
 									}
-								});
+								});*/
 							});
 
 
@@ -1482,7 +1621,7 @@ define(['backbone.marionette',
 	                    }
 
 	                    if(product.get("views")[0].protocol == "CZML"){
-	                    	this.checkLayerFeatures(product, product.get("visible"));
+	                    	//this.checkLayerFeatures(product, product.get("visible"));
                 			
 		        		}else if (product.get("views")[0].protocol == "WPS"){
 
@@ -1642,9 +1781,9 @@ define(['backbone.marionette',
 
             onSetExtent: function(bbox) {
             	//this.map.zoomToExtent(bbox);
-            	this.map.scene.camera.flyToRectangle({
+            	/*this.map.scene.camera.flyToRectangle({
             		destination: Cesium.Rectangle.fromDegrees(bbox[0], bbox[1], bbox[2], bbox[3])
-            	});
+            	});*/
 
             },
 
