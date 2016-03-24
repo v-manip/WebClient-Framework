@@ -960,7 +960,9 @@ var DrawHelper = (function() {
                 if(rectangle != null) {
                     primitives.remove(rectangle);
                 }
-                markers.remove();
+                if (markers){
+                    markers.remove();
+                }
                 mouseHandler.destroy();
                 tooltip.setVisible(false);
             }
@@ -1843,7 +1845,7 @@ var DrawHelper = (function() {
     function copyOptions(options, defaultOptions) {
         var newOptions = clone(options), option;
         for(option in defaultOptions) {
-            if(newOptions[option] === undefined) {
+            if(newOptions && newOptions[option] === undefined) {
                 newOptions[option] = clone(defaultOptions[option]);
             }
         }

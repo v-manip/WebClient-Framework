@@ -18,7 +18,7 @@ define(['backbone.marionette',
 				this.isClosed = true;
 				this.request_url = "";
 				this.plot_type = 'scatter';
-				this.sp = null;
+				this.sp = undefined;
 
 				$(window).resize(function() {
 					this.onResize();
@@ -78,21 +78,23 @@ define(['backbone.marionette',
 				};
 
 				
+				if (this.sp === undefined){
 
-            	this.sp = new scatterPlot(args, function(){},
-					function (values) {
-						if (values != null){
-							Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);	
-						}else{
-							Communicator.mediator.trigger("cesium:highlight:removeAll");
+	            	this.sp = new scatterPlot(args, function(){},
+						function (values) {
+							if (values != null){
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);	
+							}else{
+								Communicator.mediator.trigger("cesium:highlight:removeAll");
+							}
+							
+						}, 
+						function(filter){
+							Communicator.mediator.trigger("analytics:set:filter", filter);
 						}
-						
-					}, 
-					function(filter){
-						Communicator.mediator.trigger("analytics:set:filter", filter);
-					}
-				);
+					);
 
+				}
 				if(swarmdata && swarmdata.length>0){
 					args['parsedData'] = swarmdata;
 					that.sp.loadData(args);
@@ -124,6 +126,7 @@ define(['backbone.marionette',
 
 			close: function() {
 	            this.isClosed = true;
+	            globals.swarm.off("change:data");
 	            this.triggerMethod('view:disconnect');
 	        }
 

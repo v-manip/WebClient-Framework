@@ -94,8 +94,9 @@ define(['backbone.marionette',
 				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
 					"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>");
 
-				this.$el.append('<div style="position:absolute; right:46px; top:5px; height:32px; z-index:5;" type="button" class="btn btn-success" id="cesium_save">Save as Image</div>');
-
+				this.$el.append('<div type="button" class="btn btn-success darkbutton" id="cesium_save">Save as Image</div>');
+				this.$el.append('<div type="button" class="btn btn-success darkbutton"  id="bb_selection">Select Area</div>');
+				
 				var layer;
 				var name = "";
 
@@ -278,6 +279,30 @@ define(['backbone.marionette',
 				globals.swarm.on('change:filters', function(model, filters) {
 					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 				}, this);
+
+				$('#bb_selection').unbind('click');
+				$('#bb_selection').click(function(){
+					if($('#bb_selection').text() == "Select Area"){
+						$('#bb_selection').html('Deactivate');
+						Communicator.mediator.trigger('selection:activated',{
+							id:'bboxSelection',
+							active:true,
+							selectionType:'single'
+						});
+						
+					}else if($('#bb_selection').text() == "Deactivate"){
+						$('#bb_selection').html('Select Area');
+						Communicator.mediator.trigger('selection:activated', {
+							id:'bboxSelection',
+							active:false,
+							selectionType:'single'
+						});
+					}else if($('#bb_selection').text() == "Clear Selection"){
+						$('#bb_selection').html('Select Area');
+						Communicator.mediator.trigger("selection:changed", null);
+					}
+				});
+					
 
 				//this.onResize();
 				return this;
@@ -1218,10 +1243,11 @@ define(['backbone.marionette',
 								w: Cesium.Math.toDegrees(extent.west)
 							}
 							Communicator.mediator.trigger("selection:changed", bbox);
+							$('#bb_selection').html('Clear Selection');
 	                    }
 	                });
 				} else {
-					Communicator.mediator.trigger("selection:changed", null);
+					//Communicator.mediator.trigger("selection:changed", null);
 					this.drawhelper.stopDrawing();
 				}
 			},

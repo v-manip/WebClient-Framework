@@ -769,12 +769,22 @@
             "icon": "fa-globe",
             "eventToRaise": "ui:open:layercontrol",
             "template": "LayerControl"
-        }, {
-            "name": "Tools",
-            "icon": "fa-wrench",
-            "eventToRaise": "ui:open:toolselection",
-            "template": "ToolSelection"
-        }, {
+        }, 
+        {
+            "name": "Views",
+            "icon": "fa-eye",
+            "subitems": [{
+                "name": "Globe",
+                "eventToRaise": "ui:fullscreen:globe"
+            }, {
+                "name": "Analytics",
+                "eventToRaise": "ui:fullscreen:analytics"
+            }, {
+                "name": "Split Screen",
+                "eventToRaise": "layout:switch:splitview"
+            }]
+        },
+        {
             "name": "Tutorials",
             "icon": "fa-book",
             "subitems": [{
@@ -899,22 +909,6 @@
         }
     ],
 
-    "visualizationModes": [{
-            "id": "SingleView",
-            "eventToRaise": "layout:switch:singleview",
-            "description": "Single view of map",
-            "icon": "fa fa-stop fa-2x",
-            "enabled": true,
-            "active": true
-        }, {
-            "id": "SplitView",
-            "eventToRaise": "layout:switch:splitview",
-            "description": "Splits screen to visualize two maps side by side",
-            "icon": "fa fa-pause fa-2x",
-            "enabled": true,
-            "active": false
-        }
-
-    ]
+    "visualizationModes": []
 
 }
