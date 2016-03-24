@@ -159,7 +159,8 @@
                         indices: true,
                         processid: "get_indices",
                         collectionid: "index_id",
-                        output: "output"
+                        output: "output",
+                        csrftoken: this.csrftoken
                      })
                   });
 

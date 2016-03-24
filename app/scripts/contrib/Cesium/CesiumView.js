@@ -12,7 +12,6 @@ define(['backbone.marionette',
 		'hbs!tmpl/wps_calc_diff',
 		'hbs!tmpl/wps_get_field_lines',
 		'hbs!tmpl/wps_retrieve_swarm_features',
-		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
 		'filesaver',
@@ -76,7 +75,6 @@ define(['backbone.marionette',
 				Cesium.BingMapsApi.defaultKey = "NOTHING";
 
 				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(0.0, -10.0, 30.0, 55.0);
-
 
 				Cesium.WebMapServiceImageryProvider.prototype.updateProperties = function(property, value) {
 
@@ -179,19 +177,6 @@ define(['backbone.marionette',
 
 				this.map.scene.camera.frustum.far = this.map.scene.camera.frustum.far * 15
 
-				/*var maxRadii = this.map.scene.globe.ellipsoid.maximumRadius;
-
-				var frustum = new Cesium.OrthographicFrustum();
-				frustum.right = maxRadii * Cesium.Math.PI/2;
-				frustum.left = -frustum.right;
-				frustum.top = frustum.right * (this.map.scene.canvas.clientHeight / this.map.scene.canvas.clientWidth);
-				frustum.bottom = -frustum.top;
-
-				frustum.near = 0.01 * maxRadii;
-				frustum.far = 50.0 * maxRadii;
-
-				this.map.scene.camera.frustum = frustum;*/
-
 				this.map.clock.onTick.addEventListener(this.handleTick.bind(this));
 				
 				globals.baseLayers.each(function(baselayer) {
@@ -202,30 +187,6 @@ define(['backbone.marionette',
 					}
 				}, this);
 
-				/*
-				this.colors = globals.objects.get("color");
-
-				this.map.events.register("move", this.map, function(data) {
-					//console.log(data.object.getCenter());
-					var center = data.object.getCenter();
-					this.model.set({
-						'center': [center.lon, center.lat],
-						'zoom': data.object.zoom
-					});
-
-					// We set a flag here so that other views have the possibility to check if there is a
-					// map panning going on at the moment. This is important e.g. for the VGV to prevent
-					// sending a 'pan' event in some cases which would lead to a infinite recursion.
-					App.isMapPanning = true;
-				}.bind(this));
-
-				
-				this.map.events.register("moveend", this.map, function(data) {
-					// See lines above for an explanation of that flag:
-					App.isMapPanning = false;
-					Communicator.mediator.trigger("map:position:change", this.map.getExtent());				
-				}.bind(this));
-				*/
 				
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
@@ -278,6 +239,8 @@ define(['backbone.marionette',
 						overlay.set("ces_layer", imagerylayer);
 					}
                 }, this);
+
+                
 
 			},
 
@@ -442,11 +405,11 @@ define(['backbone.marionette',
                 return_layer.events.register("loadend", this, function() {
                   	Communicator.mediator.trigger("progress:change", false);
                 });*/
-                return return_layer;                
+                return return_layer;
             },
 
 			centerMap: function(data) {
-				this.map.setCenter(new OpenLayers.LonLat(data.x, data.y), data.l);
+				//this.map.setCenter(new OpenLayers.LonLat(data.x, data.y), data.l);
 
 				this.model.set({
 					'center': [data.x, data.y],
@@ -1246,99 +1209,45 @@ define(['backbone.marionette',
 				if (arg.active) {
 
 					var that = this;
-					this.drawhelper.startDrawingExtent({
+					this.drawhelper.startDrawingRectangle({
 	                    callback: function(extent) {
-
-				            /*console.log('Extent created (N: ' + extent.north.toFixed(3) +
-				            			 ', E: ' + extent.east.toFixed(3) + 
-				            			 ', S: ' + extent.south.toFixed(3) +
-				            			 ', W: ' + extent.west.toFixed(3) + ')');*/
-
-							//var colorindex = that.map.scene.primitives.length+1;
-							var colorindex = 0;
-							if(that.selectionType == "single"){
-								//that.map.scene.primitives.removeAll();
-								colorindex = that.map.scene.primitives.length;
-								//Communicator.mediator.trigger("selection:changed", null);
+							var bbox = {
+								n: Cesium.Math.toDegrees(extent.north),
+								e: Cesium.Math.toDegrees(extent.east),
+								s: Cesium.Math.toDegrees(extent.south),
+								w: Cesium.Math.toDegrees(extent.west)
 							}
-
-							//var color = that.colors(colorindex);
-							var color = null;
-
-							//Communicator.mediator.trigger("selection:changed", evt.feature);
-							// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
-							// not have to be rewritten. This has to be changed somewhen...
-							var coordinates = that._convertCoordsFromCesium(extent, 0);
-							var feature = that._convertCoordsToOpenLayers(coordinates);
-							Communicator.mediator.trigger("selection:changed", feature, coordinates, color);
+							Communicator.mediator.trigger("selection:changed", bbox);
 	                    }
 	                });
-
-					/*for (key in this.drawControls) {
-						var control = this.drawControls[key];
-						if (arg.id == key) {
-							control.activate();
-						} else {
-							control.layer.removeAllFeatures();
-							control.deactivate();
-							Communicator.mediator.trigger("selection:changed", null);
-						}
-					}*/
 				} else {
-					//this.map.scene.primitives.removeAll();
 					Communicator.mediator.trigger("selection:changed", null);
-					//this.drawhelper.muteHandlers(true);
-					//this.map.screenSpaceEventHandler.destroy();
 					this.drawhelper.stopDrawing();
-					/*for (key in this.drawControls) {
-						var control = this.drawControls[key];
-						control.layer.removeAllFeatures();
-						control.deactivate();
-						Communicator.mediator.trigger("selection:changed", null);
-
-					}*/
 				}
 			},
            
 
-			onSelectionChanged: function(feature, coords, color){
+			onSelectionChanged: function(bbox){
 
-				if(coords){
-					// TODO: Color index is needed for multiple selections
-					// this feature is not used in VirES and deactivated right now
-					// as the colorindex is not correctly implemented
-					// Need to look into this code
-
-					/*var colorindex = this.map.scene.primitives.length+1;
-					if(this.selectionType == "single"){
-						if (this.extentPrimitive)
-							this.map.scene.primitives.remove(this.extentPrimitive);
-						if(this.FL_czml_src)
-							this.map.dataSources.remove(this.FL_czml_src);
-
-						colorindex = this.map.scene.primitives.length;
-					}
-
-					if(!color)
-						color = this.colors(colorindex);*/
-
+				if(bbox){
+					this.map.scene.primitives.removeAll();
 					var color = "#6699FF";
 
 					var material = Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
 					material.uniforms.color.alpha = 0.2;
 
-					var e = new Cesium.Rectangle();
+					var e = new Cesium.Rectangle(
+						Cesium.Math.toRadians(bbox.w),
+						Cesium.Math.toRadians(bbox.s),
+						Cesium.Math.toRadians(bbox.e),
+						Cesium.Math.toRadians(bbox.n)
+					);
 
-			        e.west = Cesium.Math.toRadians(coords[0].x);
-			        e.east = Cesium.Math.toRadians(coords[2].x);
-			        e.south = Cesium.Math.toRadians(coords[0].y);
-			        e.north = Cesium.Math.toRadians(coords[2].y);
+			        this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
 
-			        this.bboxsel = [coords[0].y, coords[0].x, coords[2].y, coords[2].x ];
-
-		            this.extentPrimitive = new DrawHelper.ExtentPrimitive({
-		                extent: e,
+		            this.extentPrimitive = new DrawHelper.RectanglePrimitive({
+		                rectangle: e,
 		                material: material
 		            });
 
@@ -1509,95 +1418,6 @@ define(['backbone.marionette',
 			onRemoveHighlights: function(){
 				this.billboards.removeAll();
 			},
-
-			/*onSelectionChanged: function(coords) {
-	            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
-	            // when the selection items in the toolbar are clicked. This event triggers this method
-	            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
-	            // method.
-				if (coords) {
-					console.dir(coords);
-				}
-			},*/
-
-
-			/*onLayerOutlinesChanged: function(layer, outlines){
-				globals.products.each(function(product) {
-
-					if(product.get("name")==layer){
-
-						if(product.get("views")[0].protocol == "CZML"){
-							this.checkLayerFeatures(product, product.get("visible"));
-	                	}
-				    }
-                    
-	            }, this);
-			},*/
-
-	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
-	            var verts = openlayer_geometry.getVertices();
-
-	            var coordinates = [];
-	            for (var idx = 0; idx < verts.length - 1; ++idx) {
-	                var p = {
-	                    x: verts[idx].x,
-	                    y: verts[idx].y,
-	                    z: altitude // not mandatory, can be undefined
-	                };
-
-	                coordinates.push(p);
-	            }
-	            var p = {
-	                x: verts[idx].x,
-	                y: verts[idx].y,
-	                z: altitude // not mandatory, can be undefined
-	            };
-
-	            coordinates.push(p);
-
-	            return coordinates;
-	        },
-
-	        _convertCoordsFromCesium: function(prim, altitude) {
-
-	            var coordinates = [];
-
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.west),
-	            	y: Cesium.Math.toDegrees(prim.south),
-	            	z: altitude
-	            });
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.west),
-	            	y: Cesium.Math.toDegrees(prim.north),
-	            	z: altitude
-	            });
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.east),
-	            	y: Cesium.Math.toDegrees(prim.north),
-	            	z: altitude
-	            });
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.east),
-	            	y: Cesium.Math.toDegrees(prim.south),
-	            	z: altitude
-	            });
-	            
-	            return coordinates;
-	        },
-
-	        _convertCoordsToOpenLayers: function(coords){
-	        	var points = [];
-                for (var idx = 0; idx < coords.length; idx++) {
-                    points.push(new OpenLayers.Geometry.Point(coords[idx].x, coords[idx].y));
-                };
-
-                var ring = new OpenLayers.Geometry.LinearRing(points);
-                var polygon = new OpenLayers.Geometry.Polygon([ring]);
-                var feature = new OpenLayers.Feature.Vector(polygon);
-
-                return feature;
-	        },
 
 			onTimeChange: function (time) {
 
@@ -1834,7 +1654,7 @@ define(['backbone.marionette',
 
 			onLoadImage: function(url, selection_bounds){
 
-				proj4326 = new OpenLayers.Projection("EPSG:4326");
+				/*proj4326 = new OpenLayers.Projection("EPSG:4326");
 				bounds = selection_bounds;
 
 				bounds.transform(proj4326, this.map.getProjectionObject());
@@ -1854,7 +1674,7 @@ define(['backbone.marionette',
 					 	minzindex = zindex;
 				}.bind(this));
 
-				this.diff_overlay.setZIndex(minzindex-1);
+				this.diff_overlay.setZIndex(minzindex-1);*/
 	
 			},
 

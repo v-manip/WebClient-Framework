@@ -54,11 +54,9 @@
 			this.model.set('filter', filter);
 		},
 
-	    onSelectionChange: function(selection) {
-	        if (selection != null) {
-	          if(selection.geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
-	            this.model.set('AoI', selection.geometry);
-	          }
+	    onSelectionChange: function(bbox) {
+	        if (bbox != null) {
+	            this.model.set('AoI', bbox);
 	        }else{
 	          this.model.set('AoI', null);
 	        }

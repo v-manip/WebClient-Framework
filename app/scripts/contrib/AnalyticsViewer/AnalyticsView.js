@@ -40,9 +40,11 @@ define(['backbone.marionette',
 				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
 
+				$('#tmp_download_button').unbind( "click" );
+				$('#tmp_download_button').remove();
 
 				// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
-				var download = d3.select(this.el).append("button")   
+				var download = d3.select(this.el).append("button")
 			        .attr("type", "button")
 			        .attr("id", "tmp_download_button")
 			        .attr("class", "btn btn-success")

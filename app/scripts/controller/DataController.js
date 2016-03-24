@@ -58,10 +58,10 @@
         }
       },
 
-      onSelectionChanged: function(feature) {
+      onSelectionChanged: function(bbox) {
         
-        if(feature){
-          this.selection_list.push(feature.clone());
+        if(bbox){
+          this.selection_list.push(bbox);
           this.checkSelections();
         }else{
           this.plotdata = [];
@@ -126,8 +126,10 @@
             "end_time": getISODateTimeString(this.selected_time.end)
           };
 
-          if(this.selection_list.length > 0)
-            options["bbox"] = this.selection_list[0].geometry.getBounds().toBBOX(10,map_crs_reverse_axes);  
+          if(this.selection_list.length > 0){
+            var bb = this.selection_list[0];
+            options["bbox"] = bb.s + "," + bb.w + "," + bb.n + "," + bb.e;
+          }
                 
           var shc_model = _.find(globals.products.models, function(p){return p.get("shc") != null;});
 
