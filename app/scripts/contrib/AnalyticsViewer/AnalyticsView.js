@@ -110,6 +110,8 @@ define(['backbone.marionette',
 
 			reloadData: function(model, data) {
 				if(this.$('.d3canvas').length == 1){
+					$('#scatterdiv').empty();
+					$('#parallelsdiv').empty();
 					var args = {
 						selector: this.$('.d3canvas')[0],
 						parsedData: data
