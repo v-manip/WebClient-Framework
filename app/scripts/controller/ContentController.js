@@ -21,6 +21,17 @@
 				this.listenTo(Communicator.mediator, "ui:open:storybanner", this.StoryBannerOpen);
 				this.listenTo(Communicator.mediator, "app:reset", this.OnAppReset);
 				this.listenTo(Communicator.mediator, "layer:open:settings", this.onOpenLayerSettings);
+				this.listenTo(Communicator.mediator, "ui:fullscreen:globe", this.onFullscrenGlobe);
+				this.listenTo(Communicator.mediator, "ui:fullscreen:analytics", this.onFullscrenAnalytics);
+			},
+
+			onFullscrenGlobe: function () {
+				Communicator.mediator.trigger("layout:switch:singleview");
+			},
+
+			onFullscrenAnalytics: function () {
+				Communicator.mediator.trigger("layout:switch:singleview");
+				Communicator.mediator.trigger("region:show:view", 'tl','AnalyticsViewer');
 			},
 
 			onDialogOpenAbout: function(event){

@@ -51,10 +51,10 @@
 		        }
 			},
 
-			onSelectionChanged: function(feature) {
+			onSelectionChanged: function(bbox) {
 				
-				if(feature){
-					this.selection_list.push(feature.clone());
+				if(bbox){
+					this.selection_list.push(bbox);
 					this.checkSelections();
 				}else{
 					this.plotdata = [];

@@ -20,8 +20,7 @@
 			'controller/LayerController',
 			'controller/SelectionController',
 			'controller/DifferenceController',
-			'controller/DataController',
-			'vendor/colorlegend'
+			'controller/DataController'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -396,7 +395,7 @@
 
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
-                this.colorRampView = new v.ColorRampView(config.colorRamp);
+                //this.colorRampView = new v.ColorRampView(config.colorRamp);
 
 
 			},

@@ -12,7 +12,6 @@ define(['backbone.marionette',
 		'hbs!tmpl/wps_calc_diff',
 		'hbs!tmpl/wps_get_field_lines',
 		'hbs!tmpl/wps_retrieve_swarm_features',
-		'openlayers',
 		'cesium/Cesium',
 		'drawhelper',
 		'filesaver',
@@ -43,6 +42,7 @@ define(['backbone.marionette',
 				this.bboxsel = null;
 				this.extentPrimitive = null;
 				this.activeModels = [];
+				this.activeCollections = [];
 				this.difference_image = null;
 				this.data_filters = {};
 
@@ -63,6 +63,8 @@ define(['backbone.marionette',
 				plotty.addColorScale("custom2", ["#000000", "#030aff", "#204aff", "#3c8aff", "#77c4ff", "#f0ffff", "#f0ffff", "#f2ff7f", "#ffff00", "#ff831e", "#ff083d", "#ff00ff"], [0, 0.0000000001, 0.1, 0.2, 0.3333, 0.4666, 0.5333, 0.6666, 0.8, 0.9, 0.999999999999, 1]);
 				plotty.addColorScale("blackwhite", ["#000000", "#ffffff"], [0, 1]);
 
+				this.connectDataEvents();
+
 			},
 
 			createMap: function() {
@@ -76,7 +78,6 @@ define(['backbone.marionette',
 				Cesium.BingMapsApi.defaultKey = "NOTHING";
 
 				Cesium.Camera.DEFAULT_VIEW_RECTANGLE = Cesium.Rectangle.fromDegrees(0.0, -10.0, 30.0, 55.0);
-
 
 				Cesium.WebMapServiceImageryProvider.prototype.updateProperties = function(property, value) {
 
@@ -96,8 +97,9 @@ define(['backbone.marionette',
 				$("#cesium_custom_attribution").append("<div style='float:left'><a href='http://cesiumjs.org' target='_blank'>Cesium</a>"+
 					"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>");
 
-				this.$el.append('<div style="position:absolute; right:46px; top:5px; height:32px; z-index:5;" type="button" class="btn btn-success" id="cesium_save">Save as Image</div>');
-
+				this.$el.append('<div type="button" class="btn btn-success darkbutton" id="cesium_save">Save as Image</div>');
+				this.$el.append('<div type="button" class="btn btn-success darkbutton"  id="bb_selection">Select Area</div>');
+				
 				var layer;
 				var name = "";
 
@@ -179,19 +181,6 @@ define(['backbone.marionette',
 
 				this.map.scene.camera.frustum.far = this.map.scene.camera.frustum.far * 15
 
-				/*var maxRadii = this.map.scene.globe.ellipsoid.maximumRadius;
-
-				var frustum = new Cesium.OrthographicFrustum();
-				frustum.right = maxRadii * Cesium.Math.PI/2;
-				frustum.left = -frustum.right;
-				frustum.top = frustum.right * (this.map.scene.canvas.clientHeight / this.map.scene.canvas.clientWidth);
-				frustum.bottom = -frustum.top;
-
-				frustum.near = 0.01 * maxRadii;
-				frustum.far = 50.0 * maxRadii;
-
-				this.map.scene.camera.frustum = frustum;*/
-
 				this.map.clock.onTick.addEventListener(this.handleTick.bind(this));
 				
 				globals.baseLayers.each(function(baselayer) {
@@ -202,30 +191,6 @@ define(['backbone.marionette',
 					}
 				}, this);
 
-				/*
-				this.colors = globals.objects.get("color");
-
-				this.map.events.register("move", this.map, function(data) {
-					//console.log(data.object.getCenter());
-					var center = data.object.getCenter();
-					this.model.set({
-						'center': [center.lon, center.lat],
-						'zoom': data.object.zoom
-					});
-
-					// We set a flag here so that other views have the possibility to check if there is a
-					// map panning going on at the moment. This is important e.g. for the VGV to prevent
-					// sending a 'pan' event in some cases which would lead to a infinite recursion.
-					App.isMapPanning = true;
-				}.bind(this));
-
-				
-				this.map.events.register("moveend", this.map, function(data) {
-					// See lines above for an explanation of that flag:
-					App.isMapPanning = false;
-					Communicator.mediator.trigger("map:position:change", this.map.getExtent());				
-				}.bind(this));
-				*/
 				
 				//Go through all defined baselayer and add them to the map
 				globals.baseLayers.each(function(baselayer) {
@@ -279,6 +244,8 @@ define(['backbone.marionette',
 					}
                 }, this);
 
+                
+
 			},
 
 			onShow: function() {
@@ -296,28 +263,61 @@ define(['backbone.marionette',
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
 
+				
+				this.connectDataEvents();
+
+				// Redraw to make sure we are at current selection
+				this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
+
+				$('#bb_selection').unbind('click');
+				$('#bb_selection').click(function(){
+					if($('#bb_selection').text() == "Select Area"){
+						$('#bb_selection').html('Deactivate');
+						Communicator.mediator.trigger('selection:activated',{
+							id:'bboxSelection',
+							active:true,
+							selectionType:'single'
+						});
+						
+					}else if($('#bb_selection').text() == "Deactivate"){
+						$('#bb_selection').html('Select Area');
+						Communicator.mediator.trigger('selection:activated', {
+							id:'bboxSelection',
+							active:false,
+							selectionType:'single'
+						});
+					}else if($('#bb_selection').text() == "Clear Selection"){
+						$('#bb_selection').html('Select Area');
+						Communicator.mediator.trigger("selection:changed", null);
+					}
+				});
+					
+
+				//this.onResize();
+				return this;
+			},
+
+			connectDataEvents: function(){
+				//globals.swarm.off('change:data');
 				globals.swarm.on('change:data', function(model, data) {
 					var that = this;
 					if (data.length && data.length>0){
 						that.createDataFeatures(data, 'pointcollection', 'band');
-					  }else{
-					  	if(this.features_collection.hasOwnProperty('pointcollection')){
-		            		this.map.scene.primitives.remove(this.features_collection['pointcollection']);
-		            		delete this.features_collection['pointcollection'];
+					}else{
+						for (var i = 0; i < this.activeCollections.length; i++) {
+		            		if(this.features_collection.hasOwnProperty(this.activeCollections[i])){
+			            		this.map.scene.primitives.remove(this.features_collection[this.activeCollections[i]]);
+			            		delete this.features_collection[this.activeCollections[i]];
+			            	}
 		            	}
-		            	if(this.features_collection.hasOwnProperty('linecollection')){
-		            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
-		            		delete this.features_collection['linecollection'];
-		            	}
-					  }
+		            	this.activeCollections = [];
+					}
 				}, this);
 
+				//globals.swarm.off('change:filters');
 				globals.swarm.on('change:filters', function(model, filters) {
 					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 				}, this);
-
-				//this.onResize();
-				return this;
 			},
 
 			onResize: function() {
@@ -442,11 +442,11 @@ define(['backbone.marionette',
                 return_layer.events.register("loadend", this, function() {
                   	Communicator.mediator.trigger("progress:change", false);
                 });*/
-                return return_layer;                
+                return return_layer;
             },
 
 			centerMap: function(data) {
-				this.map.setCenter(new OpenLayers.LonLat(data.x, data.y), data.l);
+				//this.map.setCenter(new OpenLayers.LonLat(data.x, data.y), data.l);
 
 				this.model.set({
 					'center': [data.x, data.y],
@@ -486,34 +486,40 @@ define(['backbone.marionette',
 			},
 
 			onUpdateOpacity: function(options) {
-				//var ces_layer = options.model.get("ces_layer");
 				globals.products.each(function(product) {
                 	if(product.get("name")==options.model.get("name")){
                 		var ces_layer = product.get("ces_layer");
 
                 		if( _.has(this.features_collection, options.model.get("views")[0].id) ){
                 			var fc = this.features_collection[options.model.get("views")[0].id];
-                			for (var i = fc.length - 1; i >= 0; i--) {
-                				var b = fc.get(i);
-                				if(b.color){
-	                				var c = b.color.clone();
-	                				c.alpha = options.value;
-	  								b.color = c;
-	  							}else if(b.appearance){
-	  								var c = b.appearance.material.uniforms.color.clone();
-	                				c.alpha = options.value;
-	  								b.appearance.material.uniforms.color = c;
-	  							}
-                			};
+                			if(fc.hasOwnProperty("geometryInstances")){
+                				for (var i = fc._instanceIds.length - 1; i >= 0; i--) {
+	  								var attributes = fc.getGeometryInstanceAttributes(fc._instanceIds[i]);
+	  								var nc = attributes.color;
+	  								nc[3] = Math.floor(options.value*255);
+	        						attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(
+	        							Cesium.Color.fromBytes(nc[0], nc[1], nc[2], nc[3])
+	        						);
+	                			};
+                			}else{
+                				for (var i = fc.length - 1; i >= 0; i--) {
+	                				var b = fc.get(i);
+	                				if(b.color){
+		                				var c = b.color.clone();
+		                				c.alpha = options.value;
+		  								b.color = c;
+		  							}else if(b.appearance){
+		  								var c = b.appearance.material.uniforms.color.clone();
+		                				c.alpha = options.value;
+		  								b.appearance.material.uniforms.color = c;
+		  							}
+	                			};
+                			}
                 		}else if(ces_layer){
 							ces_layer.alpha = options.value;
 						}
 					}
 				}, this);
-                /*var layer = this.map.getLayersByName(options.model.get("name"))[0];
-                if (layer){
-                        layer.setOpacity(options.value);
-                }*/
             },
 
             changeLayer: function(options) {
@@ -574,23 +580,9 @@ define(['backbone.marionette',
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
                     			//this.checkLayerFeatures(product, options.visible);
+                    			this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
-			        		}else if (product.get("views")[0].protocol == "FL_CZML"){
-			        			this.plot.setColorScale(style);
-								this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
-			        			/*if(options.visible){
-			        				//product.set("visible", true);
-	                    			this.activeFL.push(product.get("name"));
-	                    		}else{
-	                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
-	                    				//TODO: Remove possibly loaded entity
-                						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
-                					}
-
-	                    		}
-	                    		this.checkFieldLines();*/
-							
-                    		}else if (product.get("views")[0].protocol == "WPS"){
+			        		}else if (product.get("views")[0].protocol == "WPS"){
                     			this.checkShc(product, options.visible);
 								
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
@@ -910,22 +902,22 @@ define(['backbone.marionette',
 
             createDataFeatures: function (results, identifier, band, alpha){
 
-            	// The feature collection is removed directly when a change happens
+            	// The feature collections are removed directly when a change happens
             	// because of the asynchronous behavior it can happen that a collection
             	// is added between removing it and adding another one so here we make sure
             	// it is empty before overwriting it, which would lead to a not referenced
             	// collection which is no longer deleted.
             	// I remove it before the response because a direct feedback to the user is important
             	// There is probably a cleaner way to do this
-            	if(this.features_collection.hasOwnProperty(identifier)){
-            		this.map.scene.primitives.remove(this.features_collection[identifier]);
-            		delete this.features_collection[identifier];
+            	for (var i = 0; i < this.activeCollections.length; i++) {
+            		
+            		if(this.features_collection.hasOwnProperty(this.activeCollections[i])){
+	            		this.map.scene.primitives.remove(this.features_collection[this.activeCollections[i]]);
+	            		delete this.features_collection[this.activeCollections[i]];
+	            	}
             	}
-
-            	if(this.features_collection.hasOwnProperty('linecollection')){
-            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
-            		delete this.features_collection['linecollection'];
-            	}
+            	this.activeCollections = [];
+            	
 
             	var settings = {};
 
@@ -936,32 +928,51 @@ define(['backbone.marionette',
             				if(params[k].selected){
             					settings[product.get('views')[0].id] = params[k];
             					settings[product.get('views')[0].id]['band'] = k;
+            					settings[product.get('views')[0].id]['alpha'] = Math.floor(product.get('opacity')*255);
+            					settings[product.get('views')[0].id]['outlines'] = product.get('outlines');
+            					settings[product.get('views')[0].id]['outline_color'] = product.get('color');
             				}
             			}
             		}
             	});
+            	var that = this;
 
-
-				this.features_collection[identifier] = new Cesium.PointPrimitiveCollection();
-
-				// Warning: Use of _private variables is undocumented and may change without warning.
-				this.features_collection[identifier]._rs = Cesium.RenderState.fromCache({
-				    depthTest : {
-				        enabled : true,
-				        func : Cesium.DepthFunction.LESS
-				    },
-				    depthMask : false,
-				    blending : Cesium.BlendingState.ALPHA_BLEND
-				});
+            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
+            		that.activeCollections.push(obj.id);
+            		if (settings[obj.id].band == 'F') {
+            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
+	            		
+	            		// Warning: Use of _private variables is undocumented and may change without warning.
+						that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
+						    depthTest : {
+						        enabled : true,
+						        func : Cesium.DepthFunction.LESS
+						    },
+						    depthMask : false,
+						    blending : Cesium.BlendingState.ALPHA_BLEND
+						});
+            		}else if(settings[obj.id].band == 'B_NEC'){
+            			that.features_collection[obj.id] = new Cesium.Primitive({
+						  	geometryInstances : [],
+						  	appearance : new Cesium.PerInstanceColorAppearance({
+						    	flat : true,
+						    	translucent : true
+						  	}),
+						  	releaseGeometryInstances: false
+						});
+            		}
+            	});
 
 				var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
 				var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
 				var previous_collection = '';
-				var line_primitives = [];
+				//var line_primitives = [];
 
+				var linecnt = 0;
 			    _.each(results, function(row){
 			    	var show = true;
 			    	var filters = globals.swarm.get('filters');
+			    	
 			    	if(filters){
 			    		for (k in filters){
 			    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
@@ -971,19 +982,25 @@ define(['backbone.marionette',
 			    	}
 
 			    	if (show){
+			    		var alpha = settings[row.id].alpha;
 			    		if (previous_collection != row.id){
 			    			previous_collection = row.id
 			    			this.plot.setColorScale(settings[row.id].colorscale);
+			    			this.plot.setDomain(settings[row.id].range);
 			    		}
 			    		if (settings[row.id].band == 'F') {
 				    		var color = this.plot.getColor(row['F']);
-							this.features_collection[identifier].add({
+				    		var options = {
 						        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
-						        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], 255),
-						        //outlineColor : Cesium.Color.BLUE,
+						        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
 						        pixelSize : 8,
 						        scaleByDistance : scaltype
-						    });
+						    };
+						    if(settings[row.id].outlines){
+						    	options['outlineWidth'] = 0.5;
+						    	options['outlineColor'] = Cesium.Color.fromCssColorString(settings[row.id].outline_color);
+						    }
+				    		this.features_collection[row.id].add(options);
 						}else if(settings[row.id].band == 'B_NEC'){
 							var v_len = Math.sqrt(Math.pow(row['B_N'],2)+Math.pow(row['B_E'],2)+Math.pow(row['B_C'],2));
 							var color = this.plot.getColor(v_len);
@@ -991,7 +1008,7 @@ define(['backbone.marionette',
 							var v_e = (row['B_E']/v_len)*add_len;
 							var v_n = (row['B_N']/v_len)*add_len;
 							var v_c = (row['B_C']/v_len)*add_len;
-							line_primitives.push( 
+							this.features_collection[row.id].geometryInstances.push( 
 							  	new Cesium.GeometryInstance({
 							    	geometry : new Cesium.SimplePolylineGeometry({
 							      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
@@ -1000,21 +1017,23 @@ define(['backbone.marionette',
 							      		]),
 							      		followSurface: false
 							    	}),
+							    	id: "vec_line_"+linecnt,
 							    	attributes : {
 							      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
-							      			new Cesium.Color.fromBytes(color[0], color[1], color[2], 255)
+							      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
 							      		)
 							    	}
 							  	})
 								
 							);
+							linecnt++;
 
 						}
 			    	}
 
 				}, this);
 
-			    if(line_primitives.length>0){
+			    /*if(line_primitives.length>0){
 			    	this.features_collection['linecollection'] = new Cesium.Primitive({
 					  	geometryInstances : line_primitives,
 					  	appearance : new Cesium.PerInstanceColorAppearance({
@@ -1023,10 +1042,13 @@ define(['backbone.marionette',
 					  	})
 					});
 					this.map.scene.primitives.add(this.features_collection['linecollection']);
-			    }
+			    }*/
 			    
 
-				this.map.scene.primitives.add(this.features_collection[identifier]);
+				//this.map.scene.primitives.add(this.features_collection[identifier]);
+				for (var i = 0; i < this.activeCollections.length; i++) {
+					this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
+				}
 			},
 
             createFeatures: function (results, identifier, band, alpha){
@@ -1099,6 +1121,20 @@ define(['backbone.marionette',
         		
             },
 
+            onLayerOutlinesChanged: function(collection){
+            	/*if (this.features_collection.hasOwnProperty(collection)){
+            		var col = this.features_collection[collection];
+            		if (col.hasOwnProperty("_pointPrimitives")){
+            			for (var i = col._pointPrimitives.length - 1; i >= 0; i--) {
+            				col._pointPrimitives[i].outlineColor = null;
+            				//col._pointPrimitives[i].outlineColor = 0;
+            			}
+            		}
+            	}*/
+            	this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
+            	
+            },
+
             OnLayerParametersChanged: function(layer){
             	globals.products.each(function(product) {
 
@@ -1121,9 +1157,6 @@ define(['backbone.marionette',
             			var coeff_range = product.get("coefficients_range");
 
 						if(product.get("views")[0].protocol == "CZML"){
-							//this.checkLayerFeatures(product, product.get("visible"));
-							//this.plot.setDomain(range);
-							//this.plot.setColorScale(style);
 							this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 	                	}else if(product.get("views")[0].protocol == "WMS"){
@@ -1246,99 +1279,46 @@ define(['backbone.marionette',
 				if (arg.active) {
 
 					var that = this;
-					this.drawhelper.startDrawingExtent({
+					this.drawhelper.startDrawingRectangle({
 	                    callback: function(extent) {
-
-				            /*console.log('Extent created (N: ' + extent.north.toFixed(3) +
-				            			 ', E: ' + extent.east.toFixed(3) + 
-				            			 ', S: ' + extent.south.toFixed(3) +
-				            			 ', W: ' + extent.west.toFixed(3) + ')');*/
-
-							//var colorindex = that.map.scene.primitives.length+1;
-							var colorindex = 0;
-							if(that.selectionType == "single"){
-								//that.map.scene.primitives.removeAll();
-								colorindex = that.map.scene.primitives.length;
-								//Communicator.mediator.trigger("selection:changed", null);
+							var bbox = {
+								n: Cesium.Math.toDegrees(extent.north),
+								e: Cesium.Math.toDegrees(extent.east),
+								s: Cesium.Math.toDegrees(extent.south),
+								w: Cesium.Math.toDegrees(extent.west)
 							}
-
-							//var color = that.colors(colorindex);
-							var color = null;
-
-							//Communicator.mediator.trigger("selection:changed", evt.feature);
-							// MH: this is a hack: I send the openlayers AND the coords so that the viewers (RBV, SliceViewer) do
-							// not have to be rewritten. This has to be changed somewhen...
-							var coordinates = that._convertCoordsFromCesium(extent, 0);
-							var feature = that._convertCoordsToOpenLayers(coordinates);
-							Communicator.mediator.trigger("selection:changed", feature, coordinates, color);
+							Communicator.mediator.trigger("selection:changed", bbox);
+							$('#bb_selection').html('Clear Selection');
 	                    }
 	                });
-
-					/*for (key in this.drawControls) {
-						var control = this.drawControls[key];
-						if (arg.id == key) {
-							control.activate();
-						} else {
-							control.layer.removeAllFeatures();
-							control.deactivate();
-							Communicator.mediator.trigger("selection:changed", null);
-						}
-					}*/
 				} else {
-					//this.map.scene.primitives.removeAll();
-					Communicator.mediator.trigger("selection:changed", null);
-					//this.drawhelper.muteHandlers(true);
-					//this.map.screenSpaceEventHandler.destroy();
+					//Communicator.mediator.trigger("selection:changed", null);
 					this.drawhelper.stopDrawing();
-					/*for (key in this.drawControls) {
-						var control = this.drawControls[key];
-						control.layer.removeAllFeatures();
-						control.deactivate();
-						Communicator.mediator.trigger("selection:changed", null);
-
-					}*/
 				}
 			},
            
 
-			onSelectionChanged: function(feature, coords, color){
+			onSelectionChanged: function(bbox){
 
-				if(coords){
-					// TODO: Color index is needed for multiple selections
-					// this feature is not used in VirES and deactivated right now
-					// as the colorindex is not correctly implemented
-					// Need to look into this code
-
-					/*var colorindex = this.map.scene.primitives.length+1;
-					if(this.selectionType == "single"){
-						if (this.extentPrimitive)
-							this.map.scene.primitives.remove(this.extentPrimitive);
-						if(this.FL_czml_src)
-							this.map.dataSources.remove(this.FL_czml_src);
-
-						colorindex = this.map.scene.primitives.length;
-					}
-
-					if(!color)
-						color = this.colors(colorindex);*/
-
+				if(bbox){
+					this.map.scene.primitives.removeAll();
 					var color = "#6699FF";
 
 					var material = Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
 					material.uniforms.color.alpha = 0.2;
 
-					var e = new Cesium.Rectangle();
+					var e = new Cesium.Rectangle(
+						Cesium.Math.toRadians(bbox.w),
+						Cesium.Math.toRadians(bbox.s),
+						Cesium.Math.toRadians(bbox.e),
+						Cesium.Math.toRadians(bbox.n)
+					);
 
-			        e.west = Cesium.Math.toRadians(coords[0].x);
-			        e.east = Cesium.Math.toRadians(coords[2].x);
-			        e.south = Cesium.Math.toRadians(coords[0].y);
-			        e.north = Cesium.Math.toRadians(coords[2].y);
+			        this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
 
-			        this.bboxsel = [coords[0].y, coords[0].x, coords[2].y, coords[2].x ];
-
-		            this.extentPrimitive = new DrawHelper.ExtentPrimitive({
-		                extent: e,
+		            this.extentPrimitive = new DrawHelper.RectanglePrimitive({
+		                rectangle: e,
 		                material: material
 		            });
 
@@ -1509,95 +1489,6 @@ define(['backbone.marionette',
 			onRemoveHighlights: function(){
 				this.billboards.removeAll();
 			},
-
-			/*onSelectionChanged: function(coords) {
-	            // FIXXME: The MapvView triggers the 'selection:changed' with the payload of 'null'
-	            // when the selection items in the toolbar are clicked. This event triggers this method
-	            // here in the VGV. So if the openlayers_geometry parameter is 'null' we skip the execution of this
-	            // method.
-				if (coords) {
-					console.dir(coords);
-				}
-			},*/
-
-
-			/*onLayerOutlinesChanged: function(layer, outlines){
-				globals.products.each(function(product) {
-
-					if(product.get("name")==layer){
-
-						if(product.get("views")[0].protocol == "CZML"){
-							this.checkLayerFeatures(product, product.get("visible"));
-	                	}
-				    }
-                    
-	            }, this);
-			},*/
-
-	        _convertCoordsFromOpenLayers: function(openlayer_geometry, altitude) {
-	            var verts = openlayer_geometry.getVertices();
-
-	            var coordinates = [];
-	            for (var idx = 0; idx < verts.length - 1; ++idx) {
-	                var p = {
-	                    x: verts[idx].x,
-	                    y: verts[idx].y,
-	                    z: altitude // not mandatory, can be undefined
-	                };
-
-	                coordinates.push(p);
-	            }
-	            var p = {
-	                x: verts[idx].x,
-	                y: verts[idx].y,
-	                z: altitude // not mandatory, can be undefined
-	            };
-
-	            coordinates.push(p);
-
-	            return coordinates;
-	        },
-
-	        _convertCoordsFromCesium: function(prim, altitude) {
-
-	            var coordinates = [];
-
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.west),
-	            	y: Cesium.Math.toDegrees(prim.south),
-	            	z: altitude
-	            });
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.west),
-	            	y: Cesium.Math.toDegrees(prim.north),
-	            	z: altitude
-	            });
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.east),
-	            	y: Cesium.Math.toDegrees(prim.north),
-	            	z: altitude
-	            });
-	            coordinates.push({
-	            	x: Cesium.Math.toDegrees(prim.east),
-	            	y: Cesium.Math.toDegrees(prim.south),
-	            	z: altitude
-	            });
-	            
-	            return coordinates;
-	        },
-
-	        _convertCoordsToOpenLayers: function(coords){
-	        	var points = [];
-                for (var idx = 0; idx < coords.length; idx++) {
-                    points.push(new OpenLayers.Geometry.Point(coords[idx].x, coords[idx].y));
-                };
-
-                var ring = new OpenLayers.Geometry.LinearRing(points);
-                var polygon = new OpenLayers.Geometry.Polygon([ring]);
-                var feature = new OpenLayers.Feature.Vector(polygon);
-
-                return feature;
-	        },
 
 			onTimeChange: function (time) {
 
@@ -1815,9 +1706,9 @@ define(['backbone.marionette',
             },
 
 			onClose: function(){
-				this.stopListening();
+				/*this.stopListening();
 				this.remove();
-				this.unbind();
+				this.unbind();*/
 				this.isClosed = true;
 			},
 
@@ -1834,7 +1725,7 @@ define(['backbone.marionette',
 
 			onLoadImage: function(url, selection_bounds){
 
-				proj4326 = new OpenLayers.Projection("EPSG:4326");
+				/*proj4326 = new OpenLayers.Projection("EPSG:4326");
 				bounds = selection_bounds;
 
 				bounds.transform(proj4326, this.map.getProjectionObject());
@@ -1854,7 +1745,7 @@ define(['backbone.marionette',
 					 	minzindex = zindex;
 				}.bind(this));
 
-				this.diff_overlay.setZIndex(minzindex-1);
+				this.diff_overlay.setZIndex(minzindex-1);*/
 	
 			},
 

@@ -24,7 +24,7 @@ define([
 				//tileManager: this.tileManager
 			});
 
-			this.connectToView();
+			//this.connectToView();
 		},
 
 		getView: function(id) {
@@ -44,7 +44,7 @@ define([
 		},
 
 		connectToView: function() {
-			// this.cesiumView.listenTo(Communicator.mediator, "map:center", _.bind(this.cesiumView.centerMap, this.cesiumView));
+
 			this.cesiumView.listenTo(Communicator.mediator, 'map:set:extent', _.bind(this.cesiumView.onSetExtent, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "map:layer:change", _.bind(this.cesiumView.changeLayer, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, "productCollection:sortUpdated", _.bind(this.cesiumView.onSortProducts, this.cesiumView));
@@ -57,37 +57,13 @@ define([
 
 			this.cesiumView.listenTo(Communicator.mediator, "layer:parameters:changed", _.bind(this.cesiumView.OnLayerParametersChanged, this.cesiumView));
 
-			//this.cesiumView.listenTo(Communicator.mediator, "layer:outlines:changed", _.bind(this.cesiumView.onLayerOutlinesChanged, this.cesiumView));
-			//this.cesiumView.listenTo(Communicator.mediator, "layer:fieldlines:changed", _.bind(this.cesiumView.onFieldlinesChanged, this.cesiumView));
-			
-		
-			//this.cesiumView.listenTo(Communicator.mediator, "map:load:image", _.bind(this.cesiumView.onLoadImage, this.cesiumView));
-			//this.cesiumView.listenTo(Communicator.mediator, "map:clear:image", _.bind(this.cesiumView.onClearImage, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "layer:outlines:changed", _.bind(this.cesiumView.onLayerOutlinesChanged, this.cesiumView));
 
-			/*if (!this.cesiumView.isEventListenedTo("map:load:geojson"))
-				this.cesiumView.listenTo(Communicator.mediator, "map:load:geojson", _.bind(this.cesiumView.onLoadGeoJSON, this.cesiumView));*/
-
-	
-			//this.cesiumView.listenTo(Communicator.mediator, "map:export:geojson", _.bind(this.cesiumView.onExportGeoJSON, this.cesiumView));
 			this.cesiumView.listenTo(Communicator.mediator, 'time:change', _.bind(this.cesiumView.onTimeChange, this.cesiumView));
-            
-
-			//this.listenTo(Communicator.mediator, "selection:changed", _.bind(this.cesiumView.onSelectionChanged, this.cesiumView));
-
-			//Communicator.reqres.setHandler('get:selection:json', _.bind(this.cesiumView.onGetGeoJSON, this.cesiumView));
+ 
 			Communicator.reqres.setHandler('map:get:extent', _.bind(this.cesiumView.onGetMapExtent, this.cesiumView));
 
 			this.cesiumView.listenTo(this.cesiumView.model, 'change', function(model, options) {
-				/*Communicator.mediator.trigger("router:setUrl", {
-					x: model.get('center')[0],
-					y: model.get('center')[1],
-					l: model.get('zoom')
-				});*/
-				/*Communicator.mediator.trigger("map:center", {
-					x: model.get('center')[0],
-					y: model.get('center')[1],
-					l: model.get('zoom')
-				});*/
 			});
 		},
 

@@ -18,11 +18,12 @@ define(['backbone.marionette',
 				this.isClosed = true;
 				this.request_url = "";
 				this.plot_type = 'scatter';
-				this.sp = null;
+				this.sp = undefined;
 
 				$(window).resize(function() {
 					this.onResize();
 				}.bind(this));
+				this.connectDataEvents();
 			},
 
 
@@ -40,9 +41,11 @@ define(['backbone.marionette',
 				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
 
+				$('#tmp_download_button').unbind( "click" );
+				$('#tmp_download_button').remove();
 
 				// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
-				var download = d3.select(this.el).append("button")   
+				var download = d3.select(this.el).append("button")
 			        .attr("type", "button")
 			        .attr("id", "tmp_download_button")
 			        .attr("class", "btn btn-success")
@@ -76,40 +79,46 @@ define(['backbone.marionette',
 				};
 
 				
+				if (this.sp === undefined){
 
-            	this.sp = new scatterPlot(args, function(){},
-					function (values) {
-						if (values != null){
-							Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);	
-						}else{
-							Communicator.mediator.trigger("cesium:highlight:removeAll");
+	            	this.sp = new scatterPlot(args, function(){},
+						function (values) {
+							if (values != null){
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);	
+							}else{
+								Communicator.mediator.trigger("cesium:highlight:removeAll");
+							}
+							
+						}, 
+						function(filter){
+							Communicator.mediator.trigger("analytics:set:filter", filter);
 						}
-						
-					}, 
-					function(filter){
-						Communicator.mediator.trigger("analytics:set:filter", filter);
-					}
-				);
+					);
 
+				}
 				if(swarmdata && swarmdata.length>0){
 					args['parsedData'] = swarmdata;
 					that.sp.loadData(args);
 				}
-
 				
+				return this;
+			},
 
+			connectDataEvents: function(){
+				globals.swarm.on('change:data', this.reloadData.bind(this));
+			},
 
-				globals.swarm.on('change:data', function(model, data) {
-				  	var args = {
-						selector: that.$('.d3canvas')[0],
+			reloadData: function(model, data) {
+				if(this.$('.d3canvas').length == 1){
+					$('#scatterdiv').empty();
+					$('#parallelsdiv').empty();
+					var args = {
+						selector: this.$('.d3canvas')[0],
 						parsedData: data
 					};
 
-					that.sp.loadData(args);
-					
-				});
-				
-				return this;
+					this.sp.loadData(args);
+				}
 			},
 
 			onResize: function() {
@@ -122,6 +131,8 @@ define(['backbone.marionette',
 
 			close: function() {
 	            this.isClosed = true;
+	            this.$el.empty();
+	            //globals.swarm.off("change:data", this.reloadData);
 	            this.triggerMethod('view:disconnect');
 	        }
 
