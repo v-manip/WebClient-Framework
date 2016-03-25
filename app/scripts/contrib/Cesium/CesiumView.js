@@ -63,6 +63,8 @@ define(['backbone.marionette',
 				plotty.addColorScale("custom2", ["#000000", "#030aff", "#204aff", "#3c8aff", "#77c4ff", "#f0ffff", "#f0ffff", "#f2ff7f", "#ffff00", "#ff831e", "#ff083d", "#ff00ff"], [0, 0.0000000001, 0.1, 0.2, 0.3333, 0.4666, 0.5333, 0.6666, 0.8, 0.9, 0.999999999999, 1]);
 				plotty.addColorScale("blackwhite", ["#000000", "#ffffff"], [0, 1]);
 
+				this.connectDataEvents();
+
 			},
 
 			createMap: function() {
@@ -261,24 +263,11 @@ define(['backbone.marionette',
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
 
-				globals.swarm.on('change:data', function(model, data) {
-					var that = this;
-					if (data.length && data.length>0){
-						that.createDataFeatures(data, 'pointcollection', 'band');
-					}else{
-						for (var i = 0; i < this.activeCollections.length; i++) {
-		            		if(this.features_collection.hasOwnProperty(this.activeCollections[i])){
-			            		this.map.scene.primitives.remove(this.features_collection[this.activeCollections[i]]);
-			            		delete this.features_collection[this.activeCollections[i]];
-			            	}
-		            	}
-		            	this.activeCollections = [];
-					}
-				}, this);
+				
+				this.connectDataEvents();
 
-				globals.swarm.on('change:filters', function(model, filters) {
-					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
-				}, this);
+				// Redraw to make sure we are at current selection
+				this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 				$('#bb_selection').unbind('click');
 				$('#bb_selection').click(function(){
@@ -306,6 +295,29 @@ define(['backbone.marionette',
 
 				//this.onResize();
 				return this;
+			},
+
+			connectDataEvents: function(){
+				//globals.swarm.off('change:data');
+				globals.swarm.on('change:data', function(model, data) {
+					var that = this;
+					if (data.length && data.length>0){
+						that.createDataFeatures(data, 'pointcollection', 'band');
+					}else{
+						for (var i = 0; i < this.activeCollections.length; i++) {
+		            		if(this.features_collection.hasOwnProperty(this.activeCollections[i])){
+			            		this.map.scene.primitives.remove(this.features_collection[this.activeCollections[i]]);
+			            		delete this.features_collection[this.activeCollections[i]];
+			            	}
+		            	}
+		            	this.activeCollections = [];
+					}
+				}, this);
+
+				//globals.swarm.off('change:filters');
+				globals.swarm.on('change:filters', function(model, filters) {
+					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
+				}, this);
 			},
 
 			onResize: function() {
@@ -890,7 +902,7 @@ define(['backbone.marionette',
 
             createDataFeatures: function (results, identifier, band, alpha){
 
-            	// The feature collection is removed directly when a change happens
+            	// The feature collections are removed directly when a change happens
             	// because of the asynchronous behavior it can happen that a collection
             	// is added between removing it and adding another one so here we make sure
             	// it is empty before overwriting it, which would lead to a not referenced
@@ -907,11 +919,6 @@ define(['backbone.marionette',
             	this.activeCollections = [];
             	
 
-            	/*if(this.features_collection.hasOwnProperty('linecollection')){
-            		this.map.scene.primitives.remove(this.features_collection['linecollection']);
-            		delete this.features_collection['linecollection'];
-            	}*/
-
             	var settings = {};
 
             	globals.products.each(function(product) {
@@ -922,6 +929,8 @@ define(['backbone.marionette',
             					settings[product.get('views')[0].id] = params[k];
             					settings[product.get('views')[0].id]['band'] = k;
             					settings[product.get('views')[0].id]['alpha'] = Math.floor(product.get('opacity')*255);
+            					settings[product.get('views')[0].id]['outlines'] = product.get('outlines');
+            					settings[product.get('views')[0].id]['outline_color'] = product.get('color');
             				}
             			}
             		}
@@ -981,14 +990,17 @@ define(['backbone.marionette',
 			    		}
 			    		if (settings[row.id].band == 'F') {
 				    		var color = this.plot.getColor(row['F']);
-				    		this.features_collection[row.id].add({
-							//this.features_collection[identifier].add({
+				    		var options = {
 						        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
 						        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
-						        //outlineColor : Cesium.Color.BLUE,
 						        pixelSize : 8,
 						        scaleByDistance : scaltype
-						    });
+						    };
+						    if(settings[row.id].outlines){
+						    	options['outlineWidth'] = 0.5;
+						    	options['outlineColor'] = Cesium.Color.fromCssColorString(settings[row.id].outline_color);
+						    }
+				    		this.features_collection[row.id].add(options);
 						}else if(settings[row.id].band == 'B_NEC'){
 							var v_len = Math.sqrt(Math.pow(row['B_N'],2)+Math.pow(row['B_E'],2)+Math.pow(row['B_C'],2));
 							var color = this.plot.getColor(v_len);
@@ -1107,6 +1119,20 @@ define(['backbone.marionette',
 				}
 
         		
+            },
+
+            onLayerOutlinesChanged: function(collection){
+            	/*if (this.features_collection.hasOwnProperty(collection)){
+            		var col = this.features_collection[collection];
+            		if (col.hasOwnProperty("_pointPrimitives")){
+            			for (var i = col._pointPrimitives.length - 1; i >= 0; i--) {
+            				col._pointPrimitives[i].outlineColor = null;
+            				//col._pointPrimitives[i].outlineColor = 0;
+            			}
+            		}
+            	}*/
+            	this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
+            	
             },
 
             OnLayerParametersChanged: function(layer){
@@ -1680,9 +1706,9 @@ define(['backbone.marionette',
             },
 
 			onClose: function(){
-				this.stopListening();
+				/*this.stopListening();
 				this.remove();
-				this.unbind();
+				this.unbind();*/
 				this.isClosed = true;
 			},
 

@@ -23,6 +23,7 @@ define(['backbone.marionette',
 				$(window).resize(function() {
 					this.onResize();
 				}.bind(this));
+				this.connectDataEvents();
 			},
 
 
@@ -99,21 +100,23 @@ define(['backbone.marionette',
 					args['parsedData'] = swarmdata;
 					that.sp.loadData(args);
 				}
-
 				
+				return this;
+			},
 
+			connectDataEvents: function(){
+				globals.swarm.on('change:data', this.reloadData.bind(this));
+			},
 
-				globals.swarm.on('change:data', function(model, data) {
-				  	var args = {
-						selector: that.$('.d3canvas')[0],
+			reloadData: function(model, data) {
+				if(this.$('.d3canvas').length == 1){
+					var args = {
+						selector: this.$('.d3canvas')[0],
 						parsedData: data
 					};
 
-					that.sp.loadData(args);
-					
-				});
-				
-				return this;
+					this.sp.loadData(args);
+				}
 			},
 
 			onResize: function() {
@@ -126,7 +129,8 @@ define(['backbone.marionette',
 
 			close: function() {
 	            this.isClosed = true;
-	            globals.swarm.off("change:data");
+	            this.$el.empty();
+	            //globals.swarm.off("change:data", this.reloadData);
 	            this.triggerMethod('view:disconnect');
 	        }
 
