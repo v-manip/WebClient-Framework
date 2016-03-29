@@ -25,7 +25,7 @@
 	        this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
 	        this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChange);
 	        this.listenTo(Communicator.mediator, "dialog:open:download", this.onDownloadToolOpen);
-	        this.listenTo(Communicator.mediator, "download:set:filter", this.onDownloadSetFilter);
+	        this.listenTo(Communicator.mediator, "analytics:set:filter", this.onDownloadSetFilter);
 	        this.listenTo(Communicator.mediator, "dialog:open:download:filter", this.onDownloadToolFilterOpen);
 		},
 
@@ -54,11 +54,9 @@
 			this.model.set('filter', filter);
 		},
 
-	    onSelectionChange: function(selection) {
-	        if (selection != null) {
-	          if(selection.geometry.CLASS_NAME == "OpenLayers.Geometry.Polygon"){
-	            this.model.set('AoI', selection.geometry);
-	          }
+	    onSelectionChange: function(bbox) {
+	        if (bbox != null) {
+	            this.model.set('AoI', bbox);
 	        }else{
 	          this.model.set('AoI', null);
 	        }

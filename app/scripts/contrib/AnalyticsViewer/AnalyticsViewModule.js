@@ -18,14 +18,15 @@ define([
 		// connected to the event system of the application via the Communicator.
 		// Moreover the Router responsible for this module is activated in this routine.
 		this.on('start', function(options) {
-			this.instances = {};
+			//this.instances = {};
+			this.instance = undefined;
 			this.idx = 0;
 
 			console.log('[AnalyticsViewerModule] Finished module initialization');
 		});
 
 		this.createController = function(opts) {
-			var id = undefined;
+			/*var id = undefined;
 			
 
 			if (typeof opts !== 'undefined') {
@@ -49,7 +50,14 @@ define([
 			var controller = new AnalyticsViewController({});
 			this.instances[id] = controller;
 
-			return controller;
+			return controller;*/
+			var i = this.insance;
+			if(this.insance === undefined){
+				i = new AnalyticsViewController({});
+				this.insance = i;
+			}
+			return i;
+
 		};
 	});
 });

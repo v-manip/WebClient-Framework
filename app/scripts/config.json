@@ -11,9 +11,7 @@
 
     "mapConfig": {
         "model": "models/MapModel",
-        "visualizationLibs": [
-            "openlayers"
-        ],
+        "visualizationLibs": [],
         "center": [13.41, 52.52],
         "zoom": 5,
         "showSun": false,
@@ -28,11 +26,11 @@
                 "id": "terrain-light",
                 "protocol": "WMTS",
                 "urls": [
-                    "http://a.tiles.maps.eox.at/wmts/",
-                    "http://b.tiles.maps.eox.at/wmts/",
-                    "http://c.tiles.maps.eox.at/wmts/",
-                    "http://d.tiles.maps.eox.at/wmts/",
-                    "http://e.tiles.maps.eox.at/wmts/"
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -52,7 +50,7 @@
                 "id": "terrain-light",
                 "protocol": "WMS",
                 "urls": [
-                    "http://tiles.maps.eox.at/wms"
+                    "//tiles.maps.eox.at/wms"
                 ],
                 "style": "default",
                 "format": "image/jpeg",
@@ -65,11 +63,11 @@
                 "id": "terrain",
                 "protocol": "WMTS",
                 "urls": [
-                    "http://a.tiles.maps.eox.at/wmts/",
-                    "http://b.tiles.maps.eox.at/wmts/",
-                    "http://c.tiles.maps.eox.at/wmts/",
-                    "http://d.tiles.maps.eox.at/wmts/",
-                    "http://e.tiles.maps.eox.at/wmts/"
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -89,7 +87,7 @@
                 "id": "terrain",
                 "protocol": "WMS",
                 "urls": [
-                    "http://tiles.maps.eox.at/wms"
+                    "//tiles.maps.eox.at/wms"
                 ],
                 "style": "default",
                 "format": "image/jpeg",
@@ -102,11 +100,11 @@
                 "id": "bluemarble",
                 "protocol": "WMTS",
                 "urls": [
-                    "http://a.tiles.maps.eox.at/wmts/",
-                    "http://b.tiles.maps.eox.at/wmts/",
-                    "http://c.tiles.maps.eox.at/wmts/",
-                    "http://d.tiles.maps.eox.at/wmts/",
-                    "http://e.tiles.maps.eox.at/wmts/"
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -126,7 +124,7 @@
                 "id": "bluemarble",
                 "protocol": "WMS",
                 "urls": [
-                    "http://tiles.maps.eox.at/wms"
+                    "//tiles.maps.eox.at/wms"
                 ],
                 "style": "default",
                 "format": "image/jpeg",
@@ -173,7 +171,7 @@
                     "name": "Magnetic field intensity"
                 }
             },
-            "outlines": true,
+            "outlines": false,
             "satellite": "Swarm"
 
         },{
@@ -673,7 +671,7 @@
                 "id": "Wireframe",
                 "protocol": "DEM",
                 "urls": [
-                    "http://data.eox.at/elevation?"
+                    "//data.eox.at/elevation?"
                 ],
                 "style": "default",
                 "format": "image/png"
@@ -686,11 +684,11 @@
             "protocol": "WMTS",
             "visible": false,
             "urls": [
-                "http://a.tiles.maps.eox.at/wmts/",
-                "http://b.tiles.maps.eox.at/wmts/",
-                "http://c.tiles.maps.eox.at/wmts/",
-                "http://d.tiles.maps.eox.at/wmts/",
-                "http://e.tiles.maps.eox.at/wmts/"
+                "//a.tiles.maps.eox.at/wmts/",
+                "//b.tiles.maps.eox.at/wmts/",
+                "//c.tiles.maps.eox.at/wmts/",
+                "//d.tiles.maps.eox.at/wmts/",
+                "//e.tiles.maps.eox.at/wmts/"
             ],
             "matrixSet": "WGS84",
             "style": "default",
@@ -713,11 +711,11 @@
             "protocol": "WMTS",
             "visible": false,
             "urls": [
-                "http://a.tiles.maps.eox.at/wmts/",
-                "http://b.tiles.maps.eox.at/wmts/",
-                "http://c.tiles.maps.eox.at/wmts/",
-                "http://d.tiles.maps.eox.at/wmts/",
-                "http://e.tiles.maps.eox.at/wmts/"
+                "//a.tiles.maps.eox.at/wmts/",
+                "//b.tiles.maps.eox.at/wmts/",
+                "//c.tiles.maps.eox.at/wmts/",
+                "//d.tiles.maps.eox.at/wmts/",
+                "//e.tiles.maps.eox.at/wmts/"
             ],
             "matrixSet": "WGS84",
             "style": "default",
@@ -771,12 +769,22 @@
             "icon": "fa-globe",
             "eventToRaise": "ui:open:layercontrol",
             "template": "LayerControl"
-        }, {
-            "name": "Tools",
-            "icon": "fa-wrench",
-            "eventToRaise": "ui:open:toolselection",
-            "template": "ToolSelection"
-        }, {
+        }, 
+        {
+            "name": "Views",
+            "icon": "fa-eye",
+            "subitems": [{
+                "name": "Globe",
+                "eventToRaise": "ui:fullscreen:globe"
+            }, {
+                "name": "Analytics",
+                "eventToRaise": "ui:fullscreen:analytics"
+            }, {
+                "name": "Split Screen",
+                "eventToRaise": "layout:switch:splitview"
+            }]
+        },
+        {
             "name": "Tutorials",
             "icon": "fa-book",
             "subitems": [{
@@ -805,8 +813,8 @@
             "end": "2014-09-30T05:00:00Z"
         },
         "display": {
-            "start": "2014-09-12T01:00:00Z",
-            "end": "2014-10-22T01:00:00Z"
+            "start": "2016-01-12T01:00:00Z",
+            "end": "2016-06-22T01:00:00Z"
         }
     },
 
@@ -820,7 +828,6 @@
         "views/ContentView",
         "views/TimeSliderView",
         "views/ToolSelectionView",
-        "core/ColorRamp/ColorRampView",
         "views/ToolItemView",
         "views/DownloadView",
         "views/DownloadFilterView",
@@ -899,110 +906,9 @@
             "icon": "fa fa-download fa-2x",
             "enabled": false,
             "active": false
-        }, {
-            "id": "selectionManager",
-            "eventToRaise": "ui:open:selectionManager",
-            "description": "Import, export and saving functionality for selections",
-            "icon": "fa fa-edit fa-2x",
-            "enabled": true,
-            "active": false
         }
-
     ],
 
-    "visualizationModes": [{
-            "id": "SingleView",
-            "eventToRaise": "layout:switch:singleview",
-            "description": "Single view of map",
-            "icon": "fa fa-stop fa-2x",
-            "enabled": true,
-            "active": true
-        }, {
-            "id": "SplitView",
-            "eventToRaise": "layout:switch:splitview",
-            "description": "Splits screen to visualize two maps side by side",
-            "icon": "fa fa-pause fa-2x",
-            "enabled": true,
-            "active": false
-        }
+    "visualizationModes": []
 
-    ],
-
-    "backendConfig": {
-        "MeshFactory": {
-            "protocol": "W3DS",
-            "url": "http://demo.v-manip.eox.at/browse/ows?",
-            "version": "1.0.0"
-        },
-        "W3DSDataUrl": "http://demo.v-manip.eox.at/gltf/"
-    },
-
-    "colorRamp": {
-        "alphaThreshold": 0.05,
-        "steps": [{
-            "start": 0.0,
-            "stop": 0.063,
-            "color": [0.043, 0.059, 0.000, 1.0]
-        }, {
-            "start": 0.063,
-            "stop": 0.125,
-            "color": [0.227, 0.102, 0.004, 1.0]
-        }, {
-            "start": 0.125,
-            "stop": 0.188,
-            "color": [0.388, 0.153, 0.000, 1.0]
-        }, {
-            "start": 0.188,
-            "stop": 0.250,
-            "color": [0.420, 0.549, 0.000, 1.0]
-        }, {
-            "start": 0.250,
-            "stop": 0.313,
-            "color": [0.000, 0.718, 0.047, 1.0]
-        }, {
-            "start": 0.313,
-            "stop": 0.375,
-            "color": [0.000, 0.878, 0.788, 1.0]
-        }, {
-            "start": 0.375,
-            "stop": 0.438,
-            "color": [0.000, 0.263, 1.000, 1.0]
-        }, {
-            "start": 0.438,
-            "stop": 0.500,
-            "color": [0.565, 0.000, 1.000, 1.0]
-        }, {
-            "start": 0.500,
-            "stop": 0.563,
-            "color": [1.000, 0.000, 0.596, 1.0]
-        }, {
-            "start": 0.563,
-            "stop": 0.625,
-            "color": [1.000, 0.231, 0.000, 1.0]
-        }, {
-            "start": 0.625,
-            "stop": 0.688,
-            "color": [0.933, 1.000, 0.027, 1.0]
-        }, {
-            "start": 0.688,
-            "stop": 0.750,
-            "color": [0.286, 1.000, 0.208, 1.0]
-        }, {
-            "start": 0.750,
-            "stop": 0.813,
-            "color": [0.376, 1.000, 0.831, 1.0]
-        }, {
-            "start": 0.813,
-            "stop": 0.875,
-            "color": [0.529, 0.733, 1.000, 1.0]
-        }, {
-            "start": 0.850,
-            "stop": 0.938,
-            "color": [0.820, 0.698, 1.000, 1.0]
-        }, {
-            "start": 0.938,
-            "stop": 1.0,
-            "color": [1.000, 0.867, 0.969, 1.0]
-        }]
-    }
 }

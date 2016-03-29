@@ -4,6 +4,7 @@
     var root = this;
 
     root.require.config({
+        waitSeconds: 120,
         /* starting point for application */
         deps: ['backbone.marionette', 'bootstrap', 'marionette.handlebars', 'main'],
 
@@ -102,18 +103,12 @@
             /* marionette and handlebars plugin */
             'marionette.handlebars': '../bower_components/backbone.marionette.handlebars/backbone.marionette.handlebars.min',
 
-            'openlayers': '../scripts/vendor/OpenLayers',
-            // 'openlayers': 'http://openlayers.org/api/OpenLayers',
-            //'openlayers': 'http://ol3js.org/en/master/build/ol',
 
-            /* 3D viewer modules base libraries */
-
-            //virtualglobeviewer: "../bower_components/virtualglobeviewer/src",
-            //x3dom: "../scripts/vendor/x3dom-full.debug",
             keypress: '../bower_components/Keypress/keypress',
-            //xtk: '../scripts/vendor/xtk_edge',
-            //'xtk-gui': '../scripts/vendor/xtk_xdat.gui',
-            papaparse: '../bower_components/papaparse/papaparse.min'
+
+            papaparse: '../bower_components/papaparse/papaparse.min',
+
+            plotty: '../bower_components/plotty/dist/plotty.min'
 
         },
 

@@ -32,7 +32,7 @@
 				// If settings open rerender view to update changes
 				this.listenTo(Communicator.mediator, "layer:settings:changed", this.onParameterChange);
 
-				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-gears"></i> ' + this.model.get("name") + ' Settings</h3>');
+				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-sliders"></i> ' + this.model.get("name") + ' Settings</h3>');
 
 		    	this.$('.close').on("click", _.bind(this.onClose, this));
 		    	this.$el.draggable({ 
@@ -113,9 +113,16 @@
 					Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
 				});
 
+				this.$("#opacitysilder").val(this.model.attributes.opacity*100);
+				this.$("#opacitysilder").on("input change", function(){
+					var opacity = Number(this.value)/100;
+					that.model.set("opacity", opacity);
+					Communicator.mediator.trigger('productCollection:updateOpacity', {model:that.model, value:opacity});
+				});
+
 				
 
-				/*if(!(typeof outlines === 'undefined')){
+				if(!(typeof outlines === 'undefined')){
 					var checked = "";
 					if (outlines)
 						checked = "checked";
@@ -130,9 +137,9 @@
 					this.$("#outlines input").change(function(evt){
 						var outlines = !that.model.get("outlines");
 						that.model.set("outlines", outlines);
-						Communicator.mediator.trigger("layer:outlines:changed", that.model.get("name"), outlines);
+						Communicator.mediator.trigger("layer:outlines:changed", that.model.get("views")[0].id, outlines);
 					});
-				}*/
+				}
 
 
 				if(!(typeof this.model.get("coefficients_range") === 'undefined')){

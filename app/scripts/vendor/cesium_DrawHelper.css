@@ -2,7 +2,7 @@
     initial twipsy code taken from bootstrap
 */
 .twipsy {
-    display: block;
+    display: none;
     position: absolute;
     visibility: visible;
     max-width: 200px;

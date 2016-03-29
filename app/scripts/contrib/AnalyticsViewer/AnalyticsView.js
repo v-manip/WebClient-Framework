@@ -16,36 +16,22 @@ define(['backbone.marionette',
 
 			initialize: function(options) {
 				this.isClosed = true;
-				this.selection_list = [];
-				this.plotdata = [];
 				this.request_url = "";
-				this.img = null;
-				this.overlay = null;
-				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
-				this.selected_time = Communicator.reqres.request('get:time');
-				//this.shc = null;
-				this.shc_active = false;
-				this.activeModels = [];
-				this.sp = null;
+				this.sp = undefined;
 
 				$(window).resize(function() {
 					this.onResize();
 				}.bind(this));
+				this.connectDataEvents();
 			},
 
-			/*events: {
-				'click .scatter-btn': function() {
-					this.render('scatter');
-				},
-
-			},*/
 
 			onShow: function() {
+
+				var that = this;
 				
-				//this.delegateEvents();
 				this.isClosed = false;
-				//this.triggerMethod('view:connect');
 
 				this.selection_list = [];
 				this.plotdata = [];
@@ -55,58 +41,84 @@ define(['backbone.marionette',
 				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
 
+				$('#tmp_download_button').unbind( "click" );
+				$('#tmp_download_button').remove();
+
 				// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
-				var download = d3.select(this.el).append("button")   
+				var download = d3.select(this.el).append("button")
 			        .attr("type", "button")
 			        .attr("id", "tmp_download_button")
 			        .attr("class", "btn btn-success")
 			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 8000;")
 			        .text("Download");
 
+
 				$("#tmp_download_button").click(function(evt){
 					Communicator.mediator.trigger("dialog:open:download:filter", true);
 				});
 				
 
-				this.$el.append(
-					"<div class='d3canvas'></div>");
+				this.$el.append("<div class='d3canvas'></div>");
 
+				this.$('.d3canvas').append("<div id='scatterdiv' style='height:55%;'></div>");
+				this.$('.d3canvas').append("<div id='parallelsdiv' style='height:45%;'></div>");
 
-				globals.products.each(function(product) {
-	                if (product.get('visible')) {
-	                    if (product.get("processes")) {
-	                        this.activeWPSproducts.push(product.get('processes')[0].layer_id)
-	                    }
-	                    if (product.get("model")){
-		              		this.activeModels.push(product.get("views")[0].id);
-		              	}
-	                }
-            	}, this);
-
-            	var args = {
+            	/*var args = {
 					selector: this.$('.d3canvas')[0]
+				};*/
+
+				var swarmdata = globals.swarm.get('data');
+
+				var args = {
+					scatterEl: '#scatterdiv',
+					histoEl: "#parallelsdiv",
+					selection_x: 'Latitude',
+					selection_y: ['F'],
+					margin: {top: 10, right: 20, bottom: 10, left: 50},
+					toIgnoreHistogram: ['B_error', 'Latitude', 'Longitude', 'Radius']
 				};
 
-            	this.sp = new scatterPlot(args, function(){
-								//sp.absolute("id1","Latitude");
-								//sp.colatitude("undefined");
-							},
-							function (values) {
-								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
-							}, 
-							function(){
+				
+				if (this.sp === undefined){
+
+	            	this.sp = new scatterPlot(args, function(){},
+						function (values) {
+							if (values != null){
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);	
+							}else{
 								Communicator.mediator.trigger("cesium:highlight:removeAll");
-							},
-							function(filter){
-								Communicator.mediator.trigger("download:set:filter", filter);
-							});
+							}
+							
+						}, 
+						function(filter){
+							Communicator.mediator.trigger("analytics:set:filter", filter);
+						}
+					);
 
-
-				this.render('scatter');
-
-				this.checkSelections();
+				}
+				if(swarmdata && swarmdata.length>0){
+					args['parsedData'] = swarmdata;
+					that.sp.loadData(args);
+				}
 				
 				return this;
+			},
+
+			connectDataEvents: function(){
+				globals.swarm.on('change:data', this.reloadData.bind(this));
+			},
+
+			reloadData: function(model, data) {
+				if(this.$('.d3canvas').length == 1){
+					$('#scatterdiv').empty();
+					$('#parallelsdiv').empty();
+					var args = {
+						selector: this.$('.d3canvas')[0],
+						parsedData: data
+					};
+
+					this.sp.loadData(args);
+				}
 			},
 
 			onResize: function() {
@@ -114,164 +126,13 @@ define(['backbone.marionette',
 
 			render: function(type) {
 
-				var colors = globals.objects.get("productcolors");
-
-				this.plot_type = type;
-
-				if(type!="overlay")
-					this.$('.d3canvas').empty();
-
-				var args = {
-					selector: this.$('.d3canvas')[0],
-					//url: this.request_url
-					data: this.plotdata,
-					//colors: colors
-				};
-				
-
-				switch (type){
-					case 'scatter':
-						this.sp.loadData(args);
-					break;
-				}
-
 				this.onResize();
-			},
-
-			changeLayer: function(options) {
-				if (!options.isBaseLayer){
-		          var product = globals.products.find(function(model) { return model.get('name') == options.name; });
-		          if (product){
-		            if(options.visible && product.get('timeSlider')){
-
-		            	if (product.get("processes")){
-		            		_.each(product.get("processes"), function(process){
-		            			this.activeWPSproducts.push(process.layer_id);
-		            		},this);
-		              	}
-		              	if (product.get("model")){
-		              		//this.activeModels.push({id: product.get("views")[0].id, url: product.get("views")[0.urls[0]]});
-		              		this.activeModels.push(product.get("views")[0].id);
-		              	}
-		              			              
-		            }else{
-		            	_.each(product.get("processes"), function(process){
-	            			if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
-			                	this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
-			              	console.log(this.activeWPSproducts);
-	            		},this);
-
-	            		if (product.get("model")){
-		              		//this.activeModels.push({id: product.get("views")[0].id, url: product.get("views")[0.urls[0]]});
-		              		if (this.activeModels.indexOf(product.get("views")[0].id)!=-1)
-		              			this.activeModels.splice(this.activeModels.indexOf(product.get("views")[0].id), 1);
-		              	}
-		            }
-		            if(options.visible && product.get("views")[0].id == "shc")
-		            	this.shc_active = true;
-		            else if (!options.visible && product.get("views")[0].id == "shc")
-		            	this.shc_active = false;
-
-		            this.checkSelections();
-		          }
-		        }
-			},
-
-			onSortProducts: function(productLayers) {},
-
-			onSelectionChanged: function(feature) {
-				
-				if(feature){
-					this.selection_list.push(feature.clone());
-					this.checkSelections();
-				}else{
-					this.plotdata = [];
-					this.selection_list = [];
-					this.request_url = "";
-					this.checkSelections();
-				}
-
-				
-			},
-
-			checkSelections: function(){
-				//if (this.activeWPSproducts.length > 0 && this.selection_list.length > 0 && this.selected_time){
-				if (this.activeWPSproducts.length > 0 && this.selected_time){
-					this.sendRequest();
-				}else{
-					this.$('.d3canvas').empty();
-					this.$('.d3canvas').html('<div class="empty-view">Please make sure to select a Layer, an Area of Interest (AoI) and a Time of Interest</div>');
-				}
-			},
-
-			onTimeChange: function (time) {
-				this.selected_time = time;
-				this.checkSelections();
-			},
-
-			sendRequest: function(){
-
-				var that = this;
-
-				var map_crs_reverse_axes = true;
-
-				var retrieve_data = [];
-
-				globals.products.each(function(model) {
-	                if (model.get('visible')) {
-	                	var processes = model.get("processes");
-	                	_.each(processes, function(process){
-	                		if(process){
-			                    switch (process.id){
-			                    	case "retrieve_data":
-			                    		retrieve_data.push({
-			                    			layer:process.layer_id,
-			                    			url: model.get("views")[0].urls[0]
-			                    		});
-			                    	break;
-			                    	
-			                    }
-			                }
-	                	}, this);
-	                }
-            	}, this);
-
-
-            	if (retrieve_data.length > 0){
-
-            		var options = {
-        				"collection_ids": retrieve_data.map(function(e){return e.layer;}).join(),
-        				"begin_time": getISODateTimeString(this.selected_time.start),
-        				"end_time": getISODateTimeString(this.selected_time.end)
-        			};
-
-            		if(this.selection_list.length > 0)
-            			options["bbox"] = this.selection_list[0].geometry.getBounds().toBBOX(10,map_crs_reverse_axes);	
-            		
-            		var shc_model = _.find(globals.products.models, function(p){return p.get("shc") != null;});
-            		if(shc_model){
-            			options["shc"] = shc_model.get("shc");
-            		}
-
-            		if(this.activeModels.length > 0)
-            			options["model_ids"] = this.activeModels.join();
-
-            		var req_data = wps_getdataTmpl(options);
-
-        			var that = this;
-
-        			$.post( retrieve_data[0].url, req_data, "xml")
-						.done(function( data ) {
-							that.plotdata = data;
-							that.render(that.plot_type);
-						});
-            	}
-
-				
 			},
 
 			close: function() {
 	            this.isClosed = true;
+	            this.$el.empty();
+	            //globals.swarm.off("change:data", this.reloadData);
 	            this.triggerMethod('view:disconnect');
 	        }
 

@@ -35,16 +35,41 @@
   z-index: $layer-gui;
 }
 
+#cesium_save{
+  position: absolute;
+  right: 46px;
+  top: 5px;
+  height: 32px;
+  z-index: 5;
+}
+
+#bb_selection{
+  position: absolute;
+  right: 170px;
+  top: 5px;
+  height: 32px;
+  z-index: 5;
+}
+
 .cesium-viewer-geocoderContainer{
   right: 127px !important;
 }
 
-#cesium_save{
+.darkbutton{
   background-color: #333 !important;
   border-color: #444 !important;
 }
 
-#cesium_save:hover{
+.darkbutton:hover{
   background-color: #48b !important;
   border-color: #aef !important;
+}
+
+.cesium-viewer{
+    padding-bottom: 7em;
+    background-color: white;
+}
+
+.twipsy{
+  display: none;
 }

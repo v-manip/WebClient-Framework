@@ -19,14 +19,15 @@ define([
 		// connected to the event system of the application via the Communicator.
 		// Moreover the Router responsible for this module is activated in this routine.
 		this.on('start', function(options) {
-			this.instances = {};
+			//this.instances = {};
 			this.idx = 0;
+			this.instance = undefined;
 
 			console.log('[CesiumViewerModule] Finished module initialization');
 		});
 
 		this.createController = function(opts) {
-			var id = undefined;
+			/*var id = undefined;
 			var startPosition = undefined;
 
 			if (typeof opts !== 'undefined') {
@@ -64,7 +65,21 @@ define([
 
 			setupKeyboardShortcuts(controller);
 
-			return controller;
+			return controller;*/
+
+
+			var i = this.insance;
+			if(this.insance === undefined){
+				i = new CesiumViewController({
+					id: 'CesiumViewer',
+					startPosition: {}
+				});
+				this.insance = i;
+			}
+			i.connectToView();
+			setupKeyboardShortcuts(i);
+			return i;
+
 		};
 
 		var setupKeyboardShortcuts = function(controller) {
