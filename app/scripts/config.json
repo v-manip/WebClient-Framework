@@ -762,7 +762,7 @@
     }],
 
     "navBarConfig": {
-        "title": "Swarm Services",
+        "title": "VirES for Swarm",
         "url": "//vires.services",
         "items": [{
             "name": "Layers",
