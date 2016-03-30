@@ -67,15 +67,19 @@ text.nvd3.nv-noData {
 }
 
 
-#tmp_download_button, #save, #grid, #download_button{
+#tmp_download_button, #save, #grid, #download_button, #reset_filters {
 	background-color: #333 !important;
  	border-color: #444 !important;
  	height:32px;
 }
 
-#tmp_download_button:hover, #save:hover, #grid:hover{
+#tmp_download_button:hover, #save:hover, #grid:hover, #reset_filters:hover{
     background-color: #48b !important;
   	border-color: #aef !important;
+}
+
+#reset_filters.disabled, #reset_filters[disabled], fieldset[disabled] #reset_filters{
+	color: #999;
 }
 
 
@@ -83,4 +87,9 @@ text.nvd3.nv-noData {
 	position: relative !important;
 	float: right;
 	bottom: 0px !important;
+}
+
+#reset_filters{
+	position: absolute !important;
+	top: 50% !important;
 }

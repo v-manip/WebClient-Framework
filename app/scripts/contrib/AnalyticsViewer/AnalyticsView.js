@@ -49,7 +49,7 @@ define(['backbone.marionette',
 			        .attr("type", "button")
 			        .attr("id", "tmp_download_button")
 			        .attr("class", "btn btn-success")
-			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 8000;")
+			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 1000;")
 			        .text("Download");
 
 

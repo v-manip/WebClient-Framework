@@ -75,13 +75,14 @@ module.exports = function (grunt) {
             },
             proxies: [{
                 context: '/vires00',
-                //host: 'vires2.eox.at',
+                //host: 'staging.vires.services',
                 host: 'localhost',
                 port: 8300,
                 rewrite: {
-                    '^/vires00': ''
+                    '^/vires00': '/'
                 },
-                https: false,
+                /*portocol: 'https',
+                https: true,*/
                 changeOrigin: true,
                 xforward: false
             }],            

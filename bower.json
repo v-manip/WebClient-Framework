@@ -21,7 +21,7 @@
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.5.0",
-    "analyticsviewer": "ESA-VirES/AnalyticsViewer#928b3f68214e284840ad9429d1697f54b9d162bc",
+    "analyticsviewer": "ESA-VirES/AnalyticsViewer#~0.3.1",
     "cesium": "http://cesiumjs.org/releases/Cesium-1.19.zip",
     "papaparse": "~4.1.0",
     "plotty": "santilland/plotty#^0.1.1"
