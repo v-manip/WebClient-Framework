@@ -90,6 +90,11 @@ text.nvd3.nv-noData {
 }
 
 #reset_filters{
-	position: absolute !important;
-	top: 50% !important;
+	//position: absolute !important;
+	top: 0px !important;
+}
+
+
+#parallelsdiv{
+	position: relative;
 }

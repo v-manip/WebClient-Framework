@@ -1455,7 +1455,7 @@ define(['backbone.marionette',
 			},
 
 			onHighlightPoint: function(coords){
-
+				this.billboards.removeAll();
 			    var canvas = document.createElement('canvas');
 			    canvas.width = 32;
 			    canvas.height = 32;

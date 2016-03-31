@@ -12,6 +12,9 @@
             jqueryui: {
                 deps:['jquery']
             },
+            jqueryuitouch: {
+                deps:['jqueryui']
+            },
             handlebars: {
                 exports: 'Handlebars'
             },
@@ -70,6 +73,7 @@
             requirejs: '../bower_components/requirejs/require',
             jquery: '../bower_components/jquery/jquery.min',
             jqueryui: '../bower_components/jquery-ui/ui/minified/jquery-ui.min',
+            jqueryuitouch: '../bower_components/jqueryui-touch-punch/jquery.ui.touch-punch.min',
             backbone: '../bower_components/backbone-amd/backbone-min',
             underscore: '../bower_components/underscore-amd/underscore-min',
             d3: '../bower_components/d3/d3.min',

@@ -334,6 +334,7 @@ module.exports = function (grunt) {
                         'bower_components/jquery-ui/ui/minified/jquery-ui.min.js',
                         "bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css",
                         'bower_components/jquery-ui/ui/minified/jquery-ui.slider.min.js',
+                        'bower_components/jqueryui-touch-punch/jquery.ui.touch-punch.min.js',
                         'bower_components/backbone-amd/backbone-min.js',
                         'bower_components/backbone-amd/backbone-min.map',
                         'bower_components/underscore-amd/underscore-min.js',
