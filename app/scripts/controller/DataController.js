@@ -153,7 +153,7 @@
                   var dat = results.data; 
                   for (var i = dat.length - 1; i >= 0; i--) {
                     if(dat[i].hasOwnProperty('Timestamp')) {
-                      dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']);
+                      dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']*1000);
                     }
                     if(dat[i].hasOwnProperty('B_NEC')) {
                       var bnec = dat[i]['B_NEC'];

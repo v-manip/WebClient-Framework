@@ -84,17 +84,38 @@ text.nvd3.nv-noData {
 
 
 .xselectdropdown{
-	position: relative !important;
+	position: absolute !important;
 	float: right;
-	bottom: 0px !important;
+	bottom: -25px !important;
+}
+
+#save, #grid, #download_button{
+	top: -43px!important;
+}
+
+#save{
+	right: 134px!important;
+}
+
+#grid{
+	right: 260px!important;
+}
+
+#download_button{
+	right: 40px!important;
 }
 
 #reset_filters{
-	//position: absolute !important;
-	top: 0px !important;
+	position: absolute !important;
+	top: -27px !important;
 }
 
+#scatterdiv{
+	position: relative;
+}
 
 #parallelsdiv{
 	position: relative;
+	margin-top: 25px;
+	margin-left: -20px;
 }
