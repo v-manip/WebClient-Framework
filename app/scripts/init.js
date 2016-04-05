@@ -6,7 +6,7 @@
     root.require.config({
         waitSeconds: 120,
         /* starting point for application */
-        deps: ['backbone.marionette', 'bootstrap', 'marionette.handlebars', 'main'],
+        deps: ['backbone', 'backbone.marionette', 'bootstrap', 'marionette.handlebars', 'main'],
 
         shim: {
             jqueryui: {

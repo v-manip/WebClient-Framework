@@ -245,13 +245,41 @@
 
         var that = this;
 
+        // Try to get CSRF token, if available set it for necesary ajax requests
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        if(csrftoken){
+          $('#div-downloads').find('form').prepend('<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'" />');
+        }
+
         $('#iframe-download-post').on("load", function(){
           Communicator.mediator.trigger("progress:change", false);
           if($("#frameloaderror").length == 0) {
             $("#error-messages").append(
                       '<div class="alert alert-warning alert-danger" id="frameloaderror">'+
                       '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                      '<strong>Error Downloading Data!</strong> The result set requested contains over 430000 mesaurements, please refine your filter criteria.'+
+                      '<strong>Error Downloading Data!</strong> This might be caused by too many records being selected. Please refine your filter criteria. '+
+                      'Should this issue persist, please, check the browser log.'+
                     '</div>'
             );
           }

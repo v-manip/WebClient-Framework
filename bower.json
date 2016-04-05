@@ -22,7 +22,7 @@
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.5.0",
     "analyticsviewer": "ESA-VirES/AnalyticsViewer#~0.3.2",
-    "cesium": "http://cesiumjs.org/releases/Cesium-1.19.zip",
+    "cesium": "http://cesiumjs.org/releases/Cesium-1.20.zip",
     "papaparse": "~4.1.0",
     "plotty": "santilland/plotty#^0.1.1",
     "jqueryui-touch-punch": "*"
