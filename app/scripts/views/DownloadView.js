@@ -1,18 +1,6 @@
 (function() {
   'use strict';
 
-  // Helper collection to keep maintain data of coverage set
-  var EOCoverageSet = Backbone.Collection.extend({
-    fetch: function(options) {
-      options || (options = {});
-      options.dataType = "xml";
-      return Backbone.Collection.prototype.fetch.call(this, options);
-    },
-    parse: function(response) {
-      return WCS.Core.Parse.parse(response).coverageDescriptions;
-    },
-  });
-
   var root = this;
   root.define([
     'backbone',
@@ -27,6 +15,18 @@
   ],
   function( Backbone, Communicator, globals, m, DownloadTmpl,
    SelectCoverageListItemTmpl, CoverageInfoTmpl,CoverageDownloadPostTmpl) {
+
+    // Helper collection to keep maintain data of coverage set
+    var EOCoverageSet = Backbone.Collection.extend({
+      fetch: function(options) {
+        options || (options = {});
+        options.dataType = "xml";
+        return Backbone.Collection.prototype.fetch.call(this, options);
+      },
+      parse: function(response) {
+        return WCS.Core.Parse.parse(response).coverageDescriptions;
+      },
+    });
 
     var DownloadView = Backbone.Marionette.ItemView.extend({
       tagName: "div",
