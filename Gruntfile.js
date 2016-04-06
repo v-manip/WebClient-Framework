@@ -428,6 +428,20 @@ module.exports = function (grunt) {
                 }]
             }
         },
+        replace: {
+          dist: {
+            src: [
+                '<%= yeoman.dist %>/bower_components/jquery/jquery.min.js',
+                '<%= yeoman.dist %>/bower_components/backbone-amd/backbone-min.js',
+                '<%= yeoman.dist %>/bower_components/require-handlebars-plugin/hbs.js'
+            ],
+            overwrite: true,
+            replacements: [{
+              from: '//@',
+              to: '//#'
+            }]
+          }
+        },
         concurrent: {
             server: [
                 'compass',
@@ -486,7 +500,7 @@ module.exports = function (grunt) {
         'cssmin',
         'uglify',
         'copy:dist',
-        //'rev',
+        'replace',
         'usemin'
     ]);
 
