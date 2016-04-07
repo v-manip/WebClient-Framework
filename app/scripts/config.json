@@ -649,6 +649,7 @@
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "INDEX",
+            "color": "#0AA8B3",
             "views": [{
                 "id": "kp",
                 "protocol": "INDEX",
