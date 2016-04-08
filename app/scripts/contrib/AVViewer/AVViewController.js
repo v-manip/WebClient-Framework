@@ -2,8 +2,8 @@ define([
 	'backbone.marionette',
 	'app',
 	'communicator',
-	'./AnalyticsView'
-], function(Marionette, App, Communicator, AnalyticsView) {
+	'./AVView'
+], function(Marionette, App, Communicator, AVView) {
 
 	'use strict';
 
@@ -12,12 +12,12 @@ define([
 	// for triggering actions caused by routing events.
 	// The Controller has per definition only direct access to the View, it does not i.e. access
 	// the Application object directly.
-	var AnalyticsViewController = Backbone.Marionette.Controller.extend({
+	var AVViewController = Backbone.Marionette.Controller.extend({
 
 		initialize: function(opts) {
 			this.id = opts.id;
 			
-			this.analyticsView = new AnalyticsView({});
+			this.analyticsView = new AVView({});
 
 			this.connectToView();
 		},
@@ -50,5 +50,5 @@ define([
 		}
 	});
 
-	return AnalyticsViewController;
+	return AVViewController;
 });

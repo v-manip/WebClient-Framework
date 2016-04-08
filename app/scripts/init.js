@@ -65,7 +65,7 @@
         },
 
         paths: {
-            analytics: '../bower_components/analyticsviewer/lib/scripts/analytics.min',
+            analytics: '../bower_components/d3.Graphs/lib/scripts/av.min',
             cesium: "../bower_components/cesium/Build/Cesium",
             drawhelper: "../scripts/vendor/cesium_DrawHelper",
             contrib: 'contrib',

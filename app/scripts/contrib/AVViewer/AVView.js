@@ -1,17 +1,17 @@
 define(['backbone.marionette',
 		'communicator',
 		'app',
-		'models/AnalyticsModel',
+		'models/AVModel',
 		'globals',
 		'hbs!tmpl/wps_getdata',
 		'd3',
 		'analytics'
 	],
-	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl) {
+	function(Marionette, Communicator, App, AVModel, globals, wps_getdataTmpl) {
 
-		var AnalyticsView = Marionette.View.extend({
+		var AVView = Marionette.View.extend({
 
-			model: new AnalyticsModel.AnalyticsModel(),
+			model: new AVModel.AVModel(),
 			className: "analytics",
 
 			initialize: function(options) {
@@ -138,5 +138,5 @@ define(['backbone.marionette',
 
 		});
 
-		return AnalyticsView;
+		return AVView;
 	});

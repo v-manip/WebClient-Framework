@@ -3,7 +3,7 @@
     "debug": true,
 
     "modules": [
-        "contrib/AnalyticsViewer/AnalyticsViewModule",
+        "contrib/AVViewer/AVViewModule",
         "contrib/Cesium/CesiumViewModule"
     ],
 

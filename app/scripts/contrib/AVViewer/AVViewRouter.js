@@ -1,14 +1,14 @@
 define([
 	'backbone.marionette',
 	'app',
-	'./AnalyticsViewController'
-], function(Marionette, App, AnalyticsViewController) {
+	'./AVViewController'
+], function(Marionette, App, AVViewController) {
 
 	'use strict';
 
 	// The RouterController provides the (private) implementation of the Router. Internally it
 	// maps routing events to functionality provided by the Module.Controller.
-	var AnalyticsViewRouterController = Marionette.Controller.extend({
+	var AVViewRouterController = Marionette.Controller.extend({
 
 		initialize: function(analytics_controller) {
 			this.analyticsController = analytics_controller;
@@ -19,5 +19,5 @@ define([
 		}
 	});
 
-	return AnalyticsViewRouterController;
+	return AVViewRouterController;
 });
