@@ -391,11 +391,8 @@
                 this.toolLayout = new ToolControlLayout();
                 this.optionsLayout = new OptionsLayout();
 
-                
-
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
-                //this.colorRampView = new v.ColorRampView(config.colorRamp);
 
 
 			},
@@ -409,8 +406,7 @@
 				var splitview = this.module('SplitView').createController();
 				this.main.show(splitview.getView());
 
-				splitview.setSinglescreen();
-
+				
 				// Show Timsliderview after creating modules to
 				// set the selected time correctly to the products
 				this.bottomBar.show(this.timeSliderView);
@@ -419,6 +415,8 @@
 				/*if(this.storyBanner){
 					this.storyView.show(this.storyBanner);
 				}*/
+
+				splitview.setSplitscreen();
 
 
 				// Try to get CSRF token, if available set it for necesary ajax requests
@@ -439,11 +437,12 @@
 				}
 				var csrftoken = getCookie('csrftoken');
 
+				function csrfSafeMethod(method) {
+				    // these HTTP methods do not require CSRF protection
+				    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+				}
+
 				if(csrftoken){
-					function csrfSafeMethod(method) {
-					    // these HTTP methods do not require CSRF protection
-					    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-					}
 					$.ajaxSetup({
 					    beforeSend: function(xhr, settings) {
 					        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
@@ -484,6 +483,16 @@
 					hide: { effect: false, duration: 0 },
 					show:{ effect: false, delay: 700}
 			    });
+
+			    globals.products.each(function(product){
+					if(product.get("visible")){
+						Communicator.mediator.trigger("map:layer:change", {
+							name: product.get('name'),
+							isBaseLayer: false,
+							visible: true
+						})
+					}
+				}, this);
 
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();

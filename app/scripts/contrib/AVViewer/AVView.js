@@ -1,17 +1,17 @@
 define(['backbone.marionette',
 		'communicator',
 		'app',
-		'models/AnalyticsModel',
+		'models/AVModel',
 		'globals',
 		'hbs!tmpl/wps_getdata',
 		'd3',
 		'analytics'
 	],
-	function(Marionette, Communicator, App, AnalyticsModel, globals, wps_getdataTmpl) {
+	function(Marionette, Communicator, App, AVModel, globals, wps_getdataTmpl) {
 
-		var AnalyticsView = Marionette.View.extend({
+		var AVView = Marionette.View.extend({
 
-			model: new AnalyticsModel.AnalyticsModel(),
+			model: new AVModel.AVModel(),
 			className: "analytics",
 
 			initialize: function(options) {
@@ -49,7 +49,7 @@ define(['backbone.marionette',
 			        .attr("type", "button")
 			        .attr("id", "tmp_download_button")
 			        .attr("class", "btn btn-success")
-			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 8000;")
+			        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 1000;")
 			        .text("Download");
 
 
@@ -138,5 +138,5 @@ define(['backbone.marionette',
 
 		});
 
-		return AnalyticsView;
+		return AVView;
 	});

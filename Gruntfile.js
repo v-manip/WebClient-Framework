@@ -75,13 +75,14 @@ module.exports = function (grunt) {
             },
             proxies: [{
                 context: '/vires00',
-                //host: 'vires2.eox.at',
+                //host: 'staging.vires.services',
                 host: 'localhost',
                 port: 8300,
                 rewrite: {
-                    '^/vires00': ''
+                    '^/vires00': '/'
                 },
-                https: false,
+                /*portocol: 'https',
+                https: true,*/
                 changeOrigin: true,
                 xforward: false
             }],            
@@ -333,6 +334,7 @@ module.exports = function (grunt) {
                         'bower_components/jquery-ui/ui/minified/jquery-ui.min.js',
                         "bower_components/jquery-ui/themes/smoothness/jquery-ui.min.css",
                         'bower_components/jquery-ui/ui/minified/jquery-ui.slider.min.js',
+                        'bower_components/jqueryui-touch-punch/jquery.ui.touch-punch.min.js',
                         'bower_components/backbone-amd/backbone-min.js',
                         'bower_components/backbone-amd/backbone-min.map',
                         'bower_components/underscore-amd/underscore-min.js',
@@ -356,7 +358,7 @@ module.exports = function (grunt) {
                         'bower_components/lm.js/lm.js',
                         //'bower_components/virtualglobeviewer/src/{,*/}*.js',
                         'bower_components/Keypress/keypress.js',
-                        'bower_components/analyticsviewer/lib/scripts/analytics.min.js',
+                        'bower_components/d3.Graphs/lib/scripts/av.min.js',
                         //'bower_components/nvd3/nv.d3.min.js',
                         //'bower_components/analyticsviewer/lib/scripts/box.js',
                         //'bower_components/virtualglobeviewer/src/**',
@@ -426,6 +428,20 @@ module.exports = function (grunt) {
                 }]
             }
         },
+        replace: {
+          dist: {
+            src: [
+                '<%= yeoman.dist %>/bower_components/jquery/jquery.min.js',
+                '<%= yeoman.dist %>/bower_components/backbone-amd/backbone-min.js',
+                '<%= yeoman.dist %>/bower_components/require-handlebars-plugin/hbs.js'
+            ],
+            overwrite: true,
+            replacements: [{
+              from: '//@',
+              to: '//#'
+            }]
+          }
+        },
         concurrent: {
             server: [
                 'compass',
@@ -484,7 +500,7 @@ module.exports = function (grunt) {
         'cssmin',
         'uglify',
         'copy:dist',
-        //'rev',
+        'replace',
         'usemin'
     ]);
 

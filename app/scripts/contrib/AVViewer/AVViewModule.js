@@ -2,13 +2,13 @@ define([
 	'backbone.marionette',
 	'app',
 	'communicator',
-	'./AnalyticsViewController',
-	'./AnalyticsViewRouter'
-], function(Marionette, App, Communicator, AnalyticsViewController, AnalyticsViewRouterController) {
+	'./AVViewController',
+	'./AVViewRouter'
+], function(Marionette, App, Communicator, AVViewController, AVViewRouterController) {
 
 	'use strict';
 
-	App.module('AnalyticsViewer', function(Module) {
+	App.module('AVViewer', function(Module) {
 
 		this.startsWithParent = true;
 
@@ -22,7 +22,7 @@ define([
 			this.instance = undefined;
 			this.idx = 0;
 
-			console.log('[AnalyticsViewerModule] Finished module initialization');
+			console.log('[AVViewerModule] Finished module initialization');
 		});
 
 		this.createController = function(opts) {
@@ -44,16 +44,16 @@ define([
 
 			// If there are no free insances create a new one
 			if (typeof id === 'undefined') {
-				id = 'AnalyticsViewer.' + this.idx++;
+				id = 'AVViewer.' + this.idx++;
 			}
 			console.log("New analytics viewer returned " +id);
-			var controller = new AnalyticsViewController({});
+			var controller = new AVViewController({});
 			this.instances[id] = controller;
 
 			return controller;*/
 			var i = this.insance;
 			if(this.insance === undefined){
-				i = new AnalyticsViewController({});
+				i = new AVViewController({});
 				this.insance = i;
 			}
 			return i;

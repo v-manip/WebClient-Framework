@@ -65,7 +65,7 @@ define([
 			this.view.setSplitscreen();
 
 			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
-			this.windowViews.tr.showView(App.module('AnalyticsViewer').createController().getView());
+			this.windowViews.tr.showView(App.module('AVViewer').createController().getView());
 
 			$(".view1").resizable({
 				handles: 'e'
@@ -82,7 +82,7 @@ define([
 
 			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
 			this.windowViews.tr.showView(App.module('VirtualGlobeViewer').createController().getView());
-			this.windowViews.br.showView(App.module('AnalyticsViewer').createController().getView());
+			this.windowViews.br.showView(App.module('AVViewer').createController().getView());
 			this.windowViews.bl.showView(App.module('SliceViewer').createController().getView());
 		},
 

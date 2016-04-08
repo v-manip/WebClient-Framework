@@ -31,6 +31,7 @@ function defaultFor(arg, val) { return typeof arg !== 'undefined' ? arg : val; }
 		'regionManager',
 		'jquery',
 		'jqueryui',
+		'jqueryuitouch',
 		"text!config.json",
 		"util",
 		"libcoverage",

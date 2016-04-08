@@ -3,7 +3,7 @@
     "debug": true,
 
     "modules": [
-        "contrib/AnalyticsViewer/AnalyticsViewModule",
+        "contrib/AVViewer/AVViewModule",
         "contrib/Cesium/CesiumViewModule"
     ],
 
@@ -133,7 +133,7 @@
         }],
         "products": [{
             "name": "MAGA LR 1B",
-            "visible": false,
+            "visible": true,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
@@ -649,6 +649,7 @@
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "INDEX",
+            "color": "#0AA8B3",
             "views": [{
                 "id": "kp",
                 "protocol": "INDEX",
@@ -762,8 +763,8 @@
     }],
 
     "navBarConfig": {
-        "title": "Swarm Services",
-        "url": "//swarm.vires.services",
+        "title": "VirES for Swarm",
+        "url": "//vires.services",
         "items": [{
             "name": "Layers",
             "icon": "fa-globe",
@@ -809,12 +810,12 @@
             "end": "2014-10-17T11:45:00Z"
         },
         "brush": {
-            "start": "2014-09-30T01:00:00Z",
-            "end": "2014-09-30T05:00:00Z"
+            "start": "2016-03-02T01:00:00Z",
+            "end": "2016-03-02T05:00:00Z"
         },
         "display": {
-            "start": "2016-01-12T01:00:00Z",
-            "end": "2016-06-22T01:00:00Z"
+            "start": "2016-02-12T01:00:00Z",
+            "end": "2016-03-22T01:00:00Z"
         }
     },
 

@@ -17,14 +17,15 @@
     "libcoverage": "https://github.com/EOX-A/libcoverage.js/releases/download/v0.1.5/libcoverage.js.v0.1.5.zip",
     "d3": "~3.5.3",
     "filesaver": "https://github.com/eligrey/FileSaver.js.git",
-    "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.18/d3.TimeSlider.zip",
+    "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.21/d3.TimeSlider.zip",
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.5.0",
-    "analyticsviewer": "ESA-VirES/AnalyticsViewer#928b3f68214e284840ad9429d1697f54b9d162bc",
-    "cesium": "http://cesiumjs.org/releases/Cesium-1.19.zip",
+    "d3.Graphs": "ESA-VirES/AnalyticsViewer#~0.3.5",
+    "cesium": "http://cesiumjs.org/releases/Cesium-1.20.zip",
     "papaparse": "~4.1.0",
-    "plotty": "santilland/plotty#^0.1.1"
+    "plotty": "santilland/plotty#^0.1.1",
+    "jqueryui-touch-punch": "*"
   },
   "devDependencies": {
     "Keypress": "~2.0.0"

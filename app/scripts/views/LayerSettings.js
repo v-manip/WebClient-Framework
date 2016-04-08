@@ -7,7 +7,8 @@
 		'backbone',
 		'communicator',
 		'hbs!tmpl/LayerSettings',
-		'underscore'
+		'underscore',
+		'plotty'
 	],
 
 	function( Backbone, Communicator, LayerSettingsTmpl ) {
@@ -20,6 +21,10 @@
 
 			initialize: function(options) {
 				this.selected = null;
+				this.plot = new plotty.plot({
+					colorScale: 'jet',
+					domain: [0,1]
+				});
 			},
 
 			/*events: {
@@ -96,12 +101,10 @@
 
 				this.$("#style").empty();
 				this.$("#style").append(colorscale_options);
-				this.$("#gradient").attr("class", selected_colorscale);
 
 				this.$("#style").change(function(evt){
 					var selected = $(evt.target).find("option:selected").text();
 					selected_colorscale = selected;
-					that.$("#gradient").attr("class", selected_colorscale);
 					options[that.selected].colorscale = selected;
 					that.model.set("parameters", options);
 
@@ -431,8 +434,14 @@
 				var style = this.model.get("parameters")[this.selected].colorscale;
 
 				$("#setting_colorscale").append(
-					'<div class="'+style+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
+					'<div id="gradient" style="width:'+scalewidth+'px;margin-left:'+margin+'px"></div>'
 				);
+				/*'<div class="'+style+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'*/
+
+				this.plot.setColorScale(style);
+				var base64_string = this.plot.colorScaleImage.toDataURL();
+				$('#gradient').css('background-image', 'url(' + base64_string + ')');
+
 
 				var svgContainer = d3.select("#setting_colorscale").append("svg")
 					.attr("width", width)

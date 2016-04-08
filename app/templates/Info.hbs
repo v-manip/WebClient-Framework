@@ -2,40 +2,48 @@
   <div class="modal-content">
     <div class="modal-header">
       <button type="button" class="close" data-dismiss="modal"><i class="fa fa-times-circle"></i></button>
-      <h3 class="panel-title" id="about-title"><i class="fa fa-fw fa-info-circle"></i> About VirES</h3>
+      <h3 class="panel-title" id="about-title"><i class="fa fa-fw fa-info-circle"></i> About </h3>
     </div>
     <div class="modal-body modal-body-about">
-    	<div><img style="width:20%; position:absolute; right:20px; top:-10px" src="/images/logos/esa.png" alt="European Space Agency logo"></div>
-		
-		<p style="font-size:1.4em">VirES Project</p>
-		<p style="margin-top:25px;">
-			The European Space Agency contributes to information technology developments for satellite data access and analysis. In the technology research project “Virtual Workspaces for Earth Observation Scientists” the Agency focused on the particular characteristics of the Swarm mission. A collaboration of scientists and industry delivered the presented Prototype system.
-			Traditionally scientists operate their own computing facilities into which they download the satellite data for performing their specialized tasks. The Prototype demonstrates augmentations and simplifications for this process by providing:
+		<p style="font-size:1.4em">The Virtual Research Environment</p>
+		<p>
+			VirES for Swarm is a platform for geomagnetists. It is the visual interface to the Swarm mission magnetic products officially released by the European Space Agency. It includes tools to study Earth magnetic models, make comparisons with the satellite measurements, and consider solar activity.
 		</p>
+		<p style="font-size:1.4em">The Data</p>
+		<p>
+			The complete sets of magnetic vector and scalar data at 1 Hz rate at exact UTC seconds is provided for the A, B, and C Swarm satellites (<a target="_blank" href="http://swarm-wiki.spacecenter.dk/mediawiki-1.21.1/index.php/Level_1b_Product_Definitions">Swarm Level 1b Products MAGX_LR_1B</a>).
+		</p>
+		<p>The following models of the Earth's magnetic field and its time variation are pre-loaded:</p>
 		<ul>
-			<li style="list-style-type: circle;"> Interactive tools with particularly convenient properties supporting the data selection, visualisation, scientific analysis and documentation</li>
-			<li style="list-style-type: circle;"> Services in the cloud which make satellite data access easier and support on-demand generation of derived value-added information</li>
+			<li style="list-style-type: circle;"> 
+				The Swarm Initial Field Model for 2014 derived from the first year of data from the Swarm satellite trio (<a target="_blank" href="http://onlinelibrary.wiley.com/doi/10.1002/2014GL062659/abstract">SIFM</a>)
+			</li>
+			<li style="list-style-type: circle;"> 
+				The 12th Generation International Geomagnetic Reference Field (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0228-9">IGRF 12</a>) released in 2015 by the International Association of Geomagnetism and Aeronomy
+			</li>
+			<li style="list-style-type: circle;"> 
+				The CHAOS-5 high resolution geomagnetic field model, derived primarily from Swarm, CHAMP, and Ørsted satellite magnetic data along with ground observatory data (<a target="_blank" href="http://earth-planets-space.springeropen.com/articles/10.1186/s40623-015-0274-3">CHAOS-5</a>)
+			</li>
 		</ul>
-		<p>The included features for Swarm mission data access, visualisation, and analysis are:</p>
+		<p>Users can also work with Custom Models and upload Spherical Harmonic Expansion coefficients (<a target="_blank" href="http://www.spacecenter.dk/files/magnetic-models/CHAOS-5/SHC-Format-Decsription.pdf">SHC file format</a>)</p>
+		<p>The global context of space weather is provided in form of:</p>
 		<ul>
-			<li style="list-style-type: circle;"> Graphical Web Interface supporting interactive virtual globe and rich analytical toolset</li>
-			<li style="list-style-type: circle;"> Plotting Swarm Level 1b data (such as Magnetic field vector, Magnetic field intensity) as a function of (co-)latitude/time</li>
-			<li style="list-style-type: circle;"> Visualisation of magnetic field residuals with the possibility of selecting different provided field models and the option of uploading the users own model as spherical harmonics coefficients</li>
-			<li style="list-style-type: circle;"> Visualisation of the magnetic field intensity maps (calculated on-the-fly based on selected model, time and altitude)</li>
-			<li style="list-style-type: circle;"> Magnetic field intensity difference between two satellites</li>
-			<li style="list-style-type: circle;"> Horizontal magnetic field residuals</li>
-			<li style="list-style-type: circle;"> Magnetic field gradient maps</li>
-			<li style="list-style-type: circle;"> Magnetic field intensity along field lines (Three-dimensional)</li>
-			<li style="list-style-type: circle;"> Vector and scalar plots along multiple orbits</li>
+			<li style="list-style-type: circle;"> 
+				The Disturbance storm time index (<a target="_blank" href="https://en.wikipedia.org/wiki/Disturbance_storm_time_index">Dst Index</a>)
+			</li>
+			<li style="list-style-type: circle;">
+				The Disturbances in the horizontal component of earth's magnetic field (<a target="_blank" href="https://en.wikipedia.org/wiki/K-index">planetary Kp Index</a>)
+			</li>
 		</ul>
-
-		<p>For questions or feedback please feel free to contact <a href="mailto:vires@eox.at">vires@eox.at</a></p>
+		<p style="font-size:1.4em">The Service Providers</p>
+		<p>VirES is a service implemented and operated by <a target="_blank" href="//eox.at">EOX</a>, as realization of ideas, specifications and funds of the Earth Observation Directorate of the European Space Agency <a target="_blank" href="http://esa.int">ESA</a>.</p>
+		<p>For questions or feedback please feel free to contact <a href="mailto:support@vires.services">support@vires.services</a></p>
  
 	   	<div class="row" style="margin-top:30px;">
-	   		<div class="col-md-3" style="text-align:center;"><img style="width:80%;vertical-align: bottom" src="/images/logos/DTU.png" alt="Technical University of Denmark logo"></div>
-	   		<div class="col-md-3" style="text-align:center;"><img style="width:60%;vertical-align: bottom" src="/images/logos/EOX_Logo.png" alt="EOX IT Services GmbH logo"></div>
-	   		<div class="col-md-3" style="text-align:center;"><img style="width:50%;vertical-align: bottom" src="/images/logos/GFZ.png" alt="Deutsches GeoForschungsZentrum logo"></div>
-	   		<div class="col-md-3" style="text-align:center;"><img style="width:80%;vertical-align: bottom" src="/images/logos/sistema.jpg" alt="SISTEMA Logo"></div>
+	   		<div class="col-md-3" style="text-align:center;"><img style="height:32px;vertical-align: center" src="/eoxs_static/workspace/images/logos/EOX_Logo.png" alt="EOX IT Services GmbH logo"></div>
+	   		<div class="col-md-3" style="text-align:center;"></div>
+	   		<div class="col-md-3" style="text-align:center;"></div>
+	   		<div class="col-md-3" style="text-align:center;"><img style="height:80px; margin-top:-22px; vertical-align: center" src="/eoxs_static/workspace/images/logos/esa.png" alt="European Space Agency Logo"></div>
 	   	</div>
 	</div>
     <p style="text-align:right;margin-right:1em;">Client version: {{ version }}</p>

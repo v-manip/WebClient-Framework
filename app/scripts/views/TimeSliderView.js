@@ -146,12 +146,13 @@
                   // For some reason updateBBox is needed, altough bbox it is initialized already.
                   // Withouth this update the first time activating a layer after the first map move
                   // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
-                  this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+                  //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
                   break;
                 case "INDEX":
-                  this.slider.addDataset({
+                  var ops = {
                     id: product.get('download').id,
                     color: product.get('color'),
+                    lineplot: true,
                     data: new TimeSlider.Plugin.WPS({
                         url: product.get('download').url,
                         eoid: product.get('download').id,
@@ -162,7 +163,8 @@
                         output: "output",
                         csrftoken: this.csrftoken
                      })
-                  });
+                  };
+                  this.slider.addDataset(ops);
 
                   break;
               }
@@ -185,7 +187,7 @@
         
         for (var i=0; i<this.activeWPSproducts.length; i++){
           //console.log(this.activeWPSproducts[i]);
-          this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
+          //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
         }
       },
 

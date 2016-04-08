@@ -6,11 +6,14 @@
     root.require.config({
         waitSeconds: 120,
         /* starting point for application */
-        deps: ['backbone.marionette', 'bootstrap', 'marionette.handlebars', 'main'],
+        deps: ['backbone', 'backbone.marionette', 'bootstrap', 'marionette.handlebars', 'main'],
 
         shim: {
             jqueryui: {
                 deps:['jquery']
+            },
+            jqueryuitouch: {
+                deps:['jqueryui']
             },
             handlebars: {
                 exports: 'Handlebars'
@@ -62,7 +65,7 @@
         },
 
         paths: {
-            analytics: '../bower_components/analyticsviewer/lib/scripts/analytics.min',
+            analytics: '../bower_components/d3.Graphs/lib/scripts/av.min',
             cesium: "../bower_components/cesium/Build/Cesium",
             drawhelper: "../scripts/vendor/cesium_DrawHelper",
             contrib: 'contrib',
@@ -70,6 +73,7 @@
             requirejs: '../bower_components/requirejs/require',
             jquery: '../bower_components/jquery/jquery.min',
             jqueryui: '../bower_components/jquery-ui/ui/minified/jquery-ui.min',
+            jqueryuitouch: '../bower_components/jqueryui-touch-punch/jquery.ui.touch-punch.min',
             backbone: '../bower_components/backbone-amd/backbone-min',
             underscore: '../bower_components/underscore-amd/underscore-min',
             d3: '../bower_components/d3/d3.min',

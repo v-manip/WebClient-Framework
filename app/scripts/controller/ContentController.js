@@ -31,7 +31,7 @@
 
 			onFullscrenAnalytics: function () {
 				Communicator.mediator.trigger("layout:switch:singleview");
-				Communicator.mediator.trigger("region:show:view", 'tl','AnalyticsViewer');
+				Communicator.mediator.trigger("region:show:view", 'tl','AVViewer');
 			},
 
 			onDialogOpenAbout: function(event){

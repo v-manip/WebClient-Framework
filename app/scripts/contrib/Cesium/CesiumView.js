@@ -171,6 +171,11 @@ define(['backbone.marionette',
 				this.billboards = this.map.scene.primitives.add(new Cesium.BillboardCollection());
 
 				this.drawhelper = new DrawHelper(this.map.cesiumWidget);
+				// It seems that if handlers are active directly there are some
+				// object deleted issues when the draw helper tries to pick elements
+				// in the scene; Setting handlers muted in the beginning seems to
+				// solve the issue.
+				this.drawhelper._handlersMuted = true;
 
 				this.camera_last_position = {};
 				this.camera_last_position.x = this.map.scene.camera.position.x;
@@ -1455,7 +1460,7 @@ define(['backbone.marionette',
 			},
 
 			onHighlightPoint: function(coords){
-
+				this.billboards.removeAll();
 			    var canvas = document.createElement('canvas');
 			    canvas.width = 32;
 			    canvas.height = 32;

@@ -4,9 +4,9 @@
 	var root = this;
 	root.define(['backbone','communicator'],
 	function( Backbone, Communicator ) {
-		var AnalyticsModel = Backbone.Model.extend({
+		var AVModel = Backbone.Model.extend({
 		
 		});
-		return {'AnalyticsModel':AnalyticsModel};
+		return {'AVModel':AVModel};
 	});
 }).call( this );
