@@ -266,7 +266,7 @@
             "opacity": 0.7,
             "tileSize":128,
             "views": [{
-                "id": "SIFM",
+                "id": "SIFM_view",
                 "protocol": "WMS",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
@@ -362,7 +362,7 @@
             "opacity": 0.7,
             "tileSize":128,
             "views": [{
-                "id": "IGRF12",
+                "id": "IGRF12_view",
                 "protocol": "WMS",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
@@ -458,7 +458,7 @@
             "opacity": 0.7,
             "tileSize":128,
             "views": [{
-                "id": "CHAOS-5-Combined",
+                "id": "CHAOS-5-Combined_view",
                 "protocol": "WMS",
                 "urls": [
                     "http://localhost:9000/vires00/ows"

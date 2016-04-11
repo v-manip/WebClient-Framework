@@ -690,7 +690,7 @@ define(['backbone.marionette',
 							// Compare models if two are selected
 							if (this.activeModels.length == 2){
 
-								var that = this;
+								/*var that = this;
 
 								var model1 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[0];});
 								var model2 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[1];});
@@ -793,7 +793,7 @@ define(['backbone.marionette',
 
 										$("#colorlegend").show();
 
-									});
+									});*/
 							}
 
 						}
@@ -1586,107 +1586,6 @@ define(['backbone.marionette',
                     }
 	            }, this);
 
-				// Compare models if two are selected
-				if (this.activeModels.length == 2){
-
-					var that = this;
-
-					var model1 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[0];});
-					var model2 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[1];});
-
-					var product = model2;
-
-					var models = [model1.get("views")[0].id, model2.get("views")[0].id];
-					var shc = null;
-
-					// Remove custom model with id shc if selected
-					if (models.indexOf("shc")!=-1){
-						shc = _.find(globals.products.models, function(p){return p.get("shc") != null;}).get("shc");
-    					models.splice(models.indexOf("shc"), 1);
-    				}
-
-					models = models.join(",");
-
-					var parameters = product.get("parameters");
-        			var band;
-        			var keys = _.keys(parameters);
-					_.each(keys, function(key){
-						if(parameters[key].selected)
-							band = key;
-					});
-        			var style = parameters[band].colorscale;
-        			var height = product.get("height");
-        			var uom = parameters[band].uom;
-
-					var imageURI;
-					var url = model2.get("views")[0].urls[0];
-
-					$.post( url, Tmpl_calc_diff({
-						"model_ids": models,
-						"shc": shc,
-						"begin_time": getISODateTimeString(this.begin_time),
-						"end_time": getISODateTimeString(this.end_time),
-						//"band": band,
-						"style": style,
-						"height": height
-					}), "xml")
-
-						.done(function( data ) {
-
-							if(that.difference_image)	
-								that.map.scene.imageryLayers.remove(that.difference_image);
-
-							var img64 = $(data.getElementsByTagName("ComplexData")).text();
-						    imageURI = "data:image/gif;base64,"+img64;
-						    var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
-							that.difference_image = that.map.scene.imageryLayers.addImageryProvider(prov);
-							that.map.scene.imageryLayers.lower(that.difference_image);
-
-							var style = $(data.getElementsByTagName("LiteralData")).text().split(",");
-
-
-							
-							var margin = 20;
-							var width = $("#colorlegend").width();
-							var scalewidth =  width - margin *2;
-
-
-							$("#colorlegend").append(
-								'<div class="'+style[0]+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
-							);
-
-							var svgContainer = d3.select("#colorlegend").append("svg")
-								.attr("width", width)
-								.attr("height", 60);
-
-
-							var axisScale = d3.scale.linear();
-
-							axisScale.domain([parseFloat(style[1]), parseFloat(style[2])]);
-							axisScale.range([0, scalewidth]);
-
-							var xAxis = d3.svg.axis()
-								.scale(axisScale);
-
-
-							xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
-							xAxis.tickFormat(d3.format('.02f'));
-
-
-						    svgContainer.append("g")
-						        .attr("class", "x axis")
-						        .attr("transform", "translate(" + [margin, 3]+")")
-						        .call(xAxis)
-						        .append("text")
-									.style("text-anchor", "middle")
-									.style("font-size", "1.1em")
-									.attr("transform", "translate(" + [scalewidth/2, 40]+")")
-									.text(uom);
-
-							$("#colorlegend").show();
-
-						});
-				}
 
 				this.checkFieldLines();
             },

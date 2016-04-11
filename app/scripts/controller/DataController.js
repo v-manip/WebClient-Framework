@@ -45,13 +45,17 @@
                 },this);
               }      
               if (product.get("model")){
-                this.activeModels.push(product.get("views")[0].id);
+                  this.activeModels.push(product.get("download").id);
               }         
             }else{
               _.each(product.get("processes"), function(process){
                 if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
                   this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
               },this);
+
+              if (this.activeModels.indexOf(product.get("download").id)!=-1){
+                this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
+              }
             }
           }
           this.checkSelections();
@@ -158,12 +162,24 @@
                     if(dat[i].hasOwnProperty('B_NEC')) {
                       var bnec = dat[i]['B_NEC'];
                       bnec = bnec.slice(1,-1).split(';').map(Number);
-                      bnec.spl
                       delete dat[i]['B_NEC'];
                       dat[i]['B_N'] = bnec[0];
                       dat[i]['B_E'] = bnec[1];
                       dat[i]['B_C'] = bnec[2];
                     }
+                    $.each(dat[i], function(key, value){
+                      if (key.indexOf("B_NEC_")>-1){
+                        var res_model = key.substring(6);
+                        var bnec = dat[i][key];
+                        bnec = bnec.slice(1,-1).split(';').map(Number);
+                        delete dat[i][key];
+                        dat[i]['B_N_res_'+res_model] = bnec[0];
+                        dat[i]['B_E_res_'+res_model] = bnec[1];
+                        dat[i]['B_C_res_'+res_model] = bnec[2];
+                      }
+                    });
+                    
+
                   }
                   globals.swarm.set({data: results.data});
                 }

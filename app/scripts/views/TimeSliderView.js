@@ -194,8 +194,11 @@
       onCoverageSelected: function(evt){
         if (evt.originalEvent.detail.bbox){
           var bbox = evt.originalEvent.detail.bbox.replace(/[()]/g,'').split(',').map(parseFloat);
-          this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
-          Communicator.mediator.trigger("map:set:extent", bbox);
+          var one_day=1000*60*60*24;
+          if ( Math.ceil( (evt.originalEvent.detail.end - evt.originalEvent.detail.start)/one_day)<10 ){
+            this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
+            Communicator.mediator.trigger("map:set:extent", bbox);
+          }
         }
       }
 
