@@ -264,6 +264,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
+            "tileSize":128,
             "views": [{
                 "id": "SIFM",
                 "protocol": "WMS",
@@ -359,6 +360,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
+            "tileSize":128,
             "views": [{
                 "id": "IGRF12",
                 "protocol": "WMS",
@@ -454,6 +456,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
+            "tileSize":128,
             "views": [{
                 "id": "CHAOS-5-Combined",
                 "protocol": "WMS",

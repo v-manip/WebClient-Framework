@@ -105,6 +105,12 @@ define(['backbone.marionette',
 
 				this.colors = globals.objects.get("color");
 
+				if (this.begin_time == null || this.end_time == null){
+					var sel_time = Communicator.reqres.request('get:time');
+					this.begin_time = sel_time.start;
+					this.end_time = sel_time.end;
+				}
+
 				globals.baseLayers.each(function(baselayer) {
 					if (baselayer.get("visible")){
 						name = baselayer.get("name");
@@ -397,9 +403,8 @@ define(['backbone.marionette',
 
                     case "WMS":
                     	params = $.extend({
-                    		time: layerdesc.get("time"),
                     		transparent: 'true'
-                    	},  Cesium.WebMapServiceImageryProvider.DefaultParameters)
+                    	},  Cesium.WebMapServiceImageryProvider.DefaultParameters);
 
                     	// Check if layer has additional parameters configured
                     	var additional_parameters = {};
@@ -415,19 +420,30 @@ define(['backbone.marionette',
 								}
 							});
                     	}
-                    	params = $.extend(additional_parameters, params);
-                    	params.styles = styles; 
+
+                    	additional_parameters['styles'] = styles; 
+
+                    	if(layerdesc.get("timeSlider")){
+                    		var string = getISODateTimeString(this.begin_time) + "/"+ getISODateTimeString(this.end_time);
+                    		additional_parameters['time'] = string;
+                    	}
 
                     	if(layerdesc.get("height")){
-	                    	params.elevation = layerdesc.get("height");
+	                    	additional_parameters['elevation'] = layerdesc.get("height");
 	                    }
 
                     	params.format = 'image/png';
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
 						    url: view.urls[0],
 						    layers : view.id,
+						    tileWidth: layerdesc.get('tileSize'),
+						    tileHeight: layerdesc.get('tileSize'),
 						    parameters: params
 						});
+
+						for (par in additional_parameters){
+							return_layer.updateProperties(par, additional_parameters[par]);
+						}
 
                     break;
 
