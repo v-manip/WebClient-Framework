@@ -157,8 +157,13 @@ div#preload {
  */
 .panel .close {
   float: right;
-  margin: -.5em -.7em 0 0;
-  font-size: 1.2em;
+  margin: -.1em -.2em 0 0;
+  font-size: 2em;
+}
+
+#about .close{
+  margin: -.2em -.2em 0 0;
+  font-size: 2em;
 }
 
 .panel .no-label, .modal .no-label {
@@ -214,7 +219,7 @@ button[active=active] {
  */
 .layercontrol {
     width: 23.8em;
-    top: 10em;
+    top: 8em;
     left: 3em;
     font-size: .9em;
     position: absolute;
