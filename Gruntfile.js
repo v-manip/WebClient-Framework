@@ -433,13 +433,24 @@ module.exports = function (grunt) {
             src: [
                 '<%= yeoman.dist %>/bower_components/jquery/jquery.min.js',
                 '<%= yeoman.dist %>/bower_components/backbone-amd/backbone-min.js',
-                '<%= yeoman.dist %>/bower_components/require-handlebars-plugin/hbs.js'
+                '<%= yeoman.dist %>/bower_components/require-handlebars-plugin/hbs.js',
+                '<%= yeoman.dist %>/bower_components/cesium/Build/Cesium/Cesium.js'
             ],
             overwrite: true,
-            replacements: [{
-              from: '//@',
-              to: '//#'
-            }]
+            replacements: [
+                {
+                  from: '//@',
+                  to: '//#'
+                },
+                {
+                  from: /r\(\"Shaders\/PointPrimitiveCollectionFS\"\,\[\]\,function\(\).*\}\)/g ,
+                  to: 'r("Shaders/PointPrimitiveCollectionFS",[],function(){"use strict";return"#ifdef GL_EXT_frag_depth\\n#extension GL_EXT_frag_depth : enable\\n#endif\\nvarying vec4 v_color;\\nvarying vec4 v_outlineColor;\\nvarying float v_innerPercent;\\nvarying float v_pixelDistance;\\n#ifdef RENDER_FOR_PICK\\nvarying vec4 v_pickColor;\\n#endif\\nvoid main()\\n{\\nfloat distanceToCenter = length(gl_PointCoord - vec2(0.5));\\nfloat maxDistance = max(0.0, 0.5 - v_pixelDistance);\\nfloat wholeAlpha = 1.0 - smoothstep(maxDistance, 0.5, distanceToCenter);\\nfloat innerAlpha = 1.0 - smoothstep(maxDistance * v_innerPercent, 0.5 * v_innerPercent, distanceToCenter);\\nvec4 color = mix(v_outlineColor, v_color, innerAlpha);\\ncolor.a *= wholeAlpha;\\nif (color.a < 0.005)\\n{\\ndiscard;\\n}\\n#ifdef GL_EXT_frag_depth\\nfloat z = gl_FragCoord.z;\\ngl_FragDepthEXT = z + ((1.0 - z) * (1.0 - wholeAlpha));\\n#endif\\n#ifdef RENDER_FOR_PICK\\ngl_FragColor = v_pickColor;\\n#else\\ngl_FragColor = color;\\n#endif\\n}"})'
+                }
+            ],
+            variables:{
+
+            }
+
           }
         },
         concurrent: {

@@ -964,14 +964,14 @@ define(['backbone.marionette',
             			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
 	            		
 	            		// Warning: Use of _private variables is undocumented and may change without warning.
-						that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
+						/*that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
 						    depthTest : {
 						        enabled : true,
 						        func : Cesium.DepthFunction.LESS
 						    },
 						    depthMask : false,
 						    blending : Cesium.BlendingState.ALPHA_BLEND
-						});
+						});*/
             		}else if(settings[obj.id].band == 'B_NEC'){
             			that.features_collection[obj.id] = new Cesium.Primitive({
 						  	geometryInstances : [],
