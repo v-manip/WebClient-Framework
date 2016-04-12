@@ -167,6 +167,14 @@
                       dat[i]['B_E'] = bnec[1];
                       dat[i]['B_C'] = bnec[2];
                     }
+                    if(dat[i].hasOwnProperty('B_error')) {
+                      var bnec = dat[i]['B_error'];
+                      bnec = bnec.slice(1,-1).split(';').map(Number);
+                      delete dat[i]['B_error'];
+                      dat[i]['B_N_error'] = bnec[0];
+                      dat[i]['B_E_error'] = bnec[1];
+                      dat[i]['B_C_error'] = bnec[2];
+                    }
                     $.each(dat[i], function(key, value){
                       if (key.indexOf("B_NEC_")>-1){
                         var res_model = key.substring(6);
