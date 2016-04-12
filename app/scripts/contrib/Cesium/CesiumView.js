@@ -1315,17 +1315,26 @@ define(['backbone.marionette',
 				} else {
 					//Communicator.mediator.trigger("selection:changed", null);
 					this.drawhelper.stopDrawing();
+					// It seems the drawhelper muted handlers reset to false and 
+					// it creates issues in cesium picking for some reason so
+					// we deactivate them again
+					this.drawhelper._handlersMuted = true;
 				}
 			},
            
 
 			onSelectionChanged: function(bbox){
 
+				// It seems the drawhelper muted handlers reset to false and 
+				// it creates issues in cesium picking for some reason so
+				// we deactivate them again
+				this.drawhelper._handlersMuted = true;
+				
 				if(bbox){
-					this.map.scene.primitives.removeAll();
+					//this.map.scene.primitives.removeAll();
 					var color = "#6699FF";
 
-					var material = Cesium.Material.fromType('Color');
+					var material = new Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
 					material.uniforms.color.alpha = 0.2;
 
