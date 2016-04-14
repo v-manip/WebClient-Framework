@@ -264,7 +264,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
-            "tileSize":128,
+            "tileSize":1024,
             "views": [{
                 "id": "SIFM_view",
                 "protocol": "WMS",
@@ -272,7 +272,7 @@
                     "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
-                "format": "image/png"
+                "format": "image/jpeg"
             }],
             "download": {
                 "id": "SIFM",
@@ -360,7 +360,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
-            "tileSize":128,
+            "tileSize":1024,
             "views": [{
                 "id": "IGRF12_view",
                 "protocol": "WMS",
@@ -368,7 +368,7 @@
                     "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
-                "format": "image/png"
+                "format": "image/jpeg"
             }],
             "download": {
                 "id": "IGRF12",
@@ -456,7 +456,7 @@
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
-            "tileSize":128,
+            "tileSize":1024,
             "views": [{
                 "id": "CHAOS-5-Combined_view",
                 "protocol": "WMS",
@@ -464,7 +464,7 @@
                     "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
-                "format": "image/png"
+                "format": "image/jpeg"
             }],
             "download": {
                 "id": "CHAOS-5-Combined",
@@ -767,7 +767,7 @@
 
     "navBarConfig": {
         "title": "VirES for Swarm",
-        "url": "//vires.services",
+        "url": "/",
         "items": [{
             "name": "Layers",
             "icon": "fa-globe",

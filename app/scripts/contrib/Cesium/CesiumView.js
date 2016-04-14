@@ -403,7 +403,7 @@ define(['backbone.marionette',
 
                     case "WMS":
                     	params = $.extend({
-                    		transparent: 'true'
+                    		/*transparent: 'true'*/
                     	},  Cesium.WebMapServiceImageryProvider.DefaultParameters);
 
                     	// Check if layer has additional parameters configured
@@ -432,7 +432,7 @@ define(['backbone.marionette',
 	                    	additional_parameters['elevation'] = layerdesc.get("height");
 	                    }
 
-                    	params.format = 'image/png';
+                    	params.format = layerdesc.get("views")[0].format;
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
 						    url: view.urls[0],
 						    layers : view.id,
@@ -623,10 +623,10 @@ define(['backbone.marionette',
 
 									if (band == "Fieldlines"){
 										if(options.visible){
-			                    			this.activeFL.push(product.get("name"));
+			                    			this.activeFL.push(product.get("download").id);
 			                    		}else{
 			                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
-		                						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+		                						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
 		                					}
 			                    		}
 			                    		this.checkFieldLines();
@@ -1190,18 +1190,18 @@ define(['backbone.marionette',
 									// When changing height or coefficient range and fieldlienes is selected
 									// model would be added multiple times, need to check if model already 
 									// marked as active and avoid adding it to list
-									if (this.activeFL.indexOf(product.get('name'))==-1)
-	                    				this.activeFL.push(product.get("name"));
+									if (this.activeFL.indexOf(product.get("download").id)==-1)
+	                    				this.activeFL.push(product.get("download").id);
 
 	                    		}else{
-	                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
-                						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+	                    			if (this.activeFL.indexOf(product.get("download").id)!=-1){
+                						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
                 					}
 	                    		}
 	                    		this.checkFieldLines();
 							}else{
-								if (this.activeFL.indexOf(product.get('name'))!=-1){
-            						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+								if (this.activeFL.indexOf(product.get("download").id)!=-1){
+            						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
             					}
             					this.checkFieldLines();
 								if(product.get("name")==layer){
@@ -1379,10 +1379,10 @@ define(['backbone.marionette',
 	            	var url, model_id, color, band, style, range, logarithmic;
 
 	            	globals.products.each(function(product) {
-                		if(this.activeFL.indexOf(product.get('name'))!=-1){
+                		if(this.activeFL.indexOf(product.get('download').id)!=-1){
                 			var name = product.get('name');
                 			url = product.get("views")[0].urls[0];
-                			model_id = product.get("views")[0].id;
+                			model_id = product.get("download").id;
                 			color = product.get("color");
 	                		color = color.substring(1, color.length);
 	            			parameters = product.get("parameters");
@@ -1414,14 +1414,14 @@ define(['backbone.marionette',
 							}))
 
 							.done(function( data ) {
-								/*Papa.parse(data, {
+								Papa.parse(data, {
 									header: true,
 									dynamicTyping: true,
 									//name: name,
 									complete: function(results) {
 										that.createPrimitives(results, name)
 									}
-								});*/
+								});
 							});
 
 
