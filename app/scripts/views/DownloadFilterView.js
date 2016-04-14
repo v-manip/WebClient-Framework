@@ -187,15 +187,15 @@
         // time
         options.begin_time = this.start_picker.datepicker( "getDate" );
         options.begin_time = new Date(Date.UTC(options.begin_time.getFullYear(), options.begin_time.getMonth(),
-            options.begin_time.getDate(), options.begin_time.getHours(), 
-            options.begin_time.getMinutes(), options.begin_time.getSeconds()));
+        options.begin_time.getDate(), options.begin_time.getHours(), 
+        options.begin_time.getMinutes(), options.begin_time.getSeconds()));
         options.begin_time.setUTCHours(0,0,0,0);
         options.begin_time = getISODateTimeString(options.begin_time);
 
         options.end_time = this.end_picker.datepicker( "getDate" );
         options.end_time = new Date(Date.UTC(options.end_time.getFullYear(), options.end_time.getMonth(),
-            options.end_time.getDate(), options.end_time.getHours(), 
-            options.end_time.getMinutes(), options.end_time.getSeconds()));
+        options.end_time.getDate(), options.end_time.getHours(), 
+        options.end_time.getMinutes(), options.end_time.getSeconds()));
         options.end_time.setUTCHours(23,59,59,999);
         options.end_time = getISODateTimeString(options.end_time);
 
@@ -203,7 +203,7 @@
         options.collection_ids = this.swarm_prod.map(function(m){return m.get("views")[0].id;}).join(",");
 
         // models
-        options.model_ids = this.models.map(function(m){return m.get("views")[0].id;}).join(",");
+        options.model_ids = this.models.map(function(m){return m.get("download").id;}).join(",");
 
         // custom model (SHC)
         var shc_model = _.find(globals.products.models, function(p){return p.get("shc") != null;});
