@@ -343,7 +343,9 @@ module.exports = function (grunt) {
                         'bower_components/d3.TimeSlider/d3.timeslider.min.js',
                         'bower_components/d3.TimeSlider/d3.timeslider.plugins.min.js',
                         'bower_components/libcoverage/libcoverage.min.js',
-                        'bower_components/filesaver/FileSaver.js',
+                        'bower_components/FileSaver.js/FileSaver.min.js',
+                        'bower_components/canvas-toBlob.js/canvas-toBlob.js',
+                        'bower_components/Blob.js/Blob.js',
                         'bower_components/backbone.marionette/lib/core/amd/backbone.marionette.min.js',
                         'bower_components/backbone.wreqr/lib/amd/backbone.wreqr.min.js',
                         'bower_components/backbone.babysitter/lib/amd/backbone.babysitter.min.js',
@@ -356,17 +358,12 @@ module.exports = function (grunt) {
                         'bower_components/bootstrap/dist/*/*',
                         'bower_components/font-awesome/css/*',
                         'bower_components/lm.js/lm.js',
-                        //'bower_components/virtualglobeviewer/src/{,*/}*.js',
                         'bower_components/Keypress/keypress.js',
                         'bower_components/d3.Graphs/lib/scripts/av.min.js',
-                        //'bower_components/nvd3/nv.d3.min.js',
-                        //'bower_components/analyticsviewer/lib/scripts/box.js',
-                        //'bower_components/virtualglobeviewer/src/**',
                         'bower_components/cesium/Build/Cesium/**',
                         'bower_components/papaparse/papaparse.min.js',
                         'bower_components/plotty/dist/plotty.min.js',
                         'scripts/vendor/**',
-                        //'scripts/core/ColorRamp/ColorRampControl.hbs'
                     ]
                 },{
                     expand: true,

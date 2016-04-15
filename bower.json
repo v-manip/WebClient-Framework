@@ -16,16 +16,18 @@
     "backbone.marionette.handlebars": "~0.2.0",
     "libcoverage": "https://github.com/EOX-A/libcoverage.js/releases/download/v0.1.5/libcoverage.js.v0.1.5.zip",
     "d3": "~3.5.3",
-    "filesaver": "https://github.com/eligrey/FileSaver.js.git",
     "d3.TimeSlider": "https://github.com/EOX-A/d3.TimeSlider/releases/download/v0.0.21/d3.TimeSlider.zip",
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.5.0",
-    "d3.Graphs": "ESA-VirES/AnalyticsViewer#~0.3.6",
+    "d3.Graphs": "ESA-VirES/AnalyticsViewer#~0.3.7",
     "cesium": "http://cesiumjs.org/releases/Cesium-1.20.zip",
     "papaparse": "~4.1.0",
     "plotty": "santilland/plotty#^0.1.1",
-    "jqueryui-touch-punch": "*"
+    "jqueryui-touch-punch": "*",
+    "FileSaver.js": "eligrey/FileSaver.js",
+    "canvas-toBlob.js": "eligrey/canvas-toBlob.js",
+    "Blob.js": "eligrey/Blob.js"
   },
   "devDependencies": {
     "Keypress": "~2.0.0"

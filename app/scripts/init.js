@@ -34,7 +34,8 @@
                 deps: ['backbone']/*,
                 exports: 'WCS'*/
             },
-            filesaver: {
+            FileSaver: {
+                deps: ['canvas-toBlob', 'Blob'],
                 exports: 'saveAs'
             },
             lm:{
@@ -80,9 +81,12 @@
             timeslider: '../bower_components/d3.TimeSlider/d3.timeslider.min',
             timeslider_plugins: '../bower_components/d3.TimeSlider/d3.timeslider.plugins.min',
             libcoverage: '../bower_components/libcoverage/libcoverage.min',
-            filesaver: '../bower_components/filesaver/FileSaver',
+
+            'canvas-toBlob': '../bower_components/canvas-toBlob.js/canvas-toBlob',
+            'Blob': '../bower_components/Blob.js/Blob',
+            'FileSaver': '../bower_components/FileSaver.js/FileSaver.min',
+
             lm: '../bower_components/lm.js/lm',
-            //nv: '../bower_components/nvd3/nv.d3.min',
 
             /* alias all marionette libs */
             'backbone.marionette': '../bower_components/backbone.marionette/lib/core/amd/backbone.marionette.min',

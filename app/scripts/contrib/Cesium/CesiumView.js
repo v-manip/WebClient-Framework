@@ -14,7 +14,7 @@ define(['backbone.marionette',
 		'hbs!tmpl/wps_retrieve_swarm_features',
 		'cesium/Cesium',
 		'drawhelper',
-		'filesaver',
+		'FileSaver',
 		'plotty'
 	],
 	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
@@ -1051,7 +1051,7 @@ define(['backbone.marionette',
             					this.checkFieldLines();
 								if(product.get("name")==layer){
 				                	var ces_layer = product.get("ces_layer");
-				                	
+
 				                	if(product.get("visible")){
 				                		ces_layer.show = true;
 				                	}
@@ -1456,32 +1456,6 @@ define(['backbone.marionette',
 
             },
 
-            getURL: function(url, id, begin_time, end_time, band, range, style, color, outlines){
-
-        		if(!outlines && band != "B_NEC"){
-        			return url + "?service=WPS&version=1.0.0&request=Execute&" +
-							  "identifier=retrieve_czml&" +
-							  "DataInputs="+
-							  "collection_ids="+ id +"%3B"+
-							  "begin_time="+ begin_time +"%3B"+
-							  "end_time="+ end_time +"%3B"+
-							  "band="+ band +"%3B"+
-							  "dim_range="+ range[0] +","+ range[1] +"%3B"+
-							  "style="+ style +"&"+
-							  "rawdataoutput=output";
-        		}
-        		return url + "?service=WPS&version=1.0.0&request=Execute&" +
-							  "identifier=retrieve_czml&" +
-							  "DataInputs="+
-							  "collection_ids="+ id +"%3B"+
-							  "begin_time="+ begin_time +"%3B"+
-							  "end_time="+ end_time +"%3B"+
-							  "band="+ band +"%3B"+
-							  "dim_range="+ range[0] +","+ range[1] +"%3B"+
-							  "style="+ style +"%3B"+
-							  "colors="+ color +"&"+
-							  "rawdataoutput=output";
-            },
 
 			onClose: function(){
 				/*this.stopListening();
@@ -1528,13 +1502,9 @@ define(['backbone.marionette',
 			},
 
 			onSaveImage: function(){
-				var dataUrl = this.map.canvas.toDataURL("image/jpeg");
-				var a = document.createElement("a");
-				a.download = "VirES_virtual_globe.jpeg";
-				a.href = dataUrl;
-				$('#pngdataurl').append(a);
-				a.click();
-				$('#pngdataurl').empty();
+				this.map.canvas.toBlob(function(blob) {
+					saveAs(blob, "VirES_Services_Screenshot.jpg");
+				}, "image/jpeg");
 			},
 
 			onClearImage: function(){
