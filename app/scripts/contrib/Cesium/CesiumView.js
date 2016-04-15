@@ -625,7 +625,7 @@ define(['backbone.marionette',
 										if(options.visible){
 			                    			this.activeFL.push(product.get("download").id);
 			                    		}else{
-			                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
+			                    			if (this.activeFL.indexOf(product.get("download").id)!=-1){
 		                						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
 		                					}
 			                    		}
@@ -867,60 +867,6 @@ define(['backbone.marionette',
             },
 
 
-            checkLayerFeatures: function (product, visible) {
-
-				var id = product.get("views")[0].id;
-
-				if(this.features_collection.hasOwnProperty(id)){
-            		this.map.scene.primitives.remove(this.features_collection[id]);
-            		delete this.features_collection[id];
-            	}
-
-            	if(visible){
-					var color = product.get("color");
-					color = color.substring(1, color.length);
-
-	    			var parameters = product.get("parameters");
-	    			var keys = _.keys(parameters);
-	    			var band;
-					_.each(keys, function(key){
-						if(parameters[key].selected)
-							band = key;
-					});
-	    			var style = parameters[band].colorscale;
-	    			var outlines = product.get("outlines");
-	    			var range = parameters[band].range;
-	    			var alpha = product.get("opacity");
-	    			var url = product.get("views")[0].urls[0];
-
-	            	var that = this;
-
-	            	$.post( url, Tmpl_retrive_swarm_features({
-						//"shc": product.get('shc'),
-						"model_ids": this.activeModels.join(),
-						"collection_id": id,
-						"begin_time": getISODateTimeString(this.begin_time),
-						"end_time": getISODateTimeString(this.end_time),
-						"band": band,
-						"alpha": alpha,
-						//"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
-						"style": style,
-						"dim_range": (range[0]+","+range[1]),
-					}))
-
-					.done(function( data ) {
-						/*Papa.parse(data, {
-							header: true,
-							dynamicTyping: true,
-							complete: function(results) {
-								that.createFeatures(results, id, band, alpha)
-							}
-						});*/
-					});
-				}
-               
-            },
-
             createDataFeatures: function (results, identifier, band, alpha){
 
             	// The feature collections are removed directly when a change happens
@@ -963,15 +909,6 @@ define(['backbone.marionette',
             		if (settings[obj.id].band == 'F') {
             			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
 	            		
-	            		// Warning: Use of _private variables is undocumented and may change without warning.
-						/*that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
-						    depthTest : {
-						        enabled : true,
-						        func : Cesium.DepthFunction.LESS
-						    },
-						    depthMask : false,
-						    blending : Cesium.BlendingState.ALPHA_BLEND
-						});*/
             		}else if(settings[obj.id].band == 'B_NEC'){
             			that.features_collection[obj.id] = new Cesium.Primitive({
 						  	geometryInstances : [],
@@ -1054,106 +991,13 @@ define(['backbone.marionette',
 
 				}, this);
 
-			    /*if(line_primitives.length>0){
-			    	this.features_collection['linecollection'] = new Cesium.Primitive({
-					  	geometryInstances : line_primitives,
-					  	appearance : new Cesium.PerInstanceColorAppearance({
-					    	flat : true,
-					    	translucent : false
-					  	})
-					});
-					this.map.scene.primitives.add(this.features_collection['linecollection']);
-			    }*/
-			    
-
-				//this.map.scene.primitives.add(this.features_collection[identifier]);
 				for (var i = 0; i < this.activeCollections.length; i++) {
 					this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
 				}
 			},
 
-            createFeatures: function (results, identifier, band, alpha){
-
-            	// The feature collection is removed directly when a change happens
-            	// because of the asynchronous behavior it can happen that a collection
-            	// is added between removing it and adding another one so here we make sure
-            	// it is empty before overwriting it, which would lead to a not referenced
-            	// collection which is no longer deleted.
-            	// I remove it before the response because a direct feedback to the user is important
-            	// There is probably a cleaner way to do this
-            	if(this.features_collection.hasOwnProperty(identifier)){
-            		this.map.scene.primitives.remove(this.features_collection[identifier]);
-            		delete this.features_collection[identifier];
-            	}
-
-				if(band == "B_NEC"){
-
-					this.features_collection[identifier] = new Cesium.PrimitiveCollection();
-					
-
-					_.each(results.data, function(row){
-
-						var arrowmat = 	new Cesium.Material.fromType('PolylineArrow');			
-						arrowmat.uniforms.color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255);
-
-						this.features_collection[identifier].add(new Cesium.Primitive({
-						    geometryInstances : new Cesium.GeometryInstance({
-						        geometry : new Cesium.PolylineGeometry({
-						            positions : [
-							            new Cesium.Cartesian3(row.pos1_x, row.pos1_y, row.rad1),
-							            new Cesium.Cartesian3(row.pos2_x, row.pos2_y, row.rad2)
-						            ],
-						            width : 5.0,
-						            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
-						        })
-						    }),
-						    //appearance : new Cesium.PolylineColorAppearance()
-						    appearance : new Cesium.PolylineMaterialAppearance({
-						    	material : arrowmat
-						  	})
-						}));
-
-					}, this);
-
-	        		this.map.scene.primitives.add(this.features_collection[identifier]);
-
-				}else{
-
-
-					this.features_collection[identifier] = new Cesium.PointPrimitiveCollection();
-
-				    _.each(results.data, function(row){
-				    	var color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255);
-						this.features_collection[identifier].add({
-					        position : new Cesium.Cartesian3(row.pos_x, row.pos_y, row.rad),
-					        //outlineWidth: 1,
-					        //outlineColor: color,
-					        //scaleByDistance: new Cesium.NearFarScalar(1.5e2, 10, 15.0e6, 0.5),
-					        color : color,
-					        pixelSize : 8
-					    });
-
-					}, this);
-
-					this.map.scene.primitives.add(this.features_collection[identifier]);
-
-				}
-
-        		
-            },
-
             onLayerOutlinesChanged: function(collection){
-            	/*if (this.features_collection.hasOwnProperty(collection)){
-            		var col = this.features_collection[collection];
-            		if (col.hasOwnProperty("_pointPrimitives")){
-            			for (var i = col._pointPrimitives.length - 1; i >= 0; i--) {
-            				col._pointPrimitives[i].outlineColor = null;
-            				//col._pointPrimitives[i].outlineColor = 0;
-            			}
-            		}
-            	}*/
-            	this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
-            	
+				this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
             },
 
             OnLayerParametersChanged: function(layer){
@@ -1185,6 +1029,7 @@ define(['backbone.marionette',
 	                		if (band == "Fieldlines" ){
 								if(product.get("visible")){
 									var ces_layer = product.get("ces_layer");
+									ces_layer.show = false;
 									this.map.scene.imageryLayers.remove(ces_layer, false);
 
 									// When changing height or coefficient range and fieldlienes is selected
@@ -1206,6 +1051,10 @@ define(['backbone.marionette',
             					this.checkFieldLines();
 								if(product.get("name")==layer){
 				                	var ces_layer = product.get("ces_layer");
+				                	
+				                	if(product.get("visible")){
+				                		ces_layer.show = true;
+				                	}
 
 				                	ces_layer.imageryProvider.updateProperties("dim_bands", band);
 

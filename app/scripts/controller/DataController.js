@@ -33,6 +33,48 @@
        
       },
 
+      checkModelValidity: function(){
+        // Added some checks here to see if model is outside validity
+        $(".validitywarning").remove();
+        var invalid_models = [];
+
+        if(this.activeModels.length>0){
+          var that = this;
+          for (var i = this.activeModels.length - 1; i >= 0; i--) {
+            var model = globals.products.find(function(model) { return model.get('download').id == that.activeModels[i]; });
+            if(model.get("validity")){
+              var val = model.get("validity");
+              var start = new Date(val.start);
+              var end = new Date(val.end);
+              if(this.selected_time && (this.selected_time.start < start || this.selected_time.end > end)){
+                invalid_models.push({
+                  model: model.get('download').id,
+                  start: start,
+                  end: end
+                });
+              }
+            }
+          }
+        }
+
+        if(invalid_models.length>0){
+          var invalid_models_string = '';
+          for (var i = invalid_models.length - 1; i >= 0; i--) {
+            invalid_models_string += invalid_models[i].model+':' + start + ' - ' + end + '<br>';
+          }
+
+          $("#error-messages").append(
+              '<div class="alert alert-warning validitywarning">'+
+                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+                '<strong>Warning!</strong> The current time selection is outside the validity of the model, '+
+                'data is displayed for the last valid date, please take this into consideration when analysing the data.<br>'+
+                invalid_models_string+
+                'Tip: You can see the validity of the model in the time slider.'+
+              '</div>'
+            );
+        }
+      },
+
 
       changeLayer: function(options) {
         if (!options.isBaseLayer){
@@ -46,7 +88,7 @@
               }      
               if (product.get("model")){
                   this.activeModels.push(product.get("download").id);
-              }         
+              }
             }else{
               _.each(product.get("processes"), function(process){
                 if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
@@ -60,6 +102,8 @@
           }
           this.checkSelections();
         }
+
+        this.checkModelValidity();
       },
 
       onSelectionChanged: function(bbox) {
@@ -96,6 +140,7 @@
       onTimeChange: function (time) {
         this.selected_time = time;
         this.checkSelections();
+        this.checkModelValidity();
       },
 
       sendRequest: function(){

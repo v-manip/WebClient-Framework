@@ -79,7 +79,7 @@ define(['backbone.marionette',
 						'B_N_error','B_E_error','B_C_error',
 						'B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12',
 						'B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM',
-						'B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_CHAOS-5-Combined',
+						'B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined',
 						'B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model',
 						'Latitude', 'Longitude', 'Radius'
 					]

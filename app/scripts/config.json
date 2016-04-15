@@ -265,6 +265,10 @@
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
             "tileSize":1024,
+            "validity":{
+                "start": "2013-07-01T14:58:33Z",
+                "end": "2015-07-01T02:42:43Z"
+            },
             "views": [{
                 "id": "SIFM_view",
                 "protocol": "WMS",
@@ -361,6 +365,10 @@
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
             "tileSize":1024,
+            "validity":{
+                "start": "1900-01-01T00:00:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
             "views": [{
                 "id": "IGRF12_view",
                 "protocol": "WMS",
@@ -457,6 +465,10 @@
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
             "tileSize":1024,
+            "validity":{
+                "start": "1997-02-07T05:31:12Z",
+                "end": "2016-02-07T14:07:00Z"
+            },
             "views": [{
                 "id": "CHAOS-5-Combined_view",
                 "protocol": "WMS",
