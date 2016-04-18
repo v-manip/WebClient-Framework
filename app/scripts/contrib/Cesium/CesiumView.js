@@ -448,6 +448,12 @@ define(['backbone.marionette',
 
                     break;
 
+					case "WPS":
+						return_layer = new Cesium.SingleTileImageryProvider({
+						    url: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+						});
+					break;
+
                     default:
                     	// No supported view available
                     	// Return dummy Image provider to help with with sorting of layers 
