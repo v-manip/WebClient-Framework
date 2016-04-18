@@ -438,6 +438,7 @@ define(['backbone.marionette',
 						    layers : view.id,
 						    tileWidth: layerdesc.get('tileSize'),
 						    tileHeight: layerdesc.get('tileSize'),
+						    enablePickFeatures: false,
 						    parameters: params
 						});
 

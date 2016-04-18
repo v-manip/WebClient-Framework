@@ -318,6 +318,16 @@ button[active=active] {
 
 }
 
+#modal-start-download .input-group-btn{
+  height: 100%;
+}
+
+.delete-filter{
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+
 /*
  * Empty view
  */

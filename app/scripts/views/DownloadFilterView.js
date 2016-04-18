@@ -53,9 +53,19 @@
         // Check for filters
         var filters = this.model.get("filter");
 
-        if (filters){
+        var aoi = this.model.get("AoI");
+        if (aoi){
+          if (typeof filters === 'undefined') {
+            filters = {};
+          }
+          filters["Longitude"] = [aoi.w, aoi.e];
+          filters["Latitude"] = [aoi.s, aoi.n];
+        }
+
+        if (!$.isEmptyObject(filters)){
           this.renderFilterList(filters);
         }
+
 
         this.$('.delete-filter').click(function(evt){
           this.parentElement.parentElement.remove();
@@ -210,6 +220,7 @@
         if(shc_model){
           options.shc = shc_model.get("shc");
         }
+
 
         // filters
         var filters = [];
