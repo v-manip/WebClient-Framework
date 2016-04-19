@@ -1270,8 +1270,9 @@ define(['backbone.marionette',
 								"end_time": getISODateTimeString(this.end_time),
 								"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
 								"style": style,
-								"dim_range": (range[0]+","+range[1]),
-								"logarithmic": logarithmic
+								"range_min": range[0],
+								"range_max": range[1],
+								"log_scale": logarithmic
 							}))
 
 							.done(function( data ) {
