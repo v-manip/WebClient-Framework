@@ -29,6 +29,9 @@ define(['backbone.marionette',
 
 			onShow: function() {
 
+				this.stopListening(Communicator.mediator, "change:axis:parameters", this.onChangeAxisParameters);
+				this.listenTo(Communicator.mediator, "change:axis:parameters", this.onChangeAxisParameters);
+
 				var that = this;
 				
 				this.isClosed = false;
@@ -132,8 +135,12 @@ define(['backbone.marionette',
 			},
 
 			render: function(type) {
-
 				this.onResize();
+			},
+
+			onChangeAxisParameters: function (selection) {
+				this.sp.sel_y=selection;
+				this.sp.render();
 			},
 
 			close: function() {

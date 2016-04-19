@@ -158,13 +158,13 @@
             ],
             "parameters": {
                 "B_NEC": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
@@ -201,13 +201,13 @@
             ],
             "parameters": {
                 "B_NEC": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
@@ -243,13 +243,13 @@
             ],
             "parameters": {
                 "B_NEC": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
@@ -285,7 +285,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
@@ -385,7 +385,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
@@ -485,7 +485,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
@@ -576,10 +576,11 @@
             },
             "parameters": {
                 "F": {
-                    "range": [30000, 60000],
+                    "range": [27000, 50000],
                     "uom":"nT",
                     "name": "Total field intensity",
-                    "colorscale": "jet"
+                    "colorscale": "jet",
+                    "selected": true
                 },
                 "H": {
                     "range": [10000, 23000],
@@ -603,8 +604,7 @@
                     "range": [-200, 200],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1",
-                    "selected": true
+                    "colorscale": "custom1"
                 },
                 "I": {
                     "range": [-80, 80],
@@ -637,9 +637,9 @@
                     "colorscale": "custom1"
                 }
             },
-            "height": 0,
+            "height": 450,
             "model": true,
-            "coefficients_range": [13,65]
+            "coefficients_range": [-1,-1]
 
         },{
             "name": "Dst Index",
@@ -825,8 +825,8 @@
             "end": "2014-10-17T11:45:00Z"
         },
         "brush": {
-            "start": "2016-03-02T01:00:00Z",
-            "end": "2016-03-02T05:00:00Z"
+            "start": "2016-03-02T10:00:00Z",
+            "end": "2016-03-02T15:00:00Z"
         },
         "display": {
             "start": "2016-02-12T01:00:00Z",

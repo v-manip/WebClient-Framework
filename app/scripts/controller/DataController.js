@@ -75,6 +75,49 @@
         }
       },
 
+      updateLayerResidualParameters: function () {
+        // Manage additional residual parameter for Swarm layers
+        globals.products.each(function(product) {
+
+          if(product.get("satellite")=="Swarm"){
+
+            // Get Layer parameters
+            var pars = product.get("parameters");
+
+            var selected = null;
+
+            // Remove already added model residuals
+            var keys = _.keys(pars);
+            for (var i = keys.length - 1; i >= 0; i--) {
+              if(pars[keys[i]].residuals){
+                if(pars[keys[i]].selected){
+                  selected = keys[i];
+                }
+                delete pars[keys[i]];
+              }
+            }
+
+            for (var i = this.activeModels.length - 1; i >= 0; i--) {
+              
+              pars[this.activeModels[i]] = {
+                  "range": [-10, 40],
+                  "uom":"nT",
+                  "colorscale": "jet",
+                  "name": ("Residuals to "+this.activeModels[i]),
+                  "residuals": true
+              };
+              if(this.activeModels[i] == selected){
+                pars[this.activeModels[i]].selected = true;
+              }
+
+              product.set({"parameters": pars});
+            }
+          }
+        }, this);
+        // Make sure any possible opened settings are updated
+        Communicator.mediator.trigger("layer:settings:changed");
+      },
+
 
       changeLayer: function(options) {
         if (!options.isBaseLayer){
@@ -88,15 +131,18 @@
               }      
               if (product.get("model")){
                   this.activeModels.push(product.get("download").id);
+                  this.updateLayerResidualParameters();
               }
             }else{
               _.each(product.get("processes"), function(process){
-                if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
+                if (this.activeWPSproducts.indexOf(process.layer_id)!=-1){
                   this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
+                }
               },this);
 
               if (this.activeModels.indexOf(product.get("download").id)!=-1){
                 this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
+                this.updateLayerResidualParameters();
               }
             }
           }

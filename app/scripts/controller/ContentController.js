@@ -77,7 +77,10 @@
                 });
                 
 				if (_.isUndefined(App.storyView.isClosed) || App.storyView.isClosed) {
-					App.storyView.show(App.storyBanner);
+					//if (confirm('Starting the tutorial will reset your current view, are you sure you want to continue?')) {
+					    App.storyView.show(App.storyBanner);
+					//}
+					
 				} else {
 					App.storyView.close();
 				}
