@@ -8,8 +8,8 @@ define(['backbone.marionette',
 		'models/MapModel',
 		'globals',
 		'papaparse',
-		'hbs!tmpl/wps_load_shc',
-		'hbs!tmpl/wps_calc_diff',
+		'hbs!tmpl/wps_eval_model', // replaces wps_load_shc
+		'hbs!tmpl/wps_eval_model_diff', // replaces wps_calc_diff
 		'hbs!tmpl/wps_get_field_lines',
 		'hbs!tmpl/wps_retrieve_swarm_features',
 		'cesium/Cesium',
@@ -17,7 +17,7 @@ define(['backbone.marionette',
 		'FileSaver',
 		'plotty'
 	],
-	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
+	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_eval_model, Tmpl_eval_model_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
 
 		var CesiumView = Marionette.View.extend({
 
@@ -714,8 +714,6 @@ define(['backbone.marionette',
 			    					models.splice(models.indexOf("shc"), 1);
 			    				}
 
-								models = models.join(",");
-
 								var parameters = product.get("parameters");
 	                			var band;
 
@@ -730,14 +728,17 @@ define(['backbone.marionette',
 
             					var imageURI;
 
-								$.post( url, Tmpl_calc_diff({
-									"model_ids": models,
-									"shc": shc,
+								$.post(url, Tmpl_eval_model_diff({
+									"model": models[0],
+									"reference_model": models[1],
+									//"variable": band,
 									"begin_time": getISODateTimeString(this.begin_time),
 									"end_time": getISODateTimeString(this.end_time),
-									//"band": band,
+									"elevation": height,
+									"shc": shc,
+									"height": 512,
+									"width": 1024,
 									"style": style,
-									"height": height
 								}), "xml")
 
 									.done(function( data ) {
@@ -837,16 +838,20 @@ define(['backbone.marionette',
 
 						var coefficients_range = product.get("coefficients_range");
 
-						$.post( url, Tmpl_load_shc({
-							"shc":product.get('shc'),
+						$.post(url, Tmpl_eval_model({
+							"model": "Custom_Model",
+							"variable": band,
 							"begin_time": getISODateTimeString(this.begin_time),
 							"end_time": getISODateTimeString(this.end_time),
-							"band": band,
+							"elevation": product.get("height"),
+							"coeff_min": coefficients_range[0],
+							"coeff_max": coefficients_range[1],
+							"shc": product.get('shc'),
+							"height": 512,
+							"width": 1024,
 							"style": style,
 							"range_min": range[0],
 							"range_max": range[1],
-							"height": product.get("height"),
-							"coefficients_range": coefficients_range.join()
 						}))
 
 							.done(function( data ) {	
@@ -1265,8 +1270,9 @@ define(['backbone.marionette',
 								"end_time": getISODateTimeString(this.end_time),
 								"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
 								"style": style,
-								"dim_range": (range[0]+","+range[1]),
-								"logarithmic": logarithmic
+								"range_min": range[0],
+								"range_max": range[1],
+								"log_scale": logarithmic
 							}))
 
 							.done(function( data ) {
@@ -1427,15 +1433,18 @@ define(['backbone.marionette',
 									
 									var url = product.get("views")[0].urls[0];
 
-									$.post( url, Tmpl_load_shc({
-										"shc": product.get('shc'),
+									$.post( url, Tmpl_eval_model({
+										"model": "Custom_Model",
+										"variable": band,
 										"begin_time": getISODateTimeString(this.begin_time),
 										"end_time": getISODateTimeString(this.end_time),
-										"band": band,
+										"elevation": product.get("height"),
+										"shc": product.get('shc'),
+										"height": 512,
+										"width": 1024,
 										"style": style,
 										"range_min": range[0],
 										"range_max": range[1],
-										"height": product.get("height")
 									}))
 
 										.done(function( data ) {	
