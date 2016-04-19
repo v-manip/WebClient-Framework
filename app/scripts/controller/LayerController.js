@@ -17,6 +17,7 @@
 		    initialize: function(options){
 		        //this.listenTo(Communicator.mediator, "ui:open:layercontrol", this.onLayerControlOpen);
 		        this.listenTo(Communicator.mediator, "layer:activate", this.layerActivate);
+		        this.listenTo(Communicator.mediator, "app:reset", this.OnAppReset);
 		        this.layercontrolopen = false;
 			},
 
@@ -50,6 +51,16 @@
 		          	Communicator.mediator.trigger('map:layer:change', options);
 	            }
 			    
+			},
+
+			OnAppReset: function(){
+				globals.products.each(function(layer){
+					if(layer.get('visible')){
+		        		var options = { name: layer.get('name'), isBaseLayer: false, visible: false };
+		        		layer.set('visible',false);
+		        		Communicator.mediator.trigger('map:layer:change', options);
+		          	}
+				});
 			}
 		});
 		return new LayerController();

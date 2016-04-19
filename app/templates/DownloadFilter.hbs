@@ -1,0 +1,32 @@
+<div class="panel-heading">
+    <button type="button" class="close"><i class="fa fa-times-circle"></i></button>
+    <h3 class="panel-title"><i class="fa fa-fw fa-download"></i> Download Manager</h3>
+    <p style="margin-top:7px; margin-bottom:0px; font-size:.91em;">The download service is limited to accept a time period of maximum 15 days and a maximum result set for download of up to 432000 measurements equivalent to five unfiltered Swarm Level 1b LR products.</p>
+</div>
+<div class="panel-body" style="max-height:25em">
+  <div id="filters"></div>
+  <div id="time" style="margin-top:20px;">
+    <p style="float:left;">Start Date: <input type="text" id="starttime"></p>
+    <p style="float:left; margin-left: 20px;">End Date: <input type="text" id="endtime"></p>
+    <div class="spacer" style="clear: both;"></div>
+    <p style="font-size:0.8em;"> * For start date the time 00:00:00 is selected; For end date the time 23:59:59 is selected.</p>
+  </div>
+  <div style="margin-top:10px;">
+    <div id="products" style="float:left;"></div>
+    <div id="model" style="float:left; margin-left:50px;"></div>
+    <div class="spacer" style="clear: both;"></div>
+  </div>
+</div>
+<div class="panel-footer" style="height:80px">
+  <div style="float: left">
+    <select class="input-small" id="select-output-format">
+      <option value="application/cdf">CDF</option>
+      <option value="text/csv" selected>CSV</option>
+    </select>
+  </div>
+  <div style="float: right">
+    <button type="button" class="btn btn-primary" id="btn-start-download"><i class="fa fa-fw fa-download"></i> Download</button>
+  </div>
+  <div class="spacer" style="clear: both;"></div>
+  <p style="font-size:0.8em; float: right; margin-top:5px">* The request to save data can take some time, please be patient.</p>
+</div>

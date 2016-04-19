@@ -18,9 +18,9 @@ text.nvd3.nv-noData {
 .analytics {
 	width: 100%;
 	height: 100%;
-	padding-top: 5px;
+	padding-top: 50px;
 	padding-left: 25px;
-	padding-bottom: 40px;
+	padding-bottom: 8.9em;
 	padding-right: 15px;
 	float: left;
 	background-color: white;
@@ -64,4 +64,58 @@ text.nvd3.nv-noData {
     margin-left: auto;
     margin-right: auto; 
     width: auto;
+}
+
+
+#tmp_download_button, #save, #grid, #download_button, #reset_filters {
+	background-color: #333 !important;
+ 	border-color: #444 !important;
+ 	height:32px;
+}
+
+#tmp_download_button:hover, #save:hover, #grid:hover, #reset_filters:hover{
+    background-color: #48b !important;
+  	border-color: #aef !important;
+}
+
+#reset_filters.disabled, #reset_filters[disabled], fieldset[disabled] #reset_filters{
+	color: #999;
+}
+
+
+.xselectdropdown{
+	position: absolute !important;
+	float: right;
+	bottom: -25px !important;
+}
+
+#save, #grid, #download_button{
+	top: -43px!important;
+}
+
+#save{
+	right: 134px!important;
+}
+
+#grid{
+	right: 260px!important;
+}
+
+#download_button{
+	right: 40px!important;
+}
+
+#reset_filters{
+	position: absolute !important;
+	top: -27px !important;
+}
+
+#scatterdiv{
+	position: relative;
+}
+
+#parallelsdiv{
+	position: relative;
+	margin-top: 25px;
+	margin-left: -20px;
 }

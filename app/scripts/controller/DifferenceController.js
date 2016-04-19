@@ -51,10 +51,10 @@
 		        }
 			},
 
-			onSelectionChanged: function(feature) {
+			onSelectionChanged: function(bbox) {
 				
-				if(feature){
-					this.selection_list.push(feature.clone());
+				if(bbox){
+					this.selection_list.push(bbox);
 					this.checkSelections();
 				}else{
 					this.plotdata = [];
@@ -66,7 +66,7 @@
 			},
 
 			checkSelections: function(){
-				if (this.selected_time == null)
+				/*if (this.selected_time == null)
 					this.selected_time = Communicator.reqres.request('get:time');
 
 				if (this.activeWPSproducts.length > 0 && this.selection_list.length > 0 && this.selected_time){
@@ -74,7 +74,7 @@
 				}else{
 					Communicator.mediator.trigger("map:clear:image");
 					$(".colorlegend").empty();
-				}
+				}*/
 			},
 
 			onTimeChange: function (time) {
