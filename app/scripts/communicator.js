@@ -18,8 +18,9 @@
 				// Allow of logging all events when debug activated
 				this.mediator.on("all", function(event, param){
 					if( !(event == "map:center" || event == "router:setUrl" ||
-					      event == "progress:change"))
-						console.log(event);
+					      event == "progress:change")){
+							console.log(event);
+					}
 
 					if (typeof Piwik !== 'undefined') {
 						this.trackEvents(event, param);
@@ -71,13 +72,17 @@
 					var tracker = Piwik.getTracker( u+'piwik.php', 4 );
 
 					if(event == 'time:change'){
-						var time = param.start + "/"+param.end;
+						var ts = getISODateTimeString(param.start).split('T')[0];
+						var te = getISODateTimeString(param.end).split('T')[0];
+						var time = ts +"/"+ te;
 						tracker.trackEvent(event, time);
 					}
 
 					if(event == 'selection:changed'){
 						if (param){
-							var bbox = ""+param.w +","+ param.s +","+ param.e +","+ param.n; 
+							var bbox = ""+
+								param.w.toFixed(3) +","+ param.s.toFixed(3) +","+ 
+								param.e.toFixed(3) +","+ param.n.toFixed(3); 
 							tracker.trackEvent(event, bbox);
 						}
 					}
@@ -91,8 +96,6 @@
 						var filters = JSON.stringify(param);
 						tracker.trackEvent(event, filters);
 					}
-
-
 
 				}
 			}
