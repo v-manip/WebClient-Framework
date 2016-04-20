@@ -8,16 +8,16 @@ define(['backbone.marionette',
 		'models/MapModel',
 		'globals',
 		'papaparse',
-		'hbs!tmpl/wps_load_shc',
-		'hbs!tmpl/wps_calc_diff',
+		'hbs!tmpl/wps_eval_model', // replaces wps_load_shc
+		'hbs!tmpl/wps_eval_model_diff', // replaces wps_calc_diff
 		'hbs!tmpl/wps_get_field_lines',
 		'hbs!tmpl/wps_retrieve_swarm_features',
 		'cesium/Cesium',
 		'drawhelper',
-		'filesaver',
+		'FileSaver',
 		'plotty'
 	],
-	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_load_shc, Tmpl_calc_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
+	function(Marionette, Communicator, App, MapModel, globals, Papa, Tmpl_eval_model, Tmpl_eval_model_diff, Tmpl_get_field_lines, Tmpl_retrive_swarm_features) {
 
 		var CesiumView = Marionette.View.extend({
 
@@ -104,6 +104,12 @@ define(['backbone.marionette',
 				var name = "";
 
 				this.colors = globals.objects.get("color");
+
+				if (this.begin_time == null || this.end_time == null){
+					var sel_time = Communicator.reqres.request('get:time');
+					this.begin_time = sel_time.start;
+					this.end_time = sel_time.end;
+				}
 
 				globals.baseLayers.each(function(baselayer) {
 					if (baselayer.get("visible")){
@@ -397,9 +403,8 @@ define(['backbone.marionette',
 
                     case "WMS":
                     	params = $.extend({
-                    		time: layerdesc.get("time"),
-                    		transparent: 'true'
-                    	},  Cesium.WebMapServiceImageryProvider.DefaultParameters)
+                    		/*transparent: 'true'*/
+                    	},  Cesium.WebMapServiceImageryProvider.DefaultParameters);
 
                     	// Check if layer has additional parameters configured
                     	var additional_parameters = {};
@@ -415,21 +420,39 @@ define(['backbone.marionette',
 								}
 							});
                     	}
-                    	params = $.extend(additional_parameters, params);
-                    	params.styles = styles; 
+
+                    	additional_parameters['styles'] = styles; 
+
+                    	if(layerdesc.get("timeSlider")){
+                    		var string = getISODateTimeString(this.begin_time) + "/"+ getISODateTimeString(this.end_time);
+                    		additional_parameters['time'] = string;
+                    	}
 
                     	if(layerdesc.get("height")){
-	                    	params.elevation = layerdesc.get("height");
+	                    	additional_parameters['elevation'] = layerdesc.get("height");
 	                    }
 
-                    	params.format = 'image/png';
+                    	params.format = layerdesc.get("views")[0].format;
                     	return_layer = new Cesium.WebMapServiceImageryProvider({
 						    url: view.urls[0],
 						    layers : view.id,
+						    tileWidth: layerdesc.get('tileSize'),
+						    tileHeight: layerdesc.get('tileSize'),
+						    enablePickFeatures: false,
 						    parameters: params
 						});
 
+						for (par in additional_parameters){
+							return_layer.updateProperties(par, additional_parameters[par]);
+						}
+
                     break;
+
+					case "WPS":
+						return_layer = new Cesium.SingleTileImageryProvider({
+						    url: "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+						});
+					break;
 
                     default:
                     	// No supported view available
@@ -585,6 +608,7 @@ define(['backbone.marionette',
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
                     			//this.checkLayerFeatures(product, options.visible);
+                    			product.set('visible', options.visible);
                     			this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 			        		}else if (product.get("views")[0].protocol == "WPS"){
@@ -607,10 +631,10 @@ define(['backbone.marionette',
 
 									if (band == "Fieldlines"){
 										if(options.visible){
-			                    			this.activeFL.push(product.get("name"));
+			                    			this.activeFL.push(product.get("download").id);
 			                    		}else{
-			                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
-		                						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+			                    			if (this.activeFL.indexOf(product.get("download").id)!=-1){
+		                						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
 		                					}
 			                    		}
 			                    		this.checkFieldLines();
@@ -635,6 +659,7 @@ define(['backbone.marionette',
 
 	                    		
 							}
+
 							if(options.visible){
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(product.get("views")[0].attribution){
@@ -674,7 +699,7 @@ define(['backbone.marionette',
 							// Compare models if two are selected
 							if (this.activeModels.length == 2){
 
-								var that = this;
+								/*var that = this;
 
 								var model1 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[0];});
 								var model2 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[1];});
@@ -691,8 +716,6 @@ define(['backbone.marionette',
 			    					models.splice(models.indexOf("shc"), 1);
 			    				}
 
-								models = models.join(",");
-
 								var parameters = product.get("parameters");
 	                			var band;
 
@@ -707,14 +730,17 @@ define(['backbone.marionette',
 
             					var imageURI;
 
-								$.post( url, Tmpl_calc_diff({
-									"model_ids": models,
-									"shc": shc,
+								$.post(url, Tmpl_eval_model_diff({
+									"model": models[0],
+									"reference_model": models[1],
+									//"variable": band,
 									"begin_time": getISODateTimeString(this.begin_time),
 									"end_time": getISODateTimeString(this.end_time),
-									//"band": band,
+									"elevation": height,
+									"shc": shc,
+									"height": 512,
+									"width": 1024,
 									"style": style,
-									"height": height
 								}), "xml")
 
 									.done(function( data ) {
@@ -777,7 +803,7 @@ define(['backbone.marionette',
 
 										$("#colorlegend").show();
 
-									});
+									});*/
 							}
 
 						}
@@ -814,16 +840,20 @@ define(['backbone.marionette',
 
 						var coefficients_range = product.get("coefficients_range");
 
-						$.post( url, Tmpl_load_shc({
-							"shc":product.get('shc'),
+						$.post(url, Tmpl_eval_model({
+							"model": "Custom_Model",
+							"variable": band,
 							"begin_time": getISODateTimeString(this.begin_time),
 							"end_time": getISODateTimeString(this.end_time),
-							"band": band,
+							"elevation": product.get("height"),
+							"coeff_min": coefficients_range[0],
+							"coeff_max": coefficients_range[1],
+							"shc": product.get('shc'),
+							"height": 512,
+							"width": 1024,
 							"style": style,
 							"range_min": range[0],
 							"range_max": range[1],
-							"height": product.get("height"),
-							"coefficients_range": coefficients_range.join()
 						}))
 
 							.done(function( data ) {	
@@ -851,60 +881,6 @@ define(['backbone.marionette',
             },
 
 
-            checkLayerFeatures: function (product, visible) {
-
-				var id = product.get("views")[0].id;
-
-				if(this.features_collection.hasOwnProperty(id)){
-            		this.map.scene.primitives.remove(this.features_collection[id]);
-            		delete this.features_collection[id];
-            	}
-
-            	if(visible){
-					var color = product.get("color");
-					color = color.substring(1, color.length);
-
-	    			var parameters = product.get("parameters");
-	    			var keys = _.keys(parameters);
-	    			var band;
-					_.each(keys, function(key){
-						if(parameters[key].selected)
-							band = key;
-					});
-	    			var style = parameters[band].colorscale;
-	    			var outlines = product.get("outlines");
-	    			var range = parameters[band].range;
-	    			var alpha = product.get("opacity");
-	    			var url = product.get("views")[0].urls[0];
-
-	            	var that = this;
-
-	            	$.post( url, Tmpl_retrive_swarm_features({
-						//"shc": product.get('shc'),
-						"model_ids": this.activeModels.join(),
-						"collection_id": id,
-						"begin_time": getISODateTimeString(this.begin_time),
-						"end_time": getISODateTimeString(this.end_time),
-						"band": band,
-						"alpha": alpha,
-						//"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
-						"style": style,
-						"dim_range": (range[0]+","+range[1]),
-					}))
-
-					.done(function( data ) {
-						/*Papa.parse(data, {
-							header: true,
-							dynamicTyping: true,
-							complete: function(results) {
-								that.createFeatures(results, id, band, alpha)
-							}
-						});*/
-					});
-				}
-               
-            },
-
             createDataFeatures: function (results, identifier, band, alpha){
 
             	// The feature collections are removed directly when a change happens
@@ -925,9 +901,11 @@ define(['backbone.marionette',
             	
 
             	var settings = {};
+            	var cur_product = null;
 
             	globals.products.each(function(product) {
             		if(product.get('visible')){
+            			cur_product = product;
             			var params = product.get('parameters')
             			for (k in params){
             				if(params[k].selected){
@@ -940,204 +918,138 @@ define(['backbone.marionette',
             			}
             		}
             	});
-            	var that = this;
 
-            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
-            		that.activeCollections.push(obj.id);
-            		if (settings[obj.id].band == 'F') {
-            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
-	            		
-	            		// Warning: Use of _private variables is undocumented and may change without warning.
-						that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
-						    depthTest : {
-						        enabled : true,
-						        func : Cesium.DepthFunction.LESS
-						    },
-						    depthMask : false,
-						    blending : Cesium.BlendingState.ALPHA_BLEND
-						});
-            		}else if(settings[obj.id].band == 'B_NEC'){
-            			that.features_collection[obj.id] = new Cesium.Primitive({
-						  	geometryInstances : [],
-						  	appearance : new Cesium.PerInstanceColorAppearance({
-						    	flat : true,
-						    	translucent : true
-						  	}),
-						  	releaseGeometryInstances: false
-						});
-            		}
-            	});
+            	
 
-				var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
-				var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
-				var previous_collection = '';
-				//var line_primitives = [];
+            	if (cur_product){
 
-				var linecnt = 0;
-			    _.each(results, function(row){
-			    	var show = true;
-			    	var filters = globals.swarm.get('filters');
-			    	
-			    	if(filters){
-			    		for (k in filters){
-			    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
-			    				show = false;
-			    			}
-			    		}
-			    	}
+            		var that = this;
 
-			    	if (show){
-			    		var alpha = settings[row.id].alpha;
-			    		if (previous_collection != row.id){
-			    			previous_collection = row.id
-			    			this.plot.setColorScale(settings[row.id].colorscale);
-			    			this.plot.setDomain(settings[row.id].range);
-			    		}
-			    		if (settings[row.id].band == 'F') {
-				    		var color = this.plot.getColor(row['F']);
-				    		var options = {
-						        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
-						        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
-						        pixelSize : 8,
-						        scaleByDistance : scaltype
-						    };
-						    if(settings[row.id].outlines){
-						    	options['outlineWidth'] = 0.5;
-						    	options['outlineColor'] = Cesium.Color.fromCssColorString(settings[row.id].outline_color);
-						    }
-				    		this.features_collection[row.id].add(options);
-						}else if(settings[row.id].band == 'B_NEC'){
-							var v_len = Math.sqrt(Math.pow(row['B_N'],2)+Math.pow(row['B_E'],2)+Math.pow(row['B_C'],2));
-							var color = this.plot.getColor(v_len);
-							var add_len = 10;
-							var v_e = (row['B_E']/v_len)*add_len;
-							var v_n = (row['B_N']/v_len)*add_len;
-							var v_c = (row['B_C']/v_len)*add_len;
-							this.features_collection[row.id].geometryInstances.push( 
-							  	new Cesium.GeometryInstance({
-							    	geometry : new Cesium.SimplePolylineGeometry({
-							      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-							        		row.Longitude, row.Latitude, (row.Radius-max_rad),
-							        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
-							      		]),
-							      		followSurface: false
-							    	}),
-							    	id: "vec_line_"+linecnt,
-							    	attributes : {
-							      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
-							      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
-							      		)
-							    	}
-							  	})
-								
-							);
-							linecnt++;
+	            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
+	            		that.activeCollections.push(obj.id);
+	            		if (settings[obj.id].band == 'F') {
+	            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
+		            		
+	            		}else if(
+	            			settings[obj.id].band == 'B_NEC' ||
+	            			settings[obj.id].band == 'SIFM' ||
+	            			settings[obj.id].band == 'IGRF12' ||
+	            			settings[obj.id].band == 'CHAOS-5-Combined' ||
+	            			settings[obj.id].band == 'shc'
+	            			){
+	            			that.features_collection[obj.id] = new Cesium.Primitive({
+							  	geometryInstances : [],
+							  	appearance : new Cesium.PerInstanceColorAppearance({
+							    	flat : true,
+							    	translucent : true
+							  	}),
+							  	releaseGeometryInstances: false
+							});
+	            		}
+	            	});
 
-						}
-			    	}
+					var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
+					var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
+					var previous_collection = '';
+					//var line_primitives = [];
 
-				}, this);
+					var linecnt = 0;
+				    _.each(results, function(row){
+				    	var show = true;
+				    	var filters = globals.swarm.get('filters');
+				    	
+				    	if(filters){
+				    		for (k in filters){
+				    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
+				    				show = false;
+				    			}
+				    		}
+				    	}
 
-			    /*if(line_primitives.length>0){
-			    	this.features_collection['linecollection'] = new Cesium.Primitive({
-					  	geometryInstances : line_primitives,
-					  	appearance : new Cesium.PerInstanceColorAppearance({
-					    	flat : true,
-					    	translucent : false
-					  	})
-					});
-					this.map.scene.primitives.add(this.features_collection['linecollection']);
-			    }*/
-			    
+				    	if (show){
+				    		var alpha = settings[row.id].alpha;
 
-				//this.map.scene.primitives.add(this.features_collection[identifier]);
-				for (var i = 0; i < this.activeCollections.length; i++) {
-					this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
+				    		if (previous_collection != row.id){
+				    			previous_collection = row.id
+				    			this.plot.setColorScale(settings[row.id].colorscale);
+				    			this.plot.setDomain(settings[row.id].range);
+				    		}
+
+				    		if (settings[row.id].band == 'F') {
+					    		var color = this.plot.getColor(row['F']);
+					    		var options = {
+							        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
+							        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
+							        pixelSize : 8,
+							        scaleByDistance : scaltype
+							    };
+							    if(settings[row.id].outlines){
+							    	options['outlineWidth'] = 0.5;
+							    	options['outlineColor'] = Cesium.Color.fromCssColorString(settings[row.id].outline_color);
+							    }
+					    		this.features_collection[row.id].add(options);
+
+							}else if(
+			            			settings[row.id].band == 'B_NEC' ||
+			            			settings[row.id].band == 'SIFM' ||
+			            			settings[row.id].band == 'IGRF12' ||
+			            			settings[row.id].band == 'CHAOS-5-Combined' ||
+			            			settings[row.id].band == 'shc'
+		            			){
+
+								var sb;
+								switch (settings[row.id].band){
+									case 'B_NEC': sb = ['B_E','B_N','B_C']; break;
+									case 'SIFM': sb = ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM']; break;
+									case 'IGRF12': sb = ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12']; break;
+									case 'CHAOS-5-Combined': sb = [
+										'B_E_res_CHAOS-5-Combined',
+										'B_N_res_CHAOS-5-Combined',
+										'B_C_res_CHAOS-5-Combined'];
+									break;
+									case 'shc': sb = ['B_E_res_shc','B_N_res_shc','B_C_res_shc']; break;
+								}
+
+								// Check if residuals are active!
+								var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
+								var color = this.plot.getColor(v_len);
+								var add_len = 10;
+								var v_e = (row[sb[0]]/v_len)*add_len;
+								var v_n = (row[sb[1]]/v_len)*add_len;
+								var v_c = (row[sb[2]]/v_len)*add_len;
+								this.features_collection[row.id].geometryInstances.push( 
+								  	new Cesium.GeometryInstance({
+								    	geometry : new Cesium.SimplePolylineGeometry({
+								      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+								        		row.Longitude, row.Latitude, (row.Radius-max_rad),
+								        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
+								      		]),
+								      		followSurface: false
+								    	}),
+								    	id: "vec_line_"+linecnt,
+								    	attributes : {
+								      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+								      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
+								      		)
+								    	}
+								  	})
+									
+								);
+								linecnt++;
+
+							}
+				    	}
+
+					}, this);
+
+					for (var i = 0; i < this.activeCollections.length; i++) {
+						this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
+					}
 				}
 			},
 
-            createFeatures: function (results, identifier, band, alpha){
-
-            	// The feature collection is removed directly when a change happens
-            	// because of the asynchronous behavior it can happen that a collection
-            	// is added between removing it and adding another one so here we make sure
-            	// it is empty before overwriting it, which would lead to a not referenced
-            	// collection which is no longer deleted.
-            	// I remove it before the response because a direct feedback to the user is important
-            	// There is probably a cleaner way to do this
-            	if(this.features_collection.hasOwnProperty(identifier)){
-            		this.map.scene.primitives.remove(this.features_collection[identifier]);
-            		delete this.features_collection[identifier];
-            	}
-
-				if(band == "B_NEC"){
-
-					this.features_collection[identifier] = new Cesium.PrimitiveCollection();
-					
-
-					_.each(results.data, function(row){
-
-						var arrowmat = 	new Cesium.Material.fromType('PolylineArrow');			
-						arrowmat.uniforms.color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255);
-
-						this.features_collection[identifier].add(new Cesium.Primitive({
-						    geometryInstances : new Cesium.GeometryInstance({
-						        geometry : new Cesium.PolylineGeometry({
-						            positions : [
-							            new Cesium.Cartesian3(row.pos1_x, row.pos1_y, row.rad1),
-							            new Cesium.Cartesian3(row.pos2_x, row.pos2_y, row.rad2)
-						            ],
-						            width : 5.0,
-						            vertexFormat : Cesium.PolylineMaterialAppearance.VERTEX_FORMAT,
-						        })
-						    }),
-						    //appearance : new Cesium.PolylineColorAppearance()
-						    appearance : new Cesium.PolylineMaterialAppearance({
-						    	material : arrowmat
-						  	})
-						}));
-
-					}, this);
-
-	        		this.map.scene.primitives.add(this.features_collection[identifier]);
-
-				}else{
-
-
-					this.features_collection[identifier] = new Cesium.PointPrimitiveCollection();
-
-				    _.each(results.data, function(row){
-				    	var color = Cesium.Color.fromBytes(row.col_r, row.col_g, row.col_b, alpha*255);
-						this.features_collection[identifier].add({
-					        position : new Cesium.Cartesian3(row.pos_x, row.pos_y, row.rad),
-					        //outlineWidth: 1,
-					        //outlineColor: color,
-					        //scaleByDistance: new Cesium.NearFarScalar(1.5e2, 10, 15.0e6, 0.5),
-					        color : color,
-					        pixelSize : 8
-					    });
-
-					}, this);
-
-					this.map.scene.primitives.add(this.features_collection[identifier]);
-
-				}
-
-        		
-            },
-
             onLayerOutlinesChanged: function(collection){
-            	/*if (this.features_collection.hasOwnProperty(collection)){
-            		var col = this.features_collection[collection];
-            		if (col.hasOwnProperty("_pointPrimitives")){
-            			for (var i = col._pointPrimitives.length - 1; i >= 0; i--) {
-            				col._pointPrimitives[i].outlineColor = null;
-            				//col._pointPrimitives[i].outlineColor = 0;
-            			}
-            		}
-            	}*/
-            	this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
-            	
+				this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
             },
 
             OnLayerParametersChanged: function(layer){
@@ -1169,27 +1081,32 @@ define(['backbone.marionette',
 	                		if (band == "Fieldlines" ){
 								if(product.get("visible")){
 									var ces_layer = product.get("ces_layer");
+									ces_layer.show = false;
 									this.map.scene.imageryLayers.remove(ces_layer, false);
 
 									// When changing height or coefficient range and fieldlienes is selected
 									// model would be added multiple times, need to check if model already 
 									// marked as active and avoid adding it to list
-									if (this.activeFL.indexOf(product.get('name'))==-1)
-	                    				this.activeFL.push(product.get("name"));
+									if (this.activeFL.indexOf(product.get("download").id)==-1)
+	                    				this.activeFL.push(product.get("download").id);
 
 	                    		}else{
-	                    			if (this.activeFL.indexOf(product.get('name'))!=-1){
-                						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+	                    			if (this.activeFL.indexOf(product.get("download").id)!=-1){
+                						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
                 					}
 	                    		}
 	                    		this.checkFieldLines();
 							}else{
-								if (this.activeFL.indexOf(product.get('name'))!=-1){
-            						this.activeFL.splice(this.activeFL.indexOf(product.get('name')), 1);
+								if (this.activeFL.indexOf(product.get("download").id)!=-1){
+            						this.activeFL.splice(this.activeFL.indexOf(product.get("download").id), 1);
             					}
             					this.checkFieldLines();
 								if(product.get("name")==layer){
 				                	var ces_layer = product.get("ces_layer");
+
+				                	if(product.get("visible")){
+				                		ces_layer.show = true;
+				                	}
 
 				                	ces_layer.imageryProvider.updateProperties("dim_bands", band);
 
@@ -1299,17 +1216,26 @@ define(['backbone.marionette',
 				} else {
 					//Communicator.mediator.trigger("selection:changed", null);
 					this.drawhelper.stopDrawing();
+					// It seems the drawhelper muted handlers reset to false and 
+					// it creates issues in cesium picking for some reason so
+					// we deactivate them again
+					this.drawhelper._handlersMuted = true;
 				}
 			},
            
 
 			onSelectionChanged: function(bbox){
 
+				// It seems the drawhelper muted handlers reset to false and 
+				// it creates issues in cesium picking for some reason so
+				// we deactivate them again
+				this.drawhelper._handlersMuted = true;
+				
 				if(bbox){
-					this.map.scene.primitives.removeAll();
+					//this.map.scene.primitives.removeAll();
 					var color = "#6699FF";
 
-					var material = Cesium.Material.fromType('Color');
+					var material = new Cesium.Material.fromType('Color');
 					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
 					material.uniforms.color.alpha = 0.2;
 
@@ -1354,10 +1280,10 @@ define(['backbone.marionette',
 	            	var url, model_id, color, band, style, range, logarithmic;
 
 	            	globals.products.each(function(product) {
-                		if(this.activeFL.indexOf(product.get('name'))!=-1){
+                		if(this.activeFL.indexOf(product.get('download').id)!=-1){
                 			var name = product.get('name');
                 			url = product.get("views")[0].urls[0];
-                			model_id = product.get("views")[0].id;
+                			model_id = product.get("download").id;
                 			color = product.get("color");
 	                		color = color.substring(1, color.length);
 	            			parameters = product.get("parameters");
@@ -1384,19 +1310,20 @@ define(['backbone.marionette',
 								"end_time": getISODateTimeString(this.end_time),
 								"bbox": this.bboxsel[0] +","+ this.bboxsel[1] +","+ this.bboxsel[2] +","+ this.bboxsel[3],
 								"style": style,
-								"dim_range": (range[0]+","+range[1]),
-								"logarithmic": logarithmic
+								"range_min": range[0],
+								"range_max": range[1],
+								"log_scale": logarithmic
 							}))
 
 							.done(function( data ) {
-								/*Papa.parse(data, {
+								Papa.parse(data, {
 									header: true,
 									dynamicTyping: true,
 									//name: name,
 									complete: function(results) {
 										that.createPrimitives(results, name)
 									}
-								});*/
+								});
 							});
 
 
@@ -1424,7 +1351,12 @@ define(['backbone.marionette',
 			createPrimitives: function(results, name){
 
 				var parseddata = {};
-				this.FL_collection[name] = new Cesium.PrimitiveCollection();
+
+				if(this.FL_collection.hasOwnProperty(name)){
+					this.map.scene.primitives.remove(this.FL_collection[name]);
+				}
+
+				var instances = [];
 
 				_.each(results.data, function(row){
 					if(parseddata.hasOwnProperty(row.id)){
@@ -1440,8 +1372,8 @@ define(['backbone.marionette',
 
         		_.each(_.keys(parseddata), function(key){
 
-					this.FL_collection[name].add(new Cesium.Primitive({
-					    geometryInstances : new Cesium.GeometryInstance({
+        			instances.push(
+        				new Cesium.GeometryInstance({
 					        geometry : new Cesium.PolylineGeometry({
 					            positions : parseddata[key].positions,
 					            width : 2.0,
@@ -1449,11 +1381,16 @@ define(['backbone.marionette',
 					            colors : parseddata[key].colors,
 					            colorsPerVertex : true
 					        })
-					    }),
-					    appearance : new Cesium.PolylineColorAppearance()
-					}));
+					    })
+        			);
 
 				}, this);
+
+				this.FL_collection[name] = new Cesium.Primitive({
+					geometryInstances: instances,
+					appearance: new Cesium.PolylineColorAppearance()
+				});
+				
 
         		this.map.scene.primitives.add(this.FL_collection[name]);
 				
@@ -1546,15 +1483,18 @@ define(['backbone.marionette',
 									
 									var url = product.get("views")[0].urls[0];
 
-									$.post( url, Tmpl_load_shc({
-										"shc": product.get('shc'),
+									$.post( url, Tmpl_eval_model({
+										"model": "Custom_Model",
+										"variable": band,
 										"begin_time": getISODateTimeString(this.begin_time),
 										"end_time": getISODateTimeString(this.end_time),
-										"band": band,
+										"elevation": product.get("height"),
+										"shc": product.get('shc'),
+										"height": 512,
+										"width": 1024,
 										"style": style,
 										"range_min": range[0],
 										"range_max": range[1],
-										"height": product.get("height")
 									}))
 
 										.done(function( data ) {	
@@ -1570,107 +1510,6 @@ define(['backbone.marionette',
                     }
 	            }, this);
 
-				// Compare models if two are selected
-				if (this.activeModels.length == 2){
-
-					var that = this;
-
-					var model1 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[0];});
-					var model2 = _.find(globals.products.models, function(p){return p.get("name") == that.activeModels[1];});
-
-					var product = model2;
-
-					var models = [model1.get("views")[0].id, model2.get("views")[0].id];
-					var shc = null;
-
-					// Remove custom model with id shc if selected
-					if (models.indexOf("shc")!=-1){
-						shc = _.find(globals.products.models, function(p){return p.get("shc") != null;}).get("shc");
-    					models.splice(models.indexOf("shc"), 1);
-    				}
-
-					models = models.join(",");
-
-					var parameters = product.get("parameters");
-        			var band;
-        			var keys = _.keys(parameters);
-					_.each(keys, function(key){
-						if(parameters[key].selected)
-							band = key;
-					});
-        			var style = parameters[band].colorscale;
-        			var height = product.get("height");
-        			var uom = parameters[band].uom;
-
-					var imageURI;
-					var url = model2.get("views")[0].urls[0];
-
-					$.post( url, Tmpl_calc_diff({
-						"model_ids": models,
-						"shc": shc,
-						"begin_time": getISODateTimeString(this.begin_time),
-						"end_time": getISODateTimeString(this.end_time),
-						//"band": band,
-						"style": style,
-						"height": height
-					}), "xml")
-
-						.done(function( data ) {
-
-							if(that.difference_image)	
-								that.map.scene.imageryLayers.remove(that.difference_image);
-
-							var img64 = $(data.getElementsByTagName("ComplexData")).text();
-						    imageURI = "data:image/gif;base64,"+img64;
-						    var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
-							that.difference_image = that.map.scene.imageryLayers.addImageryProvider(prov);
-							that.map.scene.imageryLayers.lower(that.difference_image);
-
-							var style = $(data.getElementsByTagName("LiteralData")).text().split(",");
-
-
-							
-							var margin = 20;
-							var width = $("#colorlegend").width();
-							var scalewidth =  width - margin *2;
-
-
-							$("#colorlegend").append(
-								'<div class="'+style[0]+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
-							);
-
-							var svgContainer = d3.select("#colorlegend").append("svg")
-								.attr("width", width)
-								.attr("height", 60);
-
-
-							var axisScale = d3.scale.linear();
-
-							axisScale.domain([parseFloat(style[1]), parseFloat(style[2])]);
-							axisScale.range([0, scalewidth]);
-
-							var xAxis = d3.svg.axis()
-								.scale(axisScale);
-
-
-							xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
-							xAxis.tickFormat(d3.format('.02f'));
-
-
-						    svgContainer.append("g")
-						        .attr("class", "x axis")
-						        .attr("transform", "translate(" + [margin, 3]+")")
-						        .call(xAxis)
-						        .append("text")
-									.style("text-anchor", "middle")
-									.style("font-size", "1.1em")
-									.attr("transform", "translate(" + [scalewidth/2, 40]+")")
-									.text(uom);
-
-							$("#colorlegend").show();
-
-						});
-				}
 
 				this.checkFieldLines();
             },
@@ -1683,32 +1522,14 @@ define(['backbone.marionette',
 
             },
 
-            getURL: function(url, id, begin_time, end_time, band, range, style, color, outlines){
-
-        		if(!outlines && band != "B_NEC"){
-        			return url + "?service=WPS&version=1.0.0&request=Execute&" +
-							  "identifier=retrieve_czml&" +
-							  "DataInputs="+
-							  "collection_ids="+ id +"%3B"+
-							  "begin_time="+ begin_time +"%3B"+
-							  "end_time="+ end_time +"%3B"+
-							  "band="+ band +"%3B"+
-							  "dim_range="+ range[0] +","+ range[1] +"%3B"+
-							  "style="+ style +"&"+
-							  "rawdataoutput=output";
-        		}
-        		return url + "?service=WPS&version=1.0.0&request=Execute&" +
-							  "identifier=retrieve_czml&" +
-							  "DataInputs="+
-							  "collection_ids="+ id +"%3B"+
-							  "begin_time="+ begin_time +"%3B"+
-							  "end_time="+ end_time +"%3B"+
-							  "band="+ band +"%3B"+
-							  "dim_range="+ range[0] +","+ range[1] +"%3B"+
-							  "style="+ style +"%3B"+
-							  "colors="+ color +"&"+
-							  "rawdataoutput=output";
+            onChangeZoom: function (zoom) {
+            	if(zoom<0){
+					this.map.scene.camera.zoomOut(Math.abs(zoom));
+            	}else{
+            		this.map.scene.camera.zoomIn(Math.abs(zoom));
+            	}
             },
+
 
 			onClose: function(){
 				/*this.stopListening();
@@ -1755,13 +1576,9 @@ define(['backbone.marionette',
 			},
 
 			onSaveImage: function(){
-				var dataUrl = this.map.canvas.toDataURL("image/jpeg");
-				var a = document.createElement("a");
-				a.download = "VirES_virtual_globe.jpeg";
-				a.href = dataUrl;
-				$('#pngdataurl').append(a);
-				a.click();
-				$('#pngdataurl').empty();
+				this.map.canvas.toBlob(function(blob) {
+					saveAs(blob, "VirES_Services_Screenshot.jpg");
+				}, "image/jpeg");
 			},
 
 			onClearImage: function(){

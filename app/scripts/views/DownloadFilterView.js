@@ -53,9 +53,19 @@
         // Check for filters
         var filters = this.model.get("filter");
 
-        if (filters){
+        var aoi = this.model.get("AoI");
+        if (aoi){
+          if (typeof filters === 'undefined') {
+            filters = {};
+          }
+          filters["Longitude"] = [aoi.w, aoi.e];
+          filters["Latitude"] = [aoi.s, aoi.n];
+        }
+
+        if (!$.isEmptyObject(filters)){
           this.renderFilterList(filters);
         }
+
 
         this.$('.delete-filter').click(function(evt){
           this.parentElement.parentElement.remove();
@@ -187,15 +197,15 @@
         // time
         options.begin_time = this.start_picker.datepicker( "getDate" );
         options.begin_time = new Date(Date.UTC(options.begin_time.getFullYear(), options.begin_time.getMonth(),
-            options.begin_time.getDate(), options.begin_time.getHours(), 
-            options.begin_time.getMinutes(), options.begin_time.getSeconds()));
+        options.begin_time.getDate(), options.begin_time.getHours(), 
+        options.begin_time.getMinutes(), options.begin_time.getSeconds()));
         options.begin_time.setUTCHours(0,0,0,0);
         options.begin_time = getISODateTimeString(options.begin_time);
 
         options.end_time = this.end_picker.datepicker( "getDate" );
         options.end_time = new Date(Date.UTC(options.end_time.getFullYear(), options.end_time.getMonth(),
-            options.end_time.getDate(), options.end_time.getHours(), 
-            options.end_time.getMinutes(), options.end_time.getSeconds()));
+        options.end_time.getDate(), options.end_time.getHours(), 
+        options.end_time.getMinutes(), options.end_time.getSeconds()));
         options.end_time.setUTCHours(23,59,59,999);
         options.end_time = getISODateTimeString(options.end_time);
 
@@ -203,13 +213,14 @@
         options.collection_ids = this.swarm_prod.map(function(m){return m.get("views")[0].id;}).join(",");
 
         // models
-        options.model_ids = this.models.map(function(m){return m.get("views")[0].id;}).join(",");
+        options.model_ids = this.models.map(function(m){return m.get("download").id;}).join(",");
 
         // custom model (SHC)
         var shc_model = _.find(globals.products.models, function(p){return p.get("shc") != null;});
         if(shc_model){
           options.shc = shc_model.get("shc");
         }
+
 
         // filters
         var filters = [];
@@ -245,33 +256,7 @@
 
         var that = this;
 
-        // Try to get CSRF token, if available set it for necesary ajax requests
-        function getCookie(name) {
-            var cookieValue = null;
-            if (document.cookie && document.cookie != '') {
-                var cookies = document.cookie.split(';');
-                for (var i = 0; i < cookies.length; i++) {
-                    var cookie = jQuery.trim(cookies[i]);
-                    // Does this cookie string begin with the name we want?
-                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-        var csrftoken = getCookie('csrftoken');
-
-        function csrfSafeMethod(method) {
-            // these HTTP methods do not require CSRF protection
-            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
-        }
-
-        if(csrftoken){
-          $('#div-downloads').find('form').prepend('<input type="hidden" name="csrfmiddlewaretoken" value="'+csrftoken+'" />');
-        }
-
+       
         $('#iframe-download-post').on("load", function(){
           Communicator.mediator.trigger("progress:change", false);
           if($("#frameloaderror").length == 0) {

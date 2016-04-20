@@ -29,6 +29,9 @@ define(['backbone.marionette',
 
 			onShow: function() {
 
+				this.stopListening(Communicator.mediator, "change:axis:parameters", this.onChangeAxisParameters);
+				this.listenTo(Communicator.mediator, "change:axis:parameters", this.onChangeAxisParameters);
+
 				var that = this;
 				
 				this.isClosed = false;
@@ -75,7 +78,14 @@ define(['backbone.marionette',
 					selection_x: 'Latitude',
 					selection_y: ['F'],
 					margin: {top: 10, right: 20, bottom: 10, left: 50},
-					toIgnoreHistogram: ['B_error', 'Latitude', 'Longitude', 'Radius']
+					toIgnoreHistogram: [
+						'B_N_error','B_E_error','B_C_error',
+						'B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12',
+						'B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM',
+						'B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined',
+						'B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model',
+						'Latitude', 'Longitude', 'Radius'
+					]
 				};
 
 				
@@ -125,8 +135,12 @@ define(['backbone.marionette',
 			},
 
 			render: function(type) {
-
 				this.onResize();
+			},
+
+			onChangeAxisParameters: function (selection) {
+				this.sp.sel_y=selection;
+				this.sp.render();
 			},
 
 			close: function() {

@@ -27,11 +27,10 @@
 				});
 			},
 
-			/*events: {
-		        "change #upload-selection": "onUploadSelectionChanged"
-	      	},*/
-
 			onShow: function(view){
+
+				// Unbind first to make sure we are not binding to many times
+				this.stopListening(Communicator.mediator, "layer:settings:changed", this.onParameterChange);
 
 				// Event handler to check if tutorial banner made changes to a model in order to redraw settings
 				// If settings open rerender view to update changes
@@ -68,131 +67,148 @@
 
 				this.$("#options").append(option);
 
-				if(options[this.selected].description){
-					this.$("#description").text(options[this.selected].description);
-				}
+				// Check if selected is not inside the available options
+				// This happens if residuals were selected for the layer and
+				// then the model was removed also removing the residuals parameter
+				// from the cotnext menu.
+				// If this happens the visualized parameter needs to be changed
+				if(!options.hasOwnProperty(this.selected)){
+					this.onOptionsChanged();
+				}else{
 
-				if(options[that.selected].hasOwnProperty("logarithmic")){
-					this.addLogOption(options);
-				}
-
-				// Add event handler for change in drop down selection
-				this.$("#options").change(this.onOptionsChanged.bind(this));
-
-				// Set values for color scale ranges
-				this.$("#range_min").val(options[this.selected].range[0]);
-				this.$("#range_max").val(options[this.selected].range[1]);
-				
-				// Register necessary key events
-				this.registerKeyEvents(this.$("#range_min"));
-				this.registerKeyEvents(this.$("#range_max"));
-				
-
-				var colorscale_options = "";
-				var selected_colorscale;
-				_.each(this.colorscaletypes, function(colorscale){
-					if(options[that.selected].colorscale == colorscale){
-						selected_colorscale = colorscale;
-				   		colorscale_options += '<option value="'+ colorscale + '" selected>' + colorscale + '</option>';
-				   	}else{
-				   		colorscale_options += '<option value="'+ colorscale + '">' + colorscale + '</option>';
-				   	}
-				});
-
-				this.$("#style").empty();
-				this.$("#style").append(colorscale_options);
-
-				this.$("#style").change(function(evt){
-					var selected = $(evt.target).find("option:selected").text();
-					selected_colorscale = selected;
-					options[that.selected].colorscale = selected;
-					that.model.set("parameters", options);
-
-					if(options[that.selected].hasOwnProperty("logarithmic"))
-						that.createScale(options[that.selected].logarithmic);
-					else
-						that.createScale();
-
-					Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
-				});
-
-				this.$("#opacitysilder").val(this.model.attributes.opacity*100);
-				this.$("#opacitysilder").on("input change", function(){
-					var opacity = Number(this.value)/100;
-					that.model.set("opacity", opacity);
-					Communicator.mediator.trigger('productCollection:updateOpacity', {model:that.model, value:opacity});
-				});
-
-				
-
-				if(!(typeof outlines === 'undefined')){
-					var checked = "";
-					if (outlines)
-						checked = "checked";
-
-					this.$("#outlines").append(
-						'<form style="vertical-align: middle;">'+
-						'<label for="outlines" style="width: 70px;">Outlines: </label>'+
-						'<input type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
-						'</form>'
-					);
-
-					this.$("#outlines input").change(function(evt){
-						var outlines = !that.model.get("outlines");
-						that.model.set("outlines", outlines);
-						Communicator.mediator.trigger("layer:outlines:changed", that.model.get("views")[0].id, outlines);
-					});
-				}
-
-
-				if(!(typeof this.model.get("coefficients_range") === 'undefined')){
-
-					this.$("#coefficients_range").empty();
-
-					this.$("#coefficients_range").append(
-					'<li style="margin-top: 5px;">'+
-						'<label for="coefficients_range_min" style="width: 120px;">Coefficients range: </label>'+
-						'<input id="coefficients_range_min" type="text" style="width:30px;"/>'+
-						'<input id="coefficients_range_max" type="text" style="width:30px; margin-left:8px"/>'+
-					'</li>'+
-					'<p style="font-size:0.85em; margin-left:130px;"> [-1,-1]: No range limitation</p>'
-					);
-
-					this.$("#coefficients_range_min").val(this.model.get("coefficients_range") [0]);
-					this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
-
-					// Register necessary key events
-					this.registerKeyEvents(this.$("#coefficients_range_min"));
-					this.registerKeyEvents(this.$("#coefficients_range_max"));
-					
-				}	
-
-				if (protocol == "WPS"){
-					this.$("#shc").empty();
-					this.$("#shc").append(
-						'<p>Spherical Harmonics Coefficients</p>'+
-						'<div class="myfileupload-buttonbar ">'+
-					    	'<label class="btn btn-default shcbutton">'+
-					        '<span><i class="fa fa-fw fa-upload"></i> Upload SHC File</span>'+
-					        '<input id="upload-selection" type="file" accept=".shc" name="files[]" />'+
-					      '</label>'+
-					  '</div>'
-					);
-
-					this.$("#upload-selection").change(this.onUploadSelectionChanged.bind(this));
-
-					if(this.model.get('shc_name')){
-						that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+this.model.get('shc_name')+'</p>');
+					if(options[this.selected].description){
+						this.$("#description").text(options[this.selected].description);
 					}
+
+					if(options[that.selected].hasOwnProperty("logarithmic")){
+						this.addLogOption(options);
+					}
+
+					this.$("#options").unbind();
+					// Add event handler for change in drop down selection
+					this.$("#options").change(this.onOptionsChanged.bind(this));
+
+					// Set values for color scale ranges
+					this.$("#range_min").val(options[this.selected].range[0]);
+					this.$("#range_max").val(options[this.selected].range[1]);
 					
+					// Register necessary key events
+					this.registerKeyEvents(this.$("#range_min"));
+					this.registerKeyEvents(this.$("#range_max"));
+					
+
+					var colorscale_options = "";
+					var selected_colorscale;
+					_.each(this.colorscaletypes, function(colorscale){
+						if(options[that.selected].colorscale == colorscale){
+							selected_colorscale = colorscale;
+					   		colorscale_options += '<option value="'+ colorscale + '" selected>' + colorscale + '</option>';
+					   	}else{
+					   		colorscale_options += '<option value="'+ colorscale + '">' + colorscale + '</option>';
+					   	}
+					});
+
+					this.$("#style").unbind();
+
+					this.$("#style").empty();
+					this.$("#style").append(colorscale_options);
+
+					this.$("#style").change(function(evt){
+						var selected = $(evt.target).find("option:selected").text();
+						selected_colorscale = selected;
+						options[that.selected].colorscale = selected;
+						that.model.set("parameters", options);
+
+						if(options[that.selected].hasOwnProperty("logarithmic"))
+							that.createScale(options[that.selected].logarithmic);
+						else
+							that.createScale();
+
+						Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
+					});
+
+					this.$("#opacitysilder").unbind();
+					this.$("#opacitysilder").val(this.model.attributes.opacity*100);
+					this.$("#opacitysilder").on("input change", function(){
+						var opacity = Number(this.value)/100;
+						that.model.set("opacity", opacity);
+						Communicator.mediator.trigger('productCollection:updateOpacity', {model:that.model, value:opacity});
+					});
+
+					
+
+					if(!(typeof outlines === 'undefined')){
+						var checked = "";
+						if (outlines)
+							checked = "checked";
+
+						$("#outlines input").unbind();
+						$("#outlines").empty();
+						this.$("#outlines").append(
+							'<form style="vertical-align: middle;">'+
+							'<label for="outlines" style="width: 70px;">Outlines: </label>'+
+							'<input type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
+							'</form>'
+						);
+
+						this.$("#outlines input").change(function(evt){
+							var outlines = !that.model.get("outlines");
+							that.model.set("outlines", outlines);
+							Communicator.mediator.trigger("layer:outlines:changed", that.model.get("views")[0].id, outlines);
+						});
+					}
+
+
+					if(!(typeof this.model.get("coefficients_range") === 'undefined')){
+
+						this.$("#coefficients_range").empty();
+
+						this.$("#coefficients_range").append(
+						'<li style="margin-top: 5px;">'+
+							'<label for="coefficients_range_min" style="width: 120px;">Coefficients range: </label>'+
+							'<input id="coefficients_range_min" type="text" style="width:30px;"/>'+
+							'<input id="coefficients_range_max" type="text" style="width:30px; margin-left:8px"/>'+
+						'</li>'+
+						'<p style="font-size:0.85em; margin-left:130px;"> [-1,-1]: No range limitation</p>'
+						);
+
+						this.$("#coefficients_range_min").val(this.model.get("coefficients_range") [0]);
+						this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
+
+						// Register necessary key events
+						this.registerKeyEvents(this.$("#coefficients_range_min"));
+						this.registerKeyEvents(this.$("#coefficients_range_max"));
+						
+					}	
+
+					if (protocol == "WPS"){
+						this.$("#shc").empty();
+						this.$("#shc").append(
+							'<p>Spherical Harmonics Coefficients</p>'+
+							'<div class="myfileupload-buttonbar ">'+
+						    	'<label class="btn btn-default shcbutton">'+
+						        '<span><i class="fa fa-fw fa-upload"></i> Upload SHC File</span>'+
+						        '<input id="upload-selection" type="file" accept=".shc" name="files[]" />'+
+						      '</label>'+
+						  '</div>'
+						);
+
+						this.$("#upload-selection").unbind();
+						this.$("#upload-selection").change(this.onUploadSelectionChanged.bind(this));
+
+						if(this.model.get('shc_name')){
+							that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+this.model.get('shc_name')+'</p>');
+						}
+						
+					}
+
+					if(options[this.selected].hasOwnProperty("logarithmic"))
+						this.createScale(options[that.selected].logarithmic);
+					else
+						this.createScale();
+
+					this.createHeightTextbox(this.model.get("height"));
 				}
-
-				if(options[this.selected].hasOwnProperty("logarithmic"))
-					this.createScale(options[that.selected].logarithmic);
-				else
-					this.createScale();
-
-				this.createHeightTextbox(this.model.get("height"));
 
 		    },
 
@@ -208,7 +224,10 @@
 
 				var options = this.model.get("parameters");
 
-				delete options[this.selected].selected;
+				if(options.hasOwnProperty(this.selected)){
+					delete options[this.selected].selected;
+				}
+
 				this.selected = $("#options").find("option:selected").val();
 
 				this.$("#style").empty();
@@ -354,6 +373,9 @@
 
 			setModel: function(model){
 				this.model = model;
+				this.model.on('change:parameters', function(model, data) {
+					console.log("CHANGE ATTRIBUTES!!!")
+				}, this);
 			},
 
 			sameModel: function(model){

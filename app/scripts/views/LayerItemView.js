@@ -62,20 +62,30 @@
     			var that = this;
 
     			if (this.$el.has( ".fa-sliders" ).length){
-	    			this.$el.find('.fa-sliders').click(function(){
-	    				
-	    				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-	    					App.layerSettings.setModel(that.model);
-							App.optionsBar.show(App.layerSettings);
-						} else {
-							if(App.layerSettings.sameModel(that.model)){
-								App.optionsBar.close();
-							}else{
-								App.layerSettings.setModel(that.model);
+
+    				if(this.model.get("satellite")==="Swarm"){
+    					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
+    				}
+
+    				if(this.model.get("timeSliderProtocol")==="INDEX"){
+    					this.$el.find( ".fa-sliders" ).css("visibility", "hidden");
+    					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
+    				}else{
+		    			this.$el.find('.fa-sliders').click(function(){
+		    				
+		    				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+		    					App.layerSettings.setModel(that.model);
 								App.optionsBar.show(App.layerSettings);
+							} else {
+								if(App.layerSettings.sameModel(that.model)){
+									App.optionsBar.close();
+								}else{
+									App.layerSettings.setModel(that.model);
+									App.optionsBar.show(App.layerSettings);
+								}
 							}
-						}
-	    			});
+		    			});
+	    			}
 	    		}
 			},
 

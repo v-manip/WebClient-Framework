@@ -174,7 +174,9 @@
 							outlines: product.outlines,
 							model: product.model,
 							coefficients_range: product.coefficients_range,
-							satellite: product.satellite
+							satellite: product.satellite,
+							tileSize: (product.tileSize) ? product.tileSize : 256,
+							validity: product.validity
 						})
 					);
 

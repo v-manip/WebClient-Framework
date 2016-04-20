@@ -99,6 +99,7 @@
           if(this.sections[index].hasAttribute('data-zoom')) {
               doZoom = true;
               var zoom = this.sections[index].getAttribute('data-zoom');
+              Communicator.mediator.trigger('map:change:zoom', zoom);
           }
 
           var center={};
@@ -132,6 +133,12 @@
             _.each(events, function(event){
               Communicator.mediator.trigger(event);
             }, this);
+          }
+
+          // Analytics selection
+          if(this.sections[index].hasAttribute('data-yAxis')) {
+              var yAxis = this.sections[index].getAttribute('data-yAxis').split(',');
+              Communicator.mediator.trigger("change:axis:parameters", yAxis);
           }
 
           // Time selection
@@ -203,9 +210,11 @@
                   selected = key;
               });
 
-              if(selected != config[1]){
+              if(selected && selected != config[1]){
                 // Delete previously selected and select new parameter
                 delete options[selected].selected;
+                options[config[1]].selected = true;
+              }else{
                 options[config[1]].selected = true;
               }
 
@@ -265,13 +274,13 @@
           if(this.sections[index].hasAttribute('data-bbox')){
             var coords = this.sections[index].getAttribute('data-bbox').split(",");
             // Coordinates structure is created as expected by Cesium View
-            var bbox = [
-              {x:coords[0], y:coords[1], z:0},
-              {},//Not needed in Cesium View
-              {x:coords[2], y:coords[3], z:0},
-              {},//Not needed in Cesium View
-            ];
-            Communicator.mediator.trigger("selection:changed", null, bbox, null);
+            var bbox = {
+                n: coords[3],
+                e: coords[2],
+                s: coords[1],
+                w: coords[0]
+              }
+            Communicator.mediator.trigger("selection:changed", bbox);
           }
           
 

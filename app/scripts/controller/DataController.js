@@ -33,6 +33,91 @@
        
       },
 
+      checkModelValidity: function(){
+        // Added some checks here to see if model is outside validity
+        $(".validitywarning").remove();
+        var invalid_models = [];
+
+        if(this.activeModels.length>0){
+          var that = this;
+          for (var i = this.activeModels.length - 1; i >= 0; i--) {
+            var model = globals.products.find(function(model) { return model.get('download').id == that.activeModels[i]; });
+            if(model.get("validity")){
+              var val = model.get("validity");
+              var start = new Date(val.start);
+              var end = new Date(val.end);
+              if(this.selected_time && (this.selected_time.start < start || this.selected_time.end > end)){
+                invalid_models.push({
+                  model: model.get('download').id,
+                  start: start,
+                  end: end
+                });
+              }
+            }
+          }
+        }
+
+        if(invalid_models.length>0){
+          var invalid_models_string = '';
+          for (var i = invalid_models.length - 1; i >= 0; i--) {
+            invalid_models_string += invalid_models[i].model+':' + start + ' - ' + end + '<br>';
+          }
+
+          $("#error-messages").append(
+              '<div class="alert alert-warning validitywarning">'+
+                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+                '<strong>Warning!</strong> The current time selection is outside the validity of the model, '+
+                'data is displayed for the last valid date, please take this into consideration when analysing the data.<br>'+
+                invalid_models_string+
+                'Tip: You can see the validity of the model in the time slider.'+
+              '</div>'
+            );
+        }
+      },
+
+      updateLayerResidualParameters: function () {
+        // Manage additional residual parameter for Swarm layers
+        globals.products.each(function(product) {
+
+          if(product.get("satellite")=="Swarm"){
+
+            // Get Layer parameters
+            var pars = product.get("parameters");
+
+            var selected = null;
+
+            // Remove already added model residuals
+            var keys = _.keys(pars);
+            for (var i = keys.length - 1; i >= 0; i--) {
+              if(pars[keys[i]].residuals){
+                if(pars[keys[i]].selected){
+                  selected = keys[i];
+                }
+                delete pars[keys[i]];
+              }
+            }
+
+            for (var i = this.activeModels.length - 1; i >= 0; i--) {
+              
+              pars[this.activeModels[i]] = {
+                  "range": [-10, 40],
+                  "uom":"nT",
+                  "colorscale": "jet",
+                  "name": ("Residuals to "+this.activeModels[i]),
+                  "residuals": true
+              };
+              if(this.activeModels[i] == selected){
+                pars[this.activeModels[i]].selected = true;
+              }
+
+              product.set({"parameters": pars});
+            }
+          }
+        }, this);
+        // Make sure any possible opened settings are updated
+        Communicator.mediator.trigger("layer:settings:changed");
+      },
+
 
       changeLayer: function(options) {
         if (!options.isBaseLayer){
@@ -45,17 +130,26 @@
                 },this);
               }      
               if (product.get("model")){
-                this.activeModels.push(product.get("views")[0].id);
-              }         
+                  this.activeModels.push(product.get("download").id);
+                  this.updateLayerResidualParameters();
+              }
             }else{
               _.each(product.get("processes"), function(process){
-                if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
+                if (this.activeWPSproducts.indexOf(process.layer_id)!=-1){
                   this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
+                }
               },this);
+
+              if (this.activeModels.indexOf(product.get("download").id)!=-1){
+                this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
+                this.updateLayerResidualParameters();
+              }
             }
           }
           this.checkSelections();
         }
+
+        this.checkModelValidity();
       },
 
       onSelectionChanged: function(bbox) {
@@ -92,6 +186,7 @@
       onTimeChange: function (time) {
         this.selected_time = time;
         this.checkSelections();
+        this.checkModelValidity();
       },
 
       sendRequest: function(){
@@ -158,12 +253,32 @@
                     if(dat[i].hasOwnProperty('B_NEC')) {
                       var bnec = dat[i]['B_NEC'];
                       bnec = bnec.slice(1,-1).split(';').map(Number);
-                      bnec.spl
                       delete dat[i]['B_NEC'];
                       dat[i]['B_N'] = bnec[0];
                       dat[i]['B_E'] = bnec[1];
                       dat[i]['B_C'] = bnec[2];
                     }
+                    if(dat[i].hasOwnProperty('B_error')) {
+                      var bnec = dat[i]['B_error'];
+                      bnec = bnec.slice(1,-1).split(';').map(Number);
+                      delete dat[i]['B_error'];
+                      dat[i]['B_N_error'] = bnec[0];
+                      dat[i]['B_E_error'] = bnec[1];
+                      dat[i]['B_C_error'] = bnec[2];
+                    }
+                    $.each(dat[i], function(key, value){
+                      if (key.indexOf("B_NEC_")>-1){
+                        var res_model = key.substring(6);
+                        var bnec = dat[i][key];
+                        bnec = bnec.slice(1,-1).split(';').map(Number);
+                        delete dat[i][key];
+                        dat[i]['B_N_res_'+res_model] = bnec[0];
+                        dat[i]['B_E_res_'+res_model] = bnec[1];
+                        dat[i]['B_C_res_'+res_model] = bnec[2];
+                      }
+                    });
+                    
+
                   }
                   globals.swarm.set({data: results.data});
                 }
