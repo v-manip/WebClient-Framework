@@ -75,7 +75,7 @@
 						var ts = getISODateTimeString(param.start).split('T')[0];
 						var te = getISODateTimeString(param.end).split('T')[0];
 						var time = ts +"/"+ te;
-						tracker.trackEvent(event, time);
+						tracker.trackEvent(event, "time_sel: "+time, (param.start+"/"+param.end));
 					}
 
 					if(event == 'selection:changed'){
@@ -83,18 +83,19 @@
 							var bbox = ""+
 								param.w.toFixed(3) +","+ param.s.toFixed(3) +","+ 
 								param.e.toFixed(3) +","+ param.n.toFixed(3); 
-							tracker.trackEvent(event, bbox);
+							tracker.trackEvent(event, "geo_sel: "+bbox);
 						}
 					}
 
 					if(event == 'map:layer:change'){
 						var layer = param.name;
-						tracker.trackEvent("layer:change", String(param.visible), layer);
+						tracker.trackEvent("layer:change", layer+": "+param.visible);
 					}
 
 					if(event == 'analytics:set:filter'){
+						var keys = _.keys(param).join();
 						var filters = JSON.stringify(param);
-						tracker.trackEvent(event, filters);
+						tracker.trackEvent(event, keys, filters);
 					}
 
 				}
