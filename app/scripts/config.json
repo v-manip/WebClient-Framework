@@ -722,7 +722,7 @@
             "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
         },
         {
-            "name": "Streets",
+            "name": "Borders and Labels",
             "id": "overlay",
             "protocol": "WMTS",
             "visible": false,
