@@ -151,6 +151,10 @@ define(['backbone.marionette',
 
 				var mm = globals.objects.get('mapmodel');
 
+				var navigationhelp = new Cesium.NavigationHelpButton({
+					container: $(".cesium-viewer-toolbar")[0]
+				});
+
 			    var canvas = this.map.canvas;
 
 			    this.map.scene.skyBox.show = mm.get('skyBox');
@@ -929,7 +933,17 @@ define(['backbone.marionette',
 	            		that.activeCollections.push(obj.id);
 	            		if (settings[obj.id].band == 'F') {
 	            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
-		            		
+
+	            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
+	            				that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
+		  						    depthTest : {
+		  						        enabled : true,
+		  						        func : Cesium.DepthFunction.LESS
+		  						    },
+		  						    depthMask : false,
+		  						    blending : Cesium.BlendingState.ALPHA_BLEND
+		  						});
+	            			}
 	            		}else if(
 	            			settings[obj.id].band == 'B_NEC' ||
 	            			settings[obj.id].band == 'SIFM' ||
