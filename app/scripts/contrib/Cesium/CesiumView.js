@@ -929,7 +929,17 @@ define(['backbone.marionette',
 	            		that.activeCollections.push(obj.id);
 	            		if (settings[obj.id].band == 'F') {
 	            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
-		            		
+
+	            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
+	            				that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
+		  						    depthTest : {
+		  						        enabled : true,
+		  						        func : Cesium.DepthFunction.LESS
+		  						    },
+		  						    depthMask : false,
+		  						    blending : Cesium.BlendingState.ALPHA_BLEND
+		  						});
+	            			}
 	            		}else if(
 	            			settings[obj.id].band == 'B_NEC' ||
 	            			settings[obj.id].band == 'SIFM' ||
