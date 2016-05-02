@@ -133,7 +133,7 @@
         }],
         "products": [{
             "name": "MAGA LR 1B",
-            "visible": true,
+            "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
@@ -723,7 +723,7 @@
         },
         {
             "name": "Borders and Labels",
-            "id": "overlay",
+            "id": "overlay_base",
             "protocol": "WMTS",
             "visible": false,
             "urls": [
