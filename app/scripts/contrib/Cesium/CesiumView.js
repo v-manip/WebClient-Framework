@@ -151,6 +151,10 @@ define(['backbone.marionette',
 
 				var mm = globals.objects.get('mapmodel');
 
+				var navigationhelp = new Cesium.NavigationHelpButton({
+					container: $(".cesium-viewer-toolbar")[0]
+				});
+
 			    var canvas = this.map.canvas;
 
 			    this.map.scene.skyBox.show = mm.get('skyBox');
