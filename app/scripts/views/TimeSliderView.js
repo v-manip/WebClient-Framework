@@ -76,6 +76,15 @@
 
         this.slider = new TimeSlider(this.el, initopt);
 
+        // Add selection helpers
+        this.slider.setBrushTooltip(true);
+
+        // Set the offset of the tooltip
+        this.slider.setBrushTooltipOffset([
+          35,
+          (this.el.parentElement.parentElement.offsetHeight - this.el.parentElement.offsetHeight*2 - 50)
+        ]);
+
         Communicator.mediator.trigger('time:change', {start:selectionstart, end:selectionend});
 
         // For viewers that are loaded after the TimeSlider announces its initial timespan there
