@@ -375,19 +375,9 @@ button[active=active] {
 /*
  * Time Slider
  */
-/*#timeslider {
-  position: fixed;
-  bottom: 2em;
-  width: 90%;
-  padding: 0 5%;
-}*/
-
-/*#timeslider svg.timeslider {
-  height: 4em;
-	-khtml-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
-}*/
+.brush .extent {
+  fill-opacity: 0.8!important;
+}
 
 #viewContent{
 	position: relative;
