@@ -270,7 +270,13 @@
           }
         });
 
-        $form.submit();
+        function formsubmit(){
+          $form.submit();
+          return false;
+        }
+
+        formsubmit();
+
         Communicator.mediator.trigger("progress:change", true);
 
       },
