@@ -570,7 +570,7 @@
                 ]
             }],
             "download": {
-                "id": "shc",
+                "id": "Custom_Model",
                 "protocol": "EOWCS",
                 "url": "http://localhost:9000/vires00/ows"
             },
