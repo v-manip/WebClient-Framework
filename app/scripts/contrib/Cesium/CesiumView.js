@@ -151,7 +151,7 @@ define(['backbone.marionette',
 
 				var mm = globals.objects.get('mapmodel');
 
-				var navigationhelp = new Cesium.NavigationHelpButton({
+				this.navigationhelp = new Cesium.NavigationHelpButton({
 					container: $(".cesium-viewer-toolbar")[0]
 				});
 
@@ -267,6 +267,13 @@ define(['backbone.marionette',
 				if (!this.map) {
 					this.createMap();
 				}
+
+				if(this.navigationhelp){
+					this.navigationhelp.destroy();
+					this.navigationhelp = new Cesium.NavigationHelpButton({
+						container: $(".cesium-viewer-toolbar")[0]
+					});
+				} 
 
 				this.plot = new plotty.plot({
 					colorScale: 'jet',
