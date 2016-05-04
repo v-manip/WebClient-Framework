@@ -250,45 +250,9 @@
 
         $downloads.append($form);
 
-        /*$("#btn-start-download").blur(function(){
-          Communicator.mediator.trigger("progress:change", false);
-        });*/
-
         var that = this;
 
-        /*$('#iframe-download-post').unbind();
-
-        $('#iframe-download-post').ready(function(){
-          console.log("ready!");
-          console.log($("#iframe-download-post").contents());
-        });
-
-        $('#iframe-download-post').load(function(){
-          console.log("load!");
-          console.log($("#iframe-download-post").contents());
-        });*/
-
-        /*$('#iframe-download-post').on("load", function(){
-          console.log("ON load!");
-          console.log($("#iframe-download-post").contents());
-        });*/
-
-
-        /*$('#iframe-download-post').on("load", function(){
-          Communicator.mediator.trigger("progress:change", false);
-          if($("#frameloaderror").length == 0) {
-            $("#error-messages").append(
-                      '<div class="alert alert-warning alert-danger" id="frameloaderror">'+
-                      '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                      '<strong>Error Downloading Data!</strong> This might be caused by too many records being selected. Please refine your filter criteria. '+
-                      'Should this issue persist, please, check the browser log.'+
-                    '</div>'
-            );
-          }
-        });*/
-
         function formsubmit(){
-          //Communicator.mediator.trigger("progress:change", true);
           $form.submit();
           return false;
         }
