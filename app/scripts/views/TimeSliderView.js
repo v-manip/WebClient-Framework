@@ -64,6 +64,7 @@
           },
           debounce: 300,
           ticksize: 8,
+          selectionLimit: (60*60*24*15), //15 Days
           datasets: []
         };
 

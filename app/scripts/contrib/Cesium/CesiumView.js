@@ -151,7 +151,7 @@ define(['backbone.marionette',
 
 				var mm = globals.objects.get('mapmodel');
 
-				var navigationhelp = new Cesium.NavigationHelpButton({
+				this.navigationhelp = new Cesium.NavigationHelpButton({
 					container: $(".cesium-viewer-toolbar")[0]
 				});
 
@@ -267,6 +267,13 @@ define(['backbone.marionette',
 				if (!this.map) {
 					this.createMap();
 				}
+
+				if(this.navigationhelp){
+					this.navigationhelp.destroy();
+					this.navigationhelp = new Cesium.NavigationHelpButton({
+						container: $(".cesium-viewer-toolbar")[0]
+					});
+				} 
 
 				this.plot = new plotty.plot({
 					colorScale: 'jet',
@@ -949,7 +956,7 @@ define(['backbone.marionette',
 	            			settings[obj.id].band == 'SIFM' ||
 	            			settings[obj.id].band == 'IGRF12' ||
 	            			settings[obj.id].band == 'CHAOS-5-Combined' ||
-	            			settings[obj.id].band == 'shc'
+	            			settings[obj.id].band == 'Custom_Model'
 	            			){
 	            			that.features_collection[obj.id] = new Cesium.Primitive({
 							  	geometryInstances : [],
@@ -1008,7 +1015,7 @@ define(['backbone.marionette',
 			            			settings[row.id].band == 'SIFM' ||
 			            			settings[row.id].band == 'IGRF12' ||
 			            			settings[row.id].band == 'CHAOS-5-Combined' ||
-			            			settings[row.id].band == 'shc'
+			            			settings[row.id].band == 'Custom_Model'
 		            			){
 
 								var sb;
@@ -1021,7 +1028,7 @@ define(['backbone.marionette',
 										'B_N_res_CHAOS-5-Combined',
 										'B_C_res_CHAOS-5-Combined'];
 									break;
-									case 'shc': sb = ['B_E_res_shc','B_N_res_shc','B_C_res_shc']; break;
+									case 'Custom_Model': sb = ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']; break;
 								}
 
 								// Check if residuals are active!

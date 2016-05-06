@@ -619,20 +619,22 @@ var DrawHelper = (function() {
         return _;
     })();
 
+    var dragicon = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAsAAAALCAYAAACprHcmAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9sKHAksBNXfIvIAAADGSURBVBjTlZC9DsFgFIafWsQgDE0vwGBjNVjNdYl1BYYmbkDim0yMEotFooNEW+Wjr6GfpCQG73J+nmc5B/6I924kNYEh0APawAXYAxvP827URUlTSZGkg6S7q5HbN+vySNJM0lOfebr9CKABUBRFH5i851oawMTxCuZ53gGCH3cFjldymqYZcPohnxyv5CzLdsASKL/EElg6XsnW2rUxZgHMgSPwcHVujFlYa9cff47juJUkyRgYAF3gDGx931+FYXjl37wANeOE+Ghv1/sAAAAASUVORK5CYII=';
+
     var defaultBillboard = {
-        iconUrl: "./images/dragIcon.png",
+        iconUrl: dragicon,
         shiftX: 0,
         shiftY: 0
     }
 
     var dragBillboard = {
-        iconUrl: "./images/dragIcon.png",
+        iconUrl: dragicon,
         shiftX: 0,
         shiftY: 0
     }
 
     var dragHalfBillboard = {
-        iconUrl: "./images/dragIconLight.png",
+        iconUrl: dragicon,
         shiftX: 0,
         shiftY: 0
     }

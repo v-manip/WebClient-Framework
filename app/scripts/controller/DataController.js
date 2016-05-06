@@ -123,7 +123,7 @@
         if (!options.isBaseLayer){
           var product = globals.products.find(function(model) { return model.get('name') == options.name; });
           if (product){
-            if(options.visible && product.get('timeSlider')){
+            if(options.visible){
               if (product.get("processes")){
                 _.each(product.get("processes"), function(process){
                   this.activeWPSproducts.push(process.layer_id);
