@@ -276,7 +276,7 @@
                     "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
-                "format": "image/jpeg"
+                "format": "image/png"
             }],
             "download": {
                 "id": "SIFM",
@@ -376,7 +376,7 @@
                     "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
-                "format": "image/jpeg"
+                "format": "image/png"
             }],
             "download": {
                 "id": "IGRF12",
@@ -476,7 +476,7 @@
                     "http://localhost:9000/vires00/ows"
                 ],
                 "style": "default",
-                "format": "image/jpeg"
+                "format": "image/png"
             }],
             "download": {
                 "id": "CHAOS-5-Combined",

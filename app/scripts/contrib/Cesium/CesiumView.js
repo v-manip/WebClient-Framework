@@ -418,7 +418,7 @@ define(['backbone.marionette',
                     	},  Cesium.WebMapServiceImageryProvider.DefaultParameters);
 
                     	// Check if layer has additional parameters configured
-                    	var additional_parameters = {};
+                    	var additional_parameters = {transparent: true};
                     	var styles;
                     	if(layerdesc.get("parameters")){
                     		var options = layerdesc.get("parameters");

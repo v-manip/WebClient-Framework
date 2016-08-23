@@ -7,11 +7,12 @@
 		'backbone',
 		'communicator',
 		'hbs!tmpl/LayerSettings',
+		'hbs!tmpl/wps_eval_model_GET',
 		'underscore',
 		'plotty'
 	],
 
-	function( Backbone, Communicator, LayerSettingsTmpl ) {
+	function( Backbone, Communicator, LayerSettingsTmpl, evalModelTmpl ) {
 
 		var LayerSettings = Backbone.Marionette.Layout.extend({
 
@@ -244,8 +245,6 @@
 
 				this.$("#style").append(colorscale_options);
 
-				this.$("#range_min").val(options[this.selected].range[0]);
-				this.$("#range_max").val(options[this.selected].range[1]);
 
 				if(options[this.selected].hasOwnProperty("logarithmic")){
 					this.addLogOption(options);
@@ -260,16 +259,53 @@
 					this.$("#description").text(options[this.selected].description);
 				}
 
-				if(options[this.selected].hasOwnProperty("logarithmic"))
-					this.createScale(options[this.selected].logarithmic);
-				else
-					this.createScale();
-
 				this.createHeightTextbox(this.model.get("height"));
 
-				this.model.set("parameters", options);
+				// request range for selected parameter
+				var that = this;
 
-				Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+				var sel_time = Communicator.reqres.request('get:time');
+				var req = evalModelTmpl({
+					url: this.model.get("download").url,
+					model: this.model.get("download").id,
+					variable: this.selected,
+					begin_time: getISODateTimeString(sel_time.start),
+					end_time: getISODateTimeString(sel_time.end),
+					coeff_min: this.model.get("coefficients_range")[0],
+					coeff_max: this.model.get("coefficients_range")[1],
+					elevation: this.model.get("height")
+				});
+
+				$.get(req)
+					.success(function(response){
+						var resp = response.split(',');
+						var range = [Number(resp[1]), Number(resp[2])];
+						$("#range_min").val(range[0]);
+						$("#range_max").val(range[1]);
+						options[that.selected].range = range;
+						that.model.set("parameters", options);
+					})
+					.fail(function(response){
+						$("#error-messages").append(
+							'<div class="alert alert-warning">'+
+							'<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+							'Warning: There is a problem requesting the range values for the color scale, please revise and set them to adequate values if necessary.' +
+							'</div>'
+						);
+					})
+					.always(function(){
+						$("#range_min").val(options[that.selected].range[0]);
+						$("#range_max").val(options[that.selected].range[1]);
+
+						that.model.set("parameters", options);
+						if(options[that.selected].hasOwnProperty("logarithmic"))
+							that.createScale(options[that.selected].logarithmic);
+						else
+							that.createScale();
+
+						Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
+					});
+
 			},
 
 			registerKeyEvents: function(el){
@@ -310,6 +346,7 @@
 					//this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
 
 				var error = false;
+				var model_change = false;
 
 				// Check color ranges
 				var range_min = parseFloat($("#range_min").val());
@@ -338,8 +375,13 @@
 					var coef_range_max = parseFloat($("#coefficients_range_max").val());
 					error = error || this.checkValue(coef_range_max,$("#coefficients_range_max"));
 
-					if(!error)
+					if(!error){
+						if(this.model.get("coefficients_range")[0]!=coef_range_min || 
+						   this.model.get("coefficients_range")[1]!=coef_range_max){
+							model_change = true;
+						}
 						this.model.set("coefficients_range", [coef_range_min, coef_range_max]);
+					}
 				}
 
 				// Check for height attribute
@@ -347,17 +389,60 @@
 					var height = parseFloat($("#heightvalue").val());
 					error = error || this.checkValue(height,$("#heightvalue"));
 
-					if (!error)
+					if (!error){
+						if(this.model.get("height")!=height){
+							model_change = true;
+						}
 						this.model.set("height", height);
+					}
 				}
 
 				if(!error){
 					// Remove button
 					$("#applychanges").empty();
 
-					//Apply changes
-					this.model.set("parameters", options);
-					Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+					// If there were changes of the model parameters recalculate the color range
+					if(model_change){
+						var that = this;
+
+						var sel_time = Communicator.reqres.request('get:time');
+						var req = evalModelTmpl({
+							url: this.model.get("download").url,
+							model: this.model.get("download").id,
+							variable: this.selected,
+							begin_time: getISODateTimeString(sel_time.start),
+							end_time: getISODateTimeString(sel_time.end),
+							coeff_min: this.model.get("coefficients_range")[0],
+							coeff_max: this.model.get("coefficients_range")[1],
+							elevation: this.model.get("height")
+						});
+						$.get(req)
+							.success(function(response){
+								var resp = response.split(',');
+								var range = [Number(resp[1]), Number(resp[2])];
+								$("#range_min").val(range[0]);
+								$("#range_max").val(range[1]);
+								options[that.selected].range = range;
+								that.model.set("parameters", options);
+								that.createScale();
+								Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
+								console.log(range);
+							})
+							.fail(function(response){
+								$("#error-messages").append(
+									'<div class="alert alert-warning">'+
+									'<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+									'Warning: There is a problem requesting the range values for the color scale, please revise and set them to adequate values if necessary.' +
+									'</div>'
+								);
+							});
+						
+
+					}else{
+						//Apply changes
+						this.model.set("parameters", options);
+						Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+					}
 				}
 			},
 
