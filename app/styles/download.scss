@@ -1,0 +1,11 @@
+@import "defaults";
+
+
+// Overwriting absolute positions to show correct positions in scrollable objects
+.w2ui-list{
+	position: relative !important;
+}
+
+.w2ui-field-helper{
+	position: relative !important;
+}

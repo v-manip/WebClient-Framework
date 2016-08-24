@@ -161,14 +161,110 @@
                     "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
-                    "name": "Magnetic field vector, NEC frame"
+                    "name": "Magnetic field vector, NEC frame",
+                    "mapview": true
                 },
                 "F": {
                     "range": [27000, 50000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
+                    "name": "Magnetic field intensity",
+                    "mapview": true
+                }
+            },
+            "download_parameters": {
+                "B_NEC": {
+                    "uom":"nT",
+                    "name": "Magnetic field vector, NEC frame"
+                },
+                "F": {
+                    "uom":"nT",
                     "name": "Magnetic field intensity"
+                },
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time of observation"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - Geocentric latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - Geocentric longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Position in ITRF - Radius"
+                },
+                "dF_AOCS": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction intensity of AOCS magneto-torquer coils"
+                },
+                "dF_other": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction intensity of all other sources"
+                },
+                "F_error": {
+                    "uom": "nT",
+                    "name": "Error estimate on magnetic field intensity"
+                },
+                "B_VFM": {
+                    "uom": "nT",
+                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                },
+                "dB_Sun": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of Sun induced stray field, VFM frame"
+                },
+                "dB_AOCS": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame"
+                },
+                "dB_other": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of all other sources, VFM frame"
+                },
+                "B_error": {
+                    "uom": "nT",
+                    "name": "Error estimates on magnetic field, VFM frame"
+                },
+                "q_NEC_CRF": {
+                    "uom": null,
+                    "name": "Quaternion, transformation: NEC ← CRF"
+                },
+                "Att_error": {
+                    "uom": "mdeg",
+                    "name": "Error estimates on attitude information"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags characterizing the magnetic field intensity measurement (F)"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags characterizing the magnetic field vector measurement (B_VFM, B_NEC)"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags characterizing the attitude information"
+                },
+                "Flags_Platform": {
+                    "uom": null,
+                    "name": "Flags characterizing the S/C platform information"
+                },
+                "ASM_Freq_Dev": {
+                    "uom": null,
+                    "name": "ASM frequency calibration data deviation"
+                },
+                "qdlat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "mlt": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },
             "outlines": false,
@@ -214,6 +310,100 @@
                     "name": "Magnetic field intensity"
                 }
             },
+            "download_parameters": {
+                "B_NEC": {
+                    "uom":"nT",
+                    "name": "Magnetic field vector, NEC frame"
+                },
+                "F": {
+                    "uom":"nT",
+                    "name": "Magnetic field intensity"
+                },
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time of observation"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - Geocentric latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - Geocentric longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Position in ITRF - Radius"
+                },
+                "dF_AOCS": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction intensity of AOCS magneto-torquer coils"
+                },
+                "dF_other": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction intensity of all other sources"
+                },
+                "F_error": {
+                    "uom": "nT",
+                    "name": "Error estimate on magnetic field intensity"
+                },
+                "B_VFM": {
+                    "uom": "nT",
+                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                },
+                "dB_Sun": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of Sun induced stray field, VFM frame"
+                },
+                "dB_AOCS": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame"
+                },
+                "dB_other": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of all other sources, VFM frame"
+                },
+                "B_error": {
+                    "uom": "nT",
+                    "name": "Error estimates on magnetic field, VFM frame"
+                },
+                "q_NEC_CRF": {
+                    "uom": null,
+                    "name": "Quaternion, transformation: NEC ← CRF"
+                },
+                "Att_error": {
+                    "uom": "mdeg",
+                    "name": "Error estimates on attitude information"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags characterizing the magnetic field intensity measurement (F)"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags characterizing the magnetic field vector measurement (B_VFM, B_NEC)"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags characterizing the attitude information"
+                },
+                "Flags_Platform": {
+                    "uom": null,
+                    "name": "Flags characterizing the S/C platform information"
+                },
+                "ASM_Freq_Dev": {
+                    "uom": null,
+                    "name": "ASM frequency calibration data deviation"
+                },
+                "qdlat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "mlt": {
+                    "uom": null,
+                    "name": "Magnetic local time"
+                }
+            },
             "outlines": false,
             "satellite": "Swarm"
         },{
@@ -254,6 +444,100 @@
                     "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
+                }
+            },
+            "download_parameters": {
+                "B_NEC": {
+                    "uom":"nT",
+                    "name": "Magnetic field vector, NEC frame"
+                },
+                "F": {
+                    "uom":"nT",
+                    "name": "Magnetic field intensity"
+                },
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time of observation"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - Geocentric latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - Geocentric longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Position in ITRF - Radius"
+                },
+                "dF_AOCS": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction intensity of AOCS magneto-torquer coils"
+                },
+                "dF_other": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction intensity of all other sources"
+                },
+                "F_error": {
+                    "uom": "nT",
+                    "name": "Error estimate on magnetic field intensity"
+                },
+                "B_VFM": {
+                    "uom": "nT",
+                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                },
+                "dB_Sun": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of Sun induced stray field, VFM frame"
+                },
+                "dB_AOCS": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of AOCS magneto-torquer coils, VFM frame"
+                },
+                "dB_other": {
+                    "uom": "nT",
+                    "name": "Magnetic stray field correction vector of all other sources, VFM frame"
+                },
+                "B_error": {
+                    "uom": "nT",
+                    "name": "Error estimates on magnetic field, VFM frame"
+                },
+                "q_NEC_CRF": {
+                    "uom": null,
+                    "name": "Quaternion, transformation: NEC ← CRF"
+                },
+                "Att_error": {
+                    "uom": "mdeg",
+                    "name": "Error estimates on attitude information"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags characterizing the magnetic field intensity measurement (F)"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags characterizing the magnetic field vector measurement (B_VFM, B_NEC)"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags characterizing the attitude information"
+                },
+                "Flags_Platform": {
+                    "uom": null,
+                    "name": "Flags characterizing the S/C platform information"
+                },
+                "ASM_Freq_Dev": {
+                    "uom": null,
+                    "name": "ASM frequency calibration data deviation"
+                },
+                "qdlat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "mlt": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },
             "outlines": false,
@@ -352,6 +636,16 @@
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "custom1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_SIFM": {
+                    "uom":"nT",
+                    "name": "Residuals to SIFM model of Magnetic field vector, NEC frame"
+                },
+                "F_res_SIFM": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to SIFM model"
                 }
             },
             "height": 450,
@@ -454,6 +748,16 @@
                     "colorscale": "custom1"
                 }
             },
+            "download_parameters": {
+                "B_NEC_IGRF12": {
+                    "uom":"nT",
+                    "name": "Residuals to IGRF12 model of Magnetic field vector, NEC frame"
+                },
+                "F_res_IGRF12": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to IGRF12 model"
+                }
+            },
             "height": 450,
             "model": true,
             "coefficients_range": [-1,-1]
@@ -554,6 +858,16 @@
                     "colorscale": "custom1"
                 }
             },
+            "download_parameters": {
+                "B_NEC_CHAOS-5-Combined": {
+                    "uom":"nT",
+                    "name": "Residuals to CHAOS-5 model of Magnetic field vector, NEC frame"
+                },
+                "F_res_CHAOS-5-Combined": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to CHAOS-5 model"
+                }
+            },
             "height": 450,
             "model": true,
             "coefficients_range": [-1,-1]
@@ -637,6 +951,16 @@
                     "colorscale": "custom1"
                 }
             },
+            "download_parameters": {
+                "B_NEC_Custom_Model": {
+                    "uom":"nT",
+                    "name": "Residuals to provided model coefficients of Magnetic field vector, NEC frame"
+                },
+                "F_res_Custom_Model": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to provided model coefficients"
+                }
+            },
             "height": 450,
             "model": true,
             "coefficients_range": [-1,-1]
@@ -658,6 +982,12 @@
                 "protocol": "INDEX",
                 "url": "http://localhost:9000/vires00/ows"
             },
+            "download_parameters": {
+                "dst": {
+                    "uom": null,
+                    "name": "Equivalent equatorial magnetic disturbances index"
+                }
+            },
             "index": true
         },{
             "name": "Kp Index",
@@ -676,6 +1006,12 @@
                 "id": "kp",
                 "protocol": "INDEX",
                 "url": "http://localhost:9000/vires00/ows"
+            },
+            "download_parameters": {
+                "kp": {
+                    "uom": null,
+                    "name": "Planetary index of geomagnetic activity"
+                }
             },
             "index": true
         },{

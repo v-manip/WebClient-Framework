@@ -363,6 +363,7 @@ module.exports = function (grunt) {
                         'bower_components/cesium/Build/Cesium/**',
                         'bower_components/papaparse/papaparse.min.js',
                         'bower_components/plotty/dist/plotty.min.js',
+                        'bower_components/w2ui/w2ui-1.4.min.js',
                         'scripts/vendor/**',
                     ]
                 },{

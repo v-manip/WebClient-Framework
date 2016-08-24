@@ -170,6 +170,7 @@
 							processes: product.processes,
 							unit: product.unit,
 							parameters: product.parameters,
+							download_parameters: product.download_parameters,
 							height: product.height,
 							outlines: product.outlines,
 							model: product.model,

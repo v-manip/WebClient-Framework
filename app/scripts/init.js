@@ -62,6 +62,9 @@
             },
             analytics: {
                 deps: ['d3', 'jquery']
+            },
+            w2ui: {
+                deps: ['jquery']
             }
         },
 
@@ -116,7 +119,9 @@
 
             papaparse: '../bower_components/papaparse/papaparse.min',
 
-            plotty: '../bower_components/plotty/dist/plotty.min'
+            plotty: '../bower_components/plotty/dist/plotty.min',
+
+            w2ui: '../bower_components/w2ui/dist/w2ui.min'
 
         },
 
