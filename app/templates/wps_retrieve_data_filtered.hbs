@@ -37,6 +37,12 @@
         <wps:LiteralData>{{filters}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>{{/if}}
+    {{#if parameters}}<wps:Input>
+      <ows:Identifier>parameters</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>{{parameters}}</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>{{/if}}
   </wps:DataInputs>
   <wps:ResponseForm>
     <wps:RawDataOutput mimeType="{{format}}">

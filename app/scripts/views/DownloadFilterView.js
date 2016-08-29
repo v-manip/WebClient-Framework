@@ -183,7 +183,6 @@
           '</div>'
         );
 
-
         var selected = [];
         // Check if latitude available
         if(_.find(available_parameters, function(item){return item.id == "Latitude";})){
@@ -203,7 +202,7 @@
         }
 
         $('#param_enum').w2field('enum', { 
-            items: available_parameters,
+            items: _.sortBy(available_parameters, 'id'), // Sort parameters alphabetically 
             openOnFocus: true,
             selected: selected,
             renderItem: function (item, index, remove) {
@@ -236,9 +235,6 @@
             $('#param_enum').w2field().refresh();
           }
         });
-
-
-        
 
       },
 
@@ -343,6 +339,14 @@
         });
 
         options.filters = filters.join(";");
+
+        // Custom parameters
+        if ($('#custom_parameter_cb').is(':checked')) {
+          var parameters = $('#param_enum').data('selected');
+          parameters = parameters.map(function(item) {return item.id;});
+          parameters = parameters.join(';');
+          options.parameters = parameters;
+        }
 
         // TODO: Just getting last URL here think of how different urls should be handled
         var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];

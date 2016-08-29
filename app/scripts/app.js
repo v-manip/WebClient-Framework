@@ -1,3 +1,7 @@
+
+var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC"];
+var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
+
 (function() {
 	'use strict';
 

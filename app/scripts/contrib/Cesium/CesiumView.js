@@ -1,7 +1,5 @@
 
 
-
-
 define(['backbone.marionette',
 		'communicator',
 		'app',
@@ -938,7 +936,7 @@ define(['backbone.marionette',
 
 	            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
 	            		that.activeCollections.push(obj.id);
-	            		if (settings[obj.id].band == 'F') {
+	            		if (_.find(SCALAR_PARAM, function(par){return settings[obj.id].band == par;})) {
 	            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
 
 	            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
@@ -951,13 +949,7 @@ define(['backbone.marionette',
 		  						    blending : Cesium.BlendingState.ALPHA_BLEND
 		  						});
 	            			}
-	            		}else if(
-	            			settings[obj.id].band == 'B_NEC' ||
-	            			settings[obj.id].band == 'SIFM' ||
-	            			settings[obj.id].band == 'IGRF12' ||
-	            			settings[obj.id].band == 'CHAOS-5-Combined' ||
-	            			settings[obj.id].band == 'Custom_Model'
-	            			){
+	            		}else if (_.find(VECTOR_PARAM, function(par){return settings[obj.id].band == par;})) {
 	            			that.features_collection[obj.id] = new Cesium.Primitive({
 							  	geometryInstances : [],
 							  	appearance : new Cesium.PerInstanceColorAppearance({
@@ -996,8 +988,8 @@ define(['backbone.marionette',
 				    			this.plot.setDomain(settings[row.id].range);
 				    		}
 
-				    		if (settings[row.id].band == 'F') {
-					    		var color = this.plot.getColor(row['F']);
+				    		if (_.find(SCALAR_PARAM, function(par){return settings[row.id].band == par;})) {
+					    		var color = this.plot.getColor(row[settings[row.id].band]);
 					    		var options = {
 							        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
 							        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
@@ -1010,17 +1002,11 @@ define(['backbone.marionette',
 							    }
 					    		this.features_collection[row.id].add(options);
 
-							}else if(
-			            			settings[row.id].band == 'B_NEC' ||
-			            			settings[row.id].band == 'SIFM' ||
-			            			settings[row.id].band == 'IGRF12' ||
-			            			settings[row.id].band == 'CHAOS-5-Combined' ||
-			            			settings[row.id].band == 'Custom_Model'
-		            			){
-
+							}else if (_.find(VECTOR_PARAM, function(par){return settings[row.id].band == par;})) {
 								var sb;
 								switch (settings[row.id].band){
 									case 'B_NEC': sb = ['B_E','B_N','B_C']; break;
+									case 'v_SC': sb = ['v_SC_E','v_SC_N','v_SC_C']; break;
 									case 'SIFM': sb = ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM']; break;
 									case 'IGRF12': sb = ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12']; break;
 									case 'CHAOS-5-Combined': sb = [

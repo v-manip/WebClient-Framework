@@ -266,6 +266,15 @@
                       dat[i]['B_E_error'] = bnec[1];
                       dat[i]['B_C_error'] = bnec[2];
                     }
+                    if(dat[i].hasOwnProperty('v_SC')) {
+                      var bnec = dat[i]['v_SC'];
+                      bnec = bnec.slice(1,-1).split(';').map(Number);
+                      delete dat[i]['v_SC'];
+                      dat[i]['v_SC_N'] = bnec[0];
+                      dat[i]['v_SC_E'] = bnec[1];
+                      dat[i]['v_SC_C'] = bnec[2];
+                    }
+                    
                     $.each(dat[i], function(key, value){
                       if (key.indexOf("B_NEC_")>-1){
                         var res_model = key.substring(6);
@@ -277,6 +286,7 @@
                         dat[i]['B_C_res_'+res_model] = bnec[2];
                       }
                     });
+                    
                     
 
                   }
