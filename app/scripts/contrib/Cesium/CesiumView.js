@@ -311,8 +311,7 @@ define(['backbone.marionette',
 						Communicator.mediator.trigger("selection:changed", null);
 					}
 				});
-				
-                this.onShowColorscale("SW_OPER_MAGA_LR_1B");
+
 
 				//this.onResize();
 				return this;
@@ -618,6 +617,7 @@ define(['backbone.marionette',
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
                     			//this.checkLayerFeatures(product, options.visible);
+                    			this.onShowColorscale(product.get("download").id, options.visible);
                     			product.set('visible', options.visible);
                     			this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
@@ -625,7 +625,7 @@ define(['backbone.marionette',
                     			this.checkShc(product, options.visible);
 								
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
-
+                    			this.onShowColorscale(product.get("download").id, options.visible);
                     			var parameters = product.get("parameters");
                     			var coeff_range = product.get("coefficients_range");
 
@@ -1077,6 +1077,8 @@ define(['backbone.marionette',
 
             		if(product.get("name")==layer){
 
+            			this.onShowColorscale(product.get("download").id);
+
             			var hexcolor = product.get("color");
 	                		hexcolor = hexcolor.substring(1, hexcolor.length);
             			var parameters = product.get("parameters");
@@ -1215,10 +1217,11 @@ define(['backbone.marionette',
 			    }
             },
 
-            onShowColorscale: function(product_id){
+            onShowColorscale: function(product_id, visible){
 
-                /*this.plot.setColorScale(settings[row.id].colorscale);
-                this.plot.setDomain(settings[row.id].range);*/
+            	visible = defaultFor(visible, true);
+            	var that = this;
+
                 var product = false;
                 globals.products.each(function(p) {
                     if(p.get("download").id == product_id){
@@ -1226,12 +1229,40 @@ define(['backbone.marionette',
                     }
                 });
 
-                if (product){
+                if (_.has(this.colorscales, product_id)){
+                	// remove object from cesium scene
+                	this.map.scene.primitives.remove(this.colorscales[product_id].prim);
+                	var index_to_delete = this.colorscales[product_id].index;
+                	delete this.colorscales[product_id];
+
+                	// Modify all indices and related height of all colorscales 
+                	// which are over deleted position
+
+                	_.each(this.colorscales, function(value, key, obj) {
+                		if (obj[key].index >= index_to_delete){
+                			obj[key].index = obj[key].index-1;
+
+                			var tmp_mat = obj[key].prim.material;
+                			var rect = new Cesium.BoundingRectangle(0, obj[key].index*55 +5, 300, 55);
+                			that.map.scene.primitives.remove(obj[key].prim);
+
+		                    var viewportQuad = new Cesium.ViewportQuad(rect, tmp_mat);
+
+		                    var prim = that.map.scene.primitives.add(viewportQuad);
+
+		                    obj[key].prim = prim;
+                			
+                		}
+                	});
+                }
+
+                if (product && visible){
 
                     var options = product.get("parameters");
                     var keys = _.keys(options);
                     var sel = false;
                     var that = this;
+                    var index = Object.keys(this.colorscales).length;
 
                     _.each(keys, function(key){
                         if(options[key].selected){
@@ -1245,68 +1276,90 @@ define(['backbone.marionette',
                     var style = product.get("parameters")[sel].colorscale;
 
                     var margin = 20;
-                    var width = $(".cesium-viewer").width();
+                    //var width = $(".cesium-viewer").width()/2;
+                    var width = 300;
                     var scalewidth =  width - margin *2;
 
-                    $("#setting_colorscale").append(
-                        '<div id="gradient" style="width:'+scalewidth+'px;margin-left:'+margin+'px"></div>'
-                    );
-
                     this.plot.setColorScale(style);
-                    var base64_string = this.plot.colorScaleImage.toDataURL();
-                    $('#gradient').css('background-image', 'url(' + base64_string + ')');
-
+                    var colorscaleimage = this.plot.getColorScaleImage().toDataURL("image/jpg");
 
                     var svgContainer = d3.select("body").append("svg")
                         .attr("width", width)
-                        .attr("height", 40)
+                        .attr("height", 60)
                         .attr("id", "svgcolorscalecontainer");
 
                     var axisScale;
-                    
 
                     axisScale = d3.scale.linear();
-
 
                     axisScale.domain([range_min, range_max]);
                     axisScale.range([0, scalewidth]);
 
                     var xAxis = d3.svg.axis()
-                        .scale(axisScale)
-                        .ticks(8, function(d) { 
-                            return 10 + formatPower(Math.round(Math.log(d) / Math.LN10)); 
-                        });
+                        .scale(axisScale);
 
-                    xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+                    var step = (range_max - range_min)/5
+
+					xAxis.tickValues(
+						d3.range(range_min,range_max+step, step)
+					);
+
+					xAxis.tickFormat(d3.format("g"));
 
                     var g = svgContainer.append("g")
                         .attr("class", "x axis")
-                        .attr("transform", "translate(" + [margin, 3]+")")
+                        .attr("transform", "translate(" + [margin, 20]+")")
                         .call(xAxis);
 
+                    g.append("image")
+	                    .attr("class", "colorscaleimage")
+	                    .attr("width",  scalewidth)
+	                    .attr("height", 10)
+	                    .attr("transform", "translate(0,-12)")
+	                    .attr("preserveAspectRatio", "none")
+	                    .attr("xlink:href", colorscaleimage);
+
+
+                    // Add layer info
+                    var info = product.get("name");
+                    info += " - " + sel;
                     if(uom){
-                        g.append("text")
-                            .style("text-anchor", "middle")
-                            .style("font-size", "1.1em")
-                            .attr("transform", "translate(" + [scalewidth/2, 35]+")")
-                            .text(uom);
+                    	info += " ("+uom+")";
                     }
+
+                    g.append("text")
+                        .style("text-anchor", "middle")
+                        //.style("font-size", "1.0em")
+                        .attr("transform", "translate(" + [scalewidth/2, 30]+")")
+                        .attr("font-weight", "bold")
+                        .text(info);
+
+                    svgContainer.selectAll('text')
+				      	.attr("stroke", "none")
+				      	.attr("fill", "black")
+				      	.attr("font-weight", "bold");
 
                     svgContainer.selectAll(".tick").select("line")
                         .attr("stroke", "black");
 
+                    svgContainer.selectAll('.axis .domain')
+				      	.attr("stroke-width", "2")
+				      	.attr("stroke", "#000")
+				      	.attr("shape-rendering", "crispEdges")
+				      	.attr("fill", "none");
 
-
+				    svgContainer.selectAll('.axis path')
+				      	.attr("stroke-width", "2")
+				      	.attr("shape-rendering", "crispEdges")
+				      	.attr("stroke", "#000");
 
                     var svg_html = d3.select("#svgcolorscalecontainer")
                         .attr("version", 1.1)
                         .attr("xmlns", "http://www.w3.org/2000/svg")
                         .node().innerHTML;
 
-
-
-                    var renderHeight = $(self.scatterEl).height();
-                    var renderWidth = $(self.scatterEl).width();
+                    var renderHeight = 55;
+                    var renderWidth = width;
 
                     $("#imagerenderercanvas").attr('width', renderWidth);
                     $("#imagerenderercanvas").attr('height', renderHeight);
@@ -1317,10 +1370,6 @@ define(['backbone.marionette',
                     
                     ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
 
-                    /*c.toBlob(function(blob) {
-                        saveAs(blob, "Analytics.png");
-                    }, "image/png");*/
-
                     //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
                     var image = c.toDataURL("image/jpg");
                     var newmat = new Cesium.Material.fromType('Image', {
@@ -1329,20 +1378,21 @@ define(['backbone.marionette',
                     });
 
                     var viewportQuad = new Cesium.ViewportQuad(
-                        new Cesium.BoundingRectangle(0, 0, 100, 20),
+                        new Cesium.BoundingRectangle(0, index*55 +5, renderWidth, renderHeight),
                         newmat
                     );
 
-                    this.map.scene.primitives.add(viewportQuad);
+                    var prim = this.map.scene.primitives.add(viewportQuad);
+
+                    this.colorscales[product_id] = {
+                    	index: index,
+                    	prim: prim
+                    };
+
+                    svgContainer.remove();
 
                 }
-                /*svg.append("image")
-                    .attr("class", "colorscaleimage")
-                    .attr("width",  height-self.margin.bottom)
-                    .attr("height", 20)
-                    .attr("transform", "translate(" + (width+17) + " ,"+(height-self.margin.bottom)+") rotate(270)")
-                    .attr("preserveAspectRatio", "none")
-                    .attr("xlink:href", image);*/
+
             },
 
             onSelectionActivated: function(arg) {
