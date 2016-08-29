@@ -52,6 +52,9 @@
 					show:{ effect: false, delay: 700}
 			    });
 
+				var imagerenderercanvas = $('<canvas/>',{id: 'imagerenderercanvas'});
+				$('body').append(imagerenderercanvas);
+
 
 				var v = {}; //views
 				var m = {};	//models

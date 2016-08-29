@@ -45,6 +45,7 @@ define(['backbone.marionette',
 				this.activeCollections = [];
 				this.difference_image = null;
 				this.data_filters = {};
+                this.colorscales = {};
 
 				this.begin_time = null;
 				this.end_time = null;
@@ -275,10 +276,7 @@ define(['backbone.marionette',
 					});
 				} 
 
-				this.plot = new plotty.plot({
-					colorScale: 'jet',
-					domain: [30000,60000]
-				});
+				this.plot = new plotty.plot({});
 
 				this.plot.setClamp(true, true);
 
@@ -313,7 +311,8 @@ define(['backbone.marionette',
 						Communicator.mediator.trigger("selection:changed", null);
 					}
 				});
-					
+				
+                this.onShowColorscale("SW_OPER_MAGA_LR_1B");
 
 				//this.onResize();
 				return this;
@@ -1214,6 +1213,136 @@ define(['backbone.marionette',
 			        	return {left: -180, bottom: -90, right: 180, top: 90};
 			        }
 			    }
+            },
+
+            onShowColorscale: function(product_id){
+
+                /*this.plot.setColorScale(settings[row.id].colorscale);
+                this.plot.setDomain(settings[row.id].range);*/
+                var product = false;
+                globals.products.each(function(p) {
+                    if(p.get("download").id == product_id){
+                        product = p;
+                    }
+                });
+
+                if (product){
+
+                    var options = product.get("parameters");
+                    var keys = _.keys(options);
+                    var sel = false;
+                    var that = this;
+
+                    _.each(keys, function(key){
+                        if(options[key].selected){
+                            sel = key;
+                        }
+                    });
+
+                    var range_min = product.get("parameters")[sel].range[0];
+                    var range_max = product.get("parameters")[sel].range[1];
+                    var uom = product.get("parameters")[sel].uom;
+                    var style = product.get("parameters")[sel].colorscale;
+
+                    var margin = 20;
+                    var width = $(".cesium-viewer").width();
+                    var scalewidth =  width - margin *2;
+
+                    $("#setting_colorscale").append(
+                        '<div id="gradient" style="width:'+scalewidth+'px;margin-left:'+margin+'px"></div>'
+                    );
+
+                    this.plot.setColorScale(style);
+                    var base64_string = this.plot.colorScaleImage.toDataURL();
+                    $('#gradient').css('background-image', 'url(' + base64_string + ')');
+
+
+                    var svgContainer = d3.select("body").append("svg")
+                        .attr("width", width)
+                        .attr("height", 40)
+                        .attr("id", "svgcolorscalecontainer");
+
+                    var axisScale;
+                    
+
+                    axisScale = d3.scale.linear();
+
+
+                    axisScale.domain([range_min, range_max]);
+                    axisScale.range([0, scalewidth]);
+
+                    var xAxis = d3.svg.axis()
+                        .scale(axisScale)
+                        .ticks(8, function(d) { 
+                            return 10 + formatPower(Math.round(Math.log(d) / Math.LN10)); 
+                        });
+
+                    xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+
+                    var g = svgContainer.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(" + [margin, 3]+")")
+                        .call(xAxis);
+
+                    if(uom){
+                        g.append("text")
+                            .style("text-anchor", "middle")
+                            .style("font-size", "1.1em")
+                            .attr("transform", "translate(" + [scalewidth/2, 35]+")")
+                            .text(uom);
+                    }
+
+                    svgContainer.selectAll(".tick").select("line")
+                        .attr("stroke", "black");
+
+
+
+
+                    var svg_html = d3.select("#svgcolorscalecontainer")
+                        .attr("version", 1.1)
+                        .attr("xmlns", "http://www.w3.org/2000/svg")
+                        .node().innerHTML;
+
+
+
+                    var renderHeight = $(self.scatterEl).height();
+                    var renderWidth = $(self.scatterEl).width();
+
+                    $("#imagerenderercanvas").attr('width', renderWidth);
+                    $("#imagerenderercanvas").attr('height', renderHeight);
+
+                    var c = document.querySelector("#imagerenderercanvas");
+                    var ctx = c.getContext('2d');
+                    
+                    
+                    ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
+
+                    /*c.toBlob(function(blob) {
+                        saveAs(blob, "Analytics.png");
+                    }, "image/png");*/
+
+                    //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
+                    var image = c.toDataURL("image/jpg");
+                    var newmat = new Cesium.Material.fromType('Image', {
+                        image : image,
+                        color: new Cesium.Color(1, 1, 1, 1),
+                    });
+
+                    var viewportQuad = new Cesium.ViewportQuad(
+                        new Cesium.BoundingRectangle(0, 0, 100, 20),
+                        newmat
+                    );
+
+                    this.map.scene.primitives.add(viewportQuad);
+
+                }
+                /*svg.append("image")
+                    .attr("class", "colorscaleimage")
+                    .attr("width",  height-self.margin.bottom)
+                    .attr("height", 20)
+                    .attr("transform", "translate(" + (width+17) + " ,"+(height-self.margin.bottom)+") rotate(270)")
+                    .attr("preserveAspectRatio", "none")
+                    .attr("xlink:href", image);*/
             },
 
             onSelectionActivated: function(arg) {
