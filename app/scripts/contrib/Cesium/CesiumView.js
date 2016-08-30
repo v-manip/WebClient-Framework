@@ -1256,7 +1256,7 @@ define(['backbone.marionette',
                 	});
                 }
 
-                if (product && visible){
+                if (product && product.get("showColorscale") && visible){
 
                     var options = product.get("parameters");
                     var keys = _.keys(options);

@@ -179,7 +179,8 @@
 							coefficients_range: product.coefficients_range,
 							satellite: product.satellite,
 							tileSize: (product.tileSize) ? product.tileSize : 256,
-							validity: product.validity
+							validity: product.validity,
+							showColorscale: true
 						})
 					);
 

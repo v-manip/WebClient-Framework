@@ -47,6 +47,7 @@
 		    	var options = this.model.get("parameters");
 		    	var height = this.model.get("height");
 		    	var outlines = this.model.get("outlines");
+		    	var showColorscale = this.model.get("showColorscale");
 		    	var protocol = this.model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
@@ -146,8 +147,8 @@
 						$("#outlines").empty();
 						this.$("#outlines").append(
 							'<form style="vertical-align: middle;">'+
-							'<label for="outlines" style="width: 70px;">Outlines: </label>'+
-							'<input type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
+							'<label class="valign" for="outlines" style="width: 70px;">Outlines </label>'+
+							'<input class="valign" style="margin-top: -5px;" type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
 							'</form>'
 						);
 
@@ -155,6 +156,27 @@
 							var outlines = !that.model.get("outlines");
 							that.model.set("outlines", outlines);
 							Communicator.mediator.trigger("layer:outlines:changed", that.model.get("views")[0].id, outlines);
+						});
+					}
+
+					if(!(typeof showColorscale === 'undefined')){
+						var checked = "";
+						if (showColorscale)
+							checked = "checked";
+
+						$("#showColorscale input").unbind();
+						$("#showColorscale").empty();
+						this.$("#showColorscale").append(
+							'<form style="vertical-align: middle;">'+
+							'<label class="valign" for="outlines" style="width: 70px; margin">Legend </label>'+
+							'<input class="valign" style="margin-top: -5px;" type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
+							'</form>'
+						);
+
+						this.$("#showColorscale input").change(function(evt){
+							var showColorscale = !that.model.get("showColorscale");
+							that.model.set("showColorscale", showColorscale);
+							Communicator.mediator.trigger("layer:colorscale:show", that.model.get("download").id);
 						});
 					}
 
@@ -415,8 +437,8 @@
 
 					this.$("#logarithmic").append(
 						'<form style="vertical-align: middle;">'+
-						'<label for="outlines" style="width: 100px;">Log. Scale: </label>'+
-						'<input type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
+						'<label class="valign" for="outlines" style="width: 100px;">Log. Scale: </label>'+
+						'<input class="valign" style="margin-top: -5px;" type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
 						'</form>'
 					);
 
