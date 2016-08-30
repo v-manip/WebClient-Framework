@@ -495,8 +495,6 @@
 				
 				if(logscale){
 					axisScale = d3.scale.log();
-					if (range_min == 0)
-						range_min = 0.001;
 				}else{
 					axisScale = d3.scale.linear();
 				}
@@ -505,12 +503,23 @@
 				axisScale.range([0, scalewidth]);
 
 				var xAxis = d3.svg.axis()
-					.scale(axisScale)
-					.ticks(8, function(d) { 
-						return 10 + formatPower(Math.round(Math.log(d) / Math.LN10)); 
-					});
+					.scale(axisScale);
 
-				xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+				if(logscale){
+					var numberFormat = d3.format(",f");
+					function logFormat(d) {
+						var x = Math.log(d) / Math.log(10) + 1e-6;
+						return Math.abs(x - Math.floor(x)) < .3 ? numberFormat(d) : "";
+					}
+					xAxis.tickFormat(logFormat);
+
+				}else{
+					var step = (range_max - range_min)/5
+					xAxis.tickValues(
+						d3.range(range_min,range_max+step, step)
+					);
+					xAxis.tickFormat(d3.format("g"));
+				}
 
 			    var g = svgContainer.append("g")
 			        .attr("class", "x axis")

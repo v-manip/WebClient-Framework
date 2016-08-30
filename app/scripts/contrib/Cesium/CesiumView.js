@@ -1256,13 +1256,14 @@ define(['backbone.marionette',
                 	});
                 }
 
-                if (product && product.get("showColorscale") && visible){
+                if (product && product.get("showColorscale") && product.get("visible") && visible){
 
                     var options = product.get("parameters");
                     var keys = _.keys(options);
                     var sel = false;
                     var that = this;
                     var index = Object.keys(this.colorscales).length;
+
 
                     _.each(keys, function(key){
                         if(options[key].selected){
@@ -1274,6 +1275,7 @@ define(['backbone.marionette',
                     var range_max = product.get("parameters")[sel].range[1];
                     var uom = product.get("parameters")[sel].uom;
                     var style = product.get("parameters")[sel].colorscale;
+                    var logscale = defaultFor(product.get("parameters")[sel].logarithmic, false);
 
                     var margin = 20;
                     //var width = $(".cesium-viewer").width()/2;
@@ -1290,7 +1292,12 @@ define(['backbone.marionette',
 
                     var axisScale;
 
-                    axisScale = d3.scale.linear();
+
+					if(logscale){
+						axisScale = d3.scale.log();
+					}else{
+						axisScale = d3.scale.linear();
+					}
 
                     axisScale.domain([range_min, range_max]);
                     axisScale.range([0, scalewidth]);
@@ -1298,13 +1305,21 @@ define(['backbone.marionette',
                     var xAxis = d3.svg.axis()
                         .scale(axisScale);
 
-                    var step = (range_max - range_min)/5
+                    if(logscale){
+                    	var numberFormat = d3.format(",f");
+						function logFormat(d) {
+							var x = Math.log(d) / Math.log(10) + 1e-6;
+							return Math.abs(x - Math.floor(x)) < .3 ? numberFormat(d) : "";
+						}
+						xAxis.tickFormat(logFormat);
 
-					xAxis.tickValues(
-						d3.range(range_min,range_max+step, step)
-					);
-
-					xAxis.tickFormat(d3.format("g"));
+                    }else{
+						var step = (range_max - range_min)/5
+						xAxis.tickValues(
+							d3.range(range_min,range_max+step, step)
+						);
+						xAxis.tickFormat(d3.format("g"));
+                    }
 
                     var g = svgContainer.append("g")
                         .attr("class", "x axis")
