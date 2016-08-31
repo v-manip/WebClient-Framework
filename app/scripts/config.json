@@ -764,6 +764,84 @@
             "outlines": false,
             "satellite": "Swarm"
 
+        },{
+            "name": "SW OPER IBIA",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "views": [{
+                "id": "SW_OPER_IBIA",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_IBIA",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIA"
+                }
+            ],
+            "parameters": {
+                "Bubble_Probability": {
+                    "range": [0, 1],
+                    "uom": null,
+                    "colorscale": "jet",
+                    "selected": true,
+                    "name": "Detection probability of the plasma bubble"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": "ms",
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "Bubble_Index": {
+                    "uom": null,
+                    "name": "Plasma Bubble Index (0 Quiet; 1 Bubble; -1 Not analyzed)"
+                },
+                "Bubble_Probability": {
+                    "uom": null,
+                    "name": "Detection probability of the plasma bubble (in steps of 0.2; 0-not probable, 1-very probable)"
+                },
+                "Flags_Bubble": {
+                    "uom": null,
+                    "name": "Flags related to the plasma bubble index"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from MAGx_L1_B"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from MAGx_L1_B"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from MAGx_L1_B"
+                }
+            },
+            "outlines": false,
+            "satellite": "Swarm"
         },
         {
             "name": "SIFM",

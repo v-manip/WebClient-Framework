@@ -989,9 +989,13 @@ define(['backbone.marionette',
 				    		}
 
 				    		if (_.find(SCALAR_PARAM, function(par){return settings[row.id].band == par;})) {
+				    			var height_offset = 0;
+				    			if (settings[row.id].band == "Bubble_Probability"){
+				    				height_offset = 100;
+				    			}
 					    		var color = this.plot.getColor(row[settings[row.id].band]);
 					    		var options = {
-							        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad),
+							        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
 							        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
 							        pixelSize : 8,
 							        scaleByDistance : scaltype
