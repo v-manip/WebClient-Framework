@@ -1793,7 +1793,7 @@ define(['backbone.marionette',
 			onSaveImage: function(){
 				this.map.canvas.toBlob(function(blob) {
 					saveAs(blob, "VirES_Services_Screenshot.jpg");
-				}, "image/jpeg");
+				}, "image/jpeg", 1);
 			},
 
 			onClearImage: function(){
