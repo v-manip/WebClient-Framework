@@ -67,13 +67,13 @@ text.nvd3.nv-noData {
 }
 
 
-#tmp_download_button, #save, #grid, #download_button, #reset_filters {
+#tmp_download_button, #save, #grid, #download_button, #reset_filters, #toggle_filters, #reset {
 	background-color: #333 !important;
  	border-color: #444 !important;
  	height:32px;
 }
 
-#tmp_download_button:hover, #save:hover, #grid:hover, #reset_filters:hover{
+#tmp_download_button:hover, #save:hover, #grid:hover, #reset_filters:hover, #reset:hover, #toggle_filters:hover{
     background-color: #48b !important;
   	border-color: #aef !important;
 }
@@ -89,7 +89,7 @@ text.nvd3.nv-noData {
 	bottom: -25px !important;
 }
 
-#save, #grid, #download_button{
+#save, #grid, #download_button, #reset{
 	top: -43px!important;
 }
 
@@ -105,7 +105,11 @@ text.nvd3.nv-noData {
 	right: 40px!important;
 }
 
-#reset_filters{
+#reset{
+	right: 365px!important;
+}
+
+#reset_filters, #toggle_filters{
 	position: absolute !important;
 	top: -27px !important;
 }
