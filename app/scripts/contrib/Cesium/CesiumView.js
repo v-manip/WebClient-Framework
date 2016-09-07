@@ -622,7 +622,9 @@ define(['backbone.marionette',
                     			this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 			        		}else if (product.get("views")[0].protocol == "WPS"){
+			        			this.onShowColorscale(product.get("download").id, options.visible);
                     			this.checkShc(product, options.visible);
+
 								
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
                     			this.onShowColorscale(product.get("download").id, options.visible);
