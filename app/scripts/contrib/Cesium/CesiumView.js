@@ -1222,6 +1222,7 @@ define(['backbone.marionette',
             onShowColorscale: function(product_id, visible){
 
             	visible = defaultFor(visible, true);
+
             	var that = this;
 
                 var product = false;
@@ -1230,6 +1231,10 @@ define(['backbone.marionette',
                         product = p;
                     }
                 });
+
+                if(product && product.get("views")[0].protocol == "WPS" && product.get('shc') == null){
+                	visible = false;
+                }
 
                 if (_.has(this.colorscales, product_id)){
                 	// remove object from cesium scene
