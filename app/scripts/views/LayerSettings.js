@@ -48,6 +48,7 @@
 		    	var options = this.model.get("parameters");
 		    	var height = this.model.get("height");
 		    	var outlines = this.model.get("outlines");
+		    	var showColorscale = this.model.get("showColorscale");
 		    	var protocol = this.model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
@@ -147,8 +148,8 @@
 						$("#outlines").empty();
 						this.$("#outlines").append(
 							'<form style="vertical-align: middle;">'+
-							'<label for="outlines" style="width: 70px;">Outlines: </label>'+
-							'<input type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
+							'<label class="valign" for="outlines" style="width: 70px;">Outlines </label>'+
+							'<input class="valign" style="margin-top: -5px;" type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
 							'</form>'
 						);
 
@@ -156,6 +157,27 @@
 							var outlines = !that.model.get("outlines");
 							that.model.set("outlines", outlines);
 							Communicator.mediator.trigger("layer:outlines:changed", that.model.get("views")[0].id, outlines);
+						});
+					}
+
+					if(!(typeof showColorscale === 'undefined')){
+						var checked = "";
+						if (showColorscale)
+							checked = "checked";
+
+						$("#showColorscale input").unbind();
+						$("#showColorscale").empty();
+						this.$("#showColorscale").append(
+							'<form style="vertical-align: middle;">'+
+							'<label class="valign" for="outlines" style="width: 70px; margin">Legend </label>'+
+							'<input class="valign" style="margin-top: -5px;" type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
+							'</form>'
+						);
+
+						this.$("#showColorscale input").change(function(evt){
+							var showColorscale = !that.model.get("showColorscale");
+							that.model.set("showColorscale", showColorscale);
+							Communicator.mediator.trigger("layer:colorscale:show", that.model.get("download").id);
 						});
 					}
 
@@ -500,8 +522,8 @@
 
 					this.$("#logarithmic").append(
 						'<form style="vertical-align: middle;">'+
-						'<label for="outlines" style="width: 100px;">Log. Scale: </label>'+
-						'<input type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
+						'<label class="valign" for="outlines" style="width: 100px;">Log. Scale: </label>'+
+						'<input class="valign" style="margin-top: -5px;" type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
 						'</form>'
 					);
 
@@ -558,8 +580,6 @@
 				
 				if(logscale){
 					axisScale = d3.scale.log();
-					if (range_min == 0)
-						range_min = 0.001;
 				}else{
 					axisScale = d3.scale.linear();
 				}
@@ -568,12 +588,23 @@
 				axisScale.range([0, scalewidth]);
 
 				var xAxis = d3.svg.axis()
-					.scale(axisScale)
-					.ticks(8, function(d) { 
-						return 10 + formatPower(Math.round(Math.log(d) / Math.LN10)); 
-					});
+					.scale(axisScale);
 
-				xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+				if(logscale){
+					var numberFormat = d3.format(",f");
+					function logFormat(d) {
+						var x = Math.log(d) / Math.log(10) + 1e-6;
+						return Math.abs(x - Math.floor(x)) < .3 ? numberFormat(d) : "";
+					}
+					xAxis.tickFormat(logFormat);
+
+				}else{
+					var step = (range_max - range_min)/5
+					xAxis.tickValues(
+						d3.range(range_min,range_max+step, step)
+					);
+					xAxis.tickFormat(d3.format("g"));
+				}
 
 			    var g = svgContainer.append("g")
 			        .attr("class", "x axis")

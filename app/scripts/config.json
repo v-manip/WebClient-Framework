@@ -328,7 +328,7 @@
                     "colorscale": "custom1"
                 },
                 "Fieldlines":{
-                    "range": [0.9, 40000],
+                    "range": [1, 40000],
                     "uom":"nT",
                     "name": "Fieldlines",
                     "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
@@ -428,7 +428,7 @@
                     "colorscale": "custom1"
                 },
                 "Fieldlines":{
-                    "range": [0.9, 40000],
+                    "range": [1, 40000],
                     "uom":"nT",
                     "name": "Fieldlines",
                     "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
@@ -528,7 +528,7 @@
                     "colorscale": "custom1"
                 },
                 "Fieldlines":{
-                    "range": [0.9, 40000],
+                    "range": [1, 40000],
                     "uom":"nT",
                     "name": "Fieldlines",
                     "description": "In order to visualize fieldlines please select an area with the bounding box tool.",
