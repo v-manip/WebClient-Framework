@@ -43,6 +43,7 @@ define(['backbone.marionette',
 				this.overlay = null;
 				this.activeWPSproducts = [];
 				this.plot_type = 'scatter';
+				this.previous_parameters = [];
 
 				$('#tmp_download_button').unbind( "click" );
 				$('#tmp_download_button').remove();
@@ -77,15 +78,11 @@ define(['backbone.marionette',
 					histoEl: "#parallelsdiv",
 					selection_x: 'Latitude',
 					selection_y: ['F'],
-					margin: {top: 10, right: 20, bottom: 10, left: 50},
-					toIgnoreHistogram: [
-						'B_N_error','B_E_error','B_C_error',
-						'B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12',
-						'B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM',
-						'B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined',
-						'B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model',
-						'Latitude', 'Longitude', 'Radius'
-					]
+					margin: {top: 10, right: 65, bottom: 10, left: 60},
+					histoMargin: {top: 55, right: 70, bottom: 25, left: 100},
+					shorten_width: 125,
+					toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
+					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "dst","kp","qdlat","mlt"]
 				};
 
 				
@@ -94,7 +91,7 @@ define(['backbone.marionette',
 	            	this.sp = new scatterPlot(args, function(){},
 						function (values) {
 							if (values != null){
-								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);	
+								Communicator.mediator.trigger("cesium:highlight:point", [values.Latitude, values.Longitude, values.Radius]);
 							}else{
 								Communicator.mediator.trigger("cesium:highlight:removeAll");
 							}
@@ -119,6 +116,38 @@ define(['backbone.marionette',
 			},
 
 			reloadData: function(model, data) {
+				 // Prepare to create list of available parameters
+				var available_parameters = {};
+				globals.products.each(function(prod) {
+					if(prod.get("download_parameters")){
+						var par = prod.get("download_parameters");
+						var new_keys = _.keys(par);
+						_.each(new_keys, function(key){
+							available_parameters[key] = par[key];
+						});
+					}
+				});
+				this.sp.uom_set = available_parameters;
+
+				if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
+
+					var filterstouse = ["dst","kp","qdlat","mlt"];
+					var residuals = _.filter(_.keys(data[0]), function(item) {
+						return item.indexOf("_res") !== -1;
+					});
+					
+					// If new datasets contains residuals add those instead of normal components
+					if(residuals.length > 0){
+						filterstouse = filterstouse.concat(residuals);
+					}else{
+						filterstouse = filterstouse.concat(["F","B_N", "B_E", "B_C", ]);
+					}
+
+					this.sp.fieldsforfiltering = filterstouse;
+				}
+
+				this.previous_parameters = _.keys(data[0]);
+
 				if(this.$('.d3canvas').length == 1){
 					$('#scatterdiv').empty();
 					$('#parallelsdiv').empty();
