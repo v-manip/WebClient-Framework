@@ -19,9 +19,9 @@ text.nvd3.nv-noData {
 	width: 100%;
 	height: 100%;
 	padding-top: 50px;
-	padding-left: 25px;
+	padding-left: 5px;
 	padding-bottom: 8.9em;
-	padding-right: 15px;
+	padding-right: 0px;
 	float: left;
 	background-color: white;
 }
@@ -67,7 +67,7 @@ text.nvd3.nv-noData {
 }
 
 
-#tmp_download_button, #save, #grid, #download_button, #reset_filters, #toggle_filters, #reset {
+#tmp_download_button, #save, #grid, #download_button, #reset_filters, #reset, #toggle_filters {
 	background-color: #333 !important;
  	border-color: #444 !important;
  	height:32px;
@@ -86,7 +86,7 @@ text.nvd3.nv-noData {
 .xselectdropdown{
 	position: absolute !important;
 	float: right;
-	bottom: -25px !important;
+	bottom: -28px !important;
 }
 
 #save, #grid, #download_button, #reset{
@@ -101,7 +101,7 @@ text.nvd3.nv-noData {
 	right: 260px!important;
 }
 
-#download_button{
+#download_button, #tmp_download_button{
 	right: 40px!important;
 }
 
@@ -121,5 +121,14 @@ text.nvd3.nv-noData {
 #parallelsdiv{
 	position: relative;
 	margin-top: 25px;
-	margin-left: -20px;
+	margin-left: -55px;
+}
+
+.w2ui-overlay {
+//position: relative!important;
+    min-width: 565px!important;
+}
+
+.tick text{
+	cursor: default!important;
 }

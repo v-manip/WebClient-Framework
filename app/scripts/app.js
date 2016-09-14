@@ -1,3 +1,7 @@
+
+var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability"];
+var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
+
 (function() {
 	'use strict';
 
@@ -173,6 +177,7 @@
 							processes: product.processes,
 							unit: product.unit,
 							parameters: product.parameters,
+							download_parameters: product.download_parameters,
 							height: product.height,
 							outlines: product.outlines,
 							model: product.model,
