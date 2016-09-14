@@ -20,15 +20,14 @@
     "lm.js": "madhums/lm.js#~0.1.0",
     "bootstrap": "~3.0.1",
     "font-awesome": "~4.5.0",
-    "d3.Graphs": "ESA-VirES/AnalyticsViewer#~0.3.9",
+    "d3.Graphs": "ESA-VirES/AnalyticsViewer#~0.4.2",
     "cesium": "http://cesiumjs.org/releases/Cesium-1.24.zip",
     "papaparse": "~4.1.0",
     "plotty": "santilland/plotty#^0.1.1",
     "jqueryui-touch-punch": "*",
     "FileSaver.js": "eligrey/FileSaver.js",
     "canvas-toBlob.js": "eligrey/canvas-toBlob.js",
-    "Blob.js": "eligrey/Blob.js",
-    "w2ui": "git://github.com/vitmalina/w2ui.git#3a8dcfefb6a5318ae3a824cdbe10462c432725ec"
+    "Blob.js": "eligrey/Blob.js"
   },
   "devDependencies": {
     "Keypress": "~2.0.0"
