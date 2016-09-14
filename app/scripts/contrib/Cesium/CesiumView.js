@@ -1281,6 +1281,7 @@ define(['backbone.marionette',
 
                     this.plot.setColorScale(style);
                     var colorscaleimage = this.plot.getColorScaleImage().toDataURL("image/jpg");
+                    //console.log(colorscaleimage);
 
                     var svgContainer = d3.select("body").append("svg")
                         .attr("width", width)
@@ -1331,6 +1332,7 @@ define(['backbone.marionette',
 	                    .attr("preserveAspectRatio", "none")
 	                    .attr("xlink:href", colorscaleimage);
 
+	                    //console.log(svgContainer);
 
                     // Add layer info
                     var info = product.get("name");
@@ -1378,30 +1380,35 @@ define(['backbone.marionette',
 
                     var c = document.querySelector("#imagerenderercanvas");
                     var ctx = c.getContext('2d');
-                    
-                    
-                    ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
 
-                    //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
-                    var image = c.toDataURL("image/jpg");
-                    var newmat = new Cesium.Material.fromType('Image', {
-                        image : image,
-                        color: new Cesium.Color(1, 1, 1, 1),
-                    });
+                    var that = this;
+                    // Added 0 timeout for fixing issue with colorscale legend not 
+                    // rendering correctly when starting the client
+					setTimeout(function(){
 
-                    var viewportQuad = new Cesium.ViewportQuad(
-                        new Cesium.BoundingRectangle(0, index*55 +5, renderWidth, renderHeight),
-                        newmat
-                    );
+	                    ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
 
-                    var prim = this.map.scene.primitives.add(viewportQuad);
+	                    //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
+	                    var image = c.toDataURL("image/jpg");
+	                    var newmat = new Cesium.Material.fromType('Image', {
+	                        image : image,
+	                        color: new Cesium.Color(1, 1, 1, 1),
+	                    });
 
-                    this.colorscales[product_id] = {
-                    	index: index,
-                    	prim: prim
-                    };
+	                    var viewportQuad = new Cesium.ViewportQuad(
+	                        new Cesium.BoundingRectangle(0, index*55 +5, renderWidth, renderHeight),
+	                        newmat
+	                    );
 
-                    svgContainer.remove();
+	                    var prim = that.map.scene.primitives.add(viewportQuad);
+
+	                    that.colorscales[product_id] = {
+	                    	index: index,
+	                    	prim: prim
+	                    };
+
+	                    svgContainer.remove();
+					}, 0);
 
                 }
 
