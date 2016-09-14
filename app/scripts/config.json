@@ -158,13 +158,13 @@
             ],
             "parameters": {
                 "B_NEC": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
@@ -299,13 +299,13 @@
             ],
             "parameters": {
                 "B_NEC": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
@@ -439,13 +439,13 @@
             ],
             "parameters": {
                 "B_NEC": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "name": "Magnetic field vector, NEC frame"
                 },
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "colorscale": "jet",
                     "selected": true,
@@ -870,7 +870,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
@@ -980,7 +980,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
@@ -1090,7 +1090,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
@@ -1191,7 +1191,7 @@
             },
             "parameters": {
                 "F": {
-                    "range": [27000, 50000],
+                    "range": [15000, 55000],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",

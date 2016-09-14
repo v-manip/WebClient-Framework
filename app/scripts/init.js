@@ -123,7 +123,7 @@
 
             sumoselect: '../bower_components/sumoselect/jquery.sumoselect.min',
 
-            w2ui: '../bower_components/w2ui/dist/w2ui.min'
+            w2ui: '../bower_components/w2ui/dist/w2ui-fields.min'
 
         },
 
