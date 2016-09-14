@@ -43,6 +43,7 @@ define(['backbone.marionette',
 				this.activeCollections = [];
 				this.difference_image = null;
 				this.data_filters = {};
+                this.colorscales = {};
 
 				this.begin_time = null;
 				this.end_time = null;
@@ -273,10 +274,7 @@ define(['backbone.marionette',
 					});
 				} 
 
-				this.plot = new plotty.plot({
-					colorScale: 'jet',
-					domain: [30000,60000]
-				});
+				this.plot = new plotty.plot({});
 
 				this.plot.setClamp(true, true);
 
@@ -311,7 +309,7 @@ define(['backbone.marionette',
 						Communicator.mediator.trigger("selection:changed", null);
 					}
 				});
-					
+
 
 				//this.onResize();
 				return this;
@@ -617,6 +615,7 @@ define(['backbone.marionette',
                     		// TODO: This if method is only for testing and has to be reviewed
                     		if(product.get("views")[0].protocol == "CZML"){
                     			//this.checkLayerFeatures(product, options.visible);
+                    			this.onShowColorscale(product.get("download").id, options.visible);
                     			product.set('visible', options.visible);
                     			this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
@@ -624,7 +623,7 @@ define(['backbone.marionette',
                     			this.checkShc(product, options.visible);
 								
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
-
+                    			this.onShowColorscale(product.get("download").id, options.visible);
                     			var parameters = product.get("parameters");
                     			var coeff_range = product.get("coefficients_range");
 
@@ -1068,6 +1067,8 @@ define(['backbone.marionette',
 
             		if(product.get("name")==layer){
 
+            			this.onShowColorscale(product.get("download").id);
+
             			var hexcolor = product.get("color");
 	                		hexcolor = hexcolor.substring(1, hexcolor.length);
             			var parameters = product.get("parameters");
@@ -1204,6 +1205,199 @@ define(['backbone.marionette',
 			        	return {left: -180, bottom: -90, right: 180, top: 90};
 			        }
 			    }
+            },
+
+            onShowColorscale: function(product_id, visible){
+
+            	visible = defaultFor(visible, true);
+            	var that = this;
+
+                var product = false;
+                globals.products.each(function(p) {
+                    if(p.get("download").id == product_id){
+                        product = p;
+                    }
+                });
+
+                if (_.has(this.colorscales, product_id)){
+                	// remove object from cesium scene
+                	this.map.scene.primitives.remove(this.colorscales[product_id].prim);
+                	var index_to_delete = this.colorscales[product_id].index;
+                	delete this.colorscales[product_id];
+
+                	// Modify all indices and related height of all colorscales 
+                	// which are over deleted position
+
+                	_.each(this.colorscales, function(value, key, obj) {
+                		if (obj[key].index >= index_to_delete){
+                			obj[key].index = obj[key].index-1;
+
+                			var tmp_mat = obj[key].prim.material;
+                			var rect = new Cesium.BoundingRectangle(0, obj[key].index*55 +5, 300, 55);
+                			that.map.scene.primitives.remove(obj[key].prim);
+
+		                    var viewportQuad = new Cesium.ViewportQuad(rect, tmp_mat);
+
+		                    var prim = that.map.scene.primitives.add(viewportQuad);
+
+		                    obj[key].prim = prim;
+                			
+                		}
+                	});
+                }
+
+                if (product && product.get("showColorscale") && product.get("visible") && visible){
+
+                    var options = product.get("parameters");
+                    var keys = _.keys(options);
+                    var sel = false;
+                    var that = this;
+                    var index = Object.keys(this.colorscales).length;
+
+
+                    _.each(keys, function(key){
+                        if(options[key].selected){
+                            sel = key;
+                        }
+                    });
+
+                    var range_min = product.get("parameters")[sel].range[0];
+                    var range_max = product.get("parameters")[sel].range[1];
+                    var uom = product.get("parameters")[sel].uom;
+                    var style = product.get("parameters")[sel].colorscale;
+                    var logscale = defaultFor(product.get("parameters")[sel].logarithmic, false);
+
+                    var margin = 20;
+                    //var width = $(".cesium-viewer").width()/2;
+                    var width = 300;
+                    var scalewidth =  width - margin *2;
+
+                    this.plot.setColorScale(style);
+                    var colorscaleimage = this.plot.getColorScaleImage().toDataURL("image/jpg");
+
+                    var svgContainer = d3.select("body").append("svg")
+                        .attr("width", width)
+                        .attr("height", 60)
+                        .attr("id", "svgcolorscalecontainer");
+
+                    var axisScale;
+
+
+					if(logscale){
+						axisScale = d3.scale.log();
+					}else{
+						axisScale = d3.scale.linear();
+					}
+
+                    axisScale.domain([range_min, range_max]);
+                    axisScale.range([0, scalewidth]);
+
+                    var xAxis = d3.svg.axis()
+                        .scale(axisScale);
+
+                    if(logscale){
+                    	var numberFormat = d3.format(",f");
+						function logFormat(d) {
+							var x = Math.log(d) / Math.log(10) + 1e-6;
+							return Math.abs(x - Math.floor(x)) < .3 ? numberFormat(d) : "";
+						}
+						xAxis.tickFormat(logFormat);
+
+                    }else{
+						var step = (range_max - range_min)/5
+						xAxis.tickValues(
+							d3.range(range_min,range_max+step, step)
+						);
+						xAxis.tickFormat(d3.format("g"));
+                    }
+
+                    var g = svgContainer.append("g")
+                        .attr("class", "x axis")
+                        .attr("transform", "translate(" + [margin, 20]+")")
+                        .call(xAxis);
+
+                    g.append("image")
+	                    .attr("class", "colorscaleimage")
+	                    .attr("width",  scalewidth)
+	                    .attr("height", 10)
+	                    .attr("transform", "translate(0,-12)")
+	                    .attr("preserveAspectRatio", "none")
+	                    .attr("xlink:href", colorscaleimage);
+
+
+                    // Add layer info
+                    var info = product.get("name");
+                    info += " - " + sel;
+                    if(uom){
+                    	info += " ("+uom+")";
+                    }
+
+                    g.append("text")
+                        .style("text-anchor", "middle")
+                        //.style("font-size", "1.0em")
+                        .attr("transform", "translate(" + [scalewidth/2, 30]+")")
+                        .attr("font-weight", "bold")
+                        .text(info);
+
+                    svgContainer.selectAll('text')
+				      	.attr("stroke", "none")
+				      	.attr("fill", "black")
+				      	.attr("font-weight", "bold");
+
+                    svgContainer.selectAll(".tick").select("line")
+                        .attr("stroke", "black");
+
+                    svgContainer.selectAll('.axis .domain')
+				      	.attr("stroke-width", "2")
+				      	.attr("stroke", "#000")
+				      	.attr("shape-rendering", "crispEdges")
+				      	.attr("fill", "none");
+
+				    svgContainer.selectAll('.axis path')
+				      	.attr("stroke-width", "2")
+				      	.attr("shape-rendering", "crispEdges")
+				      	.attr("stroke", "#000");
+
+                    var svg_html = d3.select("#svgcolorscalecontainer")
+                        .attr("version", 1.1)
+                        .attr("xmlns", "http://www.w3.org/2000/svg")
+                        .node().innerHTML;
+
+                    var renderHeight = 55;
+                    var renderWidth = width;
+
+                    $("#imagerenderercanvas").attr('width', renderWidth);
+                    $("#imagerenderercanvas").attr('height', renderHeight);
+
+                    var c = document.querySelector("#imagerenderercanvas");
+                    var ctx = c.getContext('2d');
+                    
+                    
+                    ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
+
+                    //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
+                    var image = c.toDataURL("image/jpg");
+                    var newmat = new Cesium.Material.fromType('Image', {
+                        image : image,
+                        color: new Cesium.Color(1, 1, 1, 1),
+                    });
+
+                    var viewportQuad = new Cesium.ViewportQuad(
+                        new Cesium.BoundingRectangle(0, index*55 +5, renderWidth, renderHeight),
+                        newmat
+                    );
+
+                    var prim = this.map.scene.primitives.add(viewportQuad);
+
+                    this.colorscales[product_id] = {
+                    	index: index,
+                    	prim: prim
+                    };
+
+                    svgContainer.remove();
+
+                }
+
             },
 
             onSelectionActivated: function(arg) {
@@ -1589,7 +1783,7 @@ define(['backbone.marionette',
 			onSaveImage: function(){
 				this.map.canvas.toBlob(function(blob) {
 					saveAs(blob, "VirES_Services_Screenshot.jpg");
-				}, "image/jpeg");
+				}, "image/jpeg", 1);
 			},
 
 			onClearImage: function(){

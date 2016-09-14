@@ -56,6 +56,9 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 					show:{ effect: false, delay: 700}
 			    });
 
+				var imagerenderercanvas = $('<canvas/>',{id: 'imagerenderercanvas'});
+				$('body').append(imagerenderercanvas);
+
 
 				var v = {}; //views
 				var m = {};	//models
@@ -181,7 +184,8 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 							coefficients_range: product.coefficients_range,
 							satellite: product.satellite,
 							tileSize: (product.tileSize) ? product.tileSize : 256,
-							validity: product.validity
+							validity: product.validity,
+							showColorscale: true
 						})
 					);
 
