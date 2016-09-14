@@ -414,7 +414,7 @@ define(['backbone.marionette',
                     	},  Cesium.WebMapServiceImageryProvider.DefaultParameters);
 
                     	// Check if layer has additional parameters configured
-                    	var additional_parameters = {};
+                    	var additional_parameters = {transparent: true};
                     	var styles;
                     	if(layerdesc.get("parameters")){
                     		var options = layerdesc.get("parameters");
@@ -620,7 +620,9 @@ define(['backbone.marionette',
                     			this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
 
 			        		}else if (product.get("views")[0].protocol == "WPS"){
+			        			this.onShowColorscale(product.get("download").id, options.visible);
                     			this.checkShc(product, options.visible);
+
 								
                     		}else if (product.get("views")[0].protocol == "WMS" || product.get("views")[0].protocol == "WMTS" ){
                     			this.onShowColorscale(product.get("download").id, options.visible);
@@ -1210,6 +1212,7 @@ define(['backbone.marionette',
             onShowColorscale: function(product_id, visible){
 
             	visible = defaultFor(visible, true);
+
             	var that = this;
 
                 var product = false;
@@ -1218,6 +1221,10 @@ define(['backbone.marionette',
                         product = p;
                     }
                 });
+
+                if(product && product.get("views")[0].protocol == "WPS" && product.get('shc') == null){
+                	visible = false;
+                }
 
                 if (_.has(this.colorscales, product_id)){
                 	// remove object from cesium scene
