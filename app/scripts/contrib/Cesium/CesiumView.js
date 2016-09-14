@@ -1422,7 +1422,6 @@ define(['backbone.marionette',
 								w: Cesium.Math.toDegrees(extent.west)
 							}
 							Communicator.mediator.trigger("selection:changed", bbox);
-							$('#bb_selection').html('Clear Selection');
 	                    }
 	                });
 				} else {
@@ -1444,7 +1443,15 @@ define(['backbone.marionette',
 				this.drawhelper._handlersMuted = true;
 				
 				if(bbox){
-					//this.map.scene.primitives.removeAll();
+
+					// Remove any possible selection and field lines (e.g.by tutorial)
+					if(this.extentPrimitive)
+						this.map.scene.primitives.remove(this.extentPrimitive);
+					_.each(_.keys(this.FL_collection), function(key){
+	            		this.map.scene.primitives.remove(this.FL_collection[key]);
+                		delete this.FL_collection[key];
+	            	}, this);
+
 					var color = "#6699FF";
 
 					var material = new Cesium.Material.fromType('Color');
@@ -1468,8 +1475,7 @@ define(['backbone.marionette',
 		            this.map.scene.primitives.add(this.extentPrimitive);
 
 		            this.checkFieldLines();
-		            
-
+		            $('#bb_selection').html('Clear Selection');
 
 				}else{
 					this.bboxsel = null;

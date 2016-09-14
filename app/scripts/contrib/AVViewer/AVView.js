@@ -116,6 +116,7 @@ define(['backbone.marionette',
 			},
 
 			reloadData: function(model, data) {
+
 				 // Prepare to create list of available parameters
 				var available_parameters = {};
 				globals.products.each(function(prod) {
@@ -129,34 +130,36 @@ define(['backbone.marionette',
 				});
 				this.sp.uom_set = available_parameters;
 
-				if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
+				if(data.length > 0){
 
-					var filterstouse = ["dst","kp","qdlat","mlt"];
-					var residuals = _.filter(_.keys(data[0]), function(item) {
-						return item.indexOf("_res") !== -1;
-					});
-					
-					// If new datasets contains residuals add those instead of normal components
-					if(residuals.length > 0){
-						filterstouse = filterstouse.concat(residuals);
-					}else{
-						filterstouse = filterstouse.concat(["F","B_N", "B_E", "B_C", ]);
+					if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
+						var filterstouse = ["dst","kp","qdlat","mlt"];
+						var residuals = _.filter(_.keys(data[0]), function(item) {
+							return item.indexOf("_res") !== -1;
+						});
+						
+						// If new datasets contains residuals add those instead of normal components
+						if(residuals.length > 0){
+							filterstouse = filterstouse.concat(residuals);
+						}else{
+							filterstouse = filterstouse.concat(["F","B_N", "B_E", "B_C", ]);
+						}
+
+						this.sp.fieldsforfiltering = filterstouse;
 					}
 
-					this.sp.fieldsforfiltering = filterstouse;
-				}
+					this.previous_parameters = _.keys(data[0]);
 
-				this.previous_parameters = _.keys(data[0]);
+					if(this.$('.d3canvas').length == 1){
+						$('#scatterdiv').empty();
+						$('#parallelsdiv').empty();
+						var args = {
+							selector: this.$('.d3canvas')[0],
+							parsedData: data
+						};
 
-				if(this.$('.d3canvas').length == 1){
-					$('#scatterdiv').empty();
-					$('#parallelsdiv').empty();
-					var args = {
-						selector: this.$('.d3canvas')[0],
-						parsedData: data
-					};
-
-					this.sp.loadData(args);
+						this.sp.loadData(args);
+					}
 				}
 			},
 
