@@ -262,9 +262,9 @@
                       var bnec = dat[i]['B_error'];
                       bnec = bnec.slice(1,-1).split(';').map(Number);
                       delete dat[i]['B_error'];
-                      dat[i]['B_N_error'] = bnec[0];
-                      dat[i]['B_E_error'] = bnec[1];
-                      dat[i]['B_C_error'] = bnec[2];
+                      dat[i]['B_error,X'] = bnec[0];
+                      dat[i]['B_error,Y'] = bnec[1];
+                      dat[i]['B_error,Z'] = bnec[2];
                     }
                     if(dat[i].hasOwnProperty('v_SC')) {
                       var bnec = dat[i]['v_SC'];

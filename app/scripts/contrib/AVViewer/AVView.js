@@ -78,7 +78,7 @@ define(['backbone.marionette',
 					histoEl: "#parallelsdiv",
 					selection_x: 'Latitude',
 					selection_y: ['F'],
-					margin: {top: 10, right: 65, bottom: 10, left: 60},
+					margin: {top: 10, right: 67, bottom: 10, left: 60},
 					histoMargin: {top: 55, right: 70, bottom: 25, left: 100},
 					shorten_width: 125,
 					toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
@@ -129,6 +129,57 @@ define(['backbone.marionette',
 					}
 				});
 				this.sp.uom_set = available_parameters;
+
+				// Special cases for separeted vectors
+				if (this.sp.uom_set.hasOwnProperty('B_error')){
+					this.sp.uom_set['B_error,X'] = $.extend({}, this.sp.uom_set['B_error']);
+					this.sp.uom_set['B_error,Y'] = $.extend({}, this.sp.uom_set['B_error']);
+					this.sp.uom_set['B_error,Z'] = $.extend({}, this.sp.uom_set['B_error']);
+					this.sp.uom_set['B_error,X'].name = "Component of "+this.sp.uom_set['B_error'].name;
+					this.sp.uom_set['B_error,Y'].name = "Component of "+this.sp.uom_set['B_error'].name;
+					this.sp.uom_set['B_error,Z'].name = "Component of "+this.sp.uom_set['B_error'].name;
+				}
+				if (this.sp.uom_set.hasOwnProperty('B_NEC')){
+					this.sp.uom_set['B_N'] = $.extend({}, this.sp.uom_set['B_NEC']);
+					this.sp.uom_set['B_E'] = $.extend({}, this.sp.uom_set['B_NEC']);
+					this.sp.uom_set['B_C'] = $.extend({}, this.sp.uom_set['B_NEC']);
+					this.sp.uom_set['B_N'].name = "Component of "+this.sp.uom_set['B_NEC'].name;
+					this.sp.uom_set['B_E'].name = "Component of "+this.sp.uom_set['B_NEC'].name;
+					this.sp.uom_set['B_C'].name = "Component of "+this.sp.uom_set['B_NEC'].name;
+				}
+				if (this.sp.uom_set.hasOwnProperty('B_NEC_res_IGRF12')){
+					this.sp.uom_set['B_N_res_IGRF12'] = $.extend({}, this.sp.uom_set['B_NEC_res_IGRF12']);
+					this.sp.uom_set['B_E_res_IGRF12'] = $.extend({}, this.sp.uom_set['B_NEC_res_IGRF12']);
+					this.sp.uom_set['B_C_res_IGRF12'] = $.extend({}, this.sp.uom_set['B_NEC_res_IGRF12']);
+					this.sp.uom_set['B_N_res_IGRF12'].name = "Component of "+this.sp.uom_set['B_NEC_res_IGRF12'].name;
+					this.sp.uom_set['B_E_res_IGRF12'].name = "Component of "+this.sp.uom_set['B_NEC_res_IGRF12'].name;
+					this.sp.uom_set['B_C_res_IGRF12'].name = "Component of "+this.sp.uom_set['B_NEC_res_IGRF12'].name;
+				}
+				if (this.sp.uom_set.hasOwnProperty('B_NEC_res_SIFM')){
+					this.sp.uom_set['B_N_res_SIFM'] = $.extend({}, this.sp.uom_set['B_NEC_res_SIFM']);
+					this.sp.uom_set['B_E_res_SIFM'] = $.extend({}, this.sp.uom_set['B_NEC_res_SIFM']);
+					this.sp.uom_set['B_C_res_SIFM'] = $.extend({}, this.sp.uom_set['B_NEC_res_SIFM']);
+					this.sp.uom_set['B_N_res_SIFM'].name = "Component of "+this.sp.uom_set['B_NEC_res_SIFM'].name;
+					this.sp.uom_set['B_E_res_SIFM'].name = "Component of "+this.sp.uom_set['B_NEC_res_SIFM'].name;
+					this.sp.uom_set['B_C_res_SIFM'].name = "Component of "+this.sp.uom_set['B_NEC_res_SIFM'].name;
+				}
+				if (this.sp.uom_set.hasOwnProperty('B_NEC_res_CHAOS-5-Combined')){
+					this.sp.uom_set['B_N_res_CHAOS-5-Combined'] = $.extend({}, this.sp.uom_set['B_NEC_res_CHAOS-5-Combined']);
+					this.sp.uom_set['B_E_res_CHAOS-5-Combined'] = $.extend({}, this.sp.uom_set['B_NEC_res_CHAOS-5-Combined']);
+					this.sp.uom_set['B_C_res_CHAOS-5-Combined'] = $.extend({}, this.sp.uom_set['B_NEC_res_CHAOS-5-Combined']);
+					this.sp.uom_set['B_N_res_CHAOS-5-Combined'].name = "Component of "+this.sp.uom_set['B_NEC_res_CHAOS-5-Combined'].name;
+					this.sp.uom_set['B_E_res_CHAOS-5-Combined'].name = "Component of "+this.sp.uom_set['B_NEC_res_CHAOS-5-Combined'].name;
+					this.sp.uom_set['B_C_res_CHAOS-5-Combined'].name = "Component of "+this.sp.uom_set['B_NEC_res_CHAOS-5-Combined'].name;
+				}
+				if (this.sp.uom_set.hasOwnProperty('B_NEC_res_Custom_Model')){
+					this.sp.uom_set['B_N_res_Custom_Model'] = $.extend({}, this.sp.uom_set['B_NEC_res_Custom_Model']);
+					this.sp.uom_set['B_E_res_Custom_Model'] = $.extend({}, this.sp.uom_set['B_NEC_res_Custom_Model']);
+					this.sp.uom_set['B_C_res_Custom_Model'] = $.extend({}, this.sp.uom_set['B_NEC_res_Custom_Model']);
+					this.sp.uom_set['B_N_res_Custom_Model'].name = "Component of "+this.sp.uom_set['B_NEC_res_Custom_Model'].name;
+					this.sp.uom_set['B_E_res_Custom_Model'].name = "Component of "+this.sp.uom_set['B_NEC_res_Custom_Model'].name;
+					this.sp.uom_set['B_C_res_Custom_Model'].name = "Component of "+this.sp.uom_set['B_NEC_res_Custom_Model'].name;
+				}
+
 
 				if(data.length > 0){
 

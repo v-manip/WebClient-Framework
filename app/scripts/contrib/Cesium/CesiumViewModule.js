@@ -83,12 +83,10 @@ define([
 		};
 
 		var setupKeyboardShortcuts = function(controller) {
-			var keypressListener = new keypress.Listener();
+			/*var keypressListener = new keypress.Listener();
 			keypressListener.simple_combo("ctrl d", function() {
-				/*var pos = controller.getStartPosition();
-				controller.centerAndZoom(pos.x, pos.y, pos.l);*/
 				controller.toggleDebug();
-			});
+			});*/
 		};
 
 		// FIXXME: the router/history concept has to be redesigned for the multiple view approach!
