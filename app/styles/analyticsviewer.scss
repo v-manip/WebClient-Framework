@@ -132,3 +132,12 @@ text.nvd3.nv-noData {
 .tick text{
 	cursor: default!important;
 }
+
+#addfilteropen{
+	height: 33px;
+}
+
+#filterinputgroup .w2ui-field-helper.w2ui-list{
+	border-bottom-left-radius: 0px;
+	border-top-left-radius: 0px;
+}
