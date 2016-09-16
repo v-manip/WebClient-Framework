@@ -211,6 +211,9 @@ define(['backbone.marionette',
 
 						this.sp.loadData(args);
 					}
+				}else{
+					$('#scatterdiv').empty();
+					$('#parallelsdiv').empty();
 				}
 			},
 

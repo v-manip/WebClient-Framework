@@ -133,7 +133,7 @@
         }],
         "products": [{
             "name": "MAGA LR 1B",
-            "visible": true,
+            "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{

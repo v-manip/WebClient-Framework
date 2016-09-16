@@ -61,134 +61,176 @@
 
     			var that = this;
 
-    			if (this.$el.has( ".fa-sliders" ).length){
+    			if(this.model.get("containerproduct")){
+					/*this.$el.find( ".input-group-addon" ).eq(1).empty();
+					this.$el.find( ".input-group-addon" ).eq(1).append('<i class="fa fa-sliders" style="cursor:pointer;"></i>');
+					this.$el.find( ".input-group-addon" ).eq(1).append('<i class="fa fa-sliders" style="cursor:pointer;"></i>');
+					this.$el.find( ".input-group-addon" ).eq(1).append('<i class="fa fa-sliders" style="cursor:pointer;"></i>');*/
+					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
+					this.$el.find( ".fa-square" ).css("visibility", "hidden");
+    			}else{
+	    			if (this.$el.has( ".fa-sliders" ).length){
 
-    				if(this.model.get("satellite")==="Swarm"){
-    					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
-    				}
+	    				if(this.model.get("satellite")==="Swarm"){
+	    					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
+	    				}
 
-    				if(this.model.get("timeSliderProtocol")==="INDEX"){
-    					this.$el.find( ".fa-sliders" ).css("visibility", "hidden");
-    					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
-    				}else{
-		    			this.$el.find('.fa-sliders').click(function(){
-		    				
-		    				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-		    					App.layerSettings.setModel(that.model);
-								App.optionsBar.show(App.layerSettings);
-							} else {
-								if(App.layerSettings.sameModel(that.model)){
-									App.optionsBar.close();
-								}else{
-									App.layerSettings.setModel(that.model);
+	    				if(this.model.get("timeSliderProtocol")==="INDEX"){
+	    					this.$el.find( ".fa-sliders" ).css("visibility", "hidden");
+	    					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
+	    				}else{
+			    			this.$el.find('.fa-sliders').click(function(){
+			    				
+			    				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+			    					App.layerSettings.setModel(that.model);
 									App.optionsBar.show(App.layerSettings);
+								} else {
+									if(App.layerSettings.sameModel(that.model)){
+										App.optionsBar.close();
+									}else{
+										App.layerSettings.setModel(that.model);
+										App.optionsBar.show(App.layerSettings);
+									}
 								}
-							}
-		    			});
-	    			}
-	    		}
+			    			});
+		    			}
+		    		}
+    			}
 			},
 
 
 			onChange: function(evt){
 
-                var isBaseLayer = false;
-                if (this.model.get('view').isBaseLayer)
-                	isBaseLayer = true;
+				var visible = evt.target.checked;
 
-                var options = { name: this.model.get('name'), isBaseLayer: isBaseLayer, visible: evt.target.checked };
+                if(this.model.get("containerproduct")){
 
-                if( !isBaseLayer && evt.target.checked ){
 
-                	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
-                    if (layer != -1  && !(typeof layer === 'undefined')) {
+                	if(visible)
+                		this.model.set("visible", true);
+                	else
+                		this.model.set("visible", false);
 
-                    	if(options.visible)
-                    		this.model.set("visible", true);
-                    	else
-                    		this.model.set("visible", false);
+                	var products = [];
 
-                    	// TODO: Here we should go through all views, or maybe only url is necessary?
-                    	var url = layer.get('views')[0].urls[0]+"?";
-                    	
+                	if(visible){
 
-                    	if (url.indexOf('https') > -1){
+	                	if($('#alphacheck').is(':checked')){
+	                		if(this.model.get("id") == "MAG"){products.push("SW_OPER_MAGA_LR_1B");}
+	                	}
+	                	if ($('#betacheck').is(':checked')){
+	                		if(this.model.get("id") == "MAG"){products.push("SW_OPER_MAGB_LR_1B");}
 
-                    		var layer = layer.get('views')[0].id;
-							var req = "LAYERS=" + layer + "&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
-							req += "&BBOX=33.75,56.25,33.80,56.50&WIDTH=2&HEIGHT=2";
-							req = url + req;
+	                	}
+	                	if($('#charliecheck').is(':checked')){
+	                		if(this.model.get("id") == "MAG"){products.push("SW_OPER_MAGC_LR_1B");}
 
-	                    	$.ajax({
-							    url: req,
-							    type: "GET",
-							    suppressErrors: true,
-							    xhrFields: {
-							      withCredentials: true
-							   	},
-							    success: function(xml, textStatus, xhr) {
-							        Communicator.mediator.trigger('map:layer:change', options);
-							    },
-							    error: function(jqXHR, textStatus, errorThrown) {
-							    	if (jqXHR.status == 403){
-							    		$("#error-messages").append(
-					                              '<div class="alert alert-warning alert-danger">'+
-					                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-					                              '<strong>Warning!</strong> You are not authorized to access this product' +
-					                            '</div>'
-					                    );
-							    	}else{
-							    		this.authview = new av.AuthView({
-								    		model: new am.AuthModel({url:req}),
-								    		template: iFrameTmpl,
-								    		layerprop: options
-								    	});
-								    	Communicator.mediator.trigger("progress:change", false);
-								    	App.optionsBar.show(this.authview);
-							    	}
-							    }
-							});
-	                    }else if(this.model.get('views')[0].protocol == "WPS"){
-	                    	if(this.model.get('shc')){
-	                    		// If an shc file was loaded acticate layer as normal
-	                    		Communicator.mediator.trigger('map:layer:change', options);
-	                    	}else{
-	                    		// If an shc file is not loaded open settings and show message to select shc file
-	                    		if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-			    					App.layerSettings.setModel(this.model);
-									App.optionsBar.show(App.layerSettings);
-								} else {
-									if(App.layerSettings.sameModel(this.model)){
-										App.optionsBar.close();
-									}else{
-										App.layerSettings.setModel(this.model);
+	                	}
+                	}
+
+                	Communicator.mediator.trigger('map:multilayer:change', products);
+
+
+                }else{
+                	var isBaseLayer = false;
+	                if (this.model.get('view').isBaseLayer)
+	                	isBaseLayer = true;
+
+	                var options = { name: this.model.get('name'), isBaseLayer: isBaseLayer, visible: visible };
+
+
+	                if( !isBaseLayer && evt.target.checked ){
+
+	                	var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
+	                    if (layer != -1  && !(typeof layer === 'undefined')) {
+
+	                    	if(options.visible)
+	                    		this.model.set("visible", true);
+	                    	else
+	                    		this.model.set("visible", false);
+
+	                    	// TODO: Here we should go through all views, or maybe only url is necessary?
+	                    	var url = layer.get('views')[0].urls[0]+"?";
+	                    	
+
+	                    	if (url.indexOf('https') > -1){
+
+	                    		var layer = layer.get('views')[0].id;
+								var req = "LAYERS=" + layer + "&TRANSPARENT=true&FORMAT=image%2Fpng&SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&STYLES=&SRS=EPSG%3A4326";
+								req += "&BBOX=33.75,56.25,33.80,56.50&WIDTH=2&HEIGHT=2";
+								req = url + req;
+
+		                    	$.ajax({
+								    url: req,
+								    type: "GET",
+								    suppressErrors: true,
+								    xhrFields: {
+								      withCredentials: true
+								   	},
+								    success: function(xml, textStatus, xhr) {
+								        Communicator.mediator.trigger('map:layer:change', options);
+								    },
+								    error: function(jqXHR, textStatus, errorThrown) {
+								    	if (jqXHR.status == 403){
+								    		$("#error-messages").append(
+						                              '<div class="alert alert-warning alert-danger">'+
+						                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+						                              '<strong>Warning!</strong> You are not authorized to access this product' +
+						                            '</div>'
+						                    );
+								    	}else{
+								    		this.authview = new av.AuthView({
+									    		model: new am.AuthModel({url:req}),
+									    		template: iFrameTmpl,
+									    		layerprop: options
+									    	});
+									    	Communicator.mediator.trigger("progress:change", false);
+									    	App.optionsBar.show(this.authview);
+								    	}
+								    }
+								});
+		                    }else if(this.model.get('views')[0].protocol == "WPS"){
+		                    	if(this.model.get('shc')){
+		                    		// If an shc file was loaded acticate layer as normal
+		                    		Communicator.mediator.trigger('map:layer:change', options);
+		                    	}else{
+		                    		// If an shc file is not loaded open settings and show message to select shc file
+		                    		if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+				    					App.layerSettings.setModel(this.model);
 										App.optionsBar.show(App.layerSettings);
+									} else {
+										if(App.layerSettings.sameModel(this.model)){
+											App.optionsBar.close();
+										}else{
+											App.layerSettings.setModel(this.model);
+											App.optionsBar.show(App.layerSettings);
+										}
 									}
-								}
-								$("#error-messages").append(
-			                              '<div class="alert alert-info">'+
-			                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-			                              'Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer' +
-			                            '</div>'
-			                    );
+									$("#error-messages").append(
+				                              '<div class="alert alert-info">'+
+				                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+				                              'Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer' +
+				                            '</div>'
+				                    );
 
-			                    var checkbox = $( "input[type$='checkbox']", this.$el);
-		    					//checkbox.attr('checked', false);
-		    					checkbox.prop( "checked", false );
-		    					//checkbox.disableSelection();
-	                    	}
+				                    var checkbox = $( "input[type$='checkbox']", this.$el);
+			    					//checkbox.attr('checked', false);
+			    					checkbox.prop( "checked", false );
+			    					//checkbox.disableSelection();
+		                    	}
 
-	                    }else{
-	                    	Communicator.mediator.trigger('map:layer:change', options);
-	                    }
-                    }else if (typeof layer === 'undefined'){
+		                    }else{
+		                    	Communicator.mediator.trigger('map:layer:change', options);
+		                    }
+	                    }else if (typeof layer === 'undefined'){
+		                	Communicator.mediator.trigger('map:layer:change', options);
+		                }
+	                } else if (!evt.target.checked){
+	                	Communicator.mediator.trigger('map:layer:change', options);
+
+	                } else if (isBaseLayer && evt.target.checked){
 	                	Communicator.mediator.trigger('map:layer:change', options);
 	                }
-                } else if (!evt.target.checked){
-                	Communicator.mediator.trigger('map:layer:change', options);
-
-                } else if (isBaseLayer && evt.target.checked){
-                	Communicator.mediator.trigger('map:layer:change', options);
                 }
             },
 

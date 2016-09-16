@@ -914,7 +914,7 @@ define(['backbone.marionette',
             	var cur_product = null;
 
             	globals.products.each(function(product) {
-            		if(product.get('visible')){
+            		//if(product.get('visible')){
             			cur_product = product;
             			var params = product.get('parameters')
             			for (k in params){
@@ -926,12 +926,12 @@ define(['backbone.marionette',
             					settings[product.get('views')[0].id]['outline_color'] = product.get('color');
             				}
             			}
-            		}
+            		//}
             	});
 
             	
 
-            	if (cur_product){
+            	//if (cur_product){
 
             		var that = this;
 
@@ -1057,7 +1057,7 @@ define(['backbone.marionette',
 					for (var i = 0; i < this.activeCollections.length; i++) {
 						this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
 					}
-				}
+				//}
 			},
 
             onLayerOutlinesChanged: function(collection){

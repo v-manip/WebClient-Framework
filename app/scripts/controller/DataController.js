@@ -24,6 +24,7 @@
         this.selected_time = null;
 
         this.listenTo(Communicator.mediator, "map:layer:change",this.changeLayer);
+        this.listenTo(Communicator.mediator, "map:multilayer:change",this.multiChangeLayer);
         this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChanged);
         this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
 
@@ -149,6 +150,23 @@
           this.checkSelections();
         }
 
+        this.checkModelValidity();
+      },
+      
+
+      multiChangeLayer: function(layers) {
+        this.activeWPSproducts = [];
+        for (var i = layers.length - 1; i >= 0; i--) {
+          var product = globals.products.find(function(model) { return model.get('download').id == layers[i]; });
+          if (product){
+              if (product.get("processes")){
+                _.each(product.get("processes"), function(process){
+                  this.activeWPSproducts.push(process.layer_id);
+                },this);
+              } 
+          }
+        }
+        this.checkSelections();
         this.checkModelValidity();
       },
 

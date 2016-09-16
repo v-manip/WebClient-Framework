@@ -289,8 +289,35 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
                 	})
                 });
 
+                // We want to have the full list of products as the underlying
+				// system works in this manner but in order to accomodate the 
+				// concept of one product with three satellites we remove here 
+				// Each three products and combine them to one, the logic for
+				// "separating" them is then done when activating one of this
+				// "special products"
+
+                var filtered = globals.products.filter(function (m) {
+					if (m && m.get("download").id && 
+						 (
+						 	m.get("download").id.indexOf("SW_OPER_MAG") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_EFI") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_IBI") != -1
+						 )
+					){
+						return false;
+					}else{
+						return true;
+					}
+		        });
+
+		        globals.swarm["satellites"] = {
+		        	"Alpha": true,
+		        	"Bravo": false,
+		        	"Charlie": false
+		        };
+
                 this.productsView = new v.LayerSelectionView({
-                	collection:globals.products,
+                	collection:new Backbone.Collection(filtered),
                 	itemView: v.LayerItemView.extend({
                 		template: {
                 			type:'handlebars',
