@@ -20,33 +20,6 @@
 				// Initially tell the models in the collection, which layer ordinal they have:
 				var idx = 0;
 
-
-				// Add generic product (which is container for A,B and C sats)
-				this.collection.add({
-					name: "Bubble Index data (IBI)",
-					visible: false,
-					color: "red",
-					protocol: null,
-					containerproduct: true,
-					id: "IBI"
-				}, {at: 0});
-				this.collection.add({
-					name: "Plasma data (EFI PL)",
-					visible: false,
-					color: "red",
-					protocol: null,
-					containerproduct: true,
-					id: "EFI"
-				}, {at: 0});
-				this.collection.add({
-					name: "Magnetic data (MAG LR)",
-					visible: false,
-					color: "red",
-					protocol: null,
-					containerproduct: true,
-					id: "MAG"
-				}, {at: 0});
-
 				this.collection.forEach(function(model) {
 					model.set('ordinal', idx++);
 					// console.log('[LayerSeleectionView::initialize] layer: ' + model.get('view').id + ' / ordinal: ' + model.get('ordinal'));
@@ -99,20 +72,59 @@
 						if(p.get("visible")){
 	                		
 		                	if($('#alphacheck').is(':checked')){
-		                		if(p.get("id") == "MAG"){products.push("SW_OPER_MAGA_LR_1B");}
+		                		products.push(globals.swarm.products[p.get("id")]['Alpha'])
 		                	}
 		                	if ($('#betacheck').is(':checked')){
-		                		if(p.get("id") == "MAG"){products.push("SW_OPER_MAGB_LR_1B");}
+		                		products.push(globals.swarm.products[p.get("id")]['Bravo'])
 		                	}
 		                	if($('#charliecheck').is(':checked')){
-		                		if(p.get("id") == "MAG"){products.push("SW_OPER_MAGC_LR_1B");}
-
+		                		products.push(globals.swarm.products[p.get("id")]['Charlie'])
 		                	}
 	                	}
 	                }
 				});
 
 				Communicator.mediator.trigger('map:multilayer:change', products);
+
+        		for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
+
+        			var indexofproduct = products.indexOf(globals.swarm.activeProducts[i]);
+        			// If previously active product no longer active need to deactivate it
+        			if(indexofproduct == -1){
+
+        				globals.products.forEach(function(p){
+                			if(p.get("download").id == globals.swarm.activeProducts[i]){
+                				p.set("visible", false);
+                				Communicator.mediator.trigger('map:layer:change', {
+                					name: p.get("name"),
+                					isBaseLayer: false,
+                					visible: false
+                				});
+                				globals.swarm.activeProducts.splice(i, 1);
+                			}
+                		});
+        			}else{
+        				// If it is already in the list it does not need to be activated again
+        				products.splice(indexofproduct, 1);
+        			}
+        		}
+
+        		// Activate all other layers
+            	for (var i = products.length - 1; i >= 0; i--) {
+
+            		globals.products.forEach(function(p){
+
+            			if(p.get("download").id == products[i]){
+            				p.set("visible", true);
+            				Communicator.mediator.trigger('map:layer:change', {
+            					name: p.get("name"),
+            					isBaseLayer: false,
+            					visible: true
+            				});
+            				globals.swarm.activeProducts.push(products[i]);
+            			}
+            		});
+            	}
 			},
 
 			updateSort: function(options) {         

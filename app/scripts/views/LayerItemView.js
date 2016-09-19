@@ -31,6 +31,7 @@
 			    });
 			    this.$slider.width(100);
 			    this.authview = null;
+			    this.activeDatasets = [];
 			},
 			onShow: function(view){
 
@@ -39,7 +40,7 @@
 				$( ".sortable" ).sortable({
 					revert: true,
 					delay: 90,
-					containment: ".layercontrol .panel-body",
+					containment: "#products",
 					axis: "y",
 					forceHelperSize: true,
 					forcePlaceHolderSize: true,
@@ -62,12 +63,23 @@
     			var that = this;
 
     			if(this.model.get("containerproduct")){
-					/*this.$el.find( ".input-group-addon" ).eq(1).empty();
-					this.$el.find( ".input-group-addon" ).eq(1).append('<i class="fa fa-sliders" style="cursor:pointer;"></i>');
-					this.$el.find( ".input-group-addon" ).eq(1).append('<i class="fa fa-sliders" style="cursor:pointer;"></i>');
-					this.$el.find( ".input-group-addon" ).eq(1).append('<i class="fa fa-sliders" style="cursor:pointer;"></i>');*/
 					this.$el.find( ".fa-sort" ).css("visibility", "hidden");
-					this.$el.find( ".fa-square" ).css("visibility", "hidden");
+					this.$el.appendTo("#containerproductslist");
+					this.$el.find('.fa-sliders').click(function(){
+			    				
+	    			if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+	    					App.layerSettings.setModel(that.model);
+							App.optionsBar.show(App.layerSettings);
+						} else {
+							if(App.layerSettings.sameModel(that.model)){
+								App.optionsBar.close();
+							}else{
+								App.layerSettings.setModel(that.model);
+								App.optionsBar.show(App.layerSettings);
+							}
+						}
+	    			});
+
     			}else{
 	    			if (this.$el.has( ".fa-sliders" ).length){
 
@@ -116,20 +128,58 @@
                 	if(visible){
 
 	                	if($('#alphacheck').is(':checked')){
-	                		if(this.model.get("id") == "MAG"){products.push("SW_OPER_MAGA_LR_1B");}
+	                		products.push(globals.swarm.products[this.model.get("id")]['Alpha'])
 	                	}
 	                	if ($('#betacheck').is(':checked')){
-	                		if(this.model.get("id") == "MAG"){products.push("SW_OPER_MAGB_LR_1B");}
-
+	                		products.push(globals.swarm.products[this.model.get("id")]['Bravo'])
 	                	}
 	                	if($('#charliecheck').is(':checked')){
-	                		if(this.model.get("id") == "MAG"){products.push("SW_OPER_MAGC_LR_1B");}
-
+	                		products.push(globals.swarm.products[this.model.get("id")]['Charlie'])
 	                	}
                 	}
 
                 	Communicator.mediator.trigger('map:multilayer:change', products);
 
+
+            		for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
+
+            			var indexofproduct = products.indexOf(globals.swarm.activeProducts[i]);
+            			// If previously active product no longer active need to deactivate it
+            			if(indexofproduct == -1){
+
+            				globals.products.forEach(function(p){
+	                			if(p.get("download").id == globals.swarm.activeProducts[i]){
+	                				p.set("visible", false);
+	                				Communicator.mediator.trigger('map:layer:change', {
+	                					name: p.get("name"),
+	                					isBaseLayer: false,
+	                					visible: false
+	                				});
+	                				globals.swarm.activeProducts.splice(i, 1);
+	                			}
+	                		});
+            			}else{
+            				// If it is already in the list it does not need to be activated again
+            				products.splice(indexofproduct, 1);
+            			}
+            		}
+
+            		// Activate all other layers
+                	for (var i = products.length - 1; i >= 0; i--) {
+
+                		globals.products.forEach(function(p){
+
+                			if(p.get("download").id == products[i]){
+                				p.set("visible", true);
+                				Communicator.mediator.trigger('map:layer:change', {
+                					name: p.get("name"),
+                					isBaseLayer: false,
+                					visible: true
+                				});
+                				globals.swarm.activeProducts.push(products[i]);
+                			}
+                		});
+                	}
 
                 }else{
                 	var isBaseLayer = false;

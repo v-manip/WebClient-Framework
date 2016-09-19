@@ -6,6 +6,7 @@
 	root.define([
 		'backbone',
 		'communicator',
+		'globals',
 		'hbs!tmpl/LayerSettings',
 		'hbs!tmpl/wps_eval_model_GET',
 		'hbs!tmpl/wps_eval_model',
@@ -13,7 +14,7 @@
 		'plotty'
 	],
 
-	function( Backbone, Communicator, LayerSettingsTmpl, evalModelTmpl, evalModelTmpl_POST ) {
+	function( Backbone, Communicator, globals, LayerSettingsTmpl, evalModelTmpl, evalModelTmpl_POST ) {
 
 		var LayerSettings = Backbone.Marionette.Layout.extend({
 
@@ -27,18 +28,18 @@
 					colorScale: 'jet',
 					domain: [0,1]
 				});
+				this.selected_satellite = "Alpha";
 			},
 
-			onShow: function(view){
-
-				// Unbind first to make sure we are not binding to many times
+			renderView: function(){
+								// Unbind first to make sure we are not binding to many times
 				this.stopListening(Communicator.mediator, "layer:settings:changed", this.onParameterChange);
 
 				// Event handler to check if tutorial banner made changes to a model in order to redraw settings
 				// If settings open rerender view to update changes
 				this.listenTo(Communicator.mediator, "layer:settings:changed", this.onParameterChange);
 
-				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-sliders"></i> ' + this.model.get("name") + ' Settings</h3>');
+				this.$(".panel-title").html('<h3 class="panel-title"><i class="fa fa-fw fa-sliders"></i> ' + this.current_model.get("name") + ' Settings</h3>');
 
 		    	this.$('.close').on("click", _.bind(this.onClose, this));
 		    	this.$el.draggable({ 
@@ -46,11 +47,11 @@
 		    		scroll: false,
 		    		handle: '.panel-heading'
 	    		});
-		    	var options = this.model.get("parameters");
-		    	var height = this.model.get("height");
-		    	var outlines = this.model.get("outlines");
-		    	var showColorscale = this.model.get("showColorscale");
-		    	var protocol = this.model.get("views")[0].protocol;
+		    	var options = this.current_model.get("parameters");
+		    	var height = this.current_model.get("height");
+		    	var outlines = this.current_model.get("outlines");
+		    	var showColorscale = this.current_model.get("showColorscale");
+		    	var protocol = this.current_model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
 				//var 
@@ -120,22 +121,22 @@
 						var selected = $(evt.target).find("option:selected").text();
 						selected_colorscale = selected;
 						options[that.selected].colorscale = selected;
-						that.model.set("parameters", options);
+						that.current_model.set("parameters", options);
 
 						if(options[that.selected].hasOwnProperty("logarithmic"))
 							that.createScale(options[that.selected].logarithmic);
 						else
 							that.createScale();
 
-						Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
+						Communicator.mediator.trigger("layer:parameters:changed", that.current_model.get("name"));
 					});
 
 					this.$("#opacitysilder").unbind();
-					this.$("#opacitysilder").val(this.model.attributes.opacity*100);
+					this.$("#opacitysilder").val(this.current_model.attributes.opacity*100);
 					this.$("#opacitysilder").on("input change", function(){
 						var opacity = Number(this.value)/100;
-						that.model.set("opacity", opacity);
-						Communicator.mediator.trigger('productCollection:updateOpacity', {model:that.model, value:opacity});
+						that.current_model.set("opacity", opacity);
+						Communicator.mediator.trigger('productCollection:updateOpacity', {model:that.current_model, value:opacity});
 					});
 
 					
@@ -155,9 +156,9 @@
 						);
 
 						this.$("#outlines input").change(function(evt){
-							var outlines = !that.model.get("outlines");
-							that.model.set("outlines", outlines);
-							Communicator.mediator.trigger("layer:outlines:changed", that.model.get("views")[0].id, outlines);
+							var outlines = !that.current_model.get("outlines");
+							that.current_model.set("outlines", outlines);
+							Communicator.mediator.trigger("layer:outlines:changed", that.current_model.get("views")[0].id, outlines);
 						});
 					}
 
@@ -176,14 +177,14 @@
 						);
 
 						this.$("#showColorscale input").change(function(evt){
-							var showColorscale = !that.model.get("showColorscale");
-							that.model.set("showColorscale", showColorscale);
-							Communicator.mediator.trigger("layer:colorscale:show", that.model.get("download").id);
+							var showColorscale = !that.current_model.get("showColorscale");
+							that.current_model.set("showColorscale", showColorscale);
+							Communicator.mediator.trigger("layer:colorscale:show", that.current_model.get("download").id);
 						});
 					}
 
 
-					if(!(typeof this.model.get("coefficients_range") === 'undefined')){
+					if(!(typeof this.current_model.get("coefficients_range") === 'undefined')){
 
 						this.$("#coefficients_range").empty();
 
@@ -196,8 +197,8 @@
 						'<p style="font-size:0.85em; margin-left:130px;"> [-1,-1]: No range limitation</p>'
 						);
 
-						this.$("#coefficients_range_min").val(this.model.get("coefficients_range") [0]);
-						this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
+						this.$("#coefficients_range_min").val(this.current_model.get("coefficients_range") [0]);
+						this.$("#coefficients_range_max").val(this.current_model.get("coefficients_range") [1]);
 
 						// Register necessary key events
 						this.registerKeyEvents(this.$("#coefficients_range_min"));
@@ -220,8 +221,8 @@
 						this.$("#upload-selection").unbind();
 						this.$("#upload-selection").change(this.onUploadSelectionChanged.bind(this));
 
-						if(this.model.get('shc_name')){
-							that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+this.model.get('shc_name')+'</p>');
+						if(this.current_model.get('shc_name')){
+							that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+this.current_model.get('shc_name')+'</p>');
 						}
 						
 					}
@@ -231,9 +232,52 @@
 					else
 						this.createScale();
 
-					this.createHeightTextbox(this.model.get("height"));
+					this.createHeightTextbox(this.current_model.get("height"));
 				}
 
+			},
+
+			onShow: function(view){
+
+				if(this.model.get("containerproduct")){
+					// Add options for three satellites
+					$("#satellite_selection").off();
+					$("#satellite_selection").empty();
+					$("#satellite_selection").append('<label for="satellite_selec" style="width:70px;">Satellite </label>');
+					$("#satellite_selection").append('<select style="margin-left:4px;" name="satellite_selec" id="satellite_selec"></select>');
+
+
+					$('#satellite_selec').append('<option value="Alpha" selected>Alpha</option>');
+					$('#satellite_selec').append('<option value="Bravo">Bravo</option>');
+					$('#satellite_selec').append('<option value="Charlie">Charlie</option>');
+
+					$("#satellite_selec option[value="+this.selected_satellite+"]").prop("selected", "selected");
+
+					var model = null;
+					var that = this;
+					globals.products.forEach(function(p){
+						if(p.get("download").id == globals.swarm.products[that.model.get("id")][that.selected_satellite]){
+							model = p;
+						}
+					});
+					this.current_model = model;
+
+					$("#satellite_selection").on('change', function(){
+						that.selected_satellite = $("#satellite_selection").find("option:selected").val();
+						var model = null;
+						globals.products.forEach(function(p){
+							if(p.get("download").id == globals.swarm.products[that.model.get("id")][that.selected_satellite]){
+								model = p;
+							}
+						});
+						that.current_model = model;
+						that.renderView();
+					});
+
+				}else{
+					this.current_model = this.model;
+				}
+				this.renderView();
 		    },
 
 			onClose: function() {
@@ -246,7 +290,7 @@
 
 			onOptionsChanged: function(){
 
-				var options = this.model.get("parameters");
+				var options = this.current_model.get("parameters");
 
 				if(options.hasOwnProperty(this.selected)){
 					delete options[this.selected].selected;
@@ -282,64 +326,69 @@
 					this.$("#description").text(options[this.selected].description);
 				}
 
-				this.createHeightTextbox(this.model.get("height"));
+				this.createHeightTextbox(this.current_model.get("height"));
 
-				// request range for selected parameter
-				var that = this;
+				// request range for selected parameter if layer is of type model
+				if(this.current_model.get("model")){
 
-				var sel_time = Communicator.reqres.request('get:time');
-				var req = evalModelTmpl({
-					url: this.model.get("download").url,
-					model: this.model.get("download").id,
-					variable: this.selected,
-					begin_time: getISODateTimeString(sel_time.start),
-					end_time: getISODateTimeString(sel_time.end),
-					coeff_min: this.model.get("coefficients_range")[0],
-					coeff_max: this.model.get("coefficients_range")[1],
-					elevation: this.model.get("height")
-				});
+					var that = this;
 
-				if(this.model.get("views")[0].id == "shc"){
+					var sel_time = Communicator.reqres.request('get:time');
+					var req = evalModelTmpl({
+						url: this.current_model.get("download").url,
+						model: this.current_model.get("download").id,
+						variable: this.selected,
+						begin_time: getISODateTimeString(sel_time.start),
+						end_time: getISODateTimeString(sel_time.end),
+						coeff_min: this.current_model.get("coefficients_range")[0],
+						coeff_max: this.current_model.get("coefficients_range")[1],
+						elevation: this.current_model.get("height")
+					});
 
-					if(this.model.attributes.hasOwnProperty("shc")){
+					if(this.current_model.get("views")[0].id == "shc"){
 
-						var payload = evalModelTmpl_POST({
-							"model": "Custom_Model",
-							"variable": this.selected,
-							"begin_time": getISODateTimeString(sel_time.start),
-							"end_time": getISODateTimeString(sel_time.end),
-							"elevation": this.model.get("height"),
-							"coeff_min": this.model.get("coefficients_range")[0],
-							"coeff_max": this.model.get("coefficients_range")[1],
-							"shc": this.model.get('shc'),
-							"height": 24,
-							"width": 24,
-							"getonlyrange": true
+						if(this.current_model.attributes.hasOwnProperty("shc")){
+
+							var payload = evalModelTmpl_POST({
+								"model": "Custom_Model",
+								"variable": this.selected,
+								"begin_time": getISODateTimeString(sel_time.start),
+								"end_time": getISODateTimeString(sel_time.end),
+								"elevation": this.current_model.get("height"),
+								"coeff_min": this.current_model.get("coefficients_range")[0],
+								"coeff_max": this.current_model.get("coefficients_range")[1],
+								"shc": this.current_model.get('shc'),
+								"height": 24,
+								"width": 24,
+								"getonlyrange": true
+							});
+
+							$.post(this.current_model.get("download").url, payload)
+								.success(this.handleRangeRespone.bind(this))
+								.fail(this.handleRangeResponseError)
+								.always(this.handleRangeChange.bind(this));
+						}
+
+					}else {
+
+						var req = evalModelTmpl({
+							url: this.current_model.get("download").url,
+							model: this.current_model.get("download").id,
+							variable: this.selected,
+							begin_time: getISODateTimeString(sel_time.start),
+							end_time: getISODateTimeString(sel_time.end),
+							coeff_min: this.current_model.get("coefficients_range")[0],
+							coeff_max: this.current_model.get("coefficients_range")[1],
+							elevation: this.current_model.get("height")
 						});
 
-						$.post(this.model.get("download").url, payload)
+						$.get(req)
 							.success(this.handleRangeRespone.bind(this))
 							.fail(this.handleRangeResponseError)
 							.always(this.handleRangeChange.bind(this));
 					}
-
-				}else {
-
-					var req = evalModelTmpl({
-						url: this.model.get("download").url,
-						model: this.model.get("download").id,
-						variable: this.selected,
-						begin_time: getISODateTimeString(sel_time.start),
-						end_time: getISODateTimeString(sel_time.end),
-						coeff_min: this.model.get("coefficients_range")[0],
-						coeff_max: this.model.get("coefficients_range")[1],
-						elevation: this.model.get("height")
-					});
-
-					$.get(req)
-						.success(this.handleRangeRespone.bind(this))
-						.fail(this.handleRangeResponseError)
-						.always(this.handleRangeChange.bind(this));
+				}else{
+					Communicator.mediator.trigger("layer:parameters:changed", this.current_model.get("name"));
 				}
 
 			},
@@ -376,7 +425,7 @@
 			},
 
 			handleRangeRespone: function(response){
-				var options = this.model.get("parameters");
+				var options = this.current_model.get("parameters");
 				var resp = response.split(',');
 				var range = [Number(resp[1]), Number(resp[2])];
 				// Make range "nicer", rounding depending on extent
@@ -384,9 +433,9 @@
 				$("#range_min").val(range[0]);
 				$("#range_max").val(range[1]);
 				options[this.selected].range = range;
-				this.model.set("parameters", options);
+				this.current_model.set("parameters", options);
 				this.createScale();
-				Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+				Communicator.mediator.trigger("layer:parameters:changed", this.current_model.get("name"));
 			},
 
 			handleRangeResponseError: function(response){
@@ -399,24 +448,24 @@
 			},
 
 			handleRangeChange: function(){
-				var options = this.model.get("parameters");
+				var options = this.current_model.get("parameters");
 				$("#range_min").val(options[this.selected].range[0]);
 				$("#range_max").val(options[this.selected].range[1]);
 
-				this.model.set("parameters", options);
+				this.current_model.set("parameters", options);
 				if(options[this.selected].hasOwnProperty("logarithmic"))
 					this.createScale(options[this.selected].logarithmic);
 				else
 					this.createScale();
 
-				Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+				Communicator.mediator.trigger("layer:parameters:changed", this.current_model.get("name"));
 			},
 
 			applyChanges: function(){
 
-				var options = this.model.get("parameters");
+				var options = this.current_model.get("parameters");
 
-					//this.$("#coefficients_range_max").val(this.model.get("coefficients_range") [1]);
+					//this.$("#coefficients_range_max").val(this.current_model.get("coefficients_range") [1]);
 
 				var error = false;
 				var model_change = false;
@@ -449,11 +498,11 @@
 					error = error || this.checkValue(coef_range_max,$("#coefficients_range_max"));
 
 					if(!error){
-						if(this.model.get("coefficients_range")[0]!=coef_range_min || 
-						   this.model.get("coefficients_range")[1]!=coef_range_max){
+						if(this.current_model.get("coefficients_range")[0]!=coef_range_min || 
+						   this.current_model.get("coefficients_range")[1]!=coef_range_max){
 							model_change = true;
 						}
-						this.model.set("coefficients_range", [coef_range_min, coef_range_max]);
+						this.current_model.set("coefficients_range", [coef_range_min, coef_range_max]);
 					}
 				}
 
@@ -463,10 +512,10 @@
 					error = error || this.checkValue(height,$("#heightvalue"));
 
 					if (!error){
-						if(this.model.get("height")!=height){
+						if(this.current_model.get("height")!=height){
 							model_change = true;
 						}
-						this.model.set("height", height);
+						this.current_model.set("height", height);
 					}
 				}
 
@@ -480,25 +529,25 @@
 
 						var sel_time = Communicator.reqres.request('get:time');
 
-						if(this.model.get("views")[0].id == "shc"){
+						if(this.current_model.get("views")[0].id == "shc"){
 
-							if(this.model.attributes.hasOwnProperty("shc")){
+							if(this.current_model.attributes.hasOwnProperty("shc")){
 
 								var payload = evalModelTmpl_POST({
 									"model": "Custom_Model",
 									"variable": this.selected,
 									"begin_time": getISODateTimeString(sel_time.start),
 									"end_time": getISODateTimeString(sel_time.end),
-									"elevation": this.model.get("height"),
-									"coeff_min": this.model.get("coefficients_range")[0],
-									"coeff_max": this.model.get("coefficients_range")[1],
-									"shc": this.model.get('shc'),
+									"elevation": this.current_model.get("height"),
+									"coeff_min": this.current_model.get("coefficients_range")[0],
+									"coeff_max": this.current_model.get("coefficients_range")[1],
+									"shc": this.current_model.get('shc'),
 									"height": 24,
 									"width": 24,
 									"getonlyrange": true
 								});
 
-								$.post(this.model.get("download").url, payload)
+								$.post(this.current_model.get("download").url, payload)
 									.success(this.handleRangeRespone.bind(this))
 									.fail(this.handleRangeResponseError);
 							}
@@ -506,14 +555,14 @@
 						}else {
 
 							var req = evalModelTmpl({
-								url: this.model.get("download").url,
-								model: this.model.get("download").id,
+								url: this.current_model.get("download").url,
+								model: this.current_model.get("download").id,
 								variable: this.selected,
 								begin_time: getISODateTimeString(sel_time.start),
 								end_time: getISODateTimeString(sel_time.end),
-								coeff_min: this.model.get("coefficients_range")[0],
-								coeff_max: this.model.get("coefficients_range")[1],
-								elevation: this.model.get("height")
+								coeff_min: this.current_model.get("coefficients_range")[0],
+								coeff_max: this.current_model.get("coefficients_range")[1],
+								elevation: this.current_model.get("height")
 							});
 
 							$.get(req)
@@ -524,8 +573,8 @@
 
 					}else{
 						//Apply changes
-						this.model.set("parameters", options);
-						Communicator.mediator.trigger("layer:parameters:changed", this.model.get("name"));
+						this.current_model.set("parameters", options);
+						Communicator.mediator.trigger("layer:parameters:changed", this.current_model.get("name"));
 					}
 				}
 			},
@@ -542,9 +591,9 @@
 
 			setModel: function(model){
 				this.model = model;
-				this.model.on('change:parameters', function(model, data) {
-					console.log("CHANGE ATTRIBUTES!!!")
-				}, this);
+				/*this.model.on('change:parameters', function(model, data) {
+					
+				}, this);*/
 			},
 
 			sameModel: function(model){
@@ -557,15 +606,15 @@
 	      		var filename = evt.target.files[0].name;
 				reader.onloadend = function(evt) {
 					//console.log(evt.target.result);
-					that.model.set('shc', evt.target.result);
-					that.model.set('shc_name', filename);
+					that.current_model.set('shc', evt.target.result);
+					that.current_model.set('shc_name', filename);
 					that.$("#shc").find("#filename").remove();
 					that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+filename+'</p>');
 					Communicator.mediator.trigger("file:shc:loaded", evt.target.result);
 
-					var params = { name: that.model.get("name"), isBaseLayer: false, visible: false };
+					var params = { name: that.current_model.get("name"), isBaseLayer: false, visible: false };
 					Communicator.mediator.trigger('map:layer:change', params);
-					Communicator.mediator.trigger("layer:activate", that.model.get("views")[0].id);
+					Communicator.mediator.trigger("layer:activate", that.current_model.get("views")[0].id);
 
 
 				}
@@ -590,11 +639,11 @@
 					);
 
 					this.$("#logarithmic input").change(function(evt){
-						var options = that.model.get("parameters");
+						var options = that.current_model.get("parameters");
 						options[that.selected].logarithmic = !options[that.selected].logarithmic;
 						
-						that.model.set("parameters", options);
-						Communicator.mediator.trigger("layer:parameters:changed", that.model.get("name"));
+						that.current_model.set("parameters", options);
+						Communicator.mediator.trigger("layer:parameters:changed", that.current_model.get("name"));
 
 						if(options[that.selected].hasOwnProperty("logarithmic"))
 							that.createScale(options[that.selected].logarithmic);
@@ -619,10 +668,10 @@
 				var width = $("#setting_colorscale").width();
 				var scalewidth =  width - margin *2;
 
-				var range_min = this.model.get("parameters")[this.selected].range[0];
-				var range_max = this.model.get("parameters")[this.selected].range[1];
-				var uom = this.model.get("parameters")[this.selected].uom;
-				var style = this.model.get("parameters")[this.selected].colorscale;
+				var range_min = this.current_model.get("parameters")[this.selected].range[0];
+				var range_max = this.current_model.get("parameters")[this.selected].range[1];
+				var uom = this.current_model.get("parameters")[this.selected].uom;
+				var style = this.current_model.get("parameters")[this.selected].colorscale;
 
 				$("#setting_colorscale").append(
 					'<div id="gradient" style="width:'+scalewidth+'px;margin-left:'+margin+'px"></div>'

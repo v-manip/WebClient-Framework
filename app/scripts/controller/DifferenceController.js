@@ -43,7 +43,7 @@
 		            	_.each(product.get("processes"), function(process){
 	            			if (this.activeWPSproducts.indexOf(process.layer_id)!=-1)
 			                	this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
-			              	console.log(this.activeWPSproducts);
+			              	//console.log(this.activeWPSproducts);
 	            		},this);
 		            }
 		            this.checkSelections();

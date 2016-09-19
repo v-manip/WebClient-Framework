@@ -316,8 +316,57 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 		        	"Charlie": false
 		        };
 
+		        globals.swarm["products"] = {
+		        	"MAG": {
+		        		"Alpha": "SW_OPER_MAGA_LR_1B",
+		        		"Bravo": "SW_OPER_MAGB_LR_1B",
+		        		"Charlie": "SW_OPER_MAGC_LR_1B"
+		        	},
+		        	"EFI":  {
+		        		"Alpha": "SW_OPER_EFIA_PL_1B",
+		        		"Bravo": "SW_OPER_EFIB_PL_1B",
+		        		"Charlie": "SW_OPER_EFIC_PL_1B"
+		        	},
+		        	"IBI":  {
+		        		"Alpha": "SW_OPER_IBIATMS_2F",
+		        		"Bravo": "SW_OPER_IBIBTMS_2F",
+		        		"Charlie": "SW_OPER_IBICTMS_2F"
+		        	}
+		        };
+
+		        globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
+		        
+		        var filtered_collection = new Backbone.Collection(filtered);
+
+		        // Add generic product (which is container for A,B and C sats)
+				filtered_collection.add({
+					name: "Bubble Index data (IBI)",
+					visible: false,
+					color: "#2ca02c",
+					protocol: null,
+					containerproduct: true,
+					id: "IBI"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Plasma data (EFI PL)",
+					visible: false,
+					color: "#ff7f0e",
+					protocol: null,
+					containerproduct: true,
+					id: "EFI"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Magnetic data (MAG LR)",
+					visible: true,
+					color: "#1f77b4",
+					protocol: null,
+					containerproduct: true,
+					id: "MAG"
+				}, {at: 0});
+
+
                 this.productsView = new v.LayerSelectionView({
-                	collection:new Backbone.Collection(filtered),
+                	collection: filtered_collection,
                 	itemView: v.LayerItemView.extend({
                 		template: {
                 			type:'handlebars',
