@@ -334,7 +334,8 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 		        	}
 		        };
 
-		        globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
+		        //globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
+		        globals.swarm["activeProducts"] = [];
 		        
 		        var filtered_collection = new Backbone.Collection(filtered);
 
@@ -357,7 +358,7 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 				}, {at: 0});
 				filtered_collection.add({
 					name: "Magnetic data (MAG LR)",
-					visible: true,
+					visible: false,
 					color: "#1f77b4",
 					protocol: null,
 					containerproduct: true,

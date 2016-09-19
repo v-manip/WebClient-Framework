@@ -317,7 +317,7 @@ define(['backbone.marionette',
 
 			connectDataEvents: function(){
 				//globals.swarm.off('change:data');
-				globals.swarm.on('change:data', function(model, data) {
+				/*globals.swarm.on('change:data', function(model, data) {
 					var that = this;
 					if (data.length && data.length>0){
 						that.createDataFeatures(data, 'pointcollection', 'band');
@@ -330,12 +330,12 @@ define(['backbone.marionette',
 		            	}
 		            	this.activeCollections = [];
 					}
-				}, this);
+				}, this);*/
 
 				//globals.swarm.off('change:filters');
-				globals.swarm.on('change:filters', function(model, filters) {
+				/*globals.swarm.on('change:filters', function(model, filters) {
 					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
-				}, this);
+				}, this);*/
 			},
 
 			onResize: function() {

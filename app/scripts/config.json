@@ -133,7 +133,7 @@
         }],
         "products": [{
             "name": "MAGA LR 1B",
-            "visible": true,
+            "visible": false,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -559,6 +559,7 @@
             "name": "EFIA PL 1B",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
             "views": [{
                 "id": "SW_OPER_EFIA_PL_1B",
                 "protocol": "CZML",
@@ -763,7 +764,12 @@
                     "uom": null,
                     "name": "Current maneuver identification code"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIA_PL_1B"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
 
@@ -771,6 +777,7 @@
             "name": "EFIB PL 1B",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
             "views": [{
                 "id": "SW_OPER_EFIB_PL_1B",
                 "protocol": "CZML",
@@ -975,7 +982,12 @@
                     "uom": null,
                     "name": "Current maneuver identification code"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIB_PL_1B"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
 
@@ -983,6 +995,7 @@
             "name": "EFIC PL 1B",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
             "views": [{
                 "id": "SW_OPER_EFIC_PL_1B",
                 "protocol": "CZML",
@@ -1187,7 +1200,12 @@
                     "uom": null,
                     "name": "Current maneuver identification code"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIC_PL_1B"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
 
@@ -1196,6 +1214,7 @@
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
+            "color": "#2ca02c",
             "views": [{
                 "id": "SW_OPER_IBIATMS_2F",
                 "protocol": "CZML",
@@ -1266,13 +1285,19 @@
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIATMS_2F"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
         },{
             "name": "SW OPER IBIB TMS 2F",
             "visible": false,
             "timeSlider": true,
+            "color": "#2ca02c",
             "timeSliderProtocol": "WPS",
             "views": [{
                 "id": "SW_OPER_IBIBTMS_2F",
@@ -1344,13 +1369,19 @@
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIBTMS_2F"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
         },{
             "name": "SW OPER IBIC TMS 2F",
             "visible": false,
             "timeSlider": true,
+            "color": "#2ca02c",
             "timeSliderProtocol": "WPS",
             "views": [{
                 "id": "SW_OPER_IBICTMS_2F",
@@ -1422,7 +1453,12 @@
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBICTMS_2F"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
         },{

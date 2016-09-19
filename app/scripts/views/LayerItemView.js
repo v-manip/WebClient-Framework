@@ -114,72 +114,75 @@
 			onChange: function(evt){
 
 				var visible = evt.target.checked;
+				var that = this;
 
                 if(this.model.get("containerproduct")){
 
 
-                	if(visible)
+                	if(visible){
                 		this.model.set("visible", true);
-                	else
+
+                	}else{
                 		this.model.set("visible", false);
 
-                	var products = [];
+                		var product_keys = _.keys(globals.swarm.products[this.model.get("id")]);
+
+                		for (var i = product_keys.length - 1; i >= 0; i--) {
+            				globals.products.forEach(function(p){
+	                			if(p.get("download").id == globals.swarm.products[that.model.get("id")][product_keys[i]]){
+	                				if(p.get("visible")){
+		                				p.set("visible", false);
+		                				Communicator.mediator.trigger('map:layer:change', {
+		                					name: p.get("name"),
+		                					isBaseLayer: false,
+		                					visible: false
+		                				});
+		                				var indexofactiveproduct = globals.swarm.activeProducts.indexOf(p.get("download").id);
+		                				globals.swarm.activeProducts.splice(indexofactiveproduct, 1);
+	                				}
+	                			}
+	                		});
+                		}
+                	}
 
                 	if(visible){
 
 	                	if($('#alphacheck').is(':checked')){
-	                		products.push(globals.swarm.products[this.model.get("id")]['Alpha'])
+	                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[this.model.get("id")]['Alpha']) == -1){
+	                			globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['Alpha']);
+	                		}
 	                	}
 	                	if ($('#betacheck').is(':checked')){
-	                		products.push(globals.swarm.products[this.model.get("id")]['Bravo'])
+	                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[this.model.get("id")]['Bravo']) == -1){
+		                		globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['Bravo']);
+		                	}
 	                	}
 	                	if($('#charliecheck').is(':checked')){
-	                		products.push(globals.swarm.products[this.model.get("id")]['Charlie'])
+	                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[this.model.get("id")]['Charlie']) == -1){
+		                		globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['Charlie']);
+		                	}
 	                	}
                 	}
 
-                	Communicator.mediator.trigger('map:multilayer:change', products);
-
-
-            		for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
-
-            			var indexofproduct = products.indexOf(globals.swarm.activeProducts[i]);
-            			// If previously active product no longer active need to deactivate it
-            			if(indexofproduct == -1){
-
-            				globals.products.forEach(function(p){
-	                			if(p.get("download").id == globals.swarm.activeProducts[i]){
-	                				p.set("visible", false);
-	                				Communicator.mediator.trigger('map:layer:change', {
-	                					name: p.get("name"),
-	                					isBaseLayer: false,
-	                					visible: false
-	                				});
-	                				globals.swarm.activeProducts.splice(i, 1);
-	                			}
-	                		});
-            			}else{
-            				// If it is already in the list it does not need to be activated again
-            				products.splice(indexofproduct, 1);
-            			}
-            		}
-
             		// Activate all other layers
-                	for (var i = products.length - 1; i >= 0; i--) {
+                	for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
 
                 		globals.products.forEach(function(p){
 
-                			if(p.get("download").id == products[i]){
-                				p.set("visible", true);
-                				Communicator.mediator.trigger('map:layer:change', {
-                					name: p.get("name"),
-                					isBaseLayer: false,
-                					visible: true
-                				});
-                				globals.swarm.activeProducts.push(products[i]);
+                			if(p.get("download").id == globals.swarm.activeProducts[i]){
+                				if(!p.get("visible")){
+	                				p.set("visible", true);
+	                				Communicator.mediator.trigger('map:layer:change', {
+	                					name: p.get("name"),
+	                					isBaseLayer: false,
+	                					visible: true
+	                				});
+                				}
+                				
                 			}
                 		});
                 	}
+                	Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 
                 }else{
                 	var isBaseLayer = false;

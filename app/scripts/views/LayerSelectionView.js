@@ -63,68 +63,70 @@
 
 			checkMultiProduct: function(){
 				var that = this;
-				var products = [];
+
+				for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
+					globals.products.forEach(function(p){
+						if(p.get("download").id == globals.swarm.activeProducts[i]){
+							if(p.get("visible")){
+								p.set("visible", false);
+								Communicator.mediator.trigger('map:layer:change', {
+									name: p.get("name"),
+									isBaseLayer: false,
+									visible: false
+								});
+							}
+						}
+					});
+				}
+
+				globals.swarm.activeProducts = [];
 
 				this.collection.forEach(function(p){
 
 					if(p.get("containerproduct")){
 
 						if(p.get("visible")){
-	                		
-		                	if($('#alphacheck').is(':checked')){
-		                		products.push(globals.swarm.products[p.get("id")]['Alpha'])
+
+							if($('#alphacheck').is(':checked')){
+		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Alpha']) == -1){
+		                			globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Alpha']);
+		                		}
 		                	}
+
 		                	if ($('#betacheck').is(':checked')){
-		                		products.push(globals.swarm.products[p.get("id")]['Bravo'])
+		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Bravo']) == -1){
+			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Bravo']);
+			                	}
 		                	}
+
 		                	if($('#charliecheck').is(':checked')){
-		                		products.push(globals.swarm.products[p.get("id")]['Charlie'])
+		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Charlie']) == -1){
+			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Charlie']);
+			                	}
 		                	}
+
 	                	}
 	                }
 				});
 
-				Communicator.mediator.trigger('map:multilayer:change', products);
-
         		for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
 
-        			var indexofproduct = products.indexOf(globals.swarm.activeProducts[i]);
-        			// If previously active product no longer active need to deactivate it
-        			if(indexofproduct == -1){
-
-        				globals.products.forEach(function(p){
-                			if(p.get("download").id == globals.swarm.activeProducts[i]){
-                				p.set("visible", false);
-                				Communicator.mediator.trigger('map:layer:change', {
-                					name: p.get("name"),
-                					isBaseLayer: false,
-                					visible: false
-                				});
-                				globals.swarm.activeProducts.splice(i, 1);
-                			}
-                		});
-        			}else{
-        				// If it is already in the list it does not need to be activated again
-        				products.splice(indexofproduct, 1);
-        			}
-        		}
-
-        		// Activate all other layers
-            	for (var i = products.length - 1; i >= 0; i--) {
-
-            		globals.products.forEach(function(p){
-
-            			if(p.get("download").id == products[i]){
-            				p.set("visible", true);
-            				Communicator.mediator.trigger('map:layer:change', {
-            					name: p.get("name"),
-            					isBaseLayer: false,
-            					visible: true
-            				});
-            				globals.swarm.activeProducts.push(products[i]);
+    				globals.products.forEach(function(p){
+            			if(p.get("download").id == globals.swarm.activeProducts[i]){
+            				if(!p.get("visible")){
+	            				p.set("visible", true);
+	            				Communicator.mediator.trigger('map:layer:change', {
+	            					name: p.get("name"),
+	            					isBaseLayer: false,
+	            					visible: true
+	            				});
+            				}
             			}
             		});
-            	}
+    			}
+    			globals.swarm.activeProducts = globals.swarm.activeProducts.sort();
+    			Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+
 			},
 
 			updateSort: function(options) {         
