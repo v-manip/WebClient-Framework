@@ -317,7 +317,7 @@ define(['backbone.marionette',
 
 			connectDataEvents: function(){
 				//globals.swarm.off('change:data');
-				/*globals.swarm.on('change:data', function(model, data) {
+				globals.swarm.on('change:data', function(model, data) {
 					var that = this;
 					if (data.length && data.length>0){
 						that.createDataFeatures(data, 'pointcollection', 'band');
@@ -330,12 +330,12 @@ define(['backbone.marionette',
 		            	}
 		            	this.activeCollections = [];
 					}
-				}, this);*/
+				}, this);
 
 				//globals.swarm.off('change:filters');
-				/*globals.swarm.on('change:filters', function(model, filters) {
+				globals.swarm.on('change:filters', function(model, filters) {
 					this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
-				}, this);*/
+				}, this);
 			},
 
 			onResize: function() {
@@ -914,19 +914,34 @@ define(['backbone.marionette',
             	var cur_product = null;
 
             	globals.products.each(function(product) {
-            		//if(product.get('visible')){
-            			cur_product = product;
-            			var params = product.get('parameters')
-            			for (k in params){
-            				if(params[k].selected){
-            					settings[product.get('views')[0].id] = params[k];
-            					settings[product.get('views')[0].id]['band'] = k;
-            					settings[product.get('views')[0].id]['alpha'] = Math.floor(product.get('opacity')*255);
-            					settings[product.get('views')[0].id]['outlines'] = product.get('outlines');
-            					settings[product.get('views')[0].id]['outline_color'] = product.get('color');
+        			cur_product = product;
+        			var params = product.get('parameters')
+        			for (k in params){
+        				if(params[k].selected){
+				            var sat = false;
+				            var product_keys = _.keys(globals.swarm.products);
+				            for (var i = product_keys.length - 1; i >= 0; i--) {
+				              var sat_keys = _.keys(globals.swarm.products[product_keys[i]]);
+				              for (var j = sat_keys.length - 1; j >= 0; j--) {
+				                if (globals.swarm.products[product_keys[i]][sat_keys[j]] == product.get('views')[0].id){
+				                  sat = sat_keys[j];
+				                }
+				              }
+				            }
+				            if(sat){
+				            	if(!settings.hasOwnProperty(sat)){
+				            		settings[sat] = {};
+				            	}
+				            	if(!settings[sat].hasOwnProperty(k)){
+				            		settings[sat][k] = product.get("parameters")[k];
+				            	}
+            					settings[sat][k]['band'] = k;
+            					settings[sat][k]['alpha'] = Math.floor(product.get('opacity')*255);
+            					settings[sat][k]['outlines'] = product.get('outlines');
+            					settings[sat][k]['outline_color'] = product.get('color');
             				}
-            			}
-            		//}
+        				}
+        			}
             	});
 
             	
@@ -937,7 +952,7 @@ define(['backbone.marionette',
 
 	            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
 	            		that.activeCollections.push(obj.id);
-	            		if (_.find(SCALAR_PARAM, function(par){return settings[obj.id].band == par;})) {
+	            		if (_.find(SCALAR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})) {
 	            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
 
 	            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
@@ -950,7 +965,7 @@ define(['backbone.marionette',
 		  						    blending : Cesium.BlendingState.ALPHA_BLEND
 		  						});
 	            			}
-	            		}else if (_.find(VECTOR_PARAM, function(par){return settings[obj.id].band == par;})) {
+	            		}else if (_.find(VECTOR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})) {
 	            			that.features_collection[obj.id] = new Cesium.Primitive({
 							  	geometryInstances : [],
 							  	appearance : new Cesium.PerInstanceColorAppearance({
@@ -981,75 +996,86 @@ define(['backbone.marionette',
 				    	}
 
 				    	if (show){
-				    		var alpha = settings[row.id].alpha;
 
-				    		if (previous_collection != row.id){
-				    			previous_collection = row.id
-				    			this.plot.setColorScale(settings[row.id].colorscale);
-				    			this.plot.setDomain(settings[row.id].range);
-				    		}
+				    		// Find parameter in settings which is also in row these are the ones that are active
+				    		var active_params = _.keys(settings[row.id]);
+				    		var tovisualize = _.find(active_params, function(ap){
+				    			return row.hasOwnProperty(ap);
+				    		});
+				    		
+				    		for (var i = tovisualize.length - 1; i >= 0; i--) {
+					    		
+				    			var set = settings[row.id][tovisualize[i]];
+					    		var alpha = set.alpha;
 
-				    		if (_.find(SCALAR_PARAM, function(par){return settings[row.id].band == par;})) {
-				    			var height_offset = 0;
-				    			if (settings[row.id].band == "Bubble_Probability"){
-				    				height_offset = 100;
-				    			}
-					    		var color = this.plot.getColor(row[settings[row.id].band]);
-					    		var options = {
-							        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
-							        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
-							        pixelSize : 8,
-							        scaleByDistance : scaltype
-							    };
-							    if(settings[row.id].outlines){
-							    	options['outlineWidth'] = 0.5;
-							    	options['outlineColor'] = Cesium.Color.fromCssColorString(settings[row.id].outline_color);
-							    }
-					    		this.features_collection[row.id].add(options);
+					    		if (previous_collection != row.id){
+					    			previous_collection = row.id
+					    			this.plot.setColorScale(set.colorscale);
+					    			this.plot.setDomain(set.range);
+					    		}
 
-							}else if (_.find(VECTOR_PARAM, function(par){return settings[row.id].band == par;})) {
-								var sb;
-								switch (settings[row.id].band){
-									case 'B_NEC': sb = ['B_E','B_N','B_C']; break;
-									case 'v_SC': sb = ['v_SC_E','v_SC_N','v_SC_C']; break;
-									case 'SIFM': sb = ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM']; break;
-									case 'IGRF12': sb = ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12']; break;
-									case 'CHAOS-5-Combined': sb = [
-										'B_E_res_CHAOS-5-Combined',
-										'B_N_res_CHAOS-5-Combined',
-										'B_C_res_CHAOS-5-Combined'];
-									break;
-									case 'Custom_Model': sb = ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']; break;
+					    		if (_.find(SCALAR_PARAM, function(par){return set.band == par;})) {
+					    			var height_offset = 0;
+					    			if (set.band == "Bubble_Probability"){
+					    				height_offset = 100;
+					    			}
+						    		var color = this.plot.getColor(row[set.band]);
+						    		var options = {
+								        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
+								        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
+								        pixelSize : 8,
+								        scaleByDistance : scaltype
+								    };
+								    if(set.outlines){
+								    	options['outlineWidth'] = 0.5;
+								    	options['outlineColor'] = Cesium.Color.fromCssColorString(set.outline_color);
+								    }
+						    		this.features_collection[row.id].add(options);
+
+								}else if (_.find(VECTOR_PARAM, function(par){return set.band == par;})) {
+									var sb;
+									switch (set.band){
+										case 'B_NEC': sb = ['B_E','B_N','B_C']; break;
+										case 'v_SC': sb = ['v_SC_E','v_SC_N','v_SC_C']; break;
+										case 'SIFM': sb = ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM']; break;
+										case 'IGRF12': sb = ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12']; break;
+										case 'CHAOS-5-Combined': sb = [
+											'B_E_res_CHAOS-5-Combined',
+											'B_N_res_CHAOS-5-Combined',
+											'B_C_res_CHAOS-5-Combined'];
+										break;
+										case 'Custom_Model': sb = ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']; break;
+									}
+
+									// Check if residuals are active!
+									var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
+									var color = this.plot.getColor(v_len);
+									var add_len = 10;
+									var v_e = (row[sb[0]]/v_len)*add_len;
+									var v_n = (row[sb[1]]/v_len)*add_len;
+									var v_c = (row[sb[2]]/v_len)*add_len;
+									this.features_collection[row.id].geometryInstances.push( 
+									  	new Cesium.GeometryInstance({
+									    	geometry : new Cesium.SimplePolylineGeometry({
+									      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+									        		row.Longitude, row.Latitude, (row.Radius-max_rad),
+									        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
+									      		]),
+									      		followSurface: false
+									    	}),
+									    	id: "vec_line_"+linecnt,
+									    	attributes : {
+									      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+									      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
+									      		)
+									    	}
+									  	})
+										
+									);
+									linecnt++;
+
 								}
-
-								// Check if residuals are active!
-								var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
-								var color = this.plot.getColor(v_len);
-								var add_len = 10;
-								var v_e = (row[sb[0]]/v_len)*add_len;
-								var v_n = (row[sb[1]]/v_len)*add_len;
-								var v_c = (row[sb[2]]/v_len)*add_len;
-								this.features_collection[row.id].geometryInstances.push( 
-								  	new Cesium.GeometryInstance({
-								    	geometry : new Cesium.SimplePolylineGeometry({
-								      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-								        		row.Longitude, row.Latitude, (row.Radius-max_rad),
-								        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
-								      		]),
-								      		followSurface: false
-								    	}),
-								    	id: "vec_line_"+linecnt,
-								    	attributes : {
-								      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
-								      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
-								      		)
-								    	}
-								  	})
-									
-								);
-								linecnt++;
-
-							}
+					    	}
 				    	}
 
 					}, this);
