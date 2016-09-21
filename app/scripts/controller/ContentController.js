@@ -88,7 +88,6 @@
 			},
 
 			OnAppReset: function(){
-				Communicator.mediator.trigger("selection:changed", null);
 				App.layout.close();
 				App.toolLayout.close();
 				App.optionsLayout.close();

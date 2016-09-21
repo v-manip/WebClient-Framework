@@ -346,8 +346,8 @@ var VECTOR_BREAKDOWN = {
 		        	}
 		        };
 
-		        //globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
-		        globals.swarm["activeProducts"] = [];
+		        globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
+		        //globals.swarm["activeProducts"] = [];
 		        
 		        var filtered_collection = new Backbone.Collection(filtered);
 
@@ -370,7 +370,7 @@ var VECTOR_BREAKDOWN = {
 				}, {at: 0});
 				filtered_collection.add({
 					name: "Magnetic data (MAG LR)",
-					visible: false,
+					visible: true,
 					color: "#1f77b4",
 					protocol: null,
 					containerproduct: true,
@@ -611,8 +611,7 @@ var VECTOR_BREAKDOWN = {
 				.domain([-1, 0, max])
 				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
 				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
-				//Communicator.mediator.trigger("layer:activate", "MAG");
-
+				
 			}
 
 

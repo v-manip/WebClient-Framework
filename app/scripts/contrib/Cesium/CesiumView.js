@@ -310,7 +310,7 @@ define(['backbone.marionette',
 					}
 				});
 
-
+				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 				//this.onResize();
 				return this;
 			},
@@ -893,210 +893,214 @@ define(['backbone.marionette',
 
             createDataFeatures: function (results, identifier, band, alpha){
 
-            	// The feature collections are removed directly when a change happens
-            	// because of the asynchronous behavior it can happen that a collection
-            	// is added between removing it and adding another one so here we make sure
-            	// it is empty before overwriting it, which would lead to a not referenced
-            	// collection which is no longer deleted.
-            	// I remove it before the response because a direct feedback to the user is important
-            	// There is probably a cleaner way to do this
-            	for (var i = 0; i < this.activeCollections.length; i++) {
-            		
-            		if(this.features_collection.hasOwnProperty(this.activeCollections[i])){
-	            		this.map.scene.primitives.remove(this.features_collection[this.activeCollections[i]]);
-	            		delete this.features_collection[this.activeCollections[i]];
+            	if(results.length>0){
+
+
+	            	// The feature collections are removed directly when a change happens
+	            	// because of the asynchronous behavior it can happen that a collection
+	            	// is added between removing it and adding another one so here we make sure
+	            	// it is empty before overwriting it, which would lead to a not referenced
+	            	// collection which is no longer deleted.
+	            	// I remove it before the response because a direct feedback to the user is important
+	            	// There is probably a cleaner way to do this
+	            	for (var i = 0; i < this.activeCollections.length; i++) {
+	            		
+	            		if(this.features_collection.hasOwnProperty(this.activeCollections[i])){
+		            		this.map.scene.primitives.remove(this.features_collection[this.activeCollections[i]]);
+		            		delete this.features_collection[this.activeCollections[i]];
+		            	}
 	            	}
-            	}
-            	this.activeCollections = [];
-            	
+	            	this.activeCollections = [];
+	            	
 
-            	var settings = {};
-            	var cur_product = null;
+	            	var settings = {};
+	            	var cur_product = null;
 
-            	globals.products.each(function(product) {
+	            	globals.products.each(function(product) {
 
-            		if(product.get("visible")){
-	        			cur_product = product;
-	        			var params = product.get('parameters')
-	        			for (k in params){
-	        				if(params[k].selected){
-					            var sat = false;
-					            var product_keys = _.keys(globals.swarm.products);
-					            for (var i = product_keys.length - 1; i >= 0; i--) {
-					              var sat_keys = _.keys(globals.swarm.products[product_keys[i]]);
-					              for (var j = sat_keys.length - 1; j >= 0; j--) {
-					                if (globals.swarm.products[product_keys[i]][sat_keys[j]] == product.get('views')[0].id){
-					                  sat = sat_keys[j];
-					                }
-					              }
-					            }
-					            if(sat){
-					            	if(!settings.hasOwnProperty(sat)){
-					            		settings[sat] = {};
-					            	}
-					            	if(!settings[sat].hasOwnProperty(k)){
-					            		settings[sat][k] = product.get("parameters")[k];
-					            	}
-	            					settings[sat][k]['band'] = k;
-	            					settings[sat][k]['alpha'] = Math.floor(product.get('opacity')*255);
-	            					settings[sat][k]['outlines'] = product.get('outlines');
-	            					settings[sat][k]['outline_color'] = product.get('color');
-	            				}
-	        				}
-	        			}
-            		}
-            	});
-
-            	
-
-            	//if (cur_product){
-
-            		var that = this;
-
-	            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
-
-	            		
-	            		var parameters = _.filter(SCALAR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})
-	            		for (var i = 0; i < parameters.length; i++) {
-	            			
-	            			that.activeCollections.push(obj.id+parameters[i]);
-	            			that.features_collection[obj.id+parameters[i]] = new Cesium.PointPrimitiveCollection();
-
-	            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
-	            				that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
-		  						    depthTest : {
-		  						        enabled : true,
-		  						        func : Cesium.DepthFunction.LESS
-		  						    },
-		  						    depthMask : false,
-		  						    blending : Cesium.BlendingState.ALPHA_BLEND
-		  						});
-	            			}
-	            		}
-	            		
-	            		parameters = _.filter(VECTOR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})
-	            		for (var i = 0; i < parameters.length; i++) {
-	            			
-	            			that.activeCollections.push(obj.id+parameters[i]);
-	            			that.features_collection[obj.id+parameters[i]] = new Cesium.Primitive({
-							  	geometryInstances : [],
-							  	appearance : new Cesium.PerInstanceColorAppearance({
-							    	flat : true,
-							    	translucent : true
-							  	}),
-							  	releaseGeometryInstances: false
-							});
+	            		if(product.get("visible")){
+		        			cur_product = product;
+		        			var params = product.get('parameters')
+		        			for (k in params){
+		        				if(params[k].selected){
+						            var sat = false;
+						            var product_keys = _.keys(globals.swarm.products);
+						            for (var i = product_keys.length - 1; i >= 0; i--) {
+						              var sat_keys = _.keys(globals.swarm.products[product_keys[i]]);
+						              for (var j = sat_keys.length - 1; j >= 0; j--) {
+						                if (globals.swarm.products[product_keys[i]][sat_keys[j]] == product.get('views')[0].id){
+						                  sat = sat_keys[j];
+						                }
+						              }
+						            }
+						            if(sat){
+						            	if(!settings.hasOwnProperty(sat)){
+						            		settings[sat] = {};
+						            	}
+						            	if(!settings[sat].hasOwnProperty(k)){
+						            		settings[sat][k] = product.get("parameters")[k];
+						            	}
+		            					settings[sat][k]['band'] = k;
+		            					settings[sat][k]['alpha'] = Math.floor(product.get('opacity')*255);
+		            					settings[sat][k]['outlines'] = product.get('outlines');
+		            					settings[sat][k]['outline_color'] = product.get('color');
+		            				}
+		        				}
+		        			}
 	            		}
 	            	});
 
-					var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
-					var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
-					var previous_collection = '';
-					//var line_primitives = [];
+	            	
 
-					var linecnt = 0;
-				    _.each(results, function(row){
-				    	var show = true;
-				    	var filters = globals.swarm.get('filters');
-				    	
-				    	if(filters){
-				    		for (k in filters){
-				    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
-				    				show = false;
-				    			}
-				    		}
-				    	}
+	            	if (!_.isEmpty(settings) ){
 
-				    	if (show){
+	            		var that = this;
 
-				    		// Find parameter in settings which is also in row 
-				    		// these are the ones that are active
-				    		var active_params = _.keys(settings[row.id]);
-				    		var tovisualize = _.filter(active_params, function(ap){
-				    			// Check if component is vector component
-				    			if(VECTOR_BREAKDOWN.hasOwnProperty(ap)){
-				    				var b = VECTOR_BREAKDOWN[ap];
-				    				return (
-				    					row.hasOwnProperty(b[0]) &&
-				    					row.hasOwnProperty(b[1]) &&
-				    					row.hasOwnProperty(b[2])
-				    				);
-				    			}else{
-				    				return row.hasOwnProperty(ap);
-				    			}
-				    		});
-				    		
-				    		for (var i = tovisualize.length - 1; i >= 0; i--) {
-					    		
-				    			var set = settings[row.id][tovisualize[i]];
-					    		var alpha = set.alpha;
+		            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
 
-				    			this.plot.setColorScale(set.colorscale);
-				    			this.plot.setDomain(set.range);
+		            		
+		            		var parameters = _.filter(SCALAR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})
+		            		for (var i = 0; i < parameters.length; i++) {
+		            			
+		            			that.activeCollections.push(obj.id+parameters[i]);
+		            			that.features_collection[obj.id+parameters[i]] = new Cesium.PointPrimitiveCollection();
 
-					    		if (_.find(SCALAR_PARAM, function(par){return set.band == par;})) {
-					    			if(tovisualize[i] == "Bubble_Probability"){
-					    				if(row[set.band] <= 0.1){
-					    					continue;
-					    				}
+		            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
+		            				that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
+			  						    depthTest : {
+			  						        enabled : true,
+			  						        func : Cesium.DepthFunction.LESS
+			  						    },
+			  						    depthMask : false,
+			  						    blending : Cesium.BlendingState.ALPHA_BLEND
+			  						});
+		            			}
+		            		}
+		            		
+		            		parameters = _.filter(VECTOR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})
+		            		for (var i = 0; i < parameters.length; i++) {
+		            			
+		            			that.activeCollections.push(obj.id+parameters[i]);
+		            			that.features_collection[obj.id+parameters[i]] = new Cesium.Primitive({
+								  	geometryInstances : [],
+								  	appearance : new Cesium.PerInstanceColorAppearance({
+								    	flat : true,
+								    	translucent : true
+								  	}),
+								  	releaseGeometryInstances: false
+								});
+		            		}
+		            	});
+
+						var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
+						var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
+						var previous_collection = '';
+						//var line_primitives = [];
+
+						var linecnt = 0;
+					    _.each(results, function(row){
+					    	var show = true;
+					    	var filters = globals.swarm.get('filters');
+					    	
+					    	if(filters){
+					    		for (k in filters){
+					    			if(row[k]<filters[k][0] || row[k]>filters[k][1]){
+					    				show = false;
 					    			}
-					    			var height_offset = i*210000;
-
-						    		var color = this.plot.getColor(row[set.band]);
-						    		var options = {
-								        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
-								        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
-								        pixelSize : 8,
-								        scaleByDistance : scaltype
-								    };
-								    if(set.outlines){
-								    	options['outlineWidth'] = 0.5;
-								    	options['outlineColor'] = Cesium.Color.fromCssColorString(set.outline_color);
-								    }
-						    		this.features_collection[row.id+set.band].add(options);
-
-								}else if (_.find(VECTOR_PARAM, function(par){return set.band == par;})) {
-									var sb = VECTOR_BREAKDOWN[set.band];
-
-									var height_offset = i*210000;
-									
-									// Check if residuals are active!
-									var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
-									var color = this.plot.getColor(v_len);
-									var add_len = 10;
-									var v_e = (row[sb[0]]/v_len)*add_len;
-									var v_n = (row[sb[1]]/v_len)*add_len;
-									var v_c = (row[sb[2]]/v_len)*add_len;
-									this.features_collection[row.id+set.band].geometryInstances.push( 
-									  	new Cesium.GeometryInstance({
-									    	geometry : new Cesium.SimplePolylineGeometry({
-									      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-									        		row.Longitude, row.Latitude, (row.Radius-max_rad+height_offset),
-									        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
-									      		]),
-									      		followSurface: false
-									    	}),
-									    	id: "vec_line_"+linecnt,
-									    	attributes : {
-									      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
-									      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
-									      		)
-									    	}
-									  	})
-										
-									);
-									linecnt++;
-
-								}
+					    		}
 					    	}
-				    	}
 
-					}, this);
+					    	if (show){
 
-					for (var i = 0; i < this.activeCollections.length; i++) {
-						this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
+					    		// Find parameter in settings which is also in row 
+					    		// these are the ones that are active
+					    		var active_params = _.keys(settings[row.id]);
+					    		var tovisualize = _.filter(active_params, function(ap){
+					    			// Check if component is vector component
+					    			if(VECTOR_BREAKDOWN.hasOwnProperty(ap)){
+					    				var b = VECTOR_BREAKDOWN[ap];
+					    				return (
+					    					row.hasOwnProperty(b[0]) &&
+					    					row.hasOwnProperty(b[1]) &&
+					    					row.hasOwnProperty(b[2])
+					    				);
+					    			}else{
+					    				return row.hasOwnProperty(ap);
+					    			}
+					    		});
+					    		
+					    		for (var i = tovisualize.length - 1; i >= 0; i--) {
+						    		
+					    			var set = settings[row.id][tovisualize[i]];
+						    		var alpha = set.alpha;
+
+					    			this.plot.setColorScale(set.colorscale);
+					    			this.plot.setDomain(set.range);
+
+						    		if (_.find(SCALAR_PARAM, function(par){return set.band == par;})) {
+						    			if(tovisualize[i] == "Bubble_Probability"){
+						    				if(row[set.band] <= 0.1){
+						    					continue;
+						    				}
+						    			}
+						    			var height_offset = i*210000;
+
+							    		var color = this.plot.getColor(row[set.band]);
+							    		var options = {
+									        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
+									        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
+									        pixelSize : 8,
+									        scaleByDistance : scaltype
+									    };
+									    if(set.outlines){
+									    	options['outlineWidth'] = 0.5;
+									    	options['outlineColor'] = Cesium.Color.fromCssColorString(set.outline_color);
+									    }
+							    		this.features_collection[row.id+set.band].add(options);
+
+									}else if (_.find(VECTOR_PARAM, function(par){return set.band == par;})) {
+										var sb = VECTOR_BREAKDOWN[set.band];
+
+										var height_offset = i*210000;
+										
+										// Check if residuals are active!
+										var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
+										var color = this.plot.getColor(v_len);
+										var add_len = 10;
+										var v_e = (row[sb[0]]/v_len)*add_len;
+										var v_n = (row[sb[1]]/v_len)*add_len;
+										var v_c = (row[sb[2]]/v_len)*add_len;
+										this.features_collection[row.id+set.band].geometryInstances.push( 
+										  	new Cesium.GeometryInstance({
+										    	geometry : new Cesium.SimplePolylineGeometry({
+										      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+										        		row.Longitude, row.Latitude, (row.Radius-max_rad+height_offset),
+										        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
+										      		]),
+										      		followSurface: false
+										    	}),
+										    	id: "vec_line_"+linecnt,
+										    	attributes : {
+										      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+										      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
+										      		)
+										    	}
+										  	})
+											
+										);
+										linecnt++;
+
+									}
+						    	}
+					    	}
+
+						}, this);
+
+						for (var i = 0; i < this.activeCollections.length; i++) {
+							this.map.scene.primitives.add(this.features_collection[this.activeCollections[i]]);
+						}
 					}
-				//}
+            	}
 			},
 
             onLayerOutlinesChanged: function(collection){

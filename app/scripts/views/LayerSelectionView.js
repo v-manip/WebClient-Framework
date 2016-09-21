@@ -43,15 +43,15 @@
 			    });
 
 				$('#alphacheck').prop('checked', globals.swarm.satellites["Alpha"]);
-				$('#betacheck').prop('checked', globals.swarm.satellites["Beta"]);
+				$('#bravocheck').prop('checked', globals.swarm.satellites["Bravo"]);
 				$('#charliecheck').prop('checked', globals.swarm.satellites["Charlie"]);
 
 				$('#alphacheck').change(function(evt){
 					globals.swarm.satellites["Alpha"] = $('#alphacheck').is(':checked');
 					self.checkMultiProduct();
 				});
-				$('#betacheck').change(function(evt){
-					globals.swarm.satellites["Beta"] = $('#betacheck').is(':checked');
+				$('#bravocheck').change(function(evt){
+					globals.swarm.satellites["Bravo"] = $('#bravocheck').is(':checked');
 					self.checkMultiProduct();
 				});
 				$('#charliecheck').change(function(evt){
@@ -93,7 +93,7 @@
 		                		}
 		                	}
 
-		                	if ($('#betacheck').is(':checked')){
+		                	if ($('#bravocheck').is(':checked')){
 		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Bravo']) == -1){
 			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Bravo']);
 			                	}

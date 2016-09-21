@@ -152,7 +152,7 @@
 	                			globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['Alpha']);
 	                		}
 	                	}
-	                	if ($('#betacheck').is(':checked')){
+	                	if ($('#bravocheck').is(':checked')){
 	                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[this.model.get("id")]['Bravo']) == -1){
 		                		globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['Bravo']);
 		                	}
@@ -317,6 +317,12 @@
 		    		//this.model.set("visible", true);
 		    		var checkbox = $( "input[type$='checkbox']", this.$el);
 		    		//checkbox.attr('checked', true);
+		    		checkbox.prop( "checked", true );
+		    	}
+
+		    	if(this.model.hasOwnProperty('id') && this.model.get('id') == layer){
+		    		// Check for multiproduct datasets
+		    		var checkbox = $( "input[type$='checkbox']", this.$el);
 		    		checkbox.prop( "checked", true );
 		    	}
 		    },

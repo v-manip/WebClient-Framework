@@ -58,39 +58,80 @@
 		            });
 		            
 		            if(layer_model){
-		            	/*var product_keys = _.keys(globals.swarm.products[layer_model.get("id")]);
+		            	if(layer_model.get("visible")){
+							layer_model.set("visible", false);
+		            	}else{
+		            		layer_model.set("visible", true);
+		            	}
+
+		            	var product_keys = _.keys(globals.swarm.products[layer_model.get("id")]);
+		            	//var activated_layers = [];
 
                 		for (var i = product_keys.length - 1; i >= 0; i--) {
             				globals.products.forEach(function(p){
 	                			if(p.get("download").id == globals.swarm.products[layer_model.get("id")][product_keys[i]]){
 	                				if(!p.get("visible") && globals.swarm.satellites[product_keys[i]]){
-
-	                				}else{
-		                				p.set("visible", false);
+	                					p.set("visible", true);
 		                				Communicator.mediator.trigger('map:layer:change', {
 		                					name: p.get("name"),
 		                					isBaseLayer: false,
-		                					visible: false
+		                					visible: true
 		                				});
-		                				var indexofactiveproduct = globals.swarm.activeProducts.indexOf(p.get("download").id);
-		                				globals.swarm.activeProducts.splice(indexofactiveproduct, 1);
+		                				globals.swarm.activeProducts.push(p.get("download").id);
+		                				
+	                				}else{
+	                					if(p.get("visible") && !layer_model.get("visible")){
+			                				p.set("visible", false);
+			                				Communicator.mediator.trigger('map:layer:change', {
+			                					name: p.get("name"),
+			                					isBaseLayer: false,
+			                					visible: false
+			                				});
+			                				var indexofactiveproduct = globals.swarm.activeProducts.indexOf(p.get("download").id);
+		                					globals.swarm.activeProducts.splice(indexofactiveproduct, 1);
+	                					}
 	                				}
 	                			}
 	                		});
-                		}*/
+                		}
+
+                		Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 		            }
 	            }
 			    
 			},
 
 			OnAppReset: function(){
-				globals.products.each(function(layer){
-					if(layer.get('visible')){
-		        		var options = { name: layer.get('name'), isBaseLayer: false, visible: false };
-		        		layer.set('visible',false);
-		        		Communicator.mediator.trigger('map:layer:change', options);
-		          	}
+				globals.swarm.filtered_collection.each(function(layer){
+					if(layer.get("containerproduct")){
+						var product_keys = _.keys(globals.swarm.products[layer.get("id")]);
+		            	layer.set("visible", false);
+
+                		for (var i = product_keys.length - 1; i >= 0; i--) {
+            				globals.products.forEach(function(p){
+            					if(p.get("visible")){
+	                				p.set("visible", false);
+	                				Communicator.mediator.trigger('map:layer:change', {
+	                					name: p.get("name"),
+	                					isBaseLayer: false,
+	                					visible: false
+	                				});
+	                				var indexofactiveproduct = globals.swarm.activeProducts.indexOf(p.get("download").id);
+                					globals.swarm.activeProducts.splice(indexofactiveproduct, 1);
+            					}
+	                		});
+                		}
+					}else{
+						if(layer.get('visible')){
+			        		var options = { name: layer.get('name'), isBaseLayer: false, visible: false };
+			        		layer.set('visible',false);
+			        		Communicator.mediator.trigger('map:layer:change', options);
+			          	}
+					}
 				});
+				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+				// Should do this in the content or data controller but need to make sure layers are first deactivated
+				Communicator.mediator.trigger("selection:changed", null);
 			}
 		});
 		return new LayerController();
