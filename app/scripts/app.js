@@ -1,6 +1,15 @@
 
 var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability"];
 var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
+var VECTOR_BREAKDOWN = {
+	'B_NEC': ['B_E','B_N','B_C'],
+	'v_SC':  ['v_SC_E','v_SC_N','v_SC_C'],
+	'SIFM': ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM'],
+	'IGRF12': ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12'],
+	'CHAOS-5-Combined': ['B_E_res_CHAOS-5-Combined','B_N_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+	'Custom_Model': ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']
+};
+
 
 (function() {
 	'use strict';
@@ -153,6 +162,9 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
                 var ordinal = 0;
                 var domain = [];
                 var range = [];
+
+                // Remove three first colors as they are used by the products
+                autoColor.getColor();autoColor.getColor();autoColor.getColor();
 
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
@@ -377,6 +389,8 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
                 	className: "sortable"
                 });
 
+                globals.swarm["filtered_collection"] = filtered_collection;
+
                 this.overlaysView = new v.BaseLayerSelectionView({
                 	collection: globals.overlays,
                 	itemView: v.LayerItemView.extend({
@@ -597,7 +611,7 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 				.domain([-1, 0, max])
 				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
 				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
-
+				//Communicator.mediator.trigger("layer:activate", "MAG");
 
 			}
 

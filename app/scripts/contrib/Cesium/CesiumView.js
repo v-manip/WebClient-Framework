@@ -387,7 +387,7 @@ define(['backbone.marionette',
 	            if(layerdesc.get("visible")){
 	            	if(view.attribution){
 	            		$("#cesium_custom_attribution").append(
-		            		"<div id='" + layerdesc.get("name") + "' style='float: left;'>"+
+		            		"<div id='" + layerdesc.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
 		            		view.attribution +
 		            		"</div>");
 	            	}
@@ -571,7 +571,7 @@ define(['backbone.marionette',
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(baselayer.get("views")[0].attribution){
 				            		$("#cesium_custom_attribution").append(
-					            		"<div id='" + baselayer.get("name") + "' style='float: left;'>"+
+					            		"<div id='" + baselayer.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
 					            		baselayer.get("views")[0].attribution +
 					            		"</div>");
 					            }
@@ -585,7 +585,7 @@ define(['backbone.marionette',
 							if(baselayer.get("name")!=options.name){
 								ces_layer.show = false;
 								//Manage custom attribution (remove deactivated layers)
-								$("#"+baselayer.get("name")).remove();
+								$("#"+baselayer.get("name").replace(/[^A-Z0-9]/ig, "_")).remove();
 							}
 						}
 					}, this);
@@ -599,13 +599,13 @@ define(['backbone.marionette',
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(overlay.get("view").attribution){
 				            		$("#cesium_custom_attribution").append(
-					            		"<div id='" + overlay.get("name") + "' style='float: left;'>"+
+					            		"<div id='" + overlay.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
 					            		overlay.get("view").attribution +
 					            		"</div>");
 					            }
 							}else{
 								//Manage custom attribution (remove deactivated layers)
-								$("#"+overlay.get("name")).remove();
+								$("#"+overlay.get("name").replace(/[^A-Z0-9]/ig, "_")).remove();
 							}
 						}
 					}, this);
@@ -670,7 +670,7 @@ define(['backbone.marionette',
 	                    		
 							}
 
-							if(options.visible){
+							/*if(options.visible){
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(product.get("views")[0].attribution){
 				            		$("#cesium_custom_attribution").append(
@@ -681,7 +681,7 @@ define(['backbone.marionette',
 							}else{
 								//Manage custom attribution (remove deactivated layers)
 								$("#"+product.get("name")).remove();
-							}
+							}*/
 						}
 						if(product.get("model") && product.get("name") == options.name){
 							if(options.visible){
@@ -914,34 +914,37 @@ define(['backbone.marionette',
             	var cur_product = null;
 
             	globals.products.each(function(product) {
-        			cur_product = product;
-        			var params = product.get('parameters')
-        			for (k in params){
-        				if(params[k].selected){
-				            var sat = false;
-				            var product_keys = _.keys(globals.swarm.products);
-				            for (var i = product_keys.length - 1; i >= 0; i--) {
-				              var sat_keys = _.keys(globals.swarm.products[product_keys[i]]);
-				              for (var j = sat_keys.length - 1; j >= 0; j--) {
-				                if (globals.swarm.products[product_keys[i]][sat_keys[j]] == product.get('views')[0].id){
-				                  sat = sat_keys[j];
-				                }
-				              }
-				            }
-				            if(sat){
-				            	if(!settings.hasOwnProperty(sat)){
-				            		settings[sat] = {};
-				            	}
-				            	if(!settings[sat].hasOwnProperty(k)){
-				            		settings[sat][k] = product.get("parameters")[k];
-				            	}
-            					settings[sat][k]['band'] = k;
-            					settings[sat][k]['alpha'] = Math.floor(product.get('opacity')*255);
-            					settings[sat][k]['outlines'] = product.get('outlines');
-            					settings[sat][k]['outline_color'] = product.get('color');
-            				}
-        				}
-        			}
+
+            		if(product.get("visible")){
+	        			cur_product = product;
+	        			var params = product.get('parameters')
+	        			for (k in params){
+	        				if(params[k].selected){
+					            var sat = false;
+					            var product_keys = _.keys(globals.swarm.products);
+					            for (var i = product_keys.length - 1; i >= 0; i--) {
+					              var sat_keys = _.keys(globals.swarm.products[product_keys[i]]);
+					              for (var j = sat_keys.length - 1; j >= 0; j--) {
+					                if (globals.swarm.products[product_keys[i]][sat_keys[j]] == product.get('views')[0].id){
+					                  sat = sat_keys[j];
+					                }
+					              }
+					            }
+					            if(sat){
+					            	if(!settings.hasOwnProperty(sat)){
+					            		settings[sat] = {};
+					            	}
+					            	if(!settings[sat].hasOwnProperty(k)){
+					            		settings[sat][k] = product.get("parameters")[k];
+					            	}
+	            					settings[sat][k]['band'] = k;
+	            					settings[sat][k]['alpha'] = Math.floor(product.get('opacity')*255);
+	            					settings[sat][k]['outlines'] = product.get('outlines');
+	            					settings[sat][k]['outline_color'] = product.get('color');
+	            				}
+	        				}
+	        			}
+            		}
             	});
 
             	
@@ -951,9 +954,13 @@ define(['backbone.marionette',
             		var that = this;
 
 	            	var collections = _.uniq(results, function(row) { return row.id; }).map(function(obj){
-	            		that.activeCollections.push(obj.id);
-	            		if (_.find(SCALAR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})) {
-	            			that.features_collection[obj.id] = new Cesium.PointPrimitiveCollection();
+
+	            		
+	            		var parameters = _.filter(SCALAR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})
+	            		for (var i = 0; i < parameters.length; i++) {
+	            			
+	            			that.activeCollections.push(obj.id+parameters[i]);
+	            			that.features_collection[obj.id+parameters[i]] = new Cesium.PointPrimitiveCollection();
 
 	            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
 	            				that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
@@ -965,8 +972,13 @@ define(['backbone.marionette',
 		  						    blending : Cesium.BlendingState.ALPHA_BLEND
 		  						});
 	            			}
-	            		}else if (_.find(VECTOR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})) {
-	            			that.features_collection[obj.id] = new Cesium.Primitive({
+	            		}
+	            		
+	            		parameters = _.filter(VECTOR_PARAM, function(par){return settings[obj.id].hasOwnProperty(par);})
+	            		for (var i = 0; i < parameters.length; i++) {
+	            			
+	            			that.activeCollections.push(obj.id+parameters[i]);
+	            			that.features_collection[obj.id+parameters[i]] = new Cesium.Primitive({
 							  	geometryInstances : [],
 							  	appearance : new Cesium.PerInstanceColorAppearance({
 							    	flat : true,
@@ -997,10 +1009,21 @@ define(['backbone.marionette',
 
 				    	if (show){
 
-				    		// Find parameter in settings which is also in row these are the ones that are active
+				    		// Find parameter in settings which is also in row 
+				    		// these are the ones that are active
 				    		var active_params = _.keys(settings[row.id]);
-				    		var tovisualize = _.find(active_params, function(ap){
-				    			return row.hasOwnProperty(ap);
+				    		var tovisualize = _.filter(active_params, function(ap){
+				    			// Check if component is vector component
+				    			if(VECTOR_BREAKDOWN.hasOwnProperty(ap)){
+				    				var b = VECTOR_BREAKDOWN[ap];
+				    				return (
+				    					row.hasOwnProperty(b[0]) &&
+				    					row.hasOwnProperty(b[1]) &&
+				    					row.hasOwnProperty(b[2])
+				    				);
+				    			}else{
+				    				return row.hasOwnProperty(ap);
+				    			}
 				    		});
 				    		
 				    		for (var i = tovisualize.length - 1; i >= 0; i--) {
@@ -1008,17 +1031,17 @@ define(['backbone.marionette',
 				    			var set = settings[row.id][tovisualize[i]];
 					    		var alpha = set.alpha;
 
-					    		if (previous_collection != row.id){
-					    			previous_collection = row.id
-					    			this.plot.setColorScale(set.colorscale);
-					    			this.plot.setDomain(set.range);
-					    		}
+				    			this.plot.setColorScale(set.colorscale);
+				    			this.plot.setDomain(set.range);
 
 					    		if (_.find(SCALAR_PARAM, function(par){return set.band == par;})) {
-					    			var height_offset = 0;
-					    			if (set.band == "Bubble_Probability"){
-					    				height_offset = 100;
+					    			if(tovisualize[i] == "Bubble_Probability"){
+					    				if(row[set.band] <= 0.1){
+					    					continue;
+					    				}
 					    			}
+					    			var height_offset = i*210000;
+
 						    		var color = this.plot.getColor(row[set.band]);
 						    		var options = {
 								        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
@@ -1030,23 +1053,13 @@ define(['backbone.marionette',
 								    	options['outlineWidth'] = 0.5;
 								    	options['outlineColor'] = Cesium.Color.fromCssColorString(set.outline_color);
 								    }
-						    		this.features_collection[row.id].add(options);
+						    		this.features_collection[row.id+set.band].add(options);
 
 								}else if (_.find(VECTOR_PARAM, function(par){return set.band == par;})) {
-									var sb;
-									switch (set.band){
-										case 'B_NEC': sb = ['B_E','B_N','B_C']; break;
-										case 'v_SC': sb = ['v_SC_E','v_SC_N','v_SC_C']; break;
-										case 'SIFM': sb = ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM']; break;
-										case 'IGRF12': sb = ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12']; break;
-										case 'CHAOS-5-Combined': sb = [
-											'B_E_res_CHAOS-5-Combined',
-											'B_N_res_CHAOS-5-Combined',
-											'B_C_res_CHAOS-5-Combined'];
-										break;
-										case 'Custom_Model': sb = ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']; break;
-									}
+									var sb = VECTOR_BREAKDOWN[set.band];
 
+									var height_offset = i*210000;
+									
 									// Check if residuals are active!
 									var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
 									var color = this.plot.getColor(v_len);
@@ -1054,11 +1067,11 @@ define(['backbone.marionette',
 									var v_e = (row[sb[0]]/v_len)*add_len;
 									var v_n = (row[sb[1]]/v_len)*add_len;
 									var v_c = (row[sb[2]]/v_len)*add_len;
-									this.features_collection[row.id].geometryInstances.push( 
+									this.features_collection[row.id+set.band].geometryInstances.push( 
 									  	new Cesium.GeometryInstance({
 									    	geometry : new Cesium.SimplePolylineGeometry({
 									      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-									        		row.Longitude, row.Latitude, (row.Radius-max_rad),
+									        		row.Longitude, row.Latitude, (row.Radius-max_rad+height_offset),
 									        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
 									      		]),
 									      		followSurface: false
@@ -1394,7 +1407,7 @@ define(['backbone.marionette',
 	                    var info = product.get("name");
 	                    info += " - " + sel;
 	                    if(uom){
-	                    	info += " ("+uom+")";
+	                    	info += " ["+uom+"]";
 	                    }
 
 	                    g.append("text")

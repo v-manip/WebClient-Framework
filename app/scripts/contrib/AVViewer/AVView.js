@@ -82,7 +82,8 @@ define(['backbone.marionette',
 					histoMargin: {top: 55, right: 70, bottom: 25, left: 100},
 					shorten_width: 125,
 					toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
-					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "dst","kp","qdlat","mlt"]
+					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "dst","kp","qdlat","mlt"],
+					single_color: true
 				};
 
 				
@@ -129,6 +130,11 @@ define(['backbone.marionette',
 					}
 				});
 				this.sp.uom_set = available_parameters;
+
+				// Remove uom of time
+				if(this.sp.uom_set.hasOwnProperty("Timestamp")){
+					this.sp.uom_set["Timestamp"].uom = null;
+				}
 
 				// Special cases for separeted vectors
 				if (this.sp.uom_set.hasOwnProperty('B_error')){
@@ -184,7 +190,7 @@ define(['backbone.marionette',
 				if(data.length > 0){
 
 					if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
-						var filterstouse = ["dst","kp","qdlat","mlt"];
+						var filterstouse = ["dst","kp","qdlat","mlt", "n", "U_SC", "T_elec", "Bubble_Probability"];
 						var residuals = _.filter(_.keys(data[0]), function(item) {
 							return item.indexOf("_res") !== -1;
 						});

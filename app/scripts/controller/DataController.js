@@ -126,21 +126,12 @@
           var product = globals.products.find(function(model) { return model.get('name') == options.name; });
           if (product){
             if(options.visible){
-              /*if (product.get("processes")){
-                _.each(product.get("processes"), function(process){
-                  this.activeWPSproducts.push(process.layer_id);
-                },this);
-              }*/
+
               if (product.get("model")){
                   this.activeModels.push(product.get("download").id);
                   this.updateLayerResidualParameters();
               }
             }else{
-              /*_.each(product.get("processes"), function(process){
-                if (this.activeWPSproducts.indexOf(process.layer_id)!=-1){
-                  this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
-                }
-              },this);*/
 
               if (this.activeModels.indexOf(product.get("download").id)!=-1){
                 this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
@@ -148,7 +139,6 @@
               }
             }
           }
-          //this.checkSelections();
         }
 
         this.checkModelValidity();
@@ -273,7 +263,7 @@
             "end_time": getISODateTimeString(this.selected_time.end)
           };
 
-          options.variables = ["F", "B_NEC", "n", "T_elec", "U_SC", "v_SC", "Bubble_Probability"].join(",");
+          options.variables = ["F", "B_NEC", "n", "T_elec", "U_SC", "v_SC", "Bubble_Probability", "dst", "kp", "mlt", "qdlat"].join(",");
 
           /*if(this.selection_list.length > 0){
             var bb = this.selection_list[0];
