@@ -141,3 +141,16 @@ text.nvd3.nv-noData {
 	border-bottom-left-radius: 0px;
 	border-top-left-radius: 0px;
 }
+
+#filtermanager{
+	pointer-events: none;
+    opacity: 0;
+}
+
+#w2ui-overlay.downloadsection{
+	margin-left: -18px!important;
+}
+
+#custom_download .w2ui-field-helper.w2ui-list{
+	height: auto !important;
+}

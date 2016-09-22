@@ -210,6 +210,7 @@
                 return html;
             },
             renderDrop: function (item, options) {
+              $("#w2ui-overlay").addClass("downloadsection");
 
               var html = '<b>'+that.createSubscript(item.id)+'</b>';
               if(item.uom != null){

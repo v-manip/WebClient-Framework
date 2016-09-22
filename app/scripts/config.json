@@ -211,7 +211,7 @@
                 },
                 "B_VFM": {
                     "uom": "nT",
-                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                    "name": "Magnetic field vector, VFM frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -353,7 +353,7 @@
                 },
                 "B_VFM": {
                     "uom": "nT",
-                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                    "name": "Magnetic field vector, VFM frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -494,7 +494,7 @@
                 },
                 "B_VFM": {
                     "uom": "nT",
-                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                    "name": "Magnetic field vector, VFM frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",

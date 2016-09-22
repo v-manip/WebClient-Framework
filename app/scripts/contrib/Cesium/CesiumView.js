@@ -1045,18 +1045,20 @@ define(['backbone.marionette',
 						    			}
 						    			var height_offset = i*210000;
 
-							    		var color = this.plot.getColor(row[set.band]);
-							    		var options = {
-									        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
-									        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
-									        pixelSize : 8,
-									        scaleByDistance : scaltype
-									    };
-									    if(set.outlines){
-									    	options['outlineWidth'] = 0.5;
-									    	options['outlineColor'] = Cesium.Color.fromCssColorString(set.outline_color);
-									    }
-							    		this.features_collection[row.id+set.band].add(options);
+						    			if(!isNaN(row[set.band])){
+								    		var color = this.plot.getColor(row[set.band]);
+								    		var options = {
+										        position : new Cesium.Cartesian3.fromDegrees(row.Longitude, row.Latitude, row.Radius-max_rad+height_offset),
+										        color : new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha),
+										        pixelSize : 8,
+										        scaleByDistance : scaltype
+										    };
+										    if(set.outlines){
+										    	options['outlineWidth'] = 0.5;
+										    	options['outlineColor'] = Cesium.Color.fromCssColorString(set.outline_color);
+										    }
+								    		this.features_collection[row.id+set.band].add(options);
+						    			}
 
 									}else if (_.find(VECTOR_PARAM, function(par){return set.band == par;})) {
 										var sb = VECTOR_BREAKDOWN[set.band];
@@ -1064,31 +1066,33 @@ define(['backbone.marionette',
 										var height_offset = i*210000;
 										
 										// Check if residuals are active!
-										var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
-										var color = this.plot.getColor(v_len);
-										var add_len = 10;
-										var v_e = (row[sb[0]]/v_len)*add_len;
-										var v_n = (row[sb[1]]/v_len)*add_len;
-										var v_c = (row[sb[2]]/v_len)*add_len;
-										this.features_collection[row.id+set.band].geometryInstances.push( 
-										  	new Cesium.GeometryInstance({
-										    	geometry : new Cesium.SimplePolylineGeometry({
-										      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
-										        		row.Longitude, row.Latitude, (row.Radius-max_rad+height_offset),
-										        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
-										      		]),
-										      		followSurface: false
-										    	}),
-										    	id: "vec_line_"+linecnt,
-										    	attributes : {
-										      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
-										      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
-										      		)
-										    	}
-										  	})
-											
-										);
-										linecnt++;
+										if(!isNaN(row[sb[0]]) && !isNaN(row[sb[1]]) && !isNaN(row[sb[2]])){
+											var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
+											var color = this.plot.getColor(v_len);
+											var add_len = 10;
+											var v_e = (row[sb[0]]/v_len)*add_len;
+											var v_n = (row[sb[1]]/v_len)*add_len;
+											var v_c = (row[sb[2]]/v_len)*add_len;
+											this.features_collection[row.id+set.band].geometryInstances.push( 
+											  	new Cesium.GeometryInstance({
+											    	geometry : new Cesium.SimplePolylineGeometry({
+											      		positions : Cesium.Cartesian3.fromDegreesArrayHeights([
+											        		row.Longitude, row.Latitude, (row.Radius-max_rad+height_offset),
+											        		(row.Longitude+v_e), (row.Latitude+v_n), ((row.Radius-max_rad)+v_c*30000)
+											      		]),
+											      		followSurface: false
+											    	}),
+											    	id: "vec_line_"+linecnt,
+											    	attributes : {
+											      		color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+											      			new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
+											      		)
+											    	}
+											  	})
+												
+											);
+											linecnt++;
+										}
 
 									}
 						    	}

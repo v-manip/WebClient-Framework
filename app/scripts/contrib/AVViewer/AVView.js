@@ -153,6 +153,22 @@ define(['backbone.marionette',
 					this.sp.uom_set['B_E'].name = "Component of "+this.sp.uom_set['B_NEC'].name;
 					this.sp.uom_set['B_C'].name = "Component of "+this.sp.uom_set['B_NEC'].name;
 				}
+				if (this.sp.uom_set.hasOwnProperty('v_SC')){
+					this.sp.uom_set['v_SC_N'] = $.extend({}, this.sp.uom_set['v_SC']);
+					this.sp.uom_set['v_SC_E'] = $.extend({}, this.sp.uom_set['v_SC']);
+					this.sp.uom_set['v_SC_C'] = $.extend({}, this.sp.uom_set['v_SC']);
+					this.sp.uom_set['v_SC_N'].name = "Component of "+this.sp.uom_set['v_SC'].name;
+					this.sp.uom_set['v_SC_E'].name = "Component of "+this.sp.uom_set['v_SC'].name;
+					this.sp.uom_set['v_SC_C'].name = "Component of "+this.sp.uom_set['v_SC'].name;
+				}
+				if (this.sp.uom_set.hasOwnProperty('B_VFM')){
+					this.sp.uom_set['B_VFM,X'] = $.extend({}, this.sp.uom_set['B_VFM']);
+					this.sp.uom_set['B_VFM,Y'] = $.extend({}, this.sp.uom_set['B_VFM']);
+					this.sp.uom_set['B_VFM,Z'] = $.extend({}, this.sp.uom_set['B_VFM']);
+					this.sp.uom_set['B_VFM,X'].name = "Component of "+this.sp.uom_set['B_VFM'].name;
+					this.sp.uom_set['B_VFM,Y'].name = "Component of "+this.sp.uom_set['B_VFM'].name;
+					this.sp.uom_set['B_VFM,Z'].name = "Component of "+this.sp.uom_set['B_VFM'].name;
+				}
 				if (this.sp.uom_set.hasOwnProperty('B_NEC_res_IGRF12')){
 					this.sp.uom_set['B_N_res_IGRF12'] = $.extend({}, this.sp.uom_set['B_NEC_res_IGRF12']);
 					this.sp.uom_set['B_E_res_IGRF12'] = $.extend({}, this.sp.uom_set['B_NEC_res_IGRF12']);
@@ -186,11 +202,17 @@ define(['backbone.marionette',
 					this.sp.uom_set['B_C_res_Custom_Model'].name = "Component of "+this.sp.uom_set['B_NEC_res_Custom_Model'].name;
 				}
 
+				this.sp.uom_set['MLT'] = {uom: null, name:"Magnetic Local Time"};
+				this.sp.uom_set['QDLat'] = {uom: "deg", name:"Quasi-Dipole Latitude"};
+				this.sp.uom_set['QDLon'] = {uom: "deg", name:"Quasi-Dipole Longitude"};
+				this.sp.uom_set['Dst'] = {uom: null, name:"Disturbance storm time Index"};
+				this.sp.uom_set['Kp'] = {uom: null, name:"Global geomagnetic storm Index"};
+
 
 				if(data.length > 0){
 
 					if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
-						var filterstouse = ["dst","kp","qdlat","mlt", "n", "U_SC", "T_elec", "Bubble_Probability"];
+						var filterstouse = ["Kp", "Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
 						var residuals = _.filter(_.keys(data[0]), function(item) {
 							return item.indexOf("_res") !== -1;
 						});
@@ -199,11 +221,32 @@ define(['backbone.marionette',
 						if(residuals.length > 0){
 							filterstouse = filterstouse.concat(residuals);
 						}else{
-							filterstouse = filterstouse.concat(["F","B_N", "B_E", "B_C", ]);
+							filterstouse = filterstouse.concat(["F","F_error" ]);
 						}
 
 						this.sp.fieldsforfiltering = filterstouse;
+
+						// Check if we want to change the y-selection
+						// If previous does not contain plasma data and new one
+						// does we add plasma parameter n to selection i plot
+						if( 
+							(this.previous_parameters.indexOf("n") == -1) && 
+							(_.keys(data[0]).indexOf("n") != -1)
+						){
+							this.sp.sel_y.push("n");
+						}
+
+						// If previous does not contain mag data and new one
+						// does we add mag parameter F to selection i plot
+						if( 
+							(this.previous_parameters.indexOf("F") == -1) && 
+							(_.keys(data[0]).indexOf("F") != -1)
+						){
+							this.sp.sel_y.push("F");
+						}
 					}
+
+
 
 					this.previous_parameters = _.keys(data[0]);
 

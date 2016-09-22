@@ -225,11 +225,7 @@
 
 
         if (retrieve_data.length > 0){
-          /*var options = {
-            "collection_ids": retrieve_data.map(function(e){return e.layer;}).join(),
-            "begin_time": getISODateTimeString(this.selected_time.start),
-            "end_time": getISODateTimeString(this.selected_time.end)
-          };*/
+
           var collections = {};
           for (var i = retrieve_data.length - 1; i >= 0; i--) {
             var sat = false;
@@ -263,9 +259,12 @@
             "end_time": getISODateTimeString(this.selected_time.end)
           };
 
-          options.variables = ["F", "B_NEC", "n", "T_elec", "U_SC", "v_SC", "Bubble_Probability", "dst", "kp", "mlt", "qdlat"].join(",");
+          options.variables = [
+            "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC", "v_SC", "Bubble_Probability",
+            "Kp", "Dst", "QDLat", "QDLon", "MLT"
+          ].join(",");
 
-          /*if(this.selection_list.length > 0){
+          if(this.selection_list.length > 0){
             var bb = this.selection_list[0];
             options["bbox"] = bb.s + "," + bb.w + "," + bb.n + "," + bb.e;
           }
@@ -277,7 +276,7 @@
           }
 
           if(this.activeModels.length > 0)
-            options["model_ids"] = this.activeModels.join();*/
+            options["model_ids"] = this.activeModels.join();
 
           var req_data = wps_fetchDataTmpl(options);
 
@@ -309,6 +308,14 @@
                       dat[i]['B_error,X'] = bnec[0];
                       dat[i]['B_error,Y'] = bnec[1];
                       dat[i]['B_error,Z'] = bnec[2];
+                    }
+                    if(dat[i].hasOwnProperty('B_VFM')) {
+                      var bnec = dat[i]['B_VFM'];
+                      bnec = bnec.slice(1,-1).split(';').map(Number);
+                      delete dat[i]['B_VFM'];
+                      dat[i]['B_VFM,X'] = bnec[0];
+                      dat[i]['B_VFM,Y'] = bnec[1];
+                      dat[i]['B_VFM,Z'] = bnec[2];
                     }
                     if(dat[i].hasOwnProperty('v_SC')) {
                       var bnec = dat[i]['v_SC'];
