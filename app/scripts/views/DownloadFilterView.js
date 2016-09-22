@@ -92,9 +92,9 @@
             var date1 = that.start_picker.datepicker( "getDate" );
             var date2 = that.end_picker.datepicker( "getDate" );
             var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>15){
+            if (diff>30){
               date2 = new Date(date1);
-              date2.setDate(date2.getDate()+15);
+              date2.setDate(date2.getDate()+30);
               that.end_picker.datepicker("setDate", date2);
             }else if(diff<0){
               that.start_picker.datepicker("setDate", date2);
@@ -108,9 +108,9 @@
             var date1 = that.start_picker.datepicker( "getDate" );
             var date2 = that.end_picker.datepicker( "getDate" );
             var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>15){
+            if (diff>30){
               date1 = new Date(date2);
-              date1.setDate(date1.getDate()-15);
+              date1.setDate(date1.getDate()-30);
               that.start_picker.datepicker("setDate", date1);
             }else if(diff<0){
               that.end_picker.datepicker("setDate", date1);
@@ -210,6 +210,7 @@
                 return html;
             },
             renderDrop: function (item, options) {
+              $("#w2ui-overlay").addClass("downloadsection");
 
               var html = '<b>'+that.createSubscript(item.id)+'</b>';
               if(item.uom != null){

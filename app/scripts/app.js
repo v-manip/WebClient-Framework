@@ -1,6 +1,15 @@
 
 var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability"];
 var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
+var VECTOR_BREAKDOWN = {
+	'B_NEC': ['B_E','B_N','B_C'],
+	'v_SC':  ['v_SC_E','v_SC_N','v_SC_C'],
+	'SIFM': ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM'],
+	'IGRF12': ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12'],
+	'CHAOS-5-Combined': ['B_E_res_CHAOS-5-Combined','B_N_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+	'Custom_Model': ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']
+};
+
 
 (function() {
 	'use strict';
@@ -154,6 +163,9 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
                 var domain = [];
                 var range = [];
 
+                // Remove three first colors as they are used by the products
+                autoColor.getColor();autoColor.getColor();autoColor.getColor();
+
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
 					globals.products.add(
@@ -289,8 +301,85 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
                 	})
                 });
 
+                // We want to have the full list of products as the underlying
+				// system works in this manner but in order to accomodate the 
+				// concept of one product with three satellites we remove here 
+				// Each three products and combine them to one, the logic for
+				// "separating" them is then done when activating one of this
+				// "special products"
+
+                var filtered = globals.products.filter(function (m) {
+					if (m && m.get("download").id && 
+						 (
+						 	m.get("download").id.indexOf("SW_OPER_MAG") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_EFI") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_IBI") != -1
+						 )
+					){
+						return false;
+					}else{
+						return true;
+					}
+		        });
+
+		        globals.swarm["satellites"] = {
+		        	"Alpha": true,
+		        	"Bravo": false,
+		        	"Charlie": false
+		        };
+
+		        globals.swarm["products"] = {
+		        	"MAG": {
+		        		"Alpha": "SW_OPER_MAGA_LR_1B",
+		        		"Bravo": "SW_OPER_MAGB_LR_1B",
+		        		"Charlie": "SW_OPER_MAGC_LR_1B"
+		        	},
+		        	"EFI":  {
+		        		"Alpha": "SW_OPER_EFIA_PL_1B",
+		        		"Bravo": "SW_OPER_EFIB_PL_1B",
+		        		"Charlie": "SW_OPER_EFIC_PL_1B"
+		        	},
+		        	"IBI":  {
+		        		"Alpha": "SW_OPER_IBIATMS_2F",
+		        		"Bravo": "SW_OPER_IBIBTMS_2F",
+		        		"Charlie": "SW_OPER_IBICTMS_2F"
+		        	}
+		        };
+
+		        globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
+		        //globals.swarm["activeProducts"] = [];
+		        
+		        var filtered_collection = new Backbone.Collection(filtered);
+
+		        // Add generic product (which is container for A,B and C sats)
+				filtered_collection.add({
+					name: "Bubble Index data (IBI)",
+					visible: false,
+					color: "#2ca02c",
+					protocol: null,
+					containerproduct: true,
+					id: "IBI"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Plasma data (EFI PL)",
+					visible: false,
+					color: "#ff7f0e",
+					protocol: null,
+					containerproduct: true,
+					id: "EFI"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Magnetic data (MAG LR)",
+					visible: true,
+					color: "#1f77b4",
+					protocol: null,
+					containerproduct: true,
+					id: "MAG"
+				}, {at: 0});
+
+
                 this.productsView = new v.LayerSelectionView({
-                	collection:globals.products,
+                	collection: filtered_collection,
                 	itemView: v.LayerItemView.extend({
                 		template: {
                 			type:'handlebars',
@@ -299,6 +388,8 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
                 	}),
                 	className: "sortable"
                 });
+
+                globals.swarm["filtered_collection"] = filtered_collection;
 
                 this.overlaysView = new v.BaseLayerSelectionView({
                 	collection: globals.overlays,
@@ -520,8 +611,7 @@ var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Cust
 				.domain([-1, 0, max])
 				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
 				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
-
-
+				
 			}
 
 

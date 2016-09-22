@@ -45,7 +45,7 @@
                 "isphericalMercator": false,
                 "wrapDateLine": true,
                 "zoomOffset": 0,
-                "attribution": "Terrain-Light { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+                "attribution": "Terrain-Light { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> contrib. and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
             }, {
                 "id": "terrain-light",
                 "protocol": "WMS",
@@ -82,7 +82,7 @@
                 "isphericalMercator": false,
                 "wrapDateLine": true,
                 "zoomOffset": 0,
-                "attribution": "Terrain { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+                "attribution": "Terrain { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> contrib. and <a href='javascript:;' onClick='toggle(terrain_attribution)'>others</a>, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
             }, {
                 "id": "terrain",
                 "protocol": "WMS",
@@ -134,6 +134,7 @@
         "products": [{
             "name": "MAGA LR 1B",
             "visible": true,
+            "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
@@ -210,7 +211,7 @@
                 },
                 "B_VFM": {
                     "uom": "nT",
-                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                    "name": "Magnetic field vector, VFM frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -275,6 +276,7 @@
         },{
             "name": "MAGB LR 1B",
             "visible": false,
+            "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
@@ -351,7 +353,7 @@
                 },
                 "B_VFM": {
                     "uom": "nT",
-                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                    "name": "Magnetic field vector, VFM frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -415,6 +417,7 @@
         },{
             "name": "MAGC LR 1B",
             "visible": false,
+            "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
             "views": [{
@@ -491,7 +494,7 @@
                 },
                 "B_VFM": {
                     "uom": "nT",
-                    "name": "Magnetic field vector, VFM frame, zero if Flags_B = 255"
+                    "name": "Magnetic field vector, VFM frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -556,8 +559,9 @@
             "name": "EFIA PL 1B",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
             "views": [{
-                "id": "SW_OPER_EFIA",
+                "id": "SW_OPER_EFIA_PL_1B",
                 "protocol": "CZML",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
@@ -566,14 +570,14 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "SW_OPER_EFIA",
+                "id": "SW_OPER_EFIA_PL_1B",
                 "protocol": "EOWCS",
                 "url": "http://localhost:9000/vires00/ows"
             },
             "processes" : [
                 {
                     "id": "retrieve_data",
-                    "layer_id": "SW_OPER_EFIA"
+                    "layer_id": "SW_OPER_EFIA_PL_1B"
                 }
             ],
             "parameters": {
@@ -760,17 +764,22 @@
                     "uom": null,
                     "name": "Current maneuver identification code"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIA_PL_1B"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
 
         },{
-            "name": "SW OPER IBIA",
-            "visible": false,
+            "name": "EFIB PL 1B",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
             "views": [{
-                "id": "SW_OPER_IBIA",
+                "id": "SW_OPER_EFIB_PL_1B",
                 "protocol": "CZML",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
@@ -779,14 +788,451 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "SW_OPER_IBIA",
+                "id": "SW_OPER_EFIB_PL_1B",
                 "protocol": "EOWCS",
                 "url": "http://localhost:9000/vires00/ows"
             },
             "processes" : [
                 {
                     "id": "retrieve_data",
-                    "layer_id": "SW_OPER_IBIA"
+                    "layer_id": "SW_OPER_EFIB_PL_1B"
+                }
+            ],
+            "parameters": {
+                "n": {
+                    "range": [100000, 200000],
+                    "uom":"cm -3",
+                    "colorscale": "jet",
+                    "selected": true,
+                    "name": "Plasma density"
+                },
+                "T_elec": {
+                    "range": [1000, 5000],
+                    "uom":"K",
+                    "colorscale": "jet",
+                    "name": "Plasma electron temperature"
+                },
+                "U_SC": {
+                    "range": [-5, 0],
+                    "uom":"V",
+                    "colorscale": "jet",
+                    "name": "Spacecraft potential"
+                },
+                "v_SC": {
+                    "range": [1500, 3500],
+                    "uom": "m/s",
+                    "colorscale": "jet",
+                    "name": "Spacecraft velocity, NEC frame"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time of observation"
+                },
+                "SyncStatus": {
+                    "uom": null,
+                    "name": "Time synchronization status (of TII), source and quality, see Appendix"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Position in ITRF - Radius"
+                },
+                "v_SC": {
+                    "uom": "m/s",
+                    "name": "Spacecraft velocity, NEC frame"
+                },
+                "v_ion": {
+                    "uom": "m/s",
+                    "name": "Ion velocity, NEC frame"
+                },
+                "v_ion_error": {
+                    "uom": "m/s",
+                    "name": "Error estimate of v_ion, NEC frame"
+                },
+                "E": {
+                    "uom": "mV/m",
+                    "name": "Electric field vector, NEC frame"
+                },
+                "E_error": {
+                    "uom": "mV/m",
+                    "name": "Error estimate of E, NEC frame"
+                },
+                "dt_LP": {
+                    "uom": "s",
+                    "name": "Time offset of plasma density, t_n = t + dt_LP"
+                },
+                "n": {
+                    "uom": "cm -3",
+                    "name": "Plasma density (electron)"
+                },
+                "n_error": {
+                    "uom": "cm -3",
+                    "name": "Error estimate of plasma density (n), a value of 2^32-1 = 4294967295 means undetermined"
+                },
+                "T_ion": {
+                    "uom": "K",
+                    "name": "Plasma ion temperature"
+                },
+                "T_ion_error": {
+                    "uom": "K",
+                    "name": "Error estimate of plasma ion temperature (T_ion)"
+                },
+                "T_elec": {
+                    "uom": "K",
+                    "name": "Plasma electron temperature"
+                },
+                "T_elec_error": {
+                    "uom": "K",
+                    "name": "Error estimate of plasma electron temperature (T_elec), a value of 2^32-1 = 4294967295 means undetermined"
+                },
+                "U_SC": {
+                    "uom": "V",
+                    "name": "Spacecraft potential"
+                },
+                "U_SC_error": {
+                    "uom": "V",
+                    "name": "Error estimate of spacecraft potential (U_SC), a value of 2^32-1 = 32767 means undetermined"
+                },
+                "v_ion_H": {
+                    "uom": "m/s",
+                    "name": "Ion velocity, horizontal (H) sensor"
+                },
+                "v_ion_H_error": {
+                    "uom": "m/s",
+                    "name": "Error estimate of v_ion_H"
+                },
+                "v_ion_V": {
+                    "uom": "m/s",
+                    "name": "Error estimate of v_ion_V"
+                },
+                "v_ion_V_error": {
+                    "uom": "m/s",
+                    "name": "RMS fit error from TII x-profile 2-Gaussian fits, H sensor"
+                },
+                "rms_fit_H": {
+                    "uom": null,
+                    "name": "RMS fit error from TII x-profile 2-Gaussian fits, V sensor"
+                },
+                "rms_fit_V": {
+                    "uom": null,
+                    "name": "Magnetic local time"
+                },
+                "var_x_H": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz x moment during a halfsecond interval, H sensor"
+                },
+                "var_y_H": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz y moment during a halfsecond interval, H sensor"
+                },
+                "var_x_V": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz x moment during a halfsecond interval, V sensor"
+                },
+                "var_y_V": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz y moment during a halfsecond interval, V sensor"
+                },
+                "dv_mtq_H": {
+                    "uom": "m/s",
+                    "name": "Velocity deflection due to magnetotorquer, H sensor"
+                },
+                "dv_mtq_V": {
+                    "uom": "m/s",
+                    "name": "Velocity deflection due to magnetotorquer, V sensor"
+                },
+                "SAA": {
+                    "uom": null,
+                    "name": "South Atlantic Anomaly proximity indicator, range 0-5"
+                },
+                "Flags_LP": {
+                    "uom": null,
+                    "name": "Flags indicating the source/method of LP measurements (n, T_elec, U_SC)"
+                },
+                "Flags_LP_n": {
+                    "uom": null,
+                    "name": "Flags characterizing the plasma density measurement"
+                },
+                "Flags_LP_T_elec": {
+                    "uom": null,
+                    "name": "Flags characterizing the electron temperature measurement"
+                },
+                "Flags_LP_U_SC": {
+                    "uom": null,
+                    "name": "Flags characterizing the spacecraft potential measurement"
+                },
+                "Flags_TII": {
+                    "uom": null,
+                    "name": "Flags characterizing the TII measurement"
+                },
+                "Flags_Platform": {
+                    "uom": null,
+                    "name": "Flags characterizing the S/C platform information (AOCS thrusters, VFM and STR status)"
+                },
+                "Maneuver_Id": {
+                    "uom": null,
+                    "name": "Current maneuver identification code"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIB_PL_1B"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+
+        },{
+            "name": "EFIC PL 1B",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_EFIC_PL_1B",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_EFIC_PL_1B",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIC_PL_1B"
+                }
+            ],
+            "parameters": {
+                "n": {
+                    "range": [100000, 200000],
+                    "uom":"cm -3",
+                    "colorscale": "jet",
+                    "selected": true,
+                    "name": "Plasma density"
+                },
+                "T_elec": {
+                    "range": [1000, 5000],
+                    "uom":"K",
+                    "colorscale": "jet",
+                    "name": "Plasma electron temperature"
+                },
+                "U_SC": {
+                    "range": [-5, 0],
+                    "uom":"V",
+                    "colorscale": "jet",
+                    "name": "Spacecraft potential"
+                },
+                "v_SC": {
+                    "range": [1500, 3500],
+                    "uom": "m/s",
+                    "colorscale": "jet",
+                    "name": "Spacecraft velocity, NEC frame"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time of observation"
+                },
+                "SyncStatus": {
+                    "uom": null,
+                    "name": "Time synchronization status (of TII), source and quality, see Appendix"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Position in ITRF - longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Position in ITRF - Radius"
+                },
+                "v_SC": {
+                    "uom": "m/s",
+                    "name": "Spacecraft velocity, NEC frame"
+                },
+                "v_ion": {
+                    "uom": "m/s",
+                    "name": "Ion velocity, NEC frame"
+                },
+                "v_ion_error": {
+                    "uom": "m/s",
+                    "name": "Error estimate of v_ion, NEC frame"
+                },
+                "E": {
+                    "uom": "mV/m",
+                    "name": "Electric field vector, NEC frame"
+                },
+                "E_error": {
+                    "uom": "mV/m",
+                    "name": "Error estimate of E, NEC frame"
+                },
+                "dt_LP": {
+                    "uom": "s",
+                    "name": "Time offset of plasma density, t_n = t + dt_LP"
+                },
+                "n": {
+                    "uom": "cm -3",
+                    "name": "Plasma density (electron)"
+                },
+                "n_error": {
+                    "uom": "cm -3",
+                    "name": "Error estimate of plasma density (n), a value of 2^32-1 = 4294967295 means undetermined"
+                },
+                "T_ion": {
+                    "uom": "K",
+                    "name": "Plasma ion temperature"
+                },
+                "T_ion_error": {
+                    "uom": "K",
+                    "name": "Error estimate of plasma ion temperature (T_ion)"
+                },
+                "T_elec": {
+                    "uom": "K",
+                    "name": "Plasma electron temperature"
+                },
+                "T_elec_error": {
+                    "uom": "K",
+                    "name": "Error estimate of plasma electron temperature (T_elec), a value of 2^32-1 = 4294967295 means undetermined"
+                },
+                "U_SC": {
+                    "uom": "V",
+                    "name": "Spacecraft potential"
+                },
+                "U_SC_error": {
+                    "uom": "V",
+                    "name": "Error estimate of spacecraft potential (U_SC), a value of 2^32-1 = 32767 means undetermined"
+                },
+                "v_ion_H": {
+                    "uom": "m/s",
+                    "name": "Ion velocity, horizontal (H) sensor"
+                },
+                "v_ion_H_error": {
+                    "uom": "m/s",
+                    "name": "Error estimate of v_ion_H"
+                },
+                "v_ion_V": {
+                    "uom": "m/s",
+                    "name": "Error estimate of v_ion_V"
+                },
+                "v_ion_V_error": {
+                    "uom": "m/s",
+                    "name": "RMS fit error from TII x-profile 2-Gaussian fits, H sensor"
+                },
+                "rms_fit_H": {
+                    "uom": null,
+                    "name": "RMS fit error from TII x-profile 2-Gaussian fits, V sensor"
+                },
+                "rms_fit_V": {
+                    "uom": null,
+                    "name": "Magnetic local time"
+                },
+                "var_x_H": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz x moment during a halfsecond interval, H sensor"
+                },
+                "var_y_H": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz y moment during a halfsecond interval, H sensor"
+                },
+                "var_x_V": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz x moment during a halfsecond interval, V sensor"
+                },
+                "var_y_V": {
+                    "uom": null,
+                    "name": "Variance in 16 Hz y moment during a halfsecond interval, V sensor"
+                },
+                "dv_mtq_H": {
+                    "uom": "m/s",
+                    "name": "Velocity deflection due to magnetotorquer, H sensor"
+                },
+                "dv_mtq_V": {
+                    "uom": "m/s",
+                    "name": "Velocity deflection due to magnetotorquer, V sensor"
+                },
+                "SAA": {
+                    "uom": null,
+                    "name": "South Atlantic Anomaly proximity indicator, range 0-5"
+                },
+                "Flags_LP": {
+                    "uom": null,
+                    "name": "Flags indicating the source/method of LP measurements (n, T_elec, U_SC)"
+                },
+                "Flags_LP_n": {
+                    "uom": null,
+                    "name": "Flags characterizing the plasma density measurement"
+                },
+                "Flags_LP_T_elec": {
+                    "uom": null,
+                    "name": "Flags characterizing the electron temperature measurement"
+                },
+                "Flags_LP_U_SC": {
+                    "uom": null,
+                    "name": "Flags characterizing the spacecraft potential measurement"
+                },
+                "Flags_TII": {
+                    "uom": null,
+                    "name": "Flags characterizing the TII measurement"
+                },
+                "Flags_Platform": {
+                    "uom": null,
+                    "name": "Flags characterizing the S/C platform information (AOCS thrusters, VFM and STR status)"
+                },
+                "Maneuver_Id": {
+                    "uom": null,
+                    "name": "Current maneuver identification code"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EFIC_PL_1B"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+
+        },{
+            "name": "SW OPER IBIA TMS 2F",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS-INDEX",
+            "color": "#2ca02c",
+            "views": [{
+                "id": "SW_OPER_IBIATMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_IBIATMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIATMS_2F"
                 }
             ],
             "parameters": {
@@ -839,11 +1285,183 @@
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
                 }
-            },
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIATMS_2F"
+                }
+            ],
             "outlines": false,
             "satellite": "Swarm"
-        },
-        {
+        },{
+            "name": "SW OPER IBIB TMS 2F",
+            "visible": false,
+            "timeSlider": true,
+            "color": "#2ca02c",
+            "timeSliderProtocol": "WPS-INDEX",
+            "views": [{
+                "id": "SW_OPER_IBIBTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_IBIBTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIBTMS_2F"
+                }
+            ],
+            "parameters": {
+                "Bubble_Probability": {
+                    "range": [0, 1],
+                    "uom": null,
+                    "colorscale": "jet",
+                    "selected": true,
+                    "name": "Detection probability of the plasma bubble"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": "ms",
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "Bubble_Index": {
+                    "uom": null,
+                    "name": "Plasma Bubble Index (0 Quiet; 1 Bubble; -1 Not analyzed)"
+                },
+                "Bubble_Probability": {
+                    "uom": null,
+                    "name": "Detection probability of the plasma bubble (in steps of 0.2; 0-not probable, 1-very probable)"
+                },
+                "Flags_Bubble": {
+                    "uom": null,
+                    "name": "Flags related to the plasma bubble index"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from MAGx_L1_B"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from MAGx_L1_B"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from MAGx_L1_B"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBIBTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
+            "name": "SW OPER IBIC TMS 2F",
+            "visible": false,
+            "timeSlider": true,
+            "color": "#2ca02c",
+            "timeSliderProtocol": "WPS-INDEX",
+            "views": [{
+                "id": "SW_OPER_IBICTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_IBICTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBICTMS_2F"
+                }
+            ],
+            "parameters": {
+                "Bubble_Probability": {
+                    "range": [0, 1],
+                    "uom": null,
+                    "colorscale": "jet",
+                    "selected": true,
+                    "name": "Detection probability of the plasma bubble"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": "ms",
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "Bubble_Index": {
+                    "uom": null,
+                    "name": "Plasma Bubble Index (0 Quiet; 1 Bubble; -1 Not analyzed)"
+                },
+                "Bubble_Probability": {
+                    "uom": null,
+                    "name": "Detection probability of the plasma bubble (in steps of 0.2; 0-not probable, 1-very probable)"
+                },
+                "Flags_Bubble": {
+                    "uom": null,
+                    "name": "Flags related to the plasma bubble index"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from MAGx_L1_B"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from MAGx_L1_B"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from MAGx_L1_B"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_IBICTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
             "name": "SIFM",
             "visible": false,
             "timeSlider": true,
@@ -1338,7 +1956,7 @@
             "isphericalMercator": false,
             "wrapDateLine": true,
             "zoomOffset": 0,
-            "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
+            "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> contrib., Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
         },
         {
             "name": "Borders and Labels",
@@ -1365,7 +1983,7 @@
             "isphericalMercator": false,
             "wrapDateLine": true,
             "zoomOffset": 0,
-            "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a> contributors, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
+            "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> contrib., Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
         }]
     },
 
@@ -1445,7 +2063,7 @@
         },
         "brush": {
             "start": "2016-03-02T10:00:00Z",
-            "end": "2016-03-02T15:00:00Z"
+            "end": "2016-03-02T11:00:00Z"
         },
         "display": {
             "start": "2016-02-28T01:00:00Z",
