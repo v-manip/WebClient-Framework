@@ -660,6 +660,12 @@ define(['backbone.marionette',
 					                		ces_layer.imageryProvider.updateProperties("dim_coeff", (coeff_range[0]+","+coeff_range[1]));
 
 										ces_layer.show = options.visible;
+
+					                	if (ces_layer.show){
+						            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+						            		this.map.scene.imageryLayers.remove(ces_layer, false);
+						            		this.map.scene.imageryLayers.add(ces_layer, index);
+						            	}
 									}
                     			}else{
                     				var ces_layer = product.get("ces_layer");
