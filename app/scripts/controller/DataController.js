@@ -126,16 +126,16 @@
           var product = globals.products.find(function(model) { return model.get('name') == options.name; });
           if (product){
             if(options.visible){
-
               if (product.get("model")){
-                  this.activeModels.push(product.get("download").id);
-                  this.updateLayerResidualParameters();
+                this.activeModels.push(product.get("download").id);
+                this.updateLayerResidualParameters();
+                this.checkSelections();
               }
             }else{
-
               if (this.activeModels.indexOf(product.get("download").id)!=-1){
                 this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
                 this.updateLayerResidualParameters();
+                this.checkSelections();
               }
             }
           }
@@ -260,8 +260,11 @@
           };
 
           options.variables = [
-            "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC", "v_SC", "Bubble_Probability",
-            "Kp", "Dst", "QDLat", "QDLon", "MLT"
+            "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
+            "v_SC", "Bubble_Probability", "Dst", "QDLat", "QDLon", "MLT",
+            "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
+            "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
+            "F_res_CHAOS-5-Combined", "F_res_Custom_Model"
           ].join(",");
 
           if(this.selection_list.length > 0){
@@ -327,14 +330,14 @@
                     }
                     
                     $.each(dat[i], function(key, value){
-                      if (key.indexOf("B_NEC_")>-1){
+                      if (key.indexOf("B_NEC_res")>-1){
                         var res_model = key.substring(6);
                         var bnec = dat[i][key];
                         bnec = bnec.slice(1,-1).split(';').map(Number);
                         delete dat[i][key];
-                        dat[i]['B_N_res_'+res_model] = bnec[0];
-                        dat[i]['B_E_res_'+res_model] = bnec[1];
-                        dat[i]['B_C_res_'+res_model] = bnec[2];
+                        dat[i]['B_N_'+res_model] = bnec[0];
+                        dat[i]['B_E_'+res_model] = bnec[1];
+                        dat[i]['B_C_'+res_model] = bnec[2];
                       }
                     });
                     

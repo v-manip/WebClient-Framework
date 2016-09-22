@@ -1564,19 +1564,21 @@ define(['backbone.marionette',
 
 				}else{
 					this.bboxsel = null;
-					if(this.extentPrimitive)
+					if(this.extentPrimitive){
 						this.map.scene.primitives.remove(this.extentPrimitive);
+					}
 					_.each(_.keys(this.FL_collection), function(key){
 	            		this.map.scene.primitives.remove(this.FL_collection[key]);
                 		delete this.FL_collection[key];
 	            	}, this);
+	            	$('#bb_selection').html('Select Area');
 				}
 
 
 			},
 
 			checkFieldLines: function(){
-				console.log(this.activeFL);
+				//console.log(this.activeFL);
 
 				if(this.activeFL.length>0 && this.bboxsel){
 

@@ -102,14 +102,16 @@
 			},
 
 			OnAppReset: function(){
+				// First deactivate all swarm container products
 				globals.swarm.filtered_collection.each(function(layer){
 					if(layer.get("containerproduct")){
-						var product_keys = _.keys(globals.swarm.products[layer.get("id")]);
+						var products = globals.swarm.products[layer.get("id")];
+						var product_keys = _.keys(products);
 		            	layer.set("visible", false);
 
                 		for (var i = product_keys.length - 1; i >= 0; i--) {
             				globals.products.forEach(function(p){
-            					if(p.get("visible")){
+            					if(p.get("visible") && products[product_keys[i]]==p.get("download").id){
 	                				p.set("visible", false);
 	                				Communicator.mediator.trigger('map:layer:change', {
 	                					name: p.get("name"),
@@ -121,15 +123,22 @@
             					}
 	                		});
                 		}
-					}else{
-						if(layer.get('visible')){
-			        		var options = { name: layer.get('name'), isBaseLayer: false, visible: false };
-			        		layer.set('visible',false);
-			        		Communicator.mediator.trigger('map:layer:change', options);
-			          	}
 					}
 				});
+
 				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+
+				globals.products.each(function(layer){
+					
+					if(layer.get('visible')){
+		        		var options = { name: layer.get('name'), isBaseLayer: false, visible: false };
+		        		layer.set('visible',false);
+		        		Communicator.mediator.trigger('map:layer:change', options);
+		          	}
+
+				});
+
+				
 				// Should do this in the content or data controller but need to make sure layers are first deactivated
 				Communicator.mediator.trigger("selection:changed", null);
 			}

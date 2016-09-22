@@ -244,6 +244,23 @@ define(['backbone.marionette',
 						){
 							this.sp.sel_y.push("F");
 						}
+
+						// If previous does not contain a residual a new one does
+						// we switch the selection to residual value
+						var res_index = residuals.indexOf(
+							_.find(_.keys(data[0]), function(item) {
+									return item.indexOf("F_res") !== -1;
+								})
+							);
+						if(res_index != -1){
+							var res_p = residuals[res_index];
+							if( 
+								(this.previous_parameters.indexOf(res_p) == -1) && 
+								(_.keys(data[0]).indexOf(res_p) != -1)
+							){
+								this.sp.sel_y = [res_p];
+							}
+						}
 					}
 
 
