@@ -82,7 +82,7 @@ define(['backbone.marionette',
 					histoMargin: {top: 55, right: 70, bottom: 25, left: 100},
 					shorten_width: 125,
 					toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
-					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "Dst","Kp","QDLat","MLT"],
+					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "Dst", "QDLat","MLT"],
 					single_color: true
 				};
 
@@ -227,7 +227,7 @@ define(['backbone.marionette',
 					});
 
 					if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
-						var filterstouse = ["Kp", "Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
+						var filterstouse = ["Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
 						var residuals = _.filter(_.keys(data[0]), function(item) {
 							return item.indexOf("_res") !== -1;
 						});

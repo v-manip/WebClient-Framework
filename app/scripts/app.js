@@ -2,12 +2,18 @@
 var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability"];
 var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
 var VECTOR_BREAKDOWN = {
-	'B_NEC': ['B_E','B_N','B_C'],
-	'v_SC':  ['v_SC_E','v_SC_N','v_SC_C'],
-	'SIFM': ['B_E_res_SIFM','B_N_res_SIFM','B_C_res_SIFM'],
-	'IGRF12': ['B_E_res_IGRF12','B_N_res_IGRF12','B_C_res_IGRF12'],
-	'CHAOS-5-Combined': ['B_E_res_CHAOS-5-Combined','B_N_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
-	'Custom_Model': ['B_E_res_Custom_Model','B_N_res_Custom_Model','B_C_res_Custom_Model']
+	'B_NEC': ['B_N','B_E','B_C'],
+	'B_error': ['B_error,X', 'B_error,Y', 'B_error,Z'],
+	'B_VFM': ['B_VFM,X', 'B_VFM,Y', 'B_VFM,Z'],
+	'v_SC':  ['v_SC_N','v_SC_E','v_SC_C'],
+	'B_NEC_res_SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
+	'B_NEC_res_IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
+	'B_NEC_res_CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+	'B_NEC_res_Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model'],
+	'SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
+	'IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
+	'CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+	'Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model']
 };
 
 
