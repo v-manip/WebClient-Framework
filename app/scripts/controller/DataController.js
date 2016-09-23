@@ -339,6 +339,9 @@
                         dat[i]['B_E_'+res_model] = bnec[1];
                         dat[i]['B_C_'+res_model] = bnec[2];
                       }
+                      if(dat[i][key] === "nan"){
+                        dat[i][key] = NaN;
+                      }
                     });
                     
                     

@@ -208,8 +208,23 @@ define(['backbone.marionette',
 				this.sp.uom_set['Dst'] = {uom: null, name:"Disturbance storm time Index"};
 				this.sp.uom_set['Kp'] = {uom: null, name:"Global geomagnetic storm Index"};
 
+				$('#tmp_download_button').unbind( "click" );
+				$('#tmp_download_button').remove();
 
 				if(data.length > 0){
+
+					// TODO: Dirty hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
+					var download = d3.select(this.el).append("button")
+				        .attr("type", "button")
+				        .attr("id", "tmp_download_button")
+				        .attr("class", "btn btn-success")
+				        .attr("style", "position: absolute; right: 55px; top: 7px; z-index: 1000;")
+				        .text("Download");
+
+
+					$("#tmp_download_button").click(function(evt){
+						Communicator.mediator.trigger("dialog:open:download:filter", true);
+					});
 
 					if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
 						var filterstouse = ["Kp", "Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
@@ -280,6 +295,7 @@ define(['backbone.marionette',
 				}else{
 					$('#scatterdiv').empty();
 					$('#parallelsdiv').empty();
+					$('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
 				}
 			},
 

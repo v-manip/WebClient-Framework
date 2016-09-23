@@ -154,3 +154,14 @@ text.nvd3.nv-noData {
 #custom_download .w2ui-field-helper.w2ui-list{
 	height: auto !important;
 }
+
+#nodatainfo{
+	text-align: center;
+	color: grey;
+	font-size: 2em;
+	font-weight: bold;
+	opacity: 0.6;
+	bottom: 20px;
+	position: absolute;
+	width: 100%;
+}
