@@ -82,7 +82,7 @@ define(['backbone.marionette',
 					histoMargin: {top: 55, right: 70, bottom: 25, left: 100},
 					shorten_width: 125,
 					toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
-					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "dst","kp","qdlat","mlt"],
+					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "Dst","Kp","QDLat","MLT"],
 					single_color: true
 				};
 
