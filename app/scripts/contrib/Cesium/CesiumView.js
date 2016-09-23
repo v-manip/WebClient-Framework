@@ -1116,8 +1116,8 @@ define(['backbone.marionette',
 											var v_len = Math.sqrt(Math.pow(row[sb[0]],2)+Math.pow(row[sb[1]],2)+Math.pow(row[sb[2]],2));
 											var color = this.plot.getColor(v_len);
 											var add_len = 10;
-											var v_e = (row[sb[0]]/v_len)*add_len;
-											var v_n = (row[sb[1]]/v_len)*add_len;
+											var v_n = (row[sb[0]]/v_len)*add_len;
+											var v_e = (row[sb[1]]/v_len)*add_len;
 											var v_c = (row[sb[2]]/v_len)*add_len;
 											this.features_collection[row.id+set.band].geometryInstances.push( 
 											  	new Cesium.GeometryInstance({

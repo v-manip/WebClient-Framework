@@ -12,11 +12,12 @@
     'hbs!tmpl/FilterTemplate',
     'hbs!tmpl/wps_retrieve_data_filtered',
     'hbs!tmpl/CoverageDownloadPost',
+    'hbs!tmpl/wps_fetchFilteredData',
     'underscore',
     'w2ui'
   ],
-  function( Backbone, Communicator, globals, m, DownloadFilterTmpl, 
-            FilterTmpl, wps_requestTmpl, CoverageDownloadPostTmpl) {
+  function( Backbone, Communicator, globals, m, DownloadFilterTmpl,
+            FilterTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredData ) {
 
     var DownloadFilterView = Backbone.Marionette.ItemView.extend({
       tagName: "div",
@@ -312,7 +313,60 @@
         options.end_time = getISODateTimeString(options.end_time);
 
         // products
-        options.collection_ids = this.swarm_prod.map(function(m){return m.get("views")[0].id;}).join(",");
+        //options.collection_ids = this.swarm_prod.map(function(m){return m.get("views")[0].id;}).join(",");
+        var retrieve_data = [];
+
+        globals.products.each(function(model) {
+          if (_.find(this.swarm_prod, function(p){ return model.get("views")[0].id == p.get("views")[0].id})) {
+            var processes = model.get("processes");
+            _.each(processes, function(process){
+              if(process){
+                switch (process.id){
+                  case "retrieve_data":
+                    retrieve_data.push({
+                      layer:process.layer_id,
+                      url: model.get("views")[0].urls[0]
+                    });
+                  break;
+                }
+              }
+            }, this);
+          }
+        }, this);
+
+
+        if (retrieve_data.length > 0){
+
+          var collections = {};
+          for (var i = retrieve_data.length - 1; i >= 0; i--) {
+            var sat = false;
+            var product_keys = _.keys(globals.swarm.products);
+            for (var j = product_keys.length - 1; j >= 0; j--) {
+              var sat_keys = _.keys(globals.swarm.products[product_keys[j]]);
+              for (var k = sat_keys.length - 1; k >= 0; k--) {
+                if (globals.swarm.products[product_keys[j]][sat_keys[k]] == retrieve_data[i].layer){
+                  sat = sat_keys[k];
+                }
+              }
+            }
+            if(sat){
+              if(collections.hasOwnProperty(sat)){
+                collections[sat].push(retrieve_data[i].layer);
+              }else{
+                collections[sat] = [retrieve_data[i].layer];
+              }
+            }
+           
+          }
+
+          var collection_keys = _.keys(collections);
+          for (var i = collection_keys.length - 1; i >= 0; i--) {
+            collections[collection_keys[i]] = collections[collection_keys[i]].reverse();
+          }
+
+          options["collections_ids"] = JSON.stringify(collections);
+        }
+
 
         // models
         options.model_ids = this.models.map(function(m){return m.get("download").id;}).join(",");
@@ -336,23 +390,42 @@
           };
           // Make sure smaller value is first item
           extent.sort(function (a, b) { return a-b; });
-          filters.push(fe.id+":"+ extent.join(","));
+
+          // Check to see if filter is on a vector component
+          var original = false;
+          var index = -1;
+          _.each(VECTOR_BREAKDOWN, function(v, key){
+            for (var i = 0; i < v.length; i++) {
+              if(v[i] === fe.id){
+                index = i;
+                original = key;
+              }
+            }
+            
+          });
+
+          if (original) {
+            filters.push(original+"["+index+"]:"+ extent.join(","));
+          }else{
+            filters.push(fe.id+":"+ extent.join(","));
+          }
         });
 
         options.filters = filters.join(";");
 
-        // Custom parameters
+        // Custom variables
         if ($('#custom_parameter_cb').is(':checked')) {
-          var parameters = $('#param_enum').data('selected');
-          parameters = parameters.map(function(item) {return item.id;});
-          parameters = parameters.join(';');
-          options.parameters = parameters;
+          var variables = $('#param_enum').data('selected');
+          variables = variables.map(function(item) {return item.id;});
+          variables = variables.join(',');
+          options.variables = variables;
         }
 
         // TODO: Just getting last URL here think of how different urls should be handled
         var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];
 
-        var xml = wps_requestTmpl(options);
+        //var xml = wps_requestTmpl(options);
+        var xml = wps_fetchFilteredData(options);
         
         var $form = $(CoverageDownloadPostTmpl({
               url: url, xml: xml

@@ -259,13 +259,38 @@
             "end_time": getISODateTimeString(this.selected_time.end)
           };
 
-          options.variables = [
+          
+          var variables = [
             "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
-            "v_SC", "Bubble_Probability", "Dst", "QDLat", "QDLon", "MLT",
+            "v_SC", "Bubble_Probability", "Kp", "Dst", "QDLat", "QDLon", "MLT",
             "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
             "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
             "F_res_CHAOS-5-Combined", "F_res_Custom_Model"
-          ].join(",");
+          ];
+
+          // See if magnetic data actually selected if not remove residuals
+          var magdata = false;
+          _.each(collections, function(vals){
+            if(_.find(vals, function(v){
+              if(v.indexOf("MAG")!=-1){
+                return true}
+              })){
+              magdata = true;
+            }
+          });
+
+          if(!magdata){
+            variables = _.filter(variables, function(v){
+              if(v.indexOf("_res_")!=-1){
+                return false;
+              }else{
+                return true;
+              }
+            })
+          }
+
+          options.variables = variables.join(",")
+
 
           if(this.selection_list.length > 0){
             var bb = this.selection_list[0];
@@ -296,49 +321,17 @@
                     if(dat[i].hasOwnProperty('Timestamp')) {
                       dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']*1000);
                     }
-                    if(dat[i].hasOwnProperty('B_NEC')) {
-                      var bnec = dat[i]['B_NEC'];
-                      bnec = bnec.slice(1,-1).split(';').map(Number);
-                      delete dat[i]['B_NEC'];
-                      dat[i]['B_N'] = bnec[0];
-                      dat[i]['B_E'] = bnec[1];
-                      dat[i]['B_C'] = bnec[2];
-                    }
-                    if(dat[i].hasOwnProperty('B_error')) {
-                      var bnec = dat[i]['B_error'];
-                      bnec = bnec.slice(1,-1).split(';').map(Number);
-                      delete dat[i]['B_error'];
-                      dat[i]['B_error,X'] = bnec[0];
-                      dat[i]['B_error,Y'] = bnec[1];
-                      dat[i]['B_error,Z'] = bnec[2];
-                    }
-                    if(dat[i].hasOwnProperty('B_VFM')) {
-                      var bnec = dat[i]['B_VFM'];
-                      bnec = bnec.slice(1,-1).split(';').map(Number);
-                      delete dat[i]['B_VFM'];
-                      dat[i]['B_VFM,X'] = bnec[0];
-                      dat[i]['B_VFM,Y'] = bnec[1];
-                      dat[i]['B_VFM,Z'] = bnec[2];
-                    }
-                    if(dat[i].hasOwnProperty('v_SC')) {
-                      var bnec = dat[i]['v_SC'];
-                      bnec = bnec.slice(1,-1).split(';').map(Number);
-                      delete dat[i]['v_SC'];
-                      dat[i]['v_SC_N'] = bnec[0];
-                      dat[i]['v_SC_E'] = bnec[1];
-                      dat[i]['v_SC_C'] = bnec[2];
-                    }
-                    
+
                     $.each(dat[i], function(key, value){
-                      if (key.indexOf("B_NEC_res")>-1){
-                        var res_model = key.substring(6);
-                        var bnec = dat[i][key];
-                        bnec = bnec.slice(1,-1).split(';').map(Number);
+                      if(VECTOR_BREAKDOWN.hasOwnProperty(key)) {
+                        var d = dat[i][key];
+                        d = d.slice(1,-1).split(';').map(Number);
                         delete dat[i][key];
-                        dat[i]['B_N_'+res_model] = bnec[0];
-                        dat[i]['B_E_'+res_model] = bnec[1];
-                        dat[i]['B_C_'+res_model] = bnec[2];
+                        dat[i][VECTOR_BREAKDOWN[key][0]] = d[0];
+                        dat[i][VECTOR_BREAKDOWN[key][1]] = d[1];
+                        dat[i][VECTOR_BREAKDOWN[key][2]] = d[2];
                       }
+
                       if(dat[i][key] === "nan"){
                         dat[i][key] = NaN;
                       }
