@@ -83,7 +83,8 @@ define(['backbone.marionette',
 					shorten_width: 125,
 					toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
 					fieldsforfiltering: ["F","B_N", "B_E", "B_C", "Dst", "QDLat","MLT"],
-					single_color: true
+					single_color: true,
+					file_save_string: "VirES_Services_plot_rendering"
 				};
 
 				

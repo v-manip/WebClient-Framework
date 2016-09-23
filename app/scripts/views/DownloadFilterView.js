@@ -395,10 +395,13 @@
           var original = false;
           var index = -1;
           _.each(VECTOR_BREAKDOWN, function(v, key){
-            if(v.indexOf(fe.id)!=-1){
-              index = v.indexOf(fe.id);
-              original = key;
+            for (var i = 0; i < v.length; i++) {
+              if(v[i] === fe.id){
+                index = i;
+                original = key;
+              }
             }
+            
           });
 
           if (original) {
