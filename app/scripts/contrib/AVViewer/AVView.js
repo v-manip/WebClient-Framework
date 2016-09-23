@@ -248,7 +248,9 @@ define(['backbone.marionette',
 							(this.previous_parameters.indexOf("n") == -1) && 
 							(_.keys(data[0]).indexOf("n") != -1)
 						){
-							this.sp.sel_y.push("n");
+							if(this.sp.sel_y.indexOf("n")==-1){
+								this.sp.sel_y.push("n");
+							}
 						}
 
 						// If previous does not contain mag data and new one
@@ -257,7 +259,10 @@ define(['backbone.marionette',
 							(this.previous_parameters.indexOf("F") == -1) && 
 							(_.keys(data[0]).indexOf("F") != -1)
 						){
-							this.sp.sel_y.push("F");
+							// Make sure it is not already enabled
+							if(this.sp.sel_y.indexOf("F")==-1){
+								this.sp.sel_y.push("F");
+							}
 						}
 
 						// If previous does not contain a residual a new one does
