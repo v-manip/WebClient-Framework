@@ -190,7 +190,7 @@
 
 						this.$("#coefficients_range").append(
 						'<li style="margin-top: 5px;">'+
-							'<label for="coefficients_range_min" style="width: 120px;">Coefficients range: </label>'+
+							'<label for="coefficients_range_min" style="width: 120px;">Coefficients range</label>'+
 							'<input id="coefficients_range_min" type="text" style="width:30px;"/>'+
 							'<input id="coefficients_range_max" type="text" style="width:30px; margin-left:8px"/>'+
 						'</li>'+
@@ -233,6 +233,14 @@
 						this.createScale();
 
 					this.createHeightTextbox(this.current_model.get("height"));
+				}
+
+				if(this.selected == "Fieldlines"){
+					$("#coefficients_range").hide();
+					$("#opacitysilder").parent().hide();
+				}else{
+					$("#coefficients_range").show();
+					$("#opacitysilder").parent().show();
 				}
 
 			},
@@ -296,6 +304,8 @@
 					delete options[this.selected].selected;
 				}
 
+				$("#description").empty();
+
 				this.selected = $("#options").find("option:selected").val();
 
 				this.$("#style").empty();
@@ -328,8 +338,16 @@
 
 				this.createHeightTextbox(this.current_model.get("height"));
 
+				if(this.selected == "Fieldlines"){
+					$("#coefficients_range").hide();
+					$("#opacitysilder").parent().hide();
+				}else{
+					$("#coefficients_range").show();
+					$("#opacitysilder").parent().show();
+				}
+
 				// request range for selected parameter if layer is of type model
-				if(this.current_model.get("model")){
+				if(this.current_model.get("model") && this.selected != "Fieldlines"){
 
 					var that = this;
 
@@ -633,7 +651,7 @@
 
 					this.$("#logarithmic").append(
 						'<form style="vertical-align: middle;">'+
-						'<label class="valign" for="outlines" style="width: 100px;">Log. Scale: </label>'+
+						'<label class="valign" for="outlines" style="width: 100px;">Log. Scale</label>'+
 						'<input class="valign" style="margin-top: -5px;" type="checkbox" name="logarithmic" value="logarithmic" ' + checked + '></input>'+
 						'</form>'
 					);
@@ -740,7 +758,7 @@
 	      		if( (height || height==0) && this.selected != "Fieldlines"){
 					this.$("#height").append(
 						'<form style="vertical-align: middle;">'+
-						'<label for="heightvalue" style="width: 70px;">Height: </label>'+
+						'<label for="heightvalue" style="width: 70px;">Height</label>'+
 						'<input id="heightvalue" type="text" style="width:30px; margin-left:8px"/>'+
 						'</form>'
 					);

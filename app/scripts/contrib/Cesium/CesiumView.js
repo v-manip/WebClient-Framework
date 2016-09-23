@@ -521,12 +521,32 @@ define(['backbone.marionette',
 			},
 
 			onUpdateOpacity: function(options) {
+
 				globals.products.each(function(product) {
+
                 	if(product.get("name")==options.model.get("name")){
                 		var ces_layer = product.get("ces_layer");
 
-                		if( _.has(this.features_collection, options.model.get("views")[0].id) ){
-                			var fc = this.features_collection[options.model.get("views")[0].id];
+                		// Find active parameter and satellite
+                		var sat = null;
+                		_.each(globals.swarm.products, function(p){
+                			var keys = _.keys(p);
+                			for (var i = 0; i < keys.length; i++) {
+                				if(p[keys[i]] == options.model.get("views")[0].id){
+                					sat = keys[i];
+                				}
+                			}
+                		});
+
+                		var key = null;
+                		_.each(options.model.get("parameters"), function(pa, k){
+                			if(pa.selected){
+								key = k;
+							}
+                		});
+
+                		if( sat && key &&_.has(this.features_collection, (sat+key)) ){
+                			var fc = this.features_collection[(sat+key)];
                 			if(fc.hasOwnProperty("geometryInstances")){
                 				for (var i = fc._instanceIds.length - 1; i >= 0; i--) {
 	  								var attributes = fc.getGeometryInstanceAttributes(fc._instanceIds[i]);
@@ -552,6 +572,26 @@ define(['backbone.marionette',
                 			}
                 		}else if(ces_layer){
 							ces_layer.alpha = options.value;
+
+							if(key && key == "Fieldlines"){
+								var index = this.activeFL.indexOf(options.model.get('download').id);
+								if(index!=-1){
+									this.activeFL[index];
+								}
+								if(this.FL_collection.hasOwnProperty(options.model.get('download').id)){
+									var flobj = this.FL_collection[options.model.get('download').id];
+									if(flobj.hasOwnProperty("geometryInstances")){
+		                				/*for (var i = flobj._instanceIds.length - 1; i >= 0; i--) {
+			  								var attributes = flobj.getGeometryInstanceAttributes(flobj._instanceIds[i]);
+			  								var nc = attributes.color;
+			  								nc[3] = Math.floor(options.value*255);
+			        						attributes.color = Cesium.ColorGeometryInstanceAttribute.toValue(
+			        							Cesium.Color.fromBytes(nc[0], nc[1], nc[2], nc[3])
+			        						);
+			                			};*/
+			                		}
+								}
+							}
 						}
 					}
 				}, this);
@@ -1680,7 +1720,7 @@ define(['backbone.marionette',
 						};
 					}
 				});
-
+				var linecnt = 0;
         		_.each(_.keys(parseddata), function(key){
 
         			instances.push(
@@ -1690,16 +1730,19 @@ define(['backbone.marionette',
 					            width : 2.0,
 					            vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT,
 					            colors : parseddata[key].colors,
-					            colorsPerVertex : true
-					        })
+					            colorsPerVertex : true,
+					        }),
+					        id: "vec_line_"+linecnt
 					    })
         			);
+        			linecnt++;
 
 				}, this);
-
+        		// TODO: Possibly needed geometry instances if transparency should work for fieldlines
 				this.FL_collection[name] = new Cesium.Primitive({
 					geometryInstances: instances,
-					appearance: new Cesium.PolylineColorAppearance()
+					appearance: new Cesium.PolylineColorAppearance()/*,
+					releaseGeometryInstances: false*/
 				});
 				
 
