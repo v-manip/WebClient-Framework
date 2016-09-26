@@ -202,11 +202,33 @@
           selected.push({id: "Radius"});
         }
 
+        // See if magnetic data actually selected if not remove residuals
+          var magdata = false;
+          _.each(products, function(p, key){
+            if(key.indexOf("MAG")!=-1){
+              magdata = true;
+            }
+          });
+
+          if(!magdata){
+            available_parameters = _.filter(available_parameters, function(v){
+              if(v.id.indexOf("_res_")!=-1){
+                return false;
+              }else{
+                return true;
+              }
+            })
+          }
+
         $('#param_enum').w2field('enum', { 
             items: _.sortBy(available_parameters, 'id'), // Sort parameters alphabetically 
             openOnFocus: true,
             selected: selected,
             renderItem: function (item, index, remove) {
+                if(item.id == "Latitude" || item.id == "Longitude" ||
+                   item.id == "Timestamp" || item.id == "Radius"){
+                  remove = "";
+                }
                 var html = remove + that.createSubscript(item.id);
                 return html;
             },
@@ -215,7 +237,7 @@
 
               var html = '<b>'+that.createSubscript(item.id)+'</b>';
               if(item.uom != null){
-                html += ' ('+item.uom+')';
+                html += ' ['+item.uom+']';
               }
               if(item.description){
                 html+= ': '+item.description;
