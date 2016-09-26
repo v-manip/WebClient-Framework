@@ -223,6 +223,7 @@ button[active=active] {
     left: 3em;
     font-size: .9em;
     position: absolute;
+    z-index: 1031 !important;
 }
 .layercontrol ul {
     margin: 0 0 1em 1.5em;
