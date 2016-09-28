@@ -61,7 +61,10 @@
                 exports: 'DrawHelper'
             },
             analytics: {
-                deps: ['d3', 'jquery']
+                deps: ['d3', 'jquery', 'w2ui', 'sumoselect']
+            },
+            w2ui: {
+                deps: ['jquery']
             }
         },
 
@@ -116,7 +119,11 @@
 
             papaparse: '../bower_components/papaparse/papaparse.min',
 
-            plotty: '../bower_components/plotty/dist/plotty.min'
+            plotty: '../bower_components/plotty/dist/plotty.min',
+
+            sumoselect: '../bower_components/sumoselect/jquery.sumoselect.min',
+
+            w2ui: '../bower_components/w2ui/dist/w2ui-fields.min'
 
         },
 

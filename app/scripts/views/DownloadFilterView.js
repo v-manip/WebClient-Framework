@@ -12,10 +12,12 @@
     'hbs!tmpl/FilterTemplate',
     'hbs!tmpl/wps_retrieve_data_filtered',
     'hbs!tmpl/CoverageDownloadPost',
-    'underscore'
+    'hbs!tmpl/wps_fetchFilteredData',
+    'underscore',
+    'w2ui'
   ],
-  function( Backbone, Communicator, globals, m, DownloadFilterTmpl, 
-            FilterTmpl, wps_requestTmpl, CoverageDownloadPostTmpl) {
+  function( Backbone, Communicator, globals, m, DownloadFilterTmpl,
+            FilterTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredData ) {
 
     var DownloadFilterView = Backbone.Marionette.ItemView.extend({
       tagName: "div",
@@ -91,9 +93,9 @@
             var date1 = that.start_picker.datepicker( "getDate" );
             var date2 = that.end_picker.datepicker( "getDate" );
             var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>15){
+            if (diff>30){
               date2 = new Date(date1);
-              date2.setDate(date2.getDate()+15);
+              date2.setDate(date2.getDate()+30);
               that.end_picker.datepicker("setDate", date2);
             }else if(diff<0){
               that.start_picker.datepicker("setDate", date2);
@@ -107,9 +109,9 @@
             var date1 = that.start_picker.datepicker( "getDate" );
             var date2 = that.end_picker.datepicker( "getDate" );
             var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>15){
+            if (diff>30){
               date1 = new Date(date2);
-              date1.setDate(date1.getDate()-15);
+              date1.setDate(date1.getDate()-30);
               that.start_picker.datepicker("setDate", date1);
             }else if(diff<0){
               that.end_picker.datepicker("setDate", date1);
@@ -118,16 +120,39 @@
         });
         this.end_picker.datepicker("setDate", timeinterval.end);
 
+        // Prepare to create list of available parameters
+        var available_parameters = [];
+
         products = this.model.get("products");
         // Separate models and Swarm products and add lists to ui
         _.each(products, function(prod){
+
+            if(prod.get("download_parameters")){
+              var par = prod.get("download_parameters");
+              var new_keys = _.keys(par);
+              _.each(new_keys, function(key){
+                if(!_.find(available_parameters, function(item){
+                  return item.id == key;
+                })){
+                  available_parameters.push({
+                    id: key,
+                    uom: par[key].uom,
+                    description: par[key].name,
+                  });
+                }
+              });
+
+            }
+
             if(prod.get("processes")){
               var result = $.grep(prod.get("processes"), function(e){ return e.id == "retrieve_data"; });
               if (result)
                 this.swarm_prod.push(prod);
             }
+
             if(prod.get("model"))
               this.models.push(prod);
+
         },this);
 
         var prod_div = this.$el.find("#products");
@@ -150,6 +175,114 @@
           }, this);
         }
 
+        this.$el.find("#custom_parameter_cb").off();
+        this.$el.find("#custom_download").empty();
+        this.$el.find("#custom_download").html(
+          '<div class="w2ui-field">'+
+              '<div class="checkbox" style="margin-left:20px;"><label><input type="checkbox" value="" id="custom_parameter_cb">Custom download parameters</label></div>'+
+              '<div style="margin-left:0px;"> <input id="param_enum" style="width:100%;"> </div>'+
+          '</div>'
+        );
+
+        var selected = [];
+        // Check if latitude available
+        if(_.find(available_parameters, function(item){return item.id == "Latitude";})){
+          selected.push({id: "Latitude"});
+        }
+        //Check if Longitude available
+        if(_.find(available_parameters, function(item){return item.id == "Longitude";})){
+          selected.push({id: "Longitude"});
+        }
+        //Check if timestamp available
+        if(_.find(available_parameters, function(item){return item.id == "Timestamp";})){
+          selected.push({id: "Timestamp"});
+        }
+        //Check if radius available
+        if(_.find(available_parameters, function(item){return item.id == "Radius";})){
+          selected.push({id: "Radius"});
+        }
+
+        // See if magnetic data actually selected if not remove residuals
+          var magdata = false;
+          _.each(products, function(p, key){
+            if(key.indexOf("MAG")!=-1){
+              magdata = true;
+            }
+          });
+
+          if(!magdata){
+            available_parameters = _.filter(available_parameters, function(v){
+              if(v.id.indexOf("_res_")!=-1){
+                return false;
+              }else{
+                return true;
+              }
+            })
+          }
+
+        $('#param_enum').w2field('enum', { 
+            items: _.sortBy(available_parameters, 'id'), // Sort parameters alphabetically 
+            openOnFocus: true,
+            selected: selected,
+            renderItem: function (item, index, remove) {
+                if(item.id == "Latitude" || item.id == "Longitude" ||
+                   item.id == "Timestamp" || item.id == "Radius"){
+                  remove = "";
+                }
+                var html = remove + that.createSubscript(item.id);
+                return html;
+            },
+            renderDrop: function (item, options) {
+              $("#w2ui-overlay").addClass("downloadsection");
+
+              var html = '<b>'+that.createSubscript(item.id)+'</b>';
+              if(item.uom != null){
+                html += ' ['+item.uom+']';
+              }
+              if(item.description){
+                html+= ': '+item.description;
+              }
+              //'<i class="fa fa-info-circle" aria-hidden="true" data-placement="right" style="margin-left:4px;" title="'+item.description+'"></i>';
+              
+              return html;
+            },
+            onRemove: function(evt){
+              if(evt.item.id == "Radius" || evt.item.id == "Latitude" ||
+                 evt.item.id == "Longitude" || evt.item.id == "Timestamp"){
+                evt.preventDefault();
+                evt.stopPropagation();
+              }
+              console.log(evt);
+            }
+        });
+        $('#param_enum').prop('disabled', true);
+        $('#param_enum').w2field().refresh();
+
+        this.$el.find("#custom_parameter_cb").click(function(evt){
+          if ($('#custom_parameter_cb').is(':checked')) {
+            $('#param_enum').prop('disabled', false);
+            $('#param_enum').w2field().refresh();
+          }else{
+            $('#param_enum').prop('disabled', true);
+            $('#param_enum').w2field().refresh();
+          }
+        });
+
+      },
+
+      createSubscript: function(string){
+        // Adding subscript elements to string which contain underscores
+        var newkey = "";
+        var parts = string.split("_");
+        if (parts.length>1){
+          newkey = parts[0];
+          for (var i=1; i<parts.length; i++){
+            newkey+=(" "+parts[i]).sub();
+          }
+        }else{
+          newkey = string;
+        }
+        return newkey;
       },
 
       renderFilterList: function(filters) {
@@ -194,6 +327,10 @@
         // format
         options.format = this.$("#select-output-format").val();
 
+        if (options.format == "application/cdf"){
+          options['time_format'] = "Unix epoch";
+        }
+
         // time
         options.begin_time = this.start_picker.datepicker( "getDate" );
         options.begin_time = new Date(Date.UTC(options.begin_time.getFullYear(), options.begin_time.getMonth(),
@@ -210,7 +347,60 @@
         options.end_time = getISODateTimeString(options.end_time);
 
         // products
-        options.collection_ids = this.swarm_prod.map(function(m){return m.get("views")[0].id;}).join(",");
+        //options.collection_ids = this.swarm_prod.map(function(m){return m.get("views")[0].id;}).join(",");
+        var retrieve_data = [];
+
+        globals.products.each(function(model) {
+          if (_.find(this.swarm_prod, function(p){ return model.get("views")[0].id == p.get("views")[0].id})) {
+            var processes = model.get("processes");
+            _.each(processes, function(process){
+              if(process){
+                switch (process.id){
+                  case "retrieve_data":
+                    retrieve_data.push({
+                      layer:process.layer_id,
+                      url: model.get("views")[0].urls[0]
+                    });
+                  break;
+                }
+              }
+            }, this);
+          }
+        }, this);
+
+
+        if (retrieve_data.length > 0){
+
+          var collections = {};
+          for (var i = retrieve_data.length - 1; i >= 0; i--) {
+            var sat = false;
+            var product_keys = _.keys(globals.swarm.products);
+            for (var j = product_keys.length - 1; j >= 0; j--) {
+              var sat_keys = _.keys(globals.swarm.products[product_keys[j]]);
+              for (var k = sat_keys.length - 1; k >= 0; k--) {
+                if (globals.swarm.products[product_keys[j]][sat_keys[k]] == retrieve_data[i].layer){
+                  sat = sat_keys[k];
+                }
+              }
+            }
+            if(sat){
+              if(collections.hasOwnProperty(sat)){
+                collections[sat].push(retrieve_data[i].layer);
+              }else{
+                collections[sat] = [retrieve_data[i].layer];
+              }
+            }
+           
+          }
+
+          var collection_keys = _.keys(collections);
+          for (var i = collection_keys.length - 1; i >= 0; i--) {
+            collections[collection_keys[i]] = collections[collection_keys[i]].reverse();
+          }
+
+          options["collections_ids"] = JSON.stringify(collections);
+        }
+
 
         // models
         options.model_ids = this.models.map(function(m){return m.get("download").id;}).join(",");
@@ -234,15 +424,68 @@
           };
           // Make sure smaller value is first item
           extent.sort(function (a, b) { return a-b; });
-          filters.push(fe.id+":"+ extent.join(","));
+
+          // Check to see if filter is on a vector component
+          var original = false;
+          var index = -1;
+          _.each(VECTOR_BREAKDOWN, function(v, key){
+            for (var i = 0; i < v.length; i++) {
+              if(v[i] === fe.id){
+                index = i;
+                original = key;
+              }
+            }
+            
+          });
+
+          if (original) {
+            filters.push(original+"["+index+"]:"+ extent.join(","));
+          }else{
+            filters.push(fe.id+":"+ extent.join(","));
+          }
         });
 
         options.filters = filters.join(";");
 
+        // Custom variables
+        if ($('#custom_parameter_cb').is(':checked')) {
+          var variables = $('#param_enum').data('selected');
+          variables = variables.map(function(item) {return item.id;});
+          variables = variables.join(',');
+          options.variables = variables;
+        }else{
+          // Use default parameters as described by download
+          // product parameters in configuration
+          var variables = [];
+
+          // Separate models and Swarm products and add lists to ui
+          _.each(this.model.get("products"), function(prod){
+
+              if(prod.get("download_parameters")){
+                var par = prod.get("download_parameters");
+                if(!prod.get("model")){
+                  var new_keys = _.keys(par);
+                  _.each(new_keys, function(key){
+                    // Remove unwanted keys
+                    if(key != "QDLat" && key != "QDLon" && key != "MLT"){
+                      if(!_.find(variables, function(item){
+                        return item == key;
+                      })){
+                        variables.push(key);
+                      }
+                    }
+                  });
+                }
+              }
+          },this);
+          options.variables = variables;
+        }
+
         // TODO: Just getting last URL here think of how different urls should be handled
         var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];
 
-        var xml = wps_requestTmpl(options);
+        //var xml = wps_requestTmpl(options);
+        var xml = wps_fetchFilteredData(options);
         
         var $form = $(CoverageDownloadPostTmpl({
               url: url, xml: xml

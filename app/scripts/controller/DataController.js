@@ -8,11 +8,12 @@
     'communicator',
     'globals',
     'hbs!tmpl/wps_getdata',
+    'hbs!tmpl/wps_fetchData',
     'app',
     'papaparse',
   ],
 
-  function( Backbone, Communicator, globals, wps_getdataTmpl, App, Papa) {
+  function( Backbone, Communicator, globals, wps_getdataTmpl, wps_fetchDataTmpl, App, Papa) {
 
     var DataController = Backbone.Marionette.Controller.extend({
 
@@ -24,6 +25,7 @@
         this.selected_time = null;
 
         this.listenTo(Communicator.mediator, "map:layer:change",this.changeLayer);
+        this.listenTo(Communicator.mediator, "map:multilayer:change",this.multiChangeLayer);
         this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChanged);
         this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
 
@@ -124,31 +126,38 @@
           var product = globals.products.find(function(model) { return model.get('name') == options.name; });
           if (product){
             if(options.visible){
+              if (product.get("model")){
+                this.activeModels.push(product.get("download").id);
+                this.updateLayerResidualParameters();
+                this.checkSelections();
+              }
+            }else{
+              if (this.activeModels.indexOf(product.get("download").id)!=-1){
+                this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
+                this.updateLayerResidualParameters();
+                this.checkSelections();
+              }
+            }
+          }
+        }
+
+        this.checkModelValidity();
+      },
+      
+
+      multiChangeLayer: function(layers) {
+        this.activeWPSproducts = [];
+        for (var i = layers.length - 1; i >= 0; i--) {
+          var product = globals.products.find(function(model) { return model.get('download').id == layers[i]; });
+          if (product){
               if (product.get("processes")){
                 _.each(product.get("processes"), function(process){
                   this.activeWPSproducts.push(process.layer_id);
                 },this);
-              }      
-              if (product.get("model")){
-                  this.activeModels.push(product.get("download").id);
-                  this.updateLayerResidualParameters();
-              }
-            }else{
-              _.each(product.get("processes"), function(process){
-                if (this.activeWPSproducts.indexOf(process.layer_id)!=-1){
-                  this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(process.layer_id), 1);
-                }
-              },this);
-
-              if (this.activeModels.indexOf(product.get("download").id)!=-1){
-                this.activeModels.splice(this.activeModels.indexOf(product.get("download").id), 1);
-                this.updateLayerResidualParameters();
-              }
-            }
+              } 
           }
-          this.checkSelections();
         }
-
+        this.checkSelections();
         this.checkModelValidity();
       },
 
@@ -207,19 +216,81 @@
                       layer:process.layer_id,
                       url: model.get("views")[0].urls[0]
                     });
-                  break;    
+                  break;
                 }
               }
             }, this);
           }
         }, this);
 
+
         if (retrieve_data.length > 0){
+
+          var collections = {};
+          for (var i = retrieve_data.length - 1; i >= 0; i--) {
+            var sat = false;
+            var product_keys = _.keys(globals.swarm.products);
+            for (var j = product_keys.length - 1; j >= 0; j--) {
+              var sat_keys = _.keys(globals.swarm.products[product_keys[j]]);
+              for (var k = sat_keys.length - 1; k >= 0; k--) {
+                if (globals.swarm.products[product_keys[j]][sat_keys[k]] == retrieve_data[i].layer){
+                  sat = sat_keys[k];
+                }
+              }
+            }
+            if(sat){
+              if(collections.hasOwnProperty(sat)){
+                collections[sat].push(retrieve_data[i].layer);
+              }else{
+                collections[sat] = [retrieve_data[i].layer];
+              }
+            }
+           
+          }
+
+          var collection_keys = _.keys(collections);
+          for (var i = collection_keys.length - 1; i >= 0; i--) {
+            collections[collection_keys[i]] = collections[collection_keys[i]].reverse();
+          }
+
           var options = {
-            "collection_ids": retrieve_data.map(function(e){return e.layer;}).join(),
+            "collections_ids": JSON.stringify(collections),
             "begin_time": getISODateTimeString(this.selected_time.start),
             "end_time": getISODateTimeString(this.selected_time.end)
           };
+
+          
+          var variables = [
+            "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
+            "v_SC", "Bubble_Probability", "Kp", "Dst", "QDLat", "QDLon", "MLT",
+            "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
+            "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
+            "F_res_CHAOS-5-Combined", "F_res_Custom_Model"
+          ];
+
+          // See if magnetic data actually selected if not remove residuals
+          var magdata = false;
+          _.each(collections, function(vals){
+            if(_.find(vals, function(v){
+              if(v.indexOf("MAG")!=-1){
+                return true}
+              })){
+              magdata = true;
+            }
+          });
+
+          if(!magdata){
+            variables = _.filter(variables, function(v){
+              if(v.indexOf("_res_")!=-1){
+                return false;
+              }else{
+                return true;
+              }
+            })
+          }
+
+          options.variables = variables.join(",")
+
 
           if(this.selection_list.length > 0){
             var bb = this.selection_list[0];
@@ -235,7 +306,7 @@
           if(this.activeModels.length > 0)
             options["model_ids"] = this.activeModels.join();
 
-          var req_data = wps_getdataTmpl(options);
+          var req_data = wps_fetchDataTmpl(options);
 
           $.post( retrieve_data[0].url, req_data)
             .done(function( data ) {
@@ -250,33 +321,22 @@
                     if(dat[i].hasOwnProperty('Timestamp')) {
                       dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']*1000);
                     }
-                    if(dat[i].hasOwnProperty('B_NEC')) {
-                      var bnec = dat[i]['B_NEC'];
-                      bnec = bnec.slice(1,-1).split(';').map(Number);
-                      delete dat[i]['B_NEC'];
-                      dat[i]['B_N'] = bnec[0];
-                      dat[i]['B_E'] = bnec[1];
-                      dat[i]['B_C'] = bnec[2];
-                    }
-                    if(dat[i].hasOwnProperty('B_error')) {
-                      var bnec = dat[i]['B_error'];
-                      bnec = bnec.slice(1,-1).split(';').map(Number);
-                      delete dat[i]['B_error'];
-                      dat[i]['B_N_error'] = bnec[0];
-                      dat[i]['B_E_error'] = bnec[1];
-                      dat[i]['B_C_error'] = bnec[2];
-                    }
+
                     $.each(dat[i], function(key, value){
-                      if (key.indexOf("B_NEC_")>-1){
-                        var res_model = key.substring(6);
-                        var bnec = dat[i][key];
-                        bnec = bnec.slice(1,-1).split(';').map(Number);
+                      if(VECTOR_BREAKDOWN.hasOwnProperty(key)) {
+                        var d = dat[i][key];
+                        d = d.slice(1,-1).split(';').map(Number);
                         delete dat[i][key];
-                        dat[i]['B_N_res_'+res_model] = bnec[0];
-                        dat[i]['B_E_res_'+res_model] = bnec[1];
-                        dat[i]['B_C_res_'+res_model] = bnec[2];
+                        dat[i][VECTOR_BREAKDOWN[key][0]] = d[0];
+                        dat[i][VECTOR_BREAKDOWN[key][1]] = d[1];
+                        dat[i][VECTOR_BREAKDOWN[key][2]] = d[2];
+                      }
+
+                      if(dat[i][key] === "nan"){
+                        dat[i][key] = NaN;
                       }
                     });
+                    
                     
 
                   }

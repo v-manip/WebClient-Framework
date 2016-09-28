@@ -88,7 +88,6 @@
 			},
 
 			OnAppReset: function(){
-				Communicator.mediator.trigger("selection:changed", null);
 				App.layout.close();
 				App.toolLayout.close();
 				App.optionsLayout.close();
@@ -97,22 +96,33 @@
 
 			onOpenLayerSettings: function(layer){
 
-				globals.products.each(function(product) {
-
-            		if(product.get("views")[0].id==layer){
-            			if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-							App.layerSettings.setModel(product);
-							App.optionsBar.show(App.layerSettings);
-						} else {
-							if(App.layerSettings.sameModel(product)){
-								App.optionsBar.close();
-							}else{
-								App.layerSettings.setModel(product);
-								App.optionsBar.show(App.layerSettings);
-							}
+				var product = false;
+				for (var i = 0; i < globals.products.models.length; i++) {
+					if(globals.products.models[i].get("views")[0].id==layer){
+						product = globals.products.models[i];
+					}
+				}
+				
+				if(!product){
+					for (var i = 0; i < globals.swarm.filtered_collection.models.length; i++) {
+						if(globals.swarm.filtered_collection.models[i].get("id")==layer){
+							product = globals.swarm.filtered_collection.models[i];
 						}
-            		}
-            	});
+					}
+				}
+
+				if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+					App.layerSettings.setModel(product);
+					App.optionsBar.show(App.layerSettings);
+				} else {
+					if(App.layerSettings.sameModel(product)){
+						App.optionsBar.close();
+					}else{
+						App.layerSettings.setModel(product);
+						App.optionsBar.show(App.layerSettings);
+					}
+				}
+
             }
 
 		});

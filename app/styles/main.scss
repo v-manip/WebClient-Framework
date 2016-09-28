@@ -19,6 +19,7 @@ $iconWhiteSpritePath: "../images/glyphicons-halflings-white.png";
 @import "layersettings";
 @import "spinner";
 @import "social";
+@import "download";
 
 
 /*
@@ -222,6 +223,7 @@ button[active=active] {
     left: 3em;
     font-size: .9em;
     position: absolute;
+    z-index: 1031 !important;
 }
 .layercontrol ul {
     margin: 0 0 1em 1.5em;
