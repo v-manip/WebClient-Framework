@@ -245,6 +245,14 @@
               //'<i class="fa fa-info-circle" aria-hidden="true" data-placement="right" style="margin-left:4px;" title="'+item.description+'"></i>';
               
               return html;
+            },
+            onRemove: function(evt){
+              if(evt.item.id == "Radius" || evt.item.id == "Latitude" ||
+                 evt.item.id == "Longitude" || evt.item.id == "Timestamp"){
+                evt.preventDefault();
+                evt.stopPropagation();
+              }
+              console.log(evt);
             }
         });
         $('#param_enum').prop('disabled', true);
@@ -318,6 +326,10 @@
 
         // format
         options.format = this.$("#select-output-format").val();
+
+        if (options.format == "application/cdf"){
+          options['time_format'] = "Unix epoch";
+        }
 
         // time
         options.begin_time = this.start_picker.datepicker( "getDate" );
@@ -440,6 +452,32 @@
           var variables = $('#param_enum').data('selected');
           variables = variables.map(function(item) {return item.id;});
           variables = variables.join(',');
+          options.variables = variables;
+        }else{
+          // Use default parameters as described by download
+          // product parameters in configuration
+          var variables = [];
+
+          // Separate models and Swarm products and add lists to ui
+          _.each(this.model.get("products"), function(prod){
+
+              if(prod.get("download_parameters")){
+                var par = prod.get("download_parameters");
+                if(!prod.get("model")){
+                  var new_keys = _.keys(par);
+                  _.each(new_keys, function(key){
+                    // Remove unwanted keys
+                    if(key != "QDLat" && key != "QDLon" && key != "MLT"){
+                      if(!_.find(variables, function(item){
+                        return item == key;
+                      })){
+                        variables.push(key);
+                      }
+                    }
+                  });
+                }
+              }
+          },this);
           options.variables = variables;
         }
 

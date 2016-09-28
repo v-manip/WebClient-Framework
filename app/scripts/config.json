@@ -173,17 +173,13 @@
                 }
             },
             "download_parameters": {
-                "B_NEC": {
-                    "uom":"nT",
-                    "name": "Magnetic field vector, NEC frame"
-                },
-                "F": {
-                    "uom":"nT",
-                    "name": "Magnetic field intensity"
-                },
                 "Timestamp": {
                     "uom": null,
                     "name": "Time of observation"
+                },
+                "SyncStatus": {
+                    "uom": null,
+                    "name": "Time synchronization status (of VFM), source and quality"
                 },
                 "Latitude": {
                     "uom": "deg",
@@ -196,6 +192,10 @@
                 "Radius": {
                     "uom": "m",
                     "name": "Position in ITRF - Radius"
+                },
+                "F": {
+                    "uom":"nT",
+                    "name": "Magnetic field intensity"
                 },
                 "dF_AOCS": {
                     "uom": "nT",
@@ -212,6 +212,10 @@
                 "B_VFM": {
                     "uom": "nT",
                     "name": "Magnetic field vector, VFM frame"
+                },
+                "B_NEC": {
+                    "uom":"nT",
+                    "name": "Magnetic field vector, NEC frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -257,15 +261,15 @@
                     "uom": null,
                     "name": "ASM frequency calibration data deviation"
                 },
-                "qdlat": {
+                "QDLat": {
                     "uom": "deg",
                     "name": "Quasi dipole latitude"
                 },
-                "qdlon": {
+                "QDLon": {
                     "uom": "deg",
                     "name": "Quasi dipole longitude"
                 },
-                "mlt": {
+                "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
                 }
@@ -315,17 +319,13 @@
                 }
             },
             "download_parameters": {
-                "B_NEC": {
-                    "uom":"nT",
-                    "name": "Magnetic field vector, NEC frame"
-                },
-                "F": {
-                    "uom":"nT",
-                    "name": "Magnetic field intensity"
-                },
                 "Timestamp": {
                     "uom": null,
                     "name": "Time of observation"
+                },
+                "SyncStatus": {
+                    "uom": null,
+                    "name": "Time synchronization status (of VFM), source and quality"
                 },
                 "Latitude": {
                     "uom": "deg",
@@ -338,6 +338,10 @@
                 "Radius": {
                     "uom": "m",
                     "name": "Position in ITRF - Radius"
+                },
+                "F": {
+                    "uom":"nT",
+                    "name": "Magnetic field intensity"
                 },
                 "dF_AOCS": {
                     "uom": "nT",
@@ -354,6 +358,10 @@
                 "B_VFM": {
                     "uom": "nT",
                     "name": "Magnetic field vector, VFM frame"
+                },
+                "B_NEC": {
+                    "uom":"nT",
+                    "name": "Magnetic field vector, NEC frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -399,15 +407,15 @@
                     "uom": null,
                     "name": "ASM frequency calibration data deviation"
                 },
-                "qdlat": {
+                "QDLat": {
                     "uom": "deg",
                     "name": "Quasi dipole latitude"
                 },
-                "qdlon": {
+                "QDLon": {
                     "uom": "deg",
                     "name": "Quasi dipole longitude"
                 },
-                "mlt": {
+                "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
                 }
@@ -456,17 +464,13 @@
                 }
             },
             "download_parameters": {
-                "B_NEC": {
-                    "uom":"nT",
-                    "name": "Magnetic field vector, NEC frame"
-                },
-                "F": {
-                    "uom":"nT",
-                    "name": "Magnetic field intensity"
-                },
                 "Timestamp": {
                     "uom": null,
                     "name": "Time of observation"
+                },
+                "SyncStatus": {
+                    "uom": null,
+                    "name": "Time synchronization status (of VFM), source and quality"
                 },
                 "Latitude": {
                     "uom": "deg",
@@ -479,6 +483,10 @@
                 "Radius": {
                     "uom": "m",
                     "name": "Position in ITRF - Radius"
+                },
+                "F": {
+                    "uom":"nT",
+                    "name": "Magnetic field intensity"
                 },
                 "dF_AOCS": {
                     "uom": "nT",
@@ -495,6 +503,10 @@
                 "B_VFM": {
                     "uom": "nT",
                     "name": "Magnetic field vector, VFM frame"
+                },
+                "B_NEC": {
+                    "uom":"nT",
+                    "name": "Magnetic field vector, NEC frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -540,15 +552,15 @@
                     "uom": null,
                     "name": "ASM frequency calibration data deviation"
                 },
-                "qdlat": {
+                "QDLat": {
                     "uom": "deg",
                     "name": "Quasi dipole latitude"
                 },
-                "qdlon": {
+                "QDLon": {
                     "uom": "deg",
                     "name": "Quasi dipole longitude"
                 },
-                "mlt": {
+                "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
                 }

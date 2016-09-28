@@ -52,12 +52,12 @@
         <wps:ComplexData>{{bbox}}</wps:ComplexData>
       </wps:Data>
     </wps:Input>{{/if}}
-    <wps:Input>
+    {{#if time_format}}<wps:Input>
       <ows:Identifier>csv_time_format</ows:Identifier>
       <wps:Data>
-        <wps:LiteralData>Unix epoch</wps:LiteralData>
+        <wps:LiteralData>{{time_format}}</wps:LiteralData>
       </wps:Data>
-    </wps:Input>
+    </wps:Input>{{/if}}
   </wps:DataInputs>
   <wps:ResponseForm>
     <wps:RawDataOutput mimeType="{{format}}">
