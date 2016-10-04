@@ -1012,7 +1012,7 @@ define(['backbone.marionette',
 		            			that.features_collection[obj.id+parameters[i]] = new Cesium.PointPrimitiveCollection();
 
 		            			if(!that.map.scene.context._gl.getExtension('EXT_frag_depth')){
-		            				that.features_collection[obj.id]._rs = Cesium.RenderState.fromCache({
+		            				that.features_collection[obj.id+parameters[i]]._rs = Cesium.RenderState.fromCache({
 			  						    depthTest : {
 			  						        enabled : true,
 			  						        func : Cesium.DepthFunction.LESS
