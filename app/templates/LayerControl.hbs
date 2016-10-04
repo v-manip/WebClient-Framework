@@ -4,6 +4,17 @@
 </div>
 <div class="panel-body">
     <div id="overlays"></div>
+    <div id="sat_selection">
+        <div id="boxlabel">
+            Multi-satellite Products
+        </div>
+        <div class="row" id="satcheckcontainer">
+          <div class="col-md-4"><label class="checkbox-inline"><input style="top:-2px;position: absolute;" id="alphacheck" type="checkbox" value="">Alpha</label></div>
+          <div class="col-md-4"><label class="checkbox-inline"><input style="top:-2px;position: absolute;" id="bravocheck" type="checkbox" value="">Bravo</label></div>
+          <div class="col-md-4"><label class="checkbox-inline"><input style="top:-2px;position: absolute;" id="charliecheck" type="checkbox" value="">Charlie</label></div>
+        </div>
+        <ul class="sortable ui-sortable" id="containerproductslist"></ul>
+    </div>
     <div id="products"></div>
     <div id="baseLayers"></div>
 </div>

@@ -46,7 +46,10 @@
 				url : [],
 			},
 			processes : [],
-			unit: ""
+			unit: "",
+			parameters:[],
+			height: 0,
+			model: false
 			
 			
 		});

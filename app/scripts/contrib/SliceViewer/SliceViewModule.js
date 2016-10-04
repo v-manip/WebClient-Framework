@@ -9,7 +9,8 @@ define([
 
     App.module('SliceViewer', function(Module) {
 
-        this.startsWithParent = true;
+        // Disabled module for now as it is not needed
+        this.startsWithParent = false;
 
         this.on('start', function(options) {
             this.instances = {};

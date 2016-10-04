@@ -3,6 +3,21 @@
 #timeslider svg.timeslider {
   z-index: $layer-gui;
   position: relative;
+  opacity: 1;
+  border: 1px solid black;
+  height: 7em;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.39);
+}
 
-  height: 3em;
+.timeslider{
+  cursor: ew-resize;
+}
+
+.dataset{
+	cursor: pointer;
+}
+
+.timeslider .brush .extent{
+	stroke-width: 3px !important;
+	stroke: #5b5b5b !important;
 }
