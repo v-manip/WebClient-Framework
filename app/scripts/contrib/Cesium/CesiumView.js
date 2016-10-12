@@ -1177,6 +1177,7 @@ define(['backbone.marionette',
             			var range = parameters[band].range;
             			var outlines = product.get("outlines");
             			var height = product.get("height");
+            			var contours = product.get("contours");
 
             			var coeff_range = product.get("coefficients_range");
 
@@ -1221,6 +1222,10 @@ define(['backbone.marionette',
 
 				                	ces_layer.imageryProvider.updateProperties("elevation", height);
 
+				                	if(contours)
+				                		ces_layer.imageryProvider.updateProperties("dim_contours", 1);
+				                	else
+				                		ces_layer.imageryProvider.updateProperties("dim_contours", 0);
 				                	if(style)
 				                		ces_layer.imageryProvider.updateProperties("styles", style);
 				                	if(coeff_range)

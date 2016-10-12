@@ -174,38 +174,40 @@ var VECTOR_BREAKDOWN = {
 
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
-					globals.products.add(
-						new m.LayerModel({
-							name: product.name,
-							visible: product.visible,
-                            ordinal: ordinal,
-							timeSlider: product.timeSlider,
-							// Default to WMS if no protocol is defined
-							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
-							color: p_color,
-							//time: products.time, // Is set in TimeSliderView on time change.
-							opacity: (product.opacity) ? product.opacity : 1,
-							views: product.views,
-							view: {isBaseLayer: false},
-							download: {
-								id: product.download.id,
-								protocol: product.download.protocol,
-								url: product.download.url
-							},
-							processes: product.processes,
-							unit: product.unit,
-							parameters: product.parameters,
-							download_parameters: product.download_parameters,
-							height: product.height,
-							outlines: product.outlines,
-							model: product.model,
-							coefficients_range: product.coefficients_range,
-							satellite: product.satellite,
-							tileSize: (product.tileSize) ? product.tileSize : 256,
-							validity: product.validity,
-							showColorscale: true
-						})
-					);
+					var lm = new m.LayerModel({
+						name: product.name,
+						visible: product.visible,
+                        ordinal: ordinal,
+						timeSlider: product.timeSlider,
+						// Default to WMS if no protocol is defined
+						timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
+						color: p_color,
+						//time: products.time, // Is set in TimeSliderView on time change.
+						opacity: (product.opacity) ? product.opacity : 1,
+						views: product.views,
+						view: {isBaseLayer: false},
+						download: {
+							id: product.download.id,
+							protocol: product.download.protocol,
+							url: product.download.url
+						},
+						processes: product.processes,
+						unit: product.unit,
+						parameters: product.parameters,
+						download_parameters: product.download_parameters,
+						height: product.height,
+						outlines: product.outlines,
+						model: product.model,
+						coefficients_range: product.coefficients_range,
+						satellite: product.satellite,
+						tileSize: (product.tileSize) ? product.tileSize : 256,
+						validity: product.validity,
+						showColorscale: true
+					});
+					if(lm.get('model')){
+						lm.set('contours', defaultFor( product.contours,false));
+					}
+					globals.products.add(lm);
 
 					if(product.processes){
 						domain.push(product.processes[0].layer_id);
