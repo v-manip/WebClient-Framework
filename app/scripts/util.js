@@ -20,7 +20,8 @@ var getISODateTimeString = function(date) {
   return getISODateString(date)
     + padLeft(String(date.getUTCHours()), "0", 2) + ":"
     + padLeft(String(date.getUTCMinutes()), "0", 2) + ":"
-    + padLeft(String(date.getUTCSeconds()), "0", 2) + "Z";
+    + padLeft(String(date.getUTCSeconds()), "0", 2) + "."
+    + padLeft(String(date.getUTCMilliseconds()), "0", 3) + "Z";
 };
 
 var htmlTemplate = function(selector, values) {
