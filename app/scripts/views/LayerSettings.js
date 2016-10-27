@@ -322,6 +322,11 @@
 
 				this.$("#style").append(colorscale_options);
 
+				$("#range_min").val(options[this.selected].range[0]);
+				$("#range_max").val(options[this.selected].range[1]);
+				
+				this.createScale();
+
 
 				if(options[this.selected].hasOwnProperty("logarithmic")){
 					this.addLogOption(options);
