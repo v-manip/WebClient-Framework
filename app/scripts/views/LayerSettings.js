@@ -322,6 +322,11 @@
 
 				this.$("#style").append(colorscale_options);
 
+				$("#range_min").val(options[this.selected].range[0]);
+				$("#range_max").val(options[this.selected].range[1]);
+				
+				this.createScale();
+
 
 				if(options[this.selected].hasOwnProperty("logarithmic")){
 					this.addLogOption(options);
@@ -628,11 +633,47 @@
 					that.current_model.set('shc_name', filename);
 					that.$("#shc").find("#filename").remove();
 					that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+filename+'</p>');
-					Communicator.mediator.trigger("file:shc:loaded", evt.target.result);
 
-					var params = { name: that.current_model.get("name"), isBaseLayer: false, visible: false };
-					Communicator.mediator.trigger('map:layer:change', params);
-					Communicator.mediator.trigger("layer:activate", that.current_model.get("views")[0].id);
+
+					var sel_time = Communicator.reqres.request('get:time');
+
+					var payload = evalModelTmpl_POST({
+						"model": "Custom_Model",
+						"variable": that.selected,
+						"begin_time": getISODateTimeString(sel_time.start),
+						"end_time": getISODateTimeString(sel_time.end),
+						"elevation": that.current_model.get("height"),
+						"coeff_min": that.current_model.get("coefficients_range")[0],
+						"coeff_max": that.current_model.get("coefficients_range")[1],
+						"shc": that.current_model.get('shc'),
+						"height": 24,
+						"width": 24,
+						"getonlyrange": true
+					});
+
+					$.post(that.current_model.get("download").url, payload)
+						.success(function(response){
+							var options = that.current_model.get("parameters");
+							var resp = response.split(',');
+							var range = [Number(resp[1]), Number(resp[2])];
+							// Make range "nicer", rounding depending on extent
+							range = d3.scale.linear().domain(range).nice().domain();
+							$("#range_min").val(range[0]);
+							$("#range_max").val(range[1]);
+							options[that.selected].range = range;
+							that.current_model.set("parameters", options);
+							that.createScale();
+							//Communicator.mediator.trigger("layer:parameters:changed", this.current_model.get("name"));
+							Communicator.mediator.trigger("file:shc:loaded", evt.target.result);
+
+							var params = { name: that.current_model.get("name"), isBaseLayer: false, visible: false };
+							Communicator.mediator.trigger('map:layer:change', params);
+							Communicator.mediator.trigger("layer:activate", that.current_model.get("views")[0].id);
+						})
+						.fail(that.handleRangeResponseError);
+						//.always(that.handleRangeChange.bind(that));
+
+					
 
 
 				}

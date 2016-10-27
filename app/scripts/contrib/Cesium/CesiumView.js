@@ -489,15 +489,29 @@ define(['backbone.marionette',
 				});
 			},
 
-			onSortProducts: function(productLayers) {
+			onSortProducts: function(shifts) {
 
 
 				// Search for moved layer
 				var layer_moved = null;
 				var to_move = 0;
+				// Sorting only works on model layers so we filter them out first
+
 				globals.products.each(function(product) {
 					var ces_layer = product.get("ces_layer");
-                	if (ces_layer){
+
+					if(ces_layer && shifts.hasOwnProperty(product.get('name'))){
+						// Raise or Lower the layer depending on movement
+						var to_move = shifts[product.get('name')];
+						for(var i=0; i<Math.abs(to_move); ++i){
+							if(to_move < 0)
+								this.map.scene.imageryLayers.lower(ces_layer);
+							else if(to_move>0)
+								this.map.scene.imageryLayers.raise(ces_layer);
+						}
+					}
+
+                	/*if (ces_layer){
                 		var product_index = (globals.products.length-1 - globals.products.indexOf(product)) + globals.baseLayers.length;
                 		var ces_index = this.map.scene.imageryLayers.indexOf(ces_layer);
                 		var cur_move = product_index - ces_index;
@@ -505,16 +519,16 @@ define(['backbone.marionette',
                 			to_move = cur_move;
                 			layer_moved = ces_layer;
                 		}
-                	}
+                	}*/
 				}, this);
 
 				// Raise or Lower the layer depending on movement
-				for(var i=0; i<Math.abs(to_move); ++i){
+				/*for(var i=0; i<Math.abs(to_move); ++i){
 					if(to_move < 0)
 						this.map.scene.imageryLayers.lower(layer_moved);
 					else if(to_move>0)
 						this.map.scene.imageryLayers.raise(layer_moved);
-				}
+				}*/
 
 				
 				console.log("Map products sorted");
@@ -889,8 +903,14 @@ define(['backbone.marionette',
 						var that = this;
 						var imagelayer;
 
-						var ces_layer = product.get("ces_layer");
-						var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+						//var ces_layer = product.get("ces_layer");
+						var index = this.map.scene.imageryLayers.indexOf(product.get("ces_layer"));
+						this.customModelLayer = product.get("ces_layer");
+						if(this.customModelLayer){
+							this.map.scene.imageryLayers.remove(this.customModelLayer);
+							this.customModelLayer = false;
+						}
+						
 						
 						var url = product.get("views")[0].urls[0];
 
@@ -912,15 +932,21 @@ define(['backbone.marionette',
 							"range_max": range[1],
 						}))
 
-							.done(function( data ) {	
-								that.map.scene.imageryLayers.remove(ces_layer);									
+							.done(function( data ) {
+
+								if(that.customModelLayer){
+									index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
+									that.map.scene.imageryLayers.remove(that.customModelLayer);	
+									that.customModelLayer = false;		
+								}
+													
 							    imageURI = "data:image/gif;base64,"+data;
 							    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-								ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-								product.set("ces_layer", ces_layer);
+								that.customModelLayer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+								product.set("ces_layer", that.customModelLayer);
 								// TODO: Hack to position layer at correct index, adding imagery provider  
 								// with index does not seem to be working
-								var ces_index = that.map.scene.imageryLayers.indexOf(ces_layer);
+								var ces_index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
 								var to_move = index - ces_index;
 								for(var i=0; i<Math.abs(to_move); ++i){
 									if(to_move < 0)
