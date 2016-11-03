@@ -50,6 +50,8 @@
 
         this.$('#btn-start-download').on("click", _.bind(this.onStartDownloadClicked, this));
 
+        $('#validationwarning').remove();
+
         var options = {};
 
         // Check for filters
@@ -183,6 +185,40 @@
               '<div style="margin-left:0px;"> <input id="param_enum" style="width:100%;"> </div>'+
           '</div>'
         );
+
+        this.$el.find("#custom_time_cb").off();
+        this.$el.find("#custom_time").empty();
+        this.$el.find("#custom_time").html(
+            '<div class="checkbox" style="margin-left:0px;"><label><input type="checkbox" value="" id="custom_time_cb">Custom time selection</label></div><div id="customtimefilter"></div>'
+        );
+
+        this.$el.find('#custom_time_cb').click(function(){
+
+          $('#customtimefilter').empty();
+
+          if ($('#custom_time_cb').is(':checked')) {
+           
+            var timeinterval = that.model.get("ToI");
+            var extent = [
+              getISOTimeString(timeinterval.start),
+              getISOTimeString(timeinterval.end)
+            ];
+
+            var name = "Time (hh:mm:ss.fff)";
+
+            var $html = $(FilterTmpl({
+                id: "timefilter",
+                name: name,
+                extent: extent
+              })
+            );
+            $('#customtimefilter').append($html);
+            $('#customtimefilter .input-group-btn button').removeClass();
+            $('#customtimefilter .input-group-btn button').attr('class', 'btn disabled');
+            
+          }
+
+        });
 
         var selected = [];
         // Check if latitude available
@@ -319,8 +355,48 @@
         return val.toFixed(2);
       },
 
+      fieldsValid(){
+        var filter_elem = this.$el.find(".input-group");
+
+        var valid = true;
+
+        _.each(filter_elem, function(fe){
+          var extent_elem = $(fe).find("textarea");
+
+          for (var i = extent_elem.length - 1; i >= 0; i--) {
+
+            if(extent_elem.context.id == 'timefilter'){
+              if(!isValidTime(extent_elem[i].value)){
+                $(extent_elem[i]).css('background-color', 'rgb(255, 215, 215)');
+                valid = false;
+              }else{
+                $(extent_elem[i]).css('background-color', 'transparent');
+              }
+            }else{
+              if(!$.isNumeric(extent_elem[i].value)){
+                $(extent_elem[i]).css('background-color', 'rgb(255, 215, 215)');
+                valid = false;
+              }else{
+                $(extent_elem[i]).css('background-color', 'transparent');
+              }
+            }
+
+          };
+        });
+        return valid;
+
+      },
+
 
       onStartDownloadClicked: function() {
+        $('#validationwarning').remove();
+        // First validate fields
+        if(!this.fieldsValid()){
+          // Show ther eis an issue in the fields and return
+          $('.panel-footer').append('<div id="validationwarning">There is an issue with the provided filters, please look for the red marked fields.</div>');
+          return;
+        }
+
         var $downloads = $("#div-downloads");
         var options = {};
 
@@ -337,7 +413,7 @@
         options.begin_time.getDate(), options.begin_time.getHours(), 
         options.begin_time.getMinutes(), options.begin_time.getSeconds()));
         options.begin_time.setUTCHours(0,0,0,0);
-        options.begin_time = getISODateTimeString(options.begin_time);
+       
 
         options.end_time = this.end_picker.datepicker( "getDate" );
         options.end_time = new Date(Date.UTC(options.end_time.getFullYear(), options.end_time.getMonth(),
@@ -345,7 +421,21 @@
         options.end_time.getMinutes(), options.end_time.getSeconds()));
         //options.end_time.setUTCHours(23,59,59,999);
         options.end_time.setUTCHours(0,0,0,0);
-        options.end_time.setDate(options.end_time.getDate() + 1);
+        
+        
+
+
+        // Rewrite time for start and end date if custom time is active
+        if($("#timefilter").length!=0) {
+          var s = parseTime($($("#timefilter").find('textarea')[1]).val());
+          var e = parseTime($($("#timefilter").find('textarea')[0]).val());
+          options.begin_time.setUTCHours(s[0],s[1],s[2],s[3]);
+          options.end_time.setUTCHours(e[0],e[1],e[2],e[3]);
+        }else{
+          options.end_time.setDate(options.end_time.getDate() + 1);
+        }
+
+        options.begin_time = getISODateTimeString(options.begin_time);
         options.end_time = getISODateTimeString(options.end_time);
 
         // products
@@ -419,7 +509,11 @@
         var filter_elem = this.$el.find(".input-group");
 
         _.each(filter_elem, function(fe){
+
           var extent_elem = $(fe).find("textarea");
+          if(extent_elem.context.id == 'timefilter'){
+            return;
+          }
           var extent = [];
           for (var i = extent_elem.length - 1; i >= 0; i--) {
             extent[i] = parseFloat(extent_elem[i].value);
