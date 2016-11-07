@@ -133,7 +133,6 @@
         }],
         "products": [{
             "name": "MAGA LR 1B",
-            "visible": true,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -279,7 +278,6 @@
 
         },{
             "name": "MAGB LR 1B",
-            "visible": false,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -424,7 +422,6 @@
             "satellite": "Swarm"
         },{
             "name": "MAGC LR 1B",
-            "visible": false,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -2065,6 +2062,10 @@
             "name": "About",
             "icon": "fa-info-circle",
             "eventToRaise": "dialog:open:about"
+        }, {
+            "name": "Reset",
+            "icon": "fa-refresh",
+            "eventToRaise": "application:reset"
         }]
     },
 

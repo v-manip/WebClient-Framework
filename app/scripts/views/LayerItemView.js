@@ -118,6 +118,13 @@
 
                 if(this.model.get("containerproduct")){
 
+                	var cs = {};
+                	if(localStorage.getItem('containerSelection') !== null){
+                		cs = JSON.parse(localStorage.getItem('containerSelection'));
+					}
+                	cs[this.model.get('id')] = visible;
+                	localStorage.setItem('containerSelection', JSON.stringify(cs));
+                	
 
                 	if(visible){
                 		this.model.set("visible", true);

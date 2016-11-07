@@ -26,7 +26,15 @@
 						this.trackEvents(event, param);
 					}
 
+					// Track events to save current status of workspace to allow restoring
+					// when user visits again
+					if (typeof(Storage) !== "undefined") {
+					    this.saveStatus(event, param);
+					}
+					
+
 				}, this);
+
 
 				//create a req/res
 				this.reqres = new Backbone.Wreqr.RequestResponse();
@@ -49,6 +57,7 @@
 				this.mediator.on(eventid, function() {
 					this.command.execute(eventid);
 				}.bind(this));
+
 			},
 
 			setAoiModel: function(model) {
@@ -99,6 +108,30 @@
 					}
 
 				}
+			},
+
+			saveStatus: function(event, param){
+
+				// Tracking timeslider
+				if(event === 'time:domain:change'){
+					localStorage.setItem('timeDomain', JSON.stringify(param));
+				}
+
+				if(event === 'time:change'){
+					localStorage.setItem('timeSelection', JSON.stringify([param.start, param.end]));
+				}
+
+				// Tracking of workspace window configuration
+				if(event === 'ui:fullscreen:globe'){
+					localStorage.setItem('viewSelection', 'globe');
+				}
+				if(event === 'ui:fullscreen:analytics'){
+					localStorage.setItem('viewSelection', 'analytics');
+				}
+				if(event === 'layout:switch:splitview'){
+					localStorage.setItem('viewSelection', 'split');
+				}
+
 			}
 		});
 

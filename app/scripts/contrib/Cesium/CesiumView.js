@@ -310,7 +310,7 @@ define(['backbone.marionette',
 					}
 				});
 
-				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+				//Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 				//this.onResize();
 				return this;
 			},

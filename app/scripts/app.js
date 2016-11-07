@@ -334,6 +334,10 @@ var VECTOR_BREAKDOWN = {
 		        	"Charlie": false
 		        };
 
+		        if(localStorage.getItem("satelliteSelection") !== null){
+		        	globals.swarm.satellites = JSON.parse(localStorage.getItem("satelliteSelection"));
+		        }
+
 		        globals.swarm["products"] = {
 		        	"MAG": {
 		        		"Alpha": "SW_OPER_MAGA_LR_1B",
@@ -352,15 +356,54 @@ var VECTOR_BREAKDOWN = {
 		        	}
 		        };
 
-		        globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
-		        //globals.swarm["activeProducts"] = [];
+		        //globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
+
+				
+
+		        globals.swarm["activeProducts"] = [];
 		        
 		        var filtered_collection = new Backbone.Collection(filtered);
+
+		        var containerSelection = {
+		        	'MAG': true,
+		        	'EFI': false,
+		        	'IBI': false
+		        };
+
+		        if(localStorage.getItem("containerSelection") !== null){
+		        	containerSelection = JSON.parse(localStorage.getItem("containerSelection"));
+		        }
+
+		        var csKeys = _.keys(containerSelection);
+		        for (var i = csKeys.length - 1; i >= 0; i--) {
+		        	if(containerSelection[csKeys[i]]){
+		        		var satKeys = _.keys(globals.swarm.products[csKeys[i]]);
+		        		for (var j = satKeys.length - 1; j >= 0; j--) {
+		        			if(globals.swarm.satellites[satKeys[j]]){
+		        				globals.swarm.activeProducts.push(
+		        					globals.swarm.products[csKeys[i]][satKeys[j]]
+		        				);
+		        			}
+		        		}
+		        	}
+		        }
+
+	        	for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
+		        	globals.products.forEach(function(p){
+            			if(p.get("download").id == globals.swarm.activeProducts[i]){
+            				if(!p.get("visible")){
+	            				p.set("visible", true);
+            				}
+            			}
+            		});
+		        }
+
+
 
 		        // Add generic product (which is container for A,B and C sats)
 				filtered_collection.add({
 					name: "Bubble Index data (IBI)",
-					visible: false,
+					visible: containerSelection['IBI'],
 					color: "#2ca02c",
 					protocol: null,
 					containerproduct: true,
@@ -368,7 +411,7 @@ var VECTOR_BREAKDOWN = {
 				}, {at: 0});
 				filtered_collection.add({
 					name: "Plasma data (EFI PL)",
-					visible: false,
+					visible: containerSelection['EFI'],
 					color: "#ff7f0e",
 					protocol: null,
 					containerproduct: true,
@@ -376,7 +419,7 @@ var VECTOR_BREAKDOWN = {
 				}, {at: 0});
 				filtered_collection.add({
 					name: "Magnetic data (MAG LR)",
-					visible: true,
+					visible: containerSelection['MAG'],
 					color: "#1f77b4",
 					protocol: null,
 					containerproduct: true,
@@ -524,8 +567,22 @@ var VECTOR_BREAKDOWN = {
 					this.storyView.show(this.storyBanner);
 				}*/
 
-				splitview.setSplitscreen();
+				if ( (typeof(Storage) !== "undefined") && localStorage.getItem("viewSelection") !== null) {
+					if(localStorage.getItem('viewSelection') == 'split'){
+						splitview.setSplitscreen();
+					}
+					if(localStorage.getItem('viewSelection') == 'globe'){
+						splitview.setSinglescreen('CesiumViewer');
+					}
+					if( localStorage.getItem('viewSelection') == 'analytics'){
+						splitview.setSinglescreen('AVViewer');
+					}
+				}else{
+					splitview.setSplitscreen();
+				}
 
+				
+				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 
 				// Try to get CSRF token, if available set it for necesary ajax requests
 				function getCookie(name) {
@@ -605,19 +662,6 @@ var VECTOR_BREAKDOWN = {
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
 
-
-                var data = [-10,0,1,3,5,7,8,10];
-				var min = d3.min(data);
-				var mean = d3.sum(data) / data.length;
-				var max = d3.max(data);
-
-				
-				// linear scale, 2 colors
-				/*var lScale = d3.scale.linear()
-				.domain([-1, 0, max])
-				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
-				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
-				
 			}
 
 
