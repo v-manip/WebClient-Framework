@@ -232,12 +232,7 @@
 								    },
 								    error: function(jqXHR, textStatus, errorThrown) {
 								    	if (jqXHR.status == 403){
-								    		$("#error-messages").append(
-						                              '<div class="alert alert-warning alert-danger">'+
-						                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-						                              '<strong>Warning!</strong> You are not authorized to access this product' +
-						                            '</div>'
-						                    );
+						                    showMessage('warning','You are not authorized to access this product.', 20);
 								    	}else{
 								    		this.authview = new av.AuthView({
 									    		model: new am.AuthModel({url:req}),
@@ -266,12 +261,7 @@
 											App.optionsBar.show(App.layerSettings);
 										}
 									}
-									$("#error-messages").append(
-				                              '<div class="alert alert-info">'+
-				                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-				                              'Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer' +
-				                            '</div>'
-				                    );
+				                    showMessage('info','Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer.', 20);
 
 				                    var checkbox = $( "input[type$='checkbox']", this.$el);
 			    					//checkbox.attr('checked', false);

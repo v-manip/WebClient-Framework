@@ -124,6 +124,13 @@ var VECTOR_BREAKDOWN = {
 
 
 				//Base Layers are loaded and added to the global collection
+				// If there are already saved baselayer config in the local
+				// storage use that instead
+
+				if(localStorage.getItem('baseLayersConfig') !== null){
+					config.mapConfig.baseLayers = JSON.parse(localStorage.getItem('baseLayersConfig'));
+				}
+
 				_.each(config.mapConfig.baseLayers, function(baselayer) {
 
 					globals.baseLayers.add(
@@ -172,6 +179,13 @@ var VECTOR_BREAKDOWN = {
                 // Remove three first colors as they are used by the products
                 autoColor.getColor();autoColor.getColor();autoColor.getColor();
 
+                // If there are already saved product config in the local
+				// storage use that instead
+
+				if(localStorage.getItem('productsConfig') !== null){
+					config.mapConfig.products = JSON.parse(localStorage.getItem('productsConfig'));
+				}
+
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
 					globals.products.add(
@@ -218,7 +232,11 @@ var VECTOR_BREAKDOWN = {
 				var productcolors = d3.scale.ordinal().domain(domain).range(range);
 
 				globals.objects.add('productcolors', productcolors);
-	      	
+
+				// If there is already saved overly configuration use that
+				if(localStorage.getItem('overlaysConfig') !== null){
+					config.mapConfig.overlays = JSON.parse(localStorage.getItem('overlaysConfig'));
+				}
 				//Overlays are loaded and added to the global collection
 				_.each(config.mapConfig.overlays, function(overlay) {
 
@@ -227,27 +245,7 @@ var VECTOR_BREAKDOWN = {
 								name: overlay.name,
 								visible: overlay.visible,
 								ordinal: ordinal,
-								view: {
-									id: overlay.id,
-									urls: overlay.urls,
-									protocol: overlay.protocol,
-									projection: overlay.projection,
-									attribution: overlay.attribution,
-									matrixSet: overlay.matrixSet,
-									style: overlay.style,
-									format: overlay.format,
-									resolutions: overlay.resolutions,
-									maxExtent: overlay.maxExtent,
-									gutter: overlay.gutter,
-									buffer: overlay.buffer,
-									units: overlay.units,
-									transitionEffect: overlay.transitionEffect,
-									isphericalMercator: overlay.isphericalMercator,
-									isBaseLayer: false,
-									wrapDateLine: overlay.wrapDateLine,
-									zoomOffset: overlay.zoomOffset,
-									//time: overlay.time // Is set in TimeSliderView on time change.
-								}
+								view: overlay.view
 							})
 						);
 						console.log("Added overlay " + overlay.id);
@@ -355,10 +353,6 @@ var VECTOR_BREAKDOWN = {
 		        		"Charlie": "SW_OPER_IBICTMS_2F"
 		        	}
 		        };
-
-		        //globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
-
-				
 
 		        globals.swarm["activeProducts"] = [];
 		        
@@ -632,12 +626,7 @@ var VECTOR_BREAKDOWN = {
 				        return;
 				    }
 
-                    $("#error-messages").append(
-                              '<div class="alert alert-warning alert-danger">'+
-                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                              '<strong>Warning!</strong> Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0] +
-                            '</div>'
-                    );
+				    showMessage('danger', ('Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0]), 15);
                 });
 
                 // The tooltip is called twice at beginning and end, it seems to show the style of the

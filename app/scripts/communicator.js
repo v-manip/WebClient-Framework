@@ -4,10 +4,11 @@
 	var root = this;
 
 	root.define([
+		'globals',
 		'backbone',
-		'backbone.marionette'
+		'backbone.marionette',
 	],
-	function( Backbone ) {
+	function( globals, Backbone ) {
 
 		var Communicator = Backbone.Marionette.Controller.extend({
 			initialize: function( options ) {
@@ -112,6 +113,14 @@
 
 			saveStatus: function(event, param){
 
+				function replacer(key,value)
+				{
+				    if (key==='ces_layer') {return undefined;}
+				    else if (key==='ordinal') {return undefined;}
+				    //else if (key==='download_parameters') {return undefined;}
+				    else {return value;}
+				}
+
 				// Tracking timeslider
 				if(event === 'time:domain:change'){
 					localStorage.setItem('timeDomain', JSON.stringify(param));
@@ -130,6 +139,54 @@
 				}
 				if(event === 'layout:switch:splitview'){
 					localStorage.setItem('viewSelection', 'split');
+				}
+
+				// Tracking of layers
+				if(event === 'map:layer:change'){
+
+					// Check what type of layer and modify group accordingly
+					if(param.isBaseLayer){
+						localStorage.setItem(
+							'baseLayersConfig',
+							JSON.stringify(
+								globals.baseLayers.models.map(function(m){
+									return m.attributes;
+								}),replacer
+							)
+						);
+					}else{
+						// Check if overlay
+						if(globals.overlays.find(function(m) { return m.get('name') === param.name; })){
+							localStorage.setItem(
+								'overlaysConfig',
+								JSON.stringify(
+									globals.overlays.models.map(function(m){
+										return m.attributes;
+									}),replacer
+								)
+							);
+						}else{
+							localStorage.setItem(
+								'productsConfig',
+								JSON.stringify(
+									globals.products.models.map(function(m){
+										return m.attributes;
+									}),replacer
+								)
+							);
+						}
+					}
+				}
+
+				if(event === 'layer:parameters:changed'){
+					localStorage.setItem(
+						'productsConfig',
+						JSON.stringify(
+							globals.products.models.map(function(m){
+								return m.attributes;
+							}),replacer
+						)
+					);
 				}
 
 			}

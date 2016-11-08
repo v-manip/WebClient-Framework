@@ -281,6 +281,22 @@ define(['backbone.marionette',
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
 
+				function synchronizeLayer(l){
+					if(l.get('ces_layer')){
+						if(l.get('ces_layer').show != l.get('visible')){
+							var isBaseLayer = defaultFor(l.get('view').isBaseLayer, false);
+							this.changeLayer({
+								name: l.get('name'), visible: l.get('visible'), isBaseLayer: isBaseLayer
+							});
+						}
+					}
+				}
+				// Go through config to make any changes done while widget
+				// not active (not in view)
+				globals.baseLayers.each(synchronizeLayer.bind(this));
+				globals.products.each(synchronizeLayer.bind(this));
+				globals.overlays.each(synchronizeLayer.bind(this));
+
 				
 				this.connectDataEvents();
 

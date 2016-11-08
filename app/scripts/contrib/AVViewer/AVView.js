@@ -61,7 +61,7 @@ define(['backbone.marionette',
 					Communicator.mediator.trigger("dialog:open:download:filter", true);
 				});
 				
-
+				this.$('.d3canvas').remove();
 				this.$el.append("<div class='d3canvas'></div>");
 
 				this.$('.d3canvas').append("<div id='scatterdiv' style='height:55%;'></div>");
