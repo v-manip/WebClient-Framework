@@ -104,11 +104,31 @@ define(['backbone.marionette',
 						}
 					);
 
+					// If filters from previous session load them
+					if(localStorage.getItem('filterSelection') !== null){
+						var filters = JSON.parse(localStorage.getItem('filterSelection'));
+						Communicator.mediator.trigger('analytics:set:filter', filters);
+						_.map(filters, function(value, key){
+							that.sp.active_brushes.push(key);
+							that.sp.brush_extents[key] = value;
+							
+						});
+					}
+
+					// If filters from previous session load them
+					if(localStorage.getItem('yAxisSelection') !== null &&
+						localStorage.getItem('xAxisSelection') !== null){
+
+							that.sp.sel_y = JSON.parse(localStorage.getItem('yAxisSelection'));
+							that.sp.sel_x = JSON.parse(localStorage.getItem('xAxisSelection'));
+					}
+
 				}
 				if(swarmdata && swarmdata.length>0){
 					args['parsedData'] = swarmdata;
 					that.sp.loadData(args);
 				}
+
 				
 				return this;
 			},
@@ -301,6 +321,14 @@ define(['backbone.marionette',
 
 							this.sp.loadData(args);
 						}
+						var that = this;
+						// Active parameters
+						$(".SumoSelect").change(function(evt){
+							localStorage.setItem('yAxisSelection', JSON.stringify(that.sp.sel_y));
+							localStorage.setItem('xAxisSelection', JSON.stringify(that.sp.sel_x));
+						});
+
+
 					}else{
 						$('#scatterdiv').empty();
 						$('#parallelsdiv').empty();

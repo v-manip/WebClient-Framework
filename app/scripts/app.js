@@ -539,6 +539,13 @@ var VECTOR_BREAKDOWN = {
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
 
+                // Load possible available filter selection
+				if(localStorage.getItem('filterSelection') !== null){
+					globals.swarm.set('filters', JSON.parse(localStorage.getItem('filterSelection')));
+				}
+
+				
+
 
 			},
 
@@ -574,9 +581,6 @@ var VECTOR_BREAKDOWN = {
 				}else{
 					splitview.setSplitscreen();
 				}
-
-				
-				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 
 				// Try to get CSRF token, if available set it for necesary ajax requests
 				function getCookie(name) {
@@ -638,6 +642,13 @@ var VECTOR_BREAKDOWN = {
 					show:{ effect: false, delay: 700}
 			    });
 
+			    // Broadcast possible area selection
+				if(localStorage.getItem('areaSelection') !== null){
+					Communicator.mediator.trigger('selection:changed', JSON.parse(localStorage.getItem('areaSelection')));
+				}
+
+				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+
 			    globals.products.each(function(product){
 					if(product.get("visible")){
 						Communicator.mediator.trigger("map:layer:change", {
@@ -650,6 +661,7 @@ var VECTOR_BREAKDOWN = {
 
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
+
 
 			}
 

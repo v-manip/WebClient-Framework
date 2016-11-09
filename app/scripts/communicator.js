@@ -189,6 +189,20 @@
 					);
 				}
 
+				// Tracking of Analytics settings
+
+				// Filters
+				if(event === 'analytics:set:filter'){
+					localStorage.setItem('filterSelection', JSON.stringify(param));
+				}
+
+				// Area selection
+				if(event === 'selection:changed'){
+					localStorage.setItem('areaSelection', JSON.stringify(param));
+				}
+				
+
+
 			}
 		});
 
