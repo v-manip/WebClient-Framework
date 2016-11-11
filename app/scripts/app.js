@@ -188,38 +188,47 @@ var VECTOR_BREAKDOWN = {
 
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
-					globals.products.add(
-						new m.LayerModel({
-							name: product.name,
-							visible: product.visible,
-                            ordinal: ordinal,
-							timeSlider: product.timeSlider,
-							// Default to WMS if no protocol is defined
-							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
-							color: p_color,
-							//time: products.time, // Is set in TimeSliderView on time change.
-							opacity: (product.opacity) ? product.opacity : 1,
-							views: product.views,
-							view: {isBaseLayer: false},
-							download: {
-								id: product.download.id,
-								protocol: product.download.protocol,
-								url: product.download.url
-							},
-							processes: product.processes,
-							unit: product.unit,
-							parameters: product.parameters,
-							download_parameters: product.download_parameters,
-							height: product.height,
-							outlines: product.outlines,
-							model: product.model,
-							coefficients_range: product.coefficients_range,
-							satellite: product.satellite,
-							tileSize: (product.tileSize) ? product.tileSize : 256,
-							validity: product.validity,
-							showColorscale: true
-						})
-					);
+					var lm = new m.LayerModel({
+						name: product.name,
+						visible: product.visible,
+                        ordinal: ordinal,
+						timeSlider: product.timeSlider,
+						// Default to WMS if no protocol is defined
+						timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
+						color: p_color,
+						//time: products.time, // Is set in TimeSliderView on time change.
+						opacity: (product.opacity) ? product.opacity : 1,
+						views: product.views,
+						view: {isBaseLayer: false},
+						download: {
+							id: product.download.id,
+							protocol: product.download.protocol,
+							url: product.download.url
+						},
+						processes: product.processes,
+						unit: product.unit,
+						parameters: product.parameters,
+						download_parameters: product.download_parameters,
+						height: product.height,
+						outlines: product.outlines,
+						model: product.model,
+						coefficients_range: product.coefficients_range,
+						satellite: product.satellite,
+						tileSize: (product.tileSize) ? product.tileSize : 256,
+						validity: product.validity,
+						showColorscale: true
+					});
+
+					if(lm.get('download').id === 'Custom_Model'){
+						var shcFile = localStorage.getItem('shcFile');
+						if(shcFile !== null){
+							shcFile = JSON.parse(shcFile);
+							lm.set('shc', shcFile.data);
+							lm.set('shc_name', shcFile.name);
+						}
+					}
+
+					globals.products.add(lm);
 
 					if(product.processes){
 						domain.push(product.processes[0].layer_id);
@@ -366,6 +375,8 @@ var VECTOR_BREAKDOWN = {
 
 		        if(localStorage.getItem("containerSelection") !== null){
 		        	containerSelection = JSON.parse(localStorage.getItem("containerSelection"));
+		        }else{
+		        	localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
 		        }
 
 		        var csKeys = _.keys(containerSelection);

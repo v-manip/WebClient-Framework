@@ -462,11 +462,10 @@
 			},
 
 			handleRangeResponseError: function(response){
-				$("#error-messages").append(
-					'<div class="alert alert-warning">'+
-					'<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-					'Warning: There is a problem requesting the range values for the color scale, please revise and set them to adequate values if necessary.' +
-					'</div>'
+				showMessage(
+					'warning', 
+					'There is a problem requesting the range values for the color scale,'+
+					' please revise and set them to adequate values if necessary.', 15
 				);
 			},
 
@@ -631,6 +630,13 @@
 					//console.log(evt.target.result);
 					that.current_model.set('shc', evt.target.result);
 					that.current_model.set('shc_name', filename);
+
+					// Save shc file to localstorage
+					localStorage.setItem('shcFile', JSON.stringify({
+						name: filename,
+						data: evt.target.result
+					}));
+
 					that.$("#shc").find("#filename").remove();
 					that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+filename+'</p>');
 

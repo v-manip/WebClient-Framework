@@ -45,6 +45,7 @@ define(['backbone.marionette',
 				this.plot_type = 'scatter';
 				this.previous_parameters = [];
 
+
 				$('#tmp_download_button').unbind( "click" );
 				$('#tmp_download_button').remove();
 
@@ -87,6 +88,44 @@ define(['backbone.marionette',
 					file_save_string: "VirES_Services_plot_rendering"
 				};
 
+				var self = this;
+				args.filterListChanged = function(param){
+					localStorage.setItem('selectedFilterList', JSON.stringify(param));
+				};
+
+				args.xAxisSelectionChanged = function(param){
+					localStorage.setItem('xAxisSelection', JSON.stringify(param));
+				};
+
+				args.yAxisSelectionChanged = function(param){
+					localStorage.setItem('yAxisSelection', JSON.stringify(param));
+				};
+
+				args.filtersViewChanged = function(param){
+					localStorage.setItem('filterViewVisible', JSON.stringify(param));
+				};
+				args.gridSettingChanged = function(param){
+					localStorage.setItem('gridVisible', JSON.stringify(param));
+				};
+
+				if(localStorage.getItem('filterViewVisible') !== null){
+					args.filters_hidden = JSON.parse(localStorage.getItem('filterViewVisible'));
+				}
+				if(localStorage.getItem('gridVisible') !== null){
+					args.grid = JSON.parse(localStorage.getItem('gridVisible'));
+				}
+
+				var filterList = localStorage.getItem('selectedFilterList');
+				if(filterList !== null){
+					filterList = JSON.parse(filterList);
+					args.fieldsforfiltering = filterList;
+					
+				}
+
+				if(localStorage.getItem('previousParameters') !== null){
+					this.previous_parameters = JSON.parse(localStorage.getItem('previousParameters'));
+				}
+
 				
 				if (this.sp === undefined){
 
@@ -116,11 +155,12 @@ define(['backbone.marionette',
 					}
 
 					// If filters from previous session load them
-					if(localStorage.getItem('yAxisSelection') !== null &&
-						localStorage.getItem('xAxisSelection') !== null){
-
-							that.sp.sel_y = JSON.parse(localStorage.getItem('yAxisSelection'));
-							that.sp.sel_x = JSON.parse(localStorage.getItem('xAxisSelection'));
+					if(localStorage.getItem('xAxisSelection') !== null){
+						that.sp.sel_x = JSON.parse(localStorage.getItem('xAxisSelection'));
+					}
+					// If filters from previous session load them
+					if(localStorage.getItem('yAxisSelection') !== null){
+						that.sp.sel_y = JSON.parse(localStorage.getItem('yAxisSelection'));
 					}
 
 				}
@@ -251,7 +291,11 @@ define(['backbone.marionette',
 						});
 
 						if (!_.isEqual(this.previous_parameters, _.keys(data[0]))){
-							var filterstouse = ["Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
+
+							//var filterstouse = ["Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
+
+							var filterstouse = this.sp.fieldsforfiltering.concat(["n", "T_elec", "Bubble_Probability"]);
+							filterstouse = filterstouse.concat(["MLT"]);
 							var residuals = _.filter(_.keys(data[0]), function(item) {
 								return item.indexOf("_res") !== -1;
 							});
@@ -260,10 +304,17 @@ define(['backbone.marionette',
 							if(residuals.length > 0){
 								filterstouse = filterstouse.concat(residuals);
 							}else{
-								filterstouse = filterstouse.concat(["F","F_error" ]);
+								if(filterstouse.indexOf('F') == -1){
+									filterstouse.push("F");
+								}
+								if(filterstouse.indexOf('F_error') == -1){
+									filterstouse.push("F_error");
+								}
+								
 							}
 
 							this.sp.fieldsforfiltering = filterstouse;
+							localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
 
 							// Check if we want to change the y-selection
 							// If previous does not contain plasma data and new one
@@ -305,11 +356,15 @@ define(['backbone.marionette',
 									this.sp.sel_y = [res_p];
 								}
 							}
+
+							localStorage.setItem('yAxisSelection', JSON.stringify(this.sp.sel_y));
+							localStorage.setItem('xAxisSelection', JSON.stringify(this.sp.sel_x));
 						}
 
 
 
 						this.previous_parameters = _.keys(data[0]);
+						localStorage.setItem('previousParameters', JSON.stringify(this.previous_parameters));
 
 						if(this.$('.d3canvas').length == 1){
 							$('#scatterdiv').empty();
@@ -321,13 +376,6 @@ define(['backbone.marionette',
 
 							this.sp.loadData(args);
 						}
-						var that = this;
-						// Active parameters
-						$(".SumoSelect").change(function(evt){
-							localStorage.setItem('yAxisSelection', JSON.stringify(that.sp.sel_y));
-							localStorage.setItem('xAxisSelection', JSON.stringify(that.sp.sel_x));
-						});
-
 
 					}else{
 						$('#scatterdiv').empty();
