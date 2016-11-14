@@ -65,8 +65,8 @@ define(['backbone.marionette',
 				this.$('.d3canvas').remove();
 				this.$el.append("<div class='d3canvas'></div>");
 
-				this.$('.d3canvas').append("<div id='scatterdiv' style='height:55%;'></div>");
-				this.$('.d3canvas').append("<div id='parallelsdiv' style='height:45%;'></div>");
+				this.$('.d3canvas').append("<div id='scatterdiv' style='height:60%;'></div>");
+				this.$('.d3canvas').append("<div id='parallelsdiv' style='height:39%;'></div>");
 
             	/*var args = {
 					selector: this.$('.d3canvas')[0]
@@ -102,14 +102,19 @@ define(['backbone.marionette',
 				};
 
 				args.filtersViewChanged = function(param){
-					localStorage.setItem('filterViewVisible', JSON.stringify(param));
+					localStorage.setItem('filterViewHidden', JSON.stringify(param));
 				};
 				args.gridSettingChanged = function(param){
 					localStorage.setItem('gridVisible', JSON.stringify(param));
 				};
 
-				if(localStorage.getItem('filterViewVisible') !== null){
-					args.filters_hidden = JSON.parse(localStorage.getItem('filterViewVisible'));
+				if(localStorage.getItem('filterViewHidden') !== null){
+					args.filters_hidden = JSON.parse(localStorage.getItem('filterViewHidden'));
+					if(args.filters_hidden){
+						$('#scatterdiv').css('height', '95%');
+						$('#parallelsdiv').css('height', '40px');
+					}
+
 				}
 				if(localStorage.getItem('gridVisible') !== null){
 					args.grid = JSON.parse(localStorage.getItem('gridVisible'));

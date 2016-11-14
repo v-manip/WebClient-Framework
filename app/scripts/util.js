@@ -101,11 +101,12 @@ var getCoverageXML = function(coverageid, options) {
 var showMessage = function(level, message, timeout, additionalClasses){
   var label = level.capitalizeFirstLetter();
   if (label === 'Danger'){label = 'Error';}
+  if(label === 'Success'){label = 'Info';}
   var el = $(
     '<div style="padding-right:40px;" class="alert alert-'+level+' '+additionalClasses+'">'+
       '<button style="margin-right:-25px;" type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
       '<svg id="countdowncircle" width="10" height="10" viewbox="0 0 10 10"><path id="loader" transform="translate(5, 5)" /></svg>'+
-      '<strong>'+label+'</strong>: '+ message  +
+      '<strong>'+label+'</strong>:<br/> '+ message  +
     '</div>'
   );
 
@@ -139,6 +140,4 @@ var showMessage = function(level, message, timeout, additionalClasses){
 
   draw.call(el);
 }
-
-
 

@@ -45,6 +45,7 @@ var VECTOR_BREAKDOWN = {
 		function(Backbone, globals, DialogRegion,
 			UIRegion, LayerControlLayout, ToolControlLayout, OptionsLayout, WindowView, Communicator) {
 
+
 		var Application = Backbone.Marionette.Application.extend({
 			initialize: function(options) {
 			},
@@ -373,8 +374,15 @@ var VECTOR_BREAKDOWN = {
 		        	'IBI': false
 		        };
 
+		        var clickEvent = "require(['communicator'], function(Communicator){Communicator.mediator.trigger('application:reset');});";
+
 		        if(localStorage.getItem("containerSelection") !== null){
 		        	containerSelection = JSON.parse(localStorage.getItem("containerSelection"));
+		        	showMessage('success',
+		        	 'The configuration of your last visit has been loaded, '+
+		        	 'if you would like to reset to the default configuration click '+
+		        	 '<b><a href="javascript:void(0);" onclick="'+clickEvent+'">here</a></b> '+
+		        	 'or on the Reset button above.', 35);
 		        }else{
 		        	localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
 		        }
