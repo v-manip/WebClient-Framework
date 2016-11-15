@@ -444,3 +444,15 @@ button[active=active] {
 }
 
 
+/* Util styles */
+
+#countdowncircle {
+  display: block;
+  position: absolute;
+  right: 30px;
+  margin-top: 6px;
+}
+
+#loader { 
+  fill: #999;
+}
