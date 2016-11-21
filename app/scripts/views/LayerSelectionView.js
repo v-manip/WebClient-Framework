@@ -129,22 +129,30 @@
 
 			},
 
-			updateSort: function(options) {         
+			updateSort: function(options) {
+				var previousPos = options.model.get('ordinal');
+				var shifts = {};  
 		        this.collection.remove(options.model);
+
+		        // Count special container collections
+		        var specialColl = this.collection.filter(function(m){return m.get("containerproduct");});
+		        options.position = options.position + specialColl.length;
 
 		        this.collection.each(function (model, index) {
 		            var ordinal = index;
-		            if (index >= options.position)
+		            if (index >= options.position){
 		                ordinal += 1;
+		            }
 		            model.set('ordinal', ordinal);
 		        });            
 
+		        shifts[options.model.get('name')] = previousPos-options.position;
 		        options.model.set('ordinal', options.position);
 		        this.collection.add(options.model, {at: options.position});
 
 		        this.render();
 		        
-		        Communicator.mediator.trigger("productCollection:sortUpdated");
+		        Communicator.mediator.trigger("productCollection:sortUpdated", shifts);
 		    },
 
 			onLayerSelectionChange: function(options) {

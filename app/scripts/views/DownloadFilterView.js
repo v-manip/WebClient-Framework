@@ -343,7 +343,9 @@
         options.end_time = new Date(Date.UTC(options.end_time.getFullYear(), options.end_time.getMonth(),
         options.end_time.getDate(), options.end_time.getHours(), 
         options.end_time.getMinutes(), options.end_time.getSeconds()));
-        options.end_time.setUTCHours(23,59,59,999);
+        //options.end_time.setUTCHours(23,59,59,999);
+        options.end_time.setUTCHours(0,0,0,0);
+        options.end_time.setDate(options.end_time.getDate() + 1);
         options.end_time = getISODateTimeString(options.end_time);
 
         // products
