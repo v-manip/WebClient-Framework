@@ -5,12 +5,11 @@
     'backbone',
     'communicator',
     'timeslider',
-    'timeslider_plugins',
     'globals',
     'underscore',
     'd3'
   ],
-  function( Backbone, Communicator, timeslider, timeslider_plugins, globals) {
+  function( Backbone, Communicator, timeslider, globals) {
     var TimeSliderView = Backbone.Marionette.ItemView.extend({
       id: 'timeslider',
       events: {
@@ -144,12 +143,10 @@
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.WPS({
+                    records: null,
+                    source: new TimeSlider.Sources.EOxServerWPSSource({
                         url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id ,
-                        bbox: [extent.left, extent.bottom, extent.right, extent.top],
-                        csrftoken: this.csrftoken
+                        eoid: product.get('download').id
                      })
                   });
                   this.activeWPSproducts.push(product.get('download').id);
