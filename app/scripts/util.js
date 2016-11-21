@@ -1,4 +1,10 @@
 
+
+String.prototype.capitalizeFirstLetter = function() {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
+
+
 var padLeft = function(str, pad, size) {
   while (str.length < size) {
     str = pad + str;
@@ -91,3 +97,47 @@ var getCoverageXML = function(coverageid, options) {
   params.push('</wcs:GetCoverage>');
   return params.join("");
 };
+
+var showMessage = function(level, message, timeout, additionalClasses){
+  var label = level.capitalizeFirstLetter();
+  if (label === 'Danger'){label = 'Error';}
+  if(label === 'Success'){label = 'Info';}
+  var el = $(
+    '<div style="padding-right:40px;" class="alert alert-'+level+' '+additionalClasses+'">'+
+      '<button style="margin-right:-25px;" type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
+      '<svg id="countdowncircle" width="10" height="10" viewbox="0 0 10 10"><path id="loader" transform="translate(5, 5)" /></svg>'+
+      '<strong>'+label+'</strong>:<br/> '+ message  +
+    '</div>'
+  );
+
+  $("#error-messages").append(el);
+
+  var $loader = $('#loader'),
+    alpha = 360,
+    pi = Math.PI,
+    time = timeout;
+
+  function draw() {
+    alpha--;
+
+    var r = ( alpha * pi / 180 ),
+      x = Math.sin( r ) * 5,
+      y = Math.cos( r ) * - 5,
+      mid = ( alpha <= 180 ) ? 0 : 1,
+      animate = 'M 0 0 v -5 A 5 5 1 ' 
+             + mid + ' 1 ' 
+             +  x  + ' ' 
+             +  y  + ' z';
+   
+      if (alpha > 0){
+        setTimeout(draw, time); // Redraw
+        el.find('path')[0].setAttribute('d', animate);
+        //loader.setAttribute( 'd', animate );
+      }else{
+        el.remove();
+      }
+  };
+
+  draw.call(el);
+}
+
