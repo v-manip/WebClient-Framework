@@ -1,18 +1,6 @@
 (function() {
   'use strict';
 
-  // Helper collection to keep maintain data of coverage set
-  var EOCoverageSet = Backbone.Collection.extend({
-    fetch: function(options) {
-      options || (options = {});
-      options.dataType = "xml";
-      return Backbone.Collection.prototype.fetch.call(this, options);
-    },
-    parse: function(response) {
-      return WCS.Core.Parse.parse(response).coverageDescriptions;
-    },
-  });
-
   var root = this;
   root.define([
     'backbone',
@@ -27,6 +15,18 @@
   ],
   function( Backbone, Communicator, globals, m, DownloadTmpl,
    SelectCoverageListItemTmpl, CoverageInfoTmpl,CoverageDownloadPostTmpl) {
+
+    // Helper collection to keep maintain data of coverage set
+    var EOCoverageSet = Backbone.Collection.extend({
+      fetch: function(options) {
+        options || (options = {});
+        options.dataType = "xml";
+        return Backbone.Collection.prototype.fetch.call(this, options);
+      },
+      parse: function(response) {
+        return WCS.Core.Parse.parse(response).coverageDescriptions;
+      },
+    });
 
     var DownloadView = Backbone.Marionette.ItemView.extend({
       tagName: "div",
@@ -80,10 +80,10 @@
             };
           } //TODO: Check what to set if timeslider not activated
 
-          options.subsetCRS = "http://www.opengis.net/def/crs/EPSG/0/4326";
+          /*options.subsetCRS = "http://www.opengis.net/def/crs/EPSG/0/4326";
           var bbox = this.model.get("AoI").getBounds();
           options.subsetX = [bbox.left, bbox.right];
-          options.subsetY = [bbox.bottom, bbox.top];
+          options.subsetY = [bbox.bottom, bbox.top];*/
 
           // TODO: Check for download protocol !
           set.url = WCS.EO.KVP.describeEOCoverageSetURL(product.get('download').url, key, options);
@@ -151,17 +151,17 @@
         var $downloads = $("#div-downloads"),
             options = {};
 
-        var bbox = this.model.get("AoI").getBounds();
+        /*var bbox = this.model.get("AoI").getBounds();
         options.subsetX = [bbox.left, bbox.right];
-        options.subsetY = [bbox.bottom, bbox.top];
+        options.subsetY = [bbox.bottom, bbox.top];*/
 
         // format + outputcrs
         options.format = this.$("#select-output-format").val();
-        options.outputCRS = this.$("#select-output-crs").val();
+        //options.outputCRS = this.$("#select-output-crs").val();
 
         // apply mask parameter if polygon is not a square
         // (described by 5 points, first and last the same)
-        var components = this.model.get("AoI").components[0].components;
+        /*var components = this.model.get("AoI").components[0].components;
         if(components.length>5){
           var coords = [];
           _.each(components, function(point) {
@@ -169,7 +169,7 @@
             coords.push(point.y);
           });
           options.mask = coords.join(" ");
-        }
+        }*/
 
 
         this.$('input[type="checkbox"]').each(_.bind(function(index) {

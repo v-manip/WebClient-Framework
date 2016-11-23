@@ -13,7 +13,7 @@
 
 		var NavBarCollectionView = Backbone.Marionette.CompositeView.extend({  
 			appendHtml: function(collectionView, itemView, index){
-				collectionView.$("ul").append(itemView.el);
+				collectionView.$("#tab-headers-main").append(itemView.el);
 			}
 		});
 		return {'NavBarCollectionView':NavBarCollectionView};

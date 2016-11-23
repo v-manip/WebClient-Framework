@@ -43,7 +43,7 @@ define([
 			this.windowViews[regionid].showView(App.module(viewid).createController().getView());
 		},
 
-		setSinglescreen: function() {
+		setSinglescreen: function(viewtype) {
 			this.view.showViewInRegion('tl', 'view1');
 
 			this.view.setFullscreen('view1');
@@ -53,7 +53,12 @@ define([
 			}
 			
 			
-			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
+			this.windowViews.tl.showView(App.module(viewtype).createController().getView());
+			if(viewtype!=='AVViewer'){
+				this.windowViews.tr.close();
+			}
+			
+			//this.windowViews.tr.triggerMethod('view:disconnect');
 		},
 
 		setSplitscreen: function() {
@@ -62,8 +67,8 @@ define([
 			this.view.showViewInRegion('tr', 'view2');
 			this.view.setSplitscreen();
 
-			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
-			this.windowViews.tr.showView(App.module('VirtualGlobeViewer').createController().getView());
+			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
+			this.windowViews.tr.showView(App.module('AVViewer').createController().getView());
 
 			$(".view1").resizable({
 				handles: 'e'
@@ -80,7 +85,7 @@ define([
 
 			this.windowViews.tl.showView(App.module('MapViewer').createController().getView());
 			this.windowViews.tr.showView(App.module('VirtualGlobeViewer').createController().getView());
-			this.windowViews.br.showView(App.module('AnalyticsViewer').createController().getView());
+			this.windowViews.br.showView(App.module('AVViewer').createController().getView());
 			this.windowViews.bl.showView(App.module('SliceViewer').createController().getView());
 		},
 

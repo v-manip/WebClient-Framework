@@ -1,3 +1,7 @@
+
+function defaultFor(arg, val) { return typeof arg !== 'undefined' ? arg : val; }
+
+
 (function() {
     'use strict';
 
@@ -27,6 +31,7 @@
 		'regionManager',
 		'jquery',
 		'jqueryui',
+		'jqueryuitouch',
 		"text!config.json",
 		"util",
 		"libcoverage",
@@ -51,8 +56,8 @@
 		// 	console.log("link: " + nodes.item(i).href);
 		// }
 
-
-		$.get("scripts/config.json", function(values) {
+		var configurl = defaultFor(CONFIG_URL, "scripts/config.json");
+		$.get(configurl, function(values) {
 			
 			// Configure Debug options
 			setuplogging(values.debug);
@@ -71,7 +76,7 @@
 
 			_.each(values.modules, function(module) {
 				modules.push(module);
-				console.log("[V-MANIP] Registered module from: " + module + ".js");
+				console.log("Registered module from: " + module + ".js");
 			});
 
 			_.each(values.views, function(view) {

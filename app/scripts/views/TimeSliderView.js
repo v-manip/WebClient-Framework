@@ -26,20 +26,42 @@
       },
       onShow: function(view) {
 
+        var that = this;
+
         this.listenTo(Communicator.mediator, "map:layer:change", this.changeLayer);
         this.listenTo(Communicator.mediator, "map:position:change", this.updateExtent);
         this.listenTo(Communicator.mediator, "date:selection:change", this.onDateSelectionChange);
 
         Communicator.reqres.setHandler('get:time', this.returnTime);
 
+        // Try to get CSRF token, if available set it for necesary ajax requests
+
+        this.csrftoken = false;
+        var name = 'csrftoken';
+        if (document.cookie && document.cookie != '') {
+            var cookies = document.cookie.split(';');
+            for (var i = 0; i < cookies.length; i++) {
+                var cookie = jQuery.trim(cookies[i]);
+                // Does this cookie string begin with the name we want?
+                if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                    this.csrftoken = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
 
         var selectionstart = new Date(this.options.brush.start);
         var selectionend = new Date(this.options.brush.end);
 
+        if(localStorage.getItem('timeSelection')){
+          var time = JSON.parse(localStorage.getItem('timeSelection'));
+          selectionstart = new Date(time[0]);
+          selectionend = new Date(time[1]);
+        }
+
         this.activeWPSproducts = [];
 
-        this.slider = new TimeSlider(this.el, {
-
+        var initopt = {
           domain: {
             start: new Date(this.options.domain.start),
             end: new Date(this.options.domain.end)
@@ -49,10 +71,39 @@
             end: selectionend
           },
           debounce: 300,
-          ticksize: 8,
-
+          ticksize: 4,
+          selectionLimit: (60*60*24*30), //15 Days
           datasets: []
+        };
 
+        if (this.options.display){
+          initopt.display = {
+            start: new Date(this.options.display.start),
+            end: new Date(this.options.display.end)
+          };
+        }
+
+        if(localStorage.getItem('timeDomain')){
+          var domain = JSON.parse(localStorage.getItem('timeDomain'));
+          initopt['display'] = {
+            start: new Date(domain[0]),
+            end: new Date(domain[1])
+          };
+        }
+
+        this.slider = new TimeSlider(this.el, initopt);
+
+        // Add selection helpers
+        this.slider.setBrushTooltip(true);
+
+        // Set the offset of the tooltip
+        this.slider.setBrushTooltipOffset([
+          35,
+          (this.el.parentElement.parentElement.offsetHeight - this.el.parentElement.offsetHeight*2 - 50)
+        ]);
+
+        $(this.el).on("mouseup mousewheel", function(evt){
+          Communicator.mediator.trigger('time:domain:change', that.slider.scales.x.domain());
         });
 
         Communicator.mediator.trigger('time:change', {start:selectionstart, end:selectionend});
@@ -64,6 +115,76 @@
           start: selectionstart,
           end: selectionend
         };
+
+
+        $(this.el).append('<div type="button" class="btn btn-success darkbutton" id="calendarselection"><i class="fa fa-calendar" aria-hidden="true"></i></div>');
+        $(this.el).append('<div id="calendarwidgetholder"></div>');
+
+        // Initialise datepickers
+        $.datepicker.setDefaults({
+          showOn: 'both',
+          dateFormat: 'dd.mm.yy',
+          changeYear: true,
+          yearRange: '-25:+5',
+        });
+
+        var that = this;
+
+
+        var datepickerWidget = this.$('#calendarwidgetholder').datepicker({
+          onSelect: function() {
+            var date = datepickerWidget.datepicker('getDate');
+            var beginTime = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                date.getHours(),date.getMinutes(), date.getSeconds())
+            );
+            beginTime.setDate(beginTime.getDate() - 1);
+            beginTime.setUTCHours(22,0,0,0);
+
+            var endTime = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                date.getHours(),date.getMinutes(), date.getSeconds())
+            );
+            endTime.setDate(endTime.getDate() + 1);
+            endTime.setUTCHours(2,0,0,0);
+
+            that.slider.center(beginTime, endTime);
+            $('#calendarwidgetholder').hide();
+
+            var  tos = Communicator.mediator.timeOfInterest;
+
+            var startSelection = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                tos.start.getUTCHours(),tos.start.getMinutes(), tos.start.getSeconds(), tos.start.getMilliseconds()
+            ));
+
+            var endSelection = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                tos.end.getUTCHours(),tos.end.getMinutes(), tos.end.getSeconds(), tos.end.getMilliseconds()
+            ));
+            
+            that.slider.select(startSelection, endSelection);
+
+            Communicator.mediator.trigger('time:domain:change', that.slider.scales.x.domain());
+            Communicator.mediator.trigger('time:change', {start:startSelection, end:endSelection});
+            
+          }
+        });
+
+        datepickerWidget.datepicker('setDate', selectionstart);
+
+        this.$('#calendarwidgetholder').hide();
+
+        $('#calendarselection').click(function(){
+          if($('#calendarwidgetholder').is(':visible') ){
+            $('#calendarwidgetholder').hide();
+          }else{
+            $('#calendarwidgetholder').show();
+          }
+        });
+
+        $('.timeslider .brush').attr('fill', '#333');
+        
       }, 
 
       onChangeTime: function(evt){
@@ -73,6 +194,8 @@
           start: evt.originalEvent.detail.start,
           end: evt.originalEvent.detail.end
         };
+
+        $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
       },
 
       onDateSelectionChange: function(opt) {
@@ -81,12 +204,18 @@
 
       changeLayer: function (options) {
         if (!options.isBaseLayer){
-          var product = globals.products.find(function(model) { return model.get('name') == options.name; });
+          var product = globals.products.find(function(model) { return model.get('name') === options.name; });
           if (product){
             if(options.visible && product.get('timeSlider')){
+              var extent = {left: -180, bottom: -90, right: 180, top: 90};
+              try{
+                extent = Communicator.reqres.request('map:get:extent');
+              }catch(err){
+                console.log('Warning: Map not initialized setting extent to default (-180,-90,180,90)')
+              }
 
               switch (product.get("timeSliderProtocol")){
-                case "WMS":
+                case 'WMS':
                   this.slider.addDataset({
                     id: product.get('view').id,
                     color: product.get('color'),
@@ -97,7 +226,7 @@
                     })
                   });
                   break;
-                case "EOWCS":
+                case 'EOWCS':
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
@@ -109,7 +238,7 @@
                   });
                   break;
                 case "WPS":
-                  var extent = Communicator.reqres.request('map:get:extent');
+                  
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
@@ -117,14 +246,54 @@
                         url: product.get('download').url,
                         eoid: product.get('download').id,
                         dataset: product.get('download').id ,
-                        bbox: [extent.left, extent.bottom, extent.right, extent.top]
+                        bbox: [extent.left, extent.bottom, extent.right, extent.top],
+                        csrftoken: this.csrftoken
                      })
                   });
                   this.activeWPSproducts.push(product.get('download').id);
                   // For some reason updateBBox is needed, altough bbox it is initialized already.
                   // Withouth this update the first time activating a layer after the first map move
                   // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
-                  this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+                  //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+                  break;
+                case "WPS-INDEX":
+                  this.slider.addDataset({
+                    id: product.get('download').id,
+                    color: product.get('color'),
+                    data: new TimeSlider.Plugin.WPS({
+                        url: product.get('download').url,
+                        eoid: product.get('download').id,
+                        dataset: product.get('download').id,
+                        processid: "retrieve_bubble_index",
+                        collectionid: "collection_id",
+                        output: "output",
+                        csrftoken: this.csrftoken
+                     })
+                  });
+                  this.activeWPSproducts.push(product.get('download').id);
+                  // For some reason updateBBox is needed, altough bbox it is initialized already.
+                  // Withouth this update the first time activating a layer after the first map move
+                  // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
+                  //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+                  break;
+                case 'INDEX':
+                  var ops = {
+                    id: product.get('download').id,
+                    color: product.get('color'),
+                    lineplot: true,
+                    data: new TimeSlider.Plugin.WPS({
+                        url: product.get('download').url,
+                        eoid: product.get('download').id,
+                        dataset: product.get('download').id,
+                        indices: true,
+                        processid: 'get_indices',
+                        collectionid: 'index_id',
+                        output: 'output',
+                        csrftoken: this.csrftoken
+                     })
+                  };
+                  this.slider.addDataset(ops);
+
                   break;
               }
               
@@ -132,7 +301,7 @@
               this.slider.removeDataset(product.get('download').id);
               if (this.activeWPSproducts.indexOf(product.get('download').id)!=-1)
                 this.activeWPSproducts.splice(this.activeWPSproducts.indexOf(product.get('download').id), 1);
-              console.log(this.activeWPSproducts);
+              //console.log(this.activeWPSproducts);
             }
           }
         }
@@ -145,16 +314,19 @@
       updateExtent: function(extent){
         
         for (var i=0; i<this.activeWPSproducts.length; i++){
-          console.log(this.activeWPSproducts[i]);
-          this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
+          //console.log(this.activeWPSproducts[i]);
+          //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], this.activeWPSproducts[i]);
         }
       },
 
       onCoverageSelected: function(evt){
         if (evt.originalEvent.detail.bbox){
           var bbox = evt.originalEvent.detail.bbox.replace(/[()]/g,'').split(',').map(parseFloat);
-          this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
-          Communicator.mediator.trigger("map:set:extent", bbox);
+          var one_day=1000*60*60*24;
+          if ( Math.ceil( (evt.originalEvent.detail.end - evt.originalEvent.detail.start)/one_day)<10 ){
+            this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
+            Communicator.mediator.trigger("map:set:extent", bbox);
+          }
         }
       }
 
