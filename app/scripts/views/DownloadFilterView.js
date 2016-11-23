@@ -354,7 +354,7 @@
         return val.toFixed(2);
       },
 
-      fieldsValid(){
+      fieldsValid: function(){
         var filter_elem = this.$el.find(".input-group");
 
         var valid = true;
