@@ -9,3 +9,12 @@
 .w2ui-field-helper{
 	position: relative !important;
 }
+
+#validationwarning{
+	font-size: 0.8em;
+    float: right;
+    position: absolute;
+    right: 140px;
+    margin-top: -24px;
+    color: #9a2929;
+}

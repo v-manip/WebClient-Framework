@@ -30,9 +30,65 @@ var getISODateTimeString = function(date) {
     + padLeft(String(date.getUTCMilliseconds()), "0", 3) + "Z";
 };
 
+var getISOTimeString = function(date) {
+  return padLeft(String(date.getUTCHours()), "0", 2) + ":"
+    + padLeft(String(date.getUTCMinutes()), "0", 2) + ":"
+    + padLeft(String(date.getUTCSeconds()), "0", 2) + "."
+    + padLeft(String(date.getUTCMilliseconds()), "0", 3);
+};
+
 var htmlTemplate = function(selector, values) {
   var tmplString = $(selector).html();
   return _.template(tmplString, values);
+};
+
+var isValidTime = function(time){
+ 
+  // offset is the one after the first.
+  var firstColonPos = time.indexOf(':');
+  var secondColonPos = time.indexOf(':', firstColonPos + 1);
+  var millisecondsPointPos = time.indexOf('.');
+  
+
+  if (firstColonPos!=2 || secondColonPos!=5 || millisecondsPointPos!=8){
+    return false;
+  }
+
+  var t = time.split(':');
+  var h = t[0];
+  var m = t[1];
+  var s = t[2].split('.')[0];
+  var ms = t[2].split('.')[1];
+  if(isNaN(h) || isNaN(m) || isNaN(s) || isNaN(ms)){
+    return false;
+  }
+
+  return true;
+
+};
+
+var parseTime = function(time){
+  
+  // offset is the one after the first.
+  var firstColonPos = time.indexOf(':');
+  var secondColonPos = time.indexOf(':', firstColonPos + 1);
+  var millisecondsPointPos = time.indexOf('.');
+  
+  if (firstColonPos!=2 || secondColonPos!=5 || millisecondsPointPos!=8){
+    return false;
+  }
+
+  var t = time.split(':');
+  var h = t[0];
+  var m = t[1];
+  var s = t[2].split('.')[0];
+  var ms = t[2].split('.')[1];
+  if(isNaN(h) || isNaN(m) || isNaN(s) || isNaN(ms)){
+    return false;
+  }
+
+  return [Number(h),Number(m),Number(s),Number(ms)];
+
 };
 
 var utc = function(year, month, day, hours, minutes, seconds, milliseconds) {
