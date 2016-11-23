@@ -288,7 +288,6 @@
                 evt.preventDefault();
                 evt.stopPropagation();
               }
-              console.log(evt);
             }
         });
         $('#param_enum').prop('disabled', true);

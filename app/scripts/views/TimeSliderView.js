@@ -26,6 +26,8 @@
       },
       onShow: function(view) {
 
+        var that = this;
+
         this.listenTo(Communicator.mediator, "map:layer:change", this.changeLayer);
         this.listenTo(Communicator.mediator, "map:position:change", this.updateExtent);
         this.listenTo(Communicator.mediator, "date:selection:change", this.onDateSelectionChange);
@@ -51,6 +53,12 @@
         var selectionstart = new Date(this.options.brush.start);
         var selectionend = new Date(this.options.brush.end);
 
+        if(localStorage.getItem('timeSelection')){
+          var time = JSON.parse(localStorage.getItem('timeSelection'));
+          selectionstart = new Date(time[0]);
+          selectionend = new Date(time[1]);
+        }
+
         this.activeWPSproducts = [];
 
         var initopt = {
@@ -69,9 +77,17 @@
         };
 
         if (this.options.display){
-          initopt["display"] = {
+          initopt.display = {
             start: new Date(this.options.display.start),
             end: new Date(this.options.display.end)
+          };
+        }
+
+        if(localStorage.getItem('timeDomain')){
+          var domain = JSON.parse(localStorage.getItem('timeDomain'));
+          initopt['display'] = {
+            start: new Date(domain[0]),
+            end: new Date(domain[1])
           };
         }
 
@@ -86,6 +102,10 @@
           (this.el.parentElement.parentElement.offsetHeight - this.el.parentElement.offsetHeight*2 - 50)
         ]);
 
+        $(this.el).on("mouseup mousewheel", function(evt){
+          Communicator.mediator.trigger('time:domain:change', that.slider.scales.x.domain());
+        });
+
         Communicator.mediator.trigger('time:change', {start:selectionstart, end:selectionend});
 
         // For viewers that are loaded after the TimeSlider announces its initial timespan there
@@ -95,6 +115,76 @@
           start: selectionstart,
           end: selectionend
         };
+
+
+        $(this.el).append('<div type="button" class="btn btn-success darkbutton" id="calendarselection"><i class="fa fa-calendar" aria-hidden="true"></i></div>');
+        $(this.el).append('<div id="calendarwidgetholder"></div>');
+
+        // Initialise datepickers
+        $.datepicker.setDefaults({
+          showOn: 'both',
+          dateFormat: 'dd.mm.yy',
+          changeYear: true,
+          yearRange: '-25:+5',
+        });
+
+        var that = this;
+
+
+        var datepickerWidget = this.$('#calendarwidgetholder').datepicker({
+          onSelect: function() {
+            var date = datepickerWidget.datepicker('getDate');
+            var beginTime = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                date.getHours(),date.getMinutes(), date.getSeconds())
+            );
+            beginTime.setDate(beginTime.getDate() - 1);
+            beginTime.setUTCHours(22,0,0,0);
+
+            var endTime = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                date.getHours(),date.getMinutes(), date.getSeconds())
+            );
+            endTime.setDate(endTime.getDate() + 1);
+            endTime.setUTCHours(2,0,0,0);
+
+            that.slider.center(beginTime, endTime);
+            $('#calendarwidgetholder').hide();
+
+            var  tos = Communicator.mediator.timeOfInterest;
+
+            var startSelection = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                tos.start.getUTCHours(),tos.start.getMinutes(), tos.start.getSeconds(), tos.start.getMilliseconds()
+            ));
+
+            var endSelection = new Date(Date.UTC(
+                date.getFullYear(), date.getMonth(), date.getDate(),
+                tos.end.getUTCHours(),tos.end.getMinutes(), tos.end.getSeconds(), tos.end.getMilliseconds()
+            ));
+            
+            that.slider.select(startSelection, endSelection);
+
+            Communicator.mediator.trigger('time:domain:change', that.slider.scales.x.domain());
+            Communicator.mediator.trigger('time:change', {start:startSelection, end:endSelection});
+            
+          }
+        });
+
+        datepickerWidget.datepicker('setDate', selectionstart);
+
+        this.$('#calendarwidgetholder').hide();
+
+        $('#calendarselection').click(function(){
+          if($('#calendarwidgetholder').is(':visible') ){
+            $('#calendarwidgetholder').hide();
+          }else{
+            $('#calendarwidgetholder').show();
+          }
+        });
+
+        $('.timeslider .brush').attr('fill', '#333');
+        
       }, 
 
       onChangeTime: function(evt){
@@ -104,6 +194,8 @@
           start: evt.originalEvent.detail.start,
           end: evt.originalEvent.detail.end
         };
+
+        $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
       },
 
       onDateSelectionChange: function(opt) {
@@ -112,12 +204,18 @@
 
       changeLayer: function (options) {
         if (!options.isBaseLayer){
-          var product = globals.products.find(function(model) { return model.get('name') == options.name; });
+          var product = globals.products.find(function(model) { return model.get('name') === options.name; });
           if (product){
             if(options.visible && product.get('timeSlider')){
+              var extent = {left: -180, bottom: -90, right: 180, top: 90};
+              try{
+                extent = Communicator.reqres.request('map:get:extent');
+              }catch(err){
+                console.log('Warning: Map not initialized setting extent to default (-180,-90,180,90)')
+              }
 
               switch (product.get("timeSliderProtocol")){
-                case "WMS":
+                case 'WMS':
                   this.slider.addDataset({
                     id: product.get('view').id,
                     color: product.get('color'),
@@ -128,7 +226,7 @@
                     })
                   });
                   break;
-                case "EOWCS":
+                case 'EOWCS':
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
@@ -140,7 +238,7 @@
                   });
                   break;
                 case "WPS":
-                  var extent = Communicator.reqres.request('map:get:extent');
+                  
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
@@ -159,7 +257,6 @@
                   //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
                   break;
                 case "WPS-INDEX":
-                  var extent = Communicator.reqres.request('map:get:extent');
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
@@ -179,7 +276,7 @@
                   // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
                   //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
                   break;
-                case "INDEX":
+                case 'INDEX':
                   var ops = {
                     id: product.get('download').id,
                     color: product.get('color'),
@@ -189,9 +286,9 @@
                         eoid: product.get('download').id,
                         dataset: product.get('download').id,
                         indices: true,
-                        processid: "get_indices",
-                        collectionid: "index_id",
-                        output: "output",
+                        processid: 'get_indices',
+                        collectionid: 'index_id',
+                        output: 'output',
                         csrftoken: this.csrftoken
                      })
                   };
