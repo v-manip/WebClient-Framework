@@ -109,6 +109,40 @@
         this.slider.select(opt.start, opt.end);
       },
 
+      fetch: function(start, end, params, callback){
+
+        var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=get_indices&DataInputs=index_id='+
+        this.id + '%3Bbegin_time='+getISODateTimeString(start)+'%3Bend_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+
+        d3.csv(request)
+          .row(function (row) {
+            return [new Date(row.time), Number(row.value), row.id];
+          })
+          .get(function(error, rows) { 
+            callback(rows);
+          });
+      },
+
+      fetchBubble: function(start, end, params, callback){
+
+        var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=retrieve_bubble_index&DataInputs=collection_id='+
+        this.id + '%3Bbegin_time='+getISODateTimeString(start)+'%3Bend_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+
+        d3.csv(request)
+          .row(function (row) {
+            return [
+              new Date(row.starttime),
+              new Date(row.endtime), {
+                id: row.identifier,
+                bbox: row.bbox.replace(/[()]/g,'').split(',').map(parseFloat)
+              }
+            ];
+          })
+          .get(function(error, rows) { 
+            callback(rows);
+          });
+      },
+
       changeLayer: function (options) {
         if (!options.isBaseLayer){
           var product = globals.products.find(function(model) { return model.get('name') == options.name; });
@@ -155,44 +189,36 @@
                   // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
                   //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
                   break;
+
                 case "WPS-INDEX":
-                  var extent = Communicator.reqres.request('map:get:extent');
+
+                  this.activeWPSproducts.push(product.get('download').id);
+
+                  var attrs = {
+                    id: product.get('download').id,
+                    url: product.get('download').url
+                  };
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.WPS({
-                        url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id,
-                        processid: "retrieve_bubble_index",
-                        collectionid: "collection_id",
-                        output: "output",
-                        csrftoken: this.csrftoken
-                     })
+                    records: null,
+                    source: {fetch: this.fetchBubble.bind(attrs)}
                   });
-                  this.activeWPSproducts.push(product.get('download').id);
-                  // For some reason updateBBox is needed, altough bbox it is initialized already.
-                  // Withouth this update the first time activating a layer after the first map move
-                  // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
-                  //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+
                   break;
+
                 case "INDEX":
-                  var ops = {
+                  var attrs = {
+                    id: product.get('download').id,
+                    url: product.get('download').url
+                  };
+                  this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
                     lineplot: true,
-                    data: new TimeSlider.Plugin.WPS({
-                        url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id,
-                        indices: true,
-                        processid: "get_indices",
-                        collectionid: "index_id",
-                        output: "output",
-                        csrftoken: this.csrftoken
-                     })
-                  };
-                  this.slider.addDataset(ops);
+                    records: null,
+                    source: {fetch: this.fetch.bind(attrs)}
+                  });
 
                   break;
               }
