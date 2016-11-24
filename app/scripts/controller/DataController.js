@@ -65,15 +65,14 @@
             invalid_models_string += invalid_models[i].model+':' + start + ' - ' + end + '<br>';
           }
 
-          $("#error-messages").append(
-              '<div class="alert alert-warning validitywarning">'+
-                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                '<strong>Warning!</strong> The current time selection is outside the validity of the model, '+
+          showMessage('warning', (
+            'The current time selection is outside the validity of the model, '+
                 'data is displayed for the last valid date, please take this into consideration when analysing the data.<br>'+
                 invalid_models_string+
-                'Tip: You can see the validity of the model in the time slider.'+
-              '</div>'
-            );
+                'Tip: You can see the validity of the model in the time slider.'
+            )
+          , 30, 'validitywarning');
+
         }
       },
 
@@ -157,6 +156,7 @@
               } 
           }
         }
+        localStorage.setItem('swarmProductSelection', JSON.stringify(this.activeWPSproducts));
         this.checkSelections();
         this.checkModelValidity();
       },

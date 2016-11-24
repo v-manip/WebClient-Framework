@@ -127,9 +127,10 @@ define(['backbone.marionette',
 				   shouldAnimate: false
 				});
 
+				
 				if (layer){
-					this.map = new Cesium.Viewer(this.el,
-					{
+
+					var options = {
 						timeline: false,
 						fullscreenButton: false,
 						baseLayerPicker: false,
@@ -145,8 +146,24 @@ define(['backbone.marionette',
 						creditContainer: "cesium_attribution",
 						contextOptions: {webgl: {preserveDrawingBuffer: true}},
 						clock: clock
-					});
+					};
+					//COLUMBUS_VIEW SCENE2D SCENE3D
+
+					if(localStorage.getItem('sceneMode') !== null){
+						options['sceneMode'] = Number(localStorage.getItem('sceneMode'));
+					}
+
+					this.map = new Cesium.Viewer(this.el, options);
 				}
+
+				if(localStorage.getItem('cameraPosition') !== null){
+					var c = JSON.parse(localStorage.getItem('cameraPosition'));
+					this.map.scene.camera.position = new Cesium.Cartesian3(c.position[0], c.position[1], c.position[2]);
+					this.map.scene.camera.direction = new Cesium.Cartesian3(c.direction[0], c.direction[1], c.direction[2]);
+					this.map.scene.camera.up = new Cesium.Cartesian3(c.up[0], c.up[1], c.up[2]);
+					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
+				}
+				
 
 				var mm = globals.objects.get('mapmodel');
 
@@ -258,7 +275,29 @@ define(['backbone.marionette',
 					}
                 }, this);
 
-                
+                if(localStorage.getItem('cameraPosition') !== null){
+					var c = JSON.parse(localStorage.getItem('cameraPosition'));
+					this.map.scene.camera.position = new Cesium.Cartesian3(c.position[0], c.position[1], c.position[2]);
+					this.map.scene.camera.direction = new Cesium.Cartesian3(c.direction[0], c.direction[1], c.direction[2]);
+					this.map.scene.camera.up = new Cesium.Cartesian3(c.up[0], c.up[1], c.up[2]);
+					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
+				}
+
+				if(localStorage.getItem('areaSelection') !== null){
+					this.onSelectionChanged(JSON.parse(localStorage.getItem('areaSelection')));
+				}
+
+				this.map.scene.morphComplete.addEventListener(function (){
+				    localStorage.setItem('sceneMode', this.map.scene.mode);
+				    var c = this.map.scene.camera;
+					localStorage.setItem('cameraPosition', JSON.stringify({
+								position: [c.position.x, c.position.y,c.position.z],
+								direction: [c.direction.x, c.direction.y,c.direction.z],
+								up: [c.up.x, c.up.y,c.up.z],
+								right: [c.right.x, c.right.y,c.right.z]
+							})
+						);
+				}, this);
 
 			},
 
@@ -280,6 +319,22 @@ define(['backbone.marionette',
 
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
+
+				function synchronizeLayer(l){
+					if(l.get('ces_layer')){
+						if(l.get('ces_layer').show != l.get('visible')){
+							var isBaseLayer = defaultFor(l.get('view').isBaseLayer, false);
+							this.changeLayer({
+								name: l.get('name'), visible: l.get('visible'), isBaseLayer: isBaseLayer
+							});
+						}
+					}
+				}
+				// Go through config to make any changes done while widget
+				// not active (not in view)
+				globals.baseLayers.each(synchronizeLayer.bind(this));
+				globals.products.each(synchronizeLayer.bind(this));
+				globals.overlays.each(synchronizeLayer.bind(this));
 
 				
 				this.connectDataEvents();
@@ -310,7 +365,7 @@ define(['backbone.marionette',
 					}
 				});
 
-				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+				//Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 				//this.onResize();
 				return this;
 			},
@@ -1968,30 +2023,47 @@ define(['backbone.marionette',
 				}
 			},
 
+
 			handleTick: function(clock) {
 				// TODO: Cesium does not provide a method to know when the camera has stopped, 
 				//       this approach is not ideal, when the movement mantains inertia difference 
 				//       values are very low and there are comparison errors.
-			    var camera = this.map.scene.camera;
+			    var c = this.map.scene.camera;
+
+			    var th = [10000, 10000, 10000];
+			    // If current mode is either Columbus or Scene2D lower threshold
+			    if(this.map.scene.mode == 1 || this.map.scene.mode == 2){
+					th = [0, 0, 0];
+			    }
 
 			    if (!this.camera_is_moving){
-			    	if (Math.abs(this.camera_last_position.x - camera.position.x) > 10000 &&
-			    		Math.abs(this.camera_last_position.y - camera.position.y) > 10000 &&
-			    		Math.abs(this.camera_last_position.z - camera.position.z) > 10000 ){
+			    	if (Math.abs(this.camera_last_position.x - c.position.x) > th[0] &&
+			    		Math.abs(this.camera_last_position.y - c.position.y) > th[1] &&
+			    		Math.abs(this.camera_last_position.z - c.position.z) >= th[2] ){
 
 			    		this.camera_is_moving = true;
 			    	}
 			    }else{
-			    	if (Math.abs(this.camera_last_position.x - camera.position.x) < 10000 &&
-			    		Math.abs(this.camera_last_position.y - camera.position.y) < 10000 &&
-			    		Math.abs(this.camera_last_position.z - camera.position.z) < 10000 ){
+			    	
+			    	if (Math.abs(this.camera_last_position.x - c.position.x) <= th[0] &&
+			    		Math.abs(this.camera_last_position.y - c.position.y) <= th[1] &&
+			    		Math.abs(this.camera_last_position.z - c.position.z) <= th[2] ){
 
 			    		this.camera_is_moving = false;
 			    		Communicator.mediator.trigger("map:position:change", this.getMapExtent() );
+
+			    		localStorage.setItem('cameraPosition', JSON.stringify({
+								position: [c.position.x, c.position.y,c.position.z],
+								direction: [c.direction.x, c.direction.y,c.direction.z],
+								up: [c.up.x, c.up.y,c.up.z],
+								right: [c.right.x, c.right.y,c.right.z]
+							})
+						);
+
 			    	}else{
-			    		this.camera_last_position.x = camera.position.x;
-			    		this.camera_last_position.y = camera.position.y;
-			    		this.camera_last_position.z = camera.position.z;
+			    		this.camera_last_position.x = c.position.x;
+			    		this.camera_last_position.y = c.position.y;
+			    		this.camera_last_position.z = c.position.z;
 			    	}
 			    }
 			},

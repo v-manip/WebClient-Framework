@@ -4,10 +4,11 @@
 	var root = this;
 
 	root.define([
+		'globals',
 		'backbone',
-		'backbone.marionette'
+		'backbone.marionette',
 	],
-	function( Backbone ) {
+	function( globals, Backbone ) {
 
 		var Communicator = Backbone.Marionette.Controller.extend({
 			initialize: function( options ) {
@@ -26,7 +27,15 @@
 						this.trackEvents(event, param);
 					}
 
+					// Track events to save current status of workspace to allow restoring
+					// when user visits again
+					if (typeof(Storage) !== "undefined") {
+					    this.saveStatus(event, param);
+					}
+					
+
 				}, this);
+
 
 				//create a req/res
 				this.reqres = new Backbone.Wreqr.RequestResponse();
@@ -49,6 +58,7 @@
 				this.mediator.on(eventid, function() {
 					this.command.execute(eventid);
 				}.bind(this));
+
 			},
 
 			setAoiModel: function(model) {
@@ -99,6 +109,100 @@
 					}
 
 				}
+			},
+
+			saveStatus: function(event, param){
+
+				function replacer(key,value)
+				{
+				    if (key==='ces_layer') {return undefined;}
+				    else if (key==='ordinal') {return undefined;}
+				    //else if (key==='download_parameters') {return undefined;}
+				    else {return value;}
+				}
+
+				// Tracking timeslider
+				if(event === 'time:domain:change'){
+					localStorage.setItem('timeDomain', JSON.stringify([param.start, param.end]));
+				}
+
+				if(event === 'time:change'){
+					localStorage.setItem('timeSelection', JSON.stringify([param.start, param.end]));
+				}
+
+				// Tracking of workspace window configuration
+				if(event === 'ui:fullscreen:globe'){
+					localStorage.setItem('viewSelection', 'globe');
+				}
+				if(event === 'ui:fullscreen:analytics'){
+					localStorage.setItem('viewSelection', 'analytics');
+				}
+				if(event === 'layout:switch:splitview'){
+					localStorage.setItem('viewSelection', 'split');
+				}
+
+				// Tracking of layers
+				if(event === 'map:layer:change'){
+
+					// Check what type of layer and modify group accordingly
+					if(param.isBaseLayer){
+						localStorage.setItem(
+							'baseLayersConfig',
+							JSON.stringify(
+								globals.baseLayers.models.map(function(m){
+									return m.attributes;
+								}),replacer
+							)
+						);
+					}else{
+						// Check if overlay
+						if(globals.overlays.find(function(m) { return m.get('name') === param.name; })){
+							localStorage.setItem(
+								'overlaysConfig',
+								JSON.stringify(
+									globals.overlays.models.map(function(m){
+										return m.attributes;
+									}),replacer
+								)
+							);
+						}else{
+							localStorage.setItem(
+								'productsConfig',
+								JSON.stringify(
+									globals.products.models.map(function(m){
+										return m.attributes;
+									}),replacer
+								)
+							);
+						}
+					}
+				}
+
+				if(event === 'layer:parameters:changed'){
+					localStorage.setItem(
+						'productsConfig',
+						JSON.stringify(
+							globals.products.models.map(function(m){
+								return m.attributes;
+							}),replacer
+						)
+					);
+				}
+
+				// Tracking of Analytics settings
+
+				// Filters
+				if(event === 'analytics:set:filter'){
+					localStorage.setItem('filterSelection', JSON.stringify(param));
+				}
+
+				// Area selection
+				if(event === 'selection:changed'){
+					localStorage.setItem('areaSelection', JSON.stringify(param));
+				}
+				
+
+
 			}
 		});
 
