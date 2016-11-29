@@ -78,7 +78,7 @@
             backbone: '../bower_components/backbone-amd/backbone-min',
             underscore: '../bower_components/underscore-amd/underscore-min',
             d3: '../bower_components/d3/d3.min',
-            timeslider: '../bower_components/d3.TimeSlider/d3.timeslider',
+            timeslider: '../bower_components/d3.TimeSlider/build/d3.timeslider',
             libcoverage: '../bower_components/libcoverage/libcoverage.min',
 
             'canvas-toBlob': '../bower_components/canvas-toBlob.js/canvas-toBlob',

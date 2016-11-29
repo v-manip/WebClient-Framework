@@ -30,7 +30,8 @@
     "grunt-svgmin": "~0.1.0",
     "grunt-text-replace": "^0.4.0",
     "grunt-usemin": "~0.1.10",
-    "matchdep": "~0.1.1"
+    "matchdep": "~0.1.1",
+    "bower-npm-resolver": "^0.7.0"
   },
   "engines": {
     "node": ">=0.8.0"

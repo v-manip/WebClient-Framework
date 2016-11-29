@@ -66,11 +66,13 @@
             start: new Date(this.options.domain.start),
             end: new Date(this.options.domain.end)
           },
+          displayLimit: 'P1Y2M',
           brush: {
             start: selectionstart,
             end: selectionend
           },
-          constrain: true,
+          constrain: false,
+          brushTooltip: true,
           debounce: 300,
           ticksize: 4,
           selectionLimit: (60*60*24*30), //15 Days
@@ -95,12 +97,12 @@
         this.slider = new TimeSlider(this.el, initopt);
 
         // Add selection helpers
-        this.slider.setBrushTooltip(true);
+        //this.slider.setBrushTooltip(true);
 
         // Set the offset of the tooltip
         this.slider.setBrushTooltipOffset([
-          35,
-          (this.el.parentElement.parentElement.offsetHeight - this.el.parentElement.offsetHeight*2 - 50)
+          0,
+          -135
         ]);
 
 
