@@ -340,7 +340,7 @@ module.exports = function (grunt) {
                         'bower_components/underscore-amd/underscore-min.js',
                         'bower_components/d3/d3.min.js',
                         'bower_components/nvd3/nv.d3.min.js',
-                        'bower_components/d3.TimeSlider/build/d3.timeslider.js',
+                        'bower_components/d3.TimeSlider/d3.timeslider.js',
                         'bower_components/libcoverage/libcoverage.min.js',
                         'bower_components/FileSaver.js/FileSaver.min.js',
                         'bower_components/canvas-toBlob.js/canvas-toBlob.js',
