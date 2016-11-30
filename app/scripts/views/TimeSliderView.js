@@ -159,6 +159,12 @@
                 date.getFullYear(), date.getMonth(), date.getDate(),
                 tos.end.getUTCHours(),tos.end.getMinutes(), tos.end.getSeconds(), tos.end.getMilliseconds()
             ));
+
+            var diff = (tos.end.getDate() - tos.start.getDate());
+            // If more then one day is selected limit end time to end of day
+            if (diff>=1){
+              endSelection.setUTCHours(23,59,59,999);
+            }
             
             that.slider.select(startSelection, endSelection);
 
