@@ -14,7 +14,7 @@
       id: 'timeslider',
       events: {
         'selectionChanged': 'onChangeTime',
-        'coverageselected': 'onCoverageSelected',
+        'recordClicked': 'onCoverageSelected',
         'displayChanged': 'onDisplayChanged'
       },
       initialize: function(options){
@@ -345,12 +345,12 @@
       },
 
       onCoverageSelected: function(evt){
-        if (evt.originalEvent.detail.bbox){
-          var bbox = evt.originalEvent.detail.bbox.replace(/[()]/g,'').split(',').map(parseFloat);
-          var one_day=1000*60*60*24;
-          if ( Math.ceil( (evt.originalEvent.detail.end - evt.originalEvent.detail.start)/one_day)<10 ){
-            this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
-            Communicator.mediator.trigger("map:set:extent", bbox);
+        var details = evt.originalEvent.detail;
+        if (details.params.bbox){
+          var oneDay=1000*60*60*24;
+          if ( Math.ceil( (details.end - details.start)/oneDay)<10 ){
+            this.slider.select(details.start, details.end);
+            Communicator.mediator.trigger("map:set:extent", details.params.bbox);
           }
         }
       }
