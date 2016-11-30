@@ -5,17 +5,17 @@
     'backbone',
     'communicator',
     'timeslider',
-    'timeslider_plugins',
     'globals',
     'underscore',
     'd3'
   ],
-  function( Backbone, Communicator, timeslider, timeslider_plugins, globals) {
+  function( Backbone, Communicator, timeslider, globals) {
     var TimeSliderView = Backbone.Marionette.ItemView.extend({
       id: 'timeslider',
       events: {
         'selectionChanged': 'onChangeTime',
-        'coverageselected': 'onCoverageSelected'
+        'recordClicked': 'onCoverageSelected',
+        'displayChanged': 'onDisplayChanged'
       },
       initialize: function(options){
         this.options = options;
@@ -66,10 +66,13 @@
             start: new Date(this.options.domain.start),
             end: new Date(this.options.domain.end)
           },
+          displayLimit: 'P1Y2M',
           brush: {
             start: selectionstart,
             end: selectionend
           },
+          constrain: false,
+          brushTooltip: true,
           debounce: 300,
           ticksize: 4,
           selectionLimit: (60*60*24*30), //15 Days
@@ -94,17 +97,14 @@
         this.slider = new TimeSlider(this.el, initopt);
 
         // Add selection helpers
-        this.slider.setBrushTooltip(true);
+        //this.slider.setBrushTooltip(true);
 
         // Set the offset of the tooltip
         this.slider.setBrushTooltipOffset([
-          35,
-          (this.el.parentElement.parentElement.offsetHeight - this.el.parentElement.offsetHeight*2 - 50)
+          0,
+          -135
         ]);
 
-        $(this.el).on("mouseup mousewheel", function(evt){
-          Communicator.mediator.trigger('time:domain:change', that.slider.scales.x.domain());
-        });
 
         Communicator.mediator.trigger('time:change', {start:selectionstart, end:selectionend});
 
@@ -127,9 +127,6 @@
           changeYear: true,
           yearRange: '-25:+5',
         });
-
-        var that = this;
-
 
         var datepickerWidget = this.$('#calendarwidgetholder').datepicker({
           onSelect: function() {
@@ -162,11 +159,18 @@
                 date.getFullYear(), date.getMonth(), date.getDate(),
                 tos.end.getUTCHours(),tos.end.getMinutes(), tos.end.getSeconds(), tos.end.getMilliseconds()
             ));
+
+            var diff = (tos.end.getDate() - tos.start.getDate());
+            // If more then one day is selected limit end time to end of day
+            if (diff>=1){
+              endSelection.setUTCHours(23,59,59,999);
+            }
             
             that.slider.select(startSelection, endSelection);
 
-            Communicator.mediator.trigger('time:domain:change', that.slider.scales.x.domain());
-            Communicator.mediator.trigger('time:change', {start:startSelection, end:endSelection});
+            var domain = that.slider.scales.x.domain();
+            Communicator.mediator.trigger('time:domain:change', {start: domain[0], end: domain[1]});
+            //Communicator.mediator.trigger('time:change', {start:startSelection, end:endSelection});
             
           }
         });
@@ -182,7 +186,6 @@
             $('#calendarwidgetholder').show();
           }
         });
-
         $('.timeslider .brush').attr('fill', '#333');
         
       }, 
@@ -194,12 +197,45 @@
           start: evt.originalEvent.detail.start,
           end: evt.originalEvent.detail.end
         };
-
         $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
+      },
+
+      onDisplayChanged: function(evt){
+        Communicator.mediator.trigger('time:domain:change', evt.originalEvent.detail);
       },
 
       onDateSelectionChange: function(opt) {
         this.slider.select(opt.start, opt.end);
+      },
+
+      fetch: function(start, end, params, callback){
+        var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=get_indices&DataInputs=index_id='+
+        this.id + '%3Bbegin_time='+getISODateTimeString(start)+'%3Bend_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+        d3.csv(request)
+          .row(function (row) {
+            return [new Date(row.time), Number(row.value), row.id];
+          })
+          .get(function(error, rows) { 
+            callback(rows);
+          });
+      },
+
+      fetchBubble: function(start, end, params, callback){
+        var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=retrieve_bubble_index&DataInputs=collection_id='+
+        this.id + '%3Bbegin_time='+getISODateTimeString(start)+'%3Bend_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+        d3.csv(request)
+          .row(function (row) {
+            return [
+              new Date(row.starttime),
+              new Date(row.endtime), {
+                id: row.identifier,
+                bbox: row.bbox.replace(/[()]/g,'').split(',').map(parseFloat)
+              }
+            ];
+          })
+          .get(function(error, rows) { 
+            callback(rows);
+          });
       },
 
       changeLayer: function (options) {
@@ -242,12 +278,10 @@
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.WPS({
+                    records: null,
+                    source: new TimeSlider.Sources.EOxServerWPSSource({
                         url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id ,
-                        bbox: [extent.left, extent.bottom, extent.right, extent.top],
-                        csrftoken: this.csrftoken
+                        eoid: product.get('download').id
                      })
                   });
                   this.activeWPSproducts.push(product.get('download').id);
@@ -257,42 +291,33 @@
                   //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
                   break;
                 case "WPS-INDEX":
+
+                  this.activeWPSproducts.push(product.get('download').id);
+
+                  var attrs = {
+                    id: product.get('download').id,
+                    url: product.get('download').url
+                  };
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
-                    data: new TimeSlider.Plugin.WPS({
-                        url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id,
-                        processid: "retrieve_bubble_index",
-                        collectionid: "collection_id",
-                        output: "output",
-                        csrftoken: this.csrftoken
-                     })
+                    records: null,
+                    source: {fetch: this.fetchBubble.bind(attrs)}
                   });
-                  this.activeWPSproducts.push(product.get('download').id);
-                  // For some reason updateBBox is needed, altough bbox it is initialized already.
-                  // Withouth this update the first time activating a layer after the first map move
-                  // the bbox doesnt seem to be defined in the timeslider library and the points shown are wrong
-                  //this.slider.updateBBox([extent.left, extent.bottom, extent.right, extent.top], product.get('download').id);
+
                   break;
-                case 'INDEX':
-                  var ops = {
+                case "INDEX":
+                  var attrs = {
+                    id: product.get('download').id,
+                    url: product.get('download').url
+                  };
+                  this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
                     lineplot: true,
-                    data: new TimeSlider.Plugin.WPS({
-                        url: product.get('download').url,
-                        eoid: product.get('download').id,
-                        dataset: product.get('download').id,
-                        indices: true,
-                        processid: 'get_indices',
-                        collectionid: 'index_id',
-                        output: 'output',
-                        csrftoken: this.csrftoken
-                     })
-                  };
-                  this.slider.addDataset(ops);
+                    records: null,
+                    source: {fetch: this.fetch.bind(attrs)}
+                  });
 
                   break;
               }
@@ -320,12 +345,12 @@
       },
 
       onCoverageSelected: function(evt){
-        if (evt.originalEvent.detail.bbox){
-          var bbox = evt.originalEvent.detail.bbox.replace(/[()]/g,'').split(',').map(parseFloat);
-          var one_day=1000*60*60*24;
-          if ( Math.ceil( (evt.originalEvent.detail.end - evt.originalEvent.detail.start)/one_day)<10 ){
-            this.slider.select(evt.originalEvent.detail.start, evt.originalEvent.detail.end);
-            Communicator.mediator.trigger("map:set:extent", bbox);
+        var details = evt.originalEvent.detail;
+        if (details.params.bbox){
+          var oneDay=1000*60*60*24;
+          if ( Math.ceil( (details.end - details.start)/oneDay)<10 ){
+            this.slider.select(details.start, details.end);
+            Communicator.mediator.trigger("map:set:extent", details.params.bbox);
           }
         }
       }

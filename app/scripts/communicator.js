@@ -123,7 +123,7 @@
 
 				// Tracking timeslider
 				if(event === 'time:domain:change'){
-					localStorage.setItem('timeDomain', JSON.stringify(param));
+					localStorage.setItem('timeDomain', JSON.stringify([param.start, param.end]));
 				}
 
 				if(event === 'time:change'){

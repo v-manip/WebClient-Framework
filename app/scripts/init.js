@@ -44,9 +44,6 @@
             timeslider: {
                 deps: ['d3']
             },
-            timeslider_plugins: {
-                deps: ['timeslider', 'libcoverage']
-			},
             keypress: {
                 exports: 'Keypress'
             },
@@ -81,8 +78,7 @@
             backbone: '../bower_components/backbone-amd/backbone-min',
             underscore: '../bower_components/underscore-amd/underscore-min',
             d3: '../bower_components/d3/d3.min',
-            timeslider: '../bower_components/d3.TimeSlider/d3.timeslider.min',
-            timeslider_plugins: '../bower_components/d3.TimeSlider/d3.timeslider.plugins.min',
+            timeslider: '../bower_components/d3.TimeSlider/d3.timeslider',
             libcoverage: '../bower_components/libcoverage/libcoverage.min',
 
             'canvas-toBlob': '../bower_components/canvas-toBlob.js/canvas-toBlob',
