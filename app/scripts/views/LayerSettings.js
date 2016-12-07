@@ -20,7 +20,13 @@
 
 			template: {type: 'handlebars', template: LayerSettingsTmpl},
 			className: "panel panel-default optionscontrol not-selectable",
-			colorscaletypes : ["coolwarm", "rainbow", "jet", "custom1", "custom2", "blackwhite","viridis","inferno", "hsv","hot","cool","spring","summer","autumn","winter","bone","copper","greys","yignbu","greens","yiorrd","bluered","rdbu","picnic","portland","blackbody","earth","electric","magma","plasma"],
+			colorscaletypes : [
+				'coolwarm', 'rainbow', 'jet', 'diverging_1', 'diverging_2',
+				'blackwhite','viridis','inferno', 'hsv','hot','cool',
+				'spring', 'summer','autumn','winter','bone','copper','yignbu',
+				'greens','yiorrd','bluered', 'portland', 'blackbody','earth',
+				'electric','magma','plasma'
+			],
 
 			initialize: function(options) {
 				this.selected = null;
@@ -239,7 +245,7 @@
 
 
 				
-				if(!(typeof contours === 'undefined')){
+				/*if(!(typeof contours === 'undefined')){
 					var checked = "";
 					if (contours)
 						checked = "checked";
@@ -259,7 +265,7 @@
 						that.current_model.set("contours", contours);
 						Communicator.mediator.trigger("layer:parameters:changed", that.current_model.get("name"));
 					});
-				}
+				}*/
 
 				if(this.selected == "Fieldlines"){
 					$("#coefficients_range").hide();

@@ -593,14 +593,14 @@
                 "n": {
                     "range": [100000, 200000],
                     "uom":"cm -3",
-                    "colorscale": "jet",
+                    "colorscale": "plasma",
                     "selected": true,
                     "name": "Plasma density"
                 },
                 "T_elec": {
                     "range": [1000, 5000],
                     "uom":"K",
-                    "colorscale": "jet",
+                    "colorscale": "portland",
                     "name": "Plasma electron temperature"
                 },
                 "U_SC": {
@@ -811,14 +811,14 @@
                 "n": {
                     "range": [100000, 200000],
                     "uom":"cm -3",
-                    "colorscale": "jet",
+                    "colorscale": "plasma",
                     "selected": true,
                     "name": "Plasma density"
                 },
                 "T_elec": {
                     "range": [1000, 5000],
                     "uom":"K",
-                    "colorscale": "jet",
+                    "colorscale": "portland",
                     "name": "Plasma electron temperature"
                 },
                 "U_SC": {
@@ -1029,14 +1029,14 @@
                 "n": {
                     "range": [100000, 200000],
                     "uom":"cm -3",
-                    "colorscale": "jet",
+                    "colorscale": "plasma",
                     "selected": true,
                     "name": "Plasma density"
                 },
                 "T_elec": {
                     "range": [1000, 5000],
                     "uom":"K",
-                    "colorscale": "jet",
+                    "colorscale": "portland",
                     "name": "Plasma electron temperature"
                 },
                 "U_SC": {
@@ -1519,25 +1519,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Fieldlines":{
                     "range": [1, 40000],
@@ -1551,19 +1551,19 @@
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Y_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1629,25 +1629,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Fieldlines":{
                     "range": [1, 40000],
@@ -1661,19 +1661,19 @@
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Y_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1739,25 +1739,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Fieldlines":{
                     "range": [1, 40000],
@@ -1771,19 +1771,19 @@
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Y_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1840,25 +1840,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-200, 200],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
