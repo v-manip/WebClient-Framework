@@ -43,7 +43,7 @@ define([
 			this.windowViews[regionid].showView(App.module(viewid).createController().getView());
 		},
 
-		setSinglescreen: function() {
+		setSinglescreen: function(viewtype) {
 			this.view.showViewInRegion('tl', 'view1');
 
 			this.view.setFullscreen('view1');
@@ -53,8 +53,11 @@ define([
 			}
 			
 			
-			this.windowViews.tl.showView(App.module('CesiumViewer').createController().getView());
-			this.windowViews.tr.close();
+			this.windowViews.tl.showView(App.module(viewtype).createController().getView());
+			if(viewtype!=='AVViewer'){
+				this.windowViews.tr.close();
+			}
+			
 			//this.windowViews.tr.triggerMethod('view:disconnect');
 		},
 

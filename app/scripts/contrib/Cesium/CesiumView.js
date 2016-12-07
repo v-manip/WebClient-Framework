@@ -127,9 +127,10 @@ define(['backbone.marionette',
 				   shouldAnimate: false
 				});
 
+				
 				if (layer){
-					this.map = new Cesium.Viewer(this.el,
-					{
+
+					var options = {
 						timeline: false,
 						fullscreenButton: false,
 						baseLayerPicker: false,
@@ -145,8 +146,24 @@ define(['backbone.marionette',
 						creditContainer: "cesium_attribution",
 						contextOptions: {webgl: {preserveDrawingBuffer: true}},
 						clock: clock
-					});
+					};
+					//COLUMBUS_VIEW SCENE2D SCENE3D
+
+					if(localStorage.getItem('sceneMode') !== null){
+						options['sceneMode'] = Number(localStorage.getItem('sceneMode'));
+					}
+
+					this.map = new Cesium.Viewer(this.el, options);
 				}
+
+				if(localStorage.getItem('cameraPosition') !== null){
+					var c = JSON.parse(localStorage.getItem('cameraPosition'));
+					this.map.scene.camera.position = new Cesium.Cartesian3(c.position[0], c.position[1], c.position[2]);
+					this.map.scene.camera.direction = new Cesium.Cartesian3(c.direction[0], c.direction[1], c.direction[2]);
+					this.map.scene.camera.up = new Cesium.Cartesian3(c.up[0], c.up[1], c.up[2]);
+					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
+				}
+				
 
 				var mm = globals.objects.get('mapmodel');
 
@@ -258,7 +275,29 @@ define(['backbone.marionette',
 					}
                 }, this);
 
-                
+                if(localStorage.getItem('cameraPosition') !== null){
+					var c = JSON.parse(localStorage.getItem('cameraPosition'));
+					this.map.scene.camera.position = new Cesium.Cartesian3(c.position[0], c.position[1], c.position[2]);
+					this.map.scene.camera.direction = new Cesium.Cartesian3(c.direction[0], c.direction[1], c.direction[2]);
+					this.map.scene.camera.up = new Cesium.Cartesian3(c.up[0], c.up[1], c.up[2]);
+					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
+				}
+
+				if(localStorage.getItem('areaSelection') !== null){
+					this.onSelectionChanged(JSON.parse(localStorage.getItem('areaSelection')));
+				}
+
+				this.map.scene.morphComplete.addEventListener(function (){
+				    localStorage.setItem('sceneMode', this.map.scene.mode);
+				    var c = this.map.scene.camera;
+					localStorage.setItem('cameraPosition', JSON.stringify({
+								position: [c.position.x, c.position.y,c.position.z],
+								direction: [c.direction.x, c.direction.y,c.direction.z],
+								up: [c.up.x, c.up.y,c.up.z],
+								right: [c.right.x, c.right.y,c.right.z]
+							})
+						);
+				}, this);
 
 			},
 
@@ -280,6 +319,22 @@ define(['backbone.marionette',
 
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
+
+				function synchronizeLayer(l){
+					if(l.get('ces_layer')){
+						if(l.get('ces_layer').show != l.get('visible')){
+							var isBaseLayer = defaultFor(l.get('view').isBaseLayer, false);
+							this.changeLayer({
+								name: l.get('name'), visible: l.get('visible'), isBaseLayer: isBaseLayer
+							});
+						}
+					}
+				}
+				// Go through config to make any changes done while widget
+				// not active (not in view)
+				globals.baseLayers.each(synchronizeLayer.bind(this));
+				globals.products.each(synchronizeLayer.bind(this));
+				globals.overlays.each(synchronizeLayer.bind(this));
 
 				
 				this.connectDataEvents();
@@ -310,7 +365,7 @@ define(['backbone.marionette',
 					}
 				});
 
-				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+				//Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 				//this.onResize();
 				return this;
 			},
@@ -489,15 +544,29 @@ define(['backbone.marionette',
 				});
 			},
 
-			onSortProducts: function(productLayers) {
+			onSortProducts: function(shifts) {
 
 
 				// Search for moved layer
 				var layer_moved = null;
 				var to_move = 0;
+				// Sorting only works on model layers so we filter them out first
+
 				globals.products.each(function(product) {
 					var ces_layer = product.get("ces_layer");
-                	if (ces_layer){
+
+					if(ces_layer && shifts.hasOwnProperty(product.get('name'))){
+						// Raise or Lower the layer depending on movement
+						var to_move = shifts[product.get('name')];
+						for(var i=0; i<Math.abs(to_move); ++i){
+							if(to_move < 0)
+								this.map.scene.imageryLayers.lower(ces_layer);
+							else if(to_move>0)
+								this.map.scene.imageryLayers.raise(ces_layer);
+						}
+					}
+
+                	/*if (ces_layer){
                 		var product_index = (globals.products.length-1 - globals.products.indexOf(product)) + globals.baseLayers.length;
                 		var ces_index = this.map.scene.imageryLayers.indexOf(ces_layer);
                 		var cur_move = product_index - ces_index;
@@ -505,16 +574,16 @@ define(['backbone.marionette',
                 			to_move = cur_move;
                 			layer_moved = ces_layer;
                 		}
-                	}
+                	}*/
 				}, this);
 
 				// Raise or Lower the layer depending on movement
-				for(var i=0; i<Math.abs(to_move); ++i){
+				/*for(var i=0; i<Math.abs(to_move); ++i){
 					if(to_move < 0)
 						this.map.scene.imageryLayers.lower(layer_moved);
 					else if(to_move>0)
 						this.map.scene.imageryLayers.raise(layer_moved);
-				}
+				}*/
 
 				
 				console.log("Map products sorted");
@@ -889,8 +958,14 @@ define(['backbone.marionette',
 						var that = this;
 						var imagelayer;
 
-						var ces_layer = product.get("ces_layer");
-						var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+						//var ces_layer = product.get("ces_layer");
+						var index = this.map.scene.imageryLayers.indexOf(product.get("ces_layer"));
+						this.customModelLayer = product.get("ces_layer");
+						if(this.customModelLayer){
+							this.map.scene.imageryLayers.remove(this.customModelLayer);
+							this.customModelLayer = false;
+						}
+						
 						
 						var url = product.get("views")[0].urls[0];
 
@@ -912,15 +987,21 @@ define(['backbone.marionette',
 							"range_max": range[1],
 						}))
 
-							.done(function( data ) {	
-								that.map.scene.imageryLayers.remove(ces_layer);									
+							.done(function( data ) {
+
+								if(that.customModelLayer){
+									index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
+									that.map.scene.imageryLayers.remove(that.customModelLayer);	
+									that.customModelLayer = false;		
+								}
+													
 							    imageURI = "data:image/gif;base64,"+data;
 							    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-								ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-								product.set("ces_layer", ces_layer);
+								that.customModelLayer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+								product.set("ces_layer", that.customModelLayer);
 								// TODO: Hack to position layer at correct index, adding imagery provider  
 								// with index does not seem to be working
-								var ces_index = that.map.scene.imageryLayers.indexOf(ces_layer);
+								var ces_index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
 								var to_move = index - ces_index;
 								for(var i=0; i<Math.abs(to_move); ++i){
 									if(to_move < 0)
@@ -1947,30 +2028,47 @@ define(['backbone.marionette',
 				}
 			},
 
+
 			handleTick: function(clock) {
 				// TODO: Cesium does not provide a method to know when the camera has stopped, 
 				//       this approach is not ideal, when the movement mantains inertia difference 
 				//       values are very low and there are comparison errors.
-			    var camera = this.map.scene.camera;
+			    var c = this.map.scene.camera;
+
+			    var th = [10000, 10000, 10000];
+			    // If current mode is either Columbus or Scene2D lower threshold
+			    if(this.map.scene.mode == 1 || this.map.scene.mode == 2){
+					th = [0, 0, 0];
+			    }
 
 			    if (!this.camera_is_moving){
-			    	if (Math.abs(this.camera_last_position.x - camera.position.x) > 10000 &&
-			    		Math.abs(this.camera_last_position.y - camera.position.y) > 10000 &&
-			    		Math.abs(this.camera_last_position.z - camera.position.z) > 10000 ){
+			    	if (Math.abs(this.camera_last_position.x - c.position.x) > th[0] &&
+			    		Math.abs(this.camera_last_position.y - c.position.y) > th[1] &&
+			    		Math.abs(this.camera_last_position.z - c.position.z) >= th[2] ){
 
 			    		this.camera_is_moving = true;
 			    	}
 			    }else{
-			    	if (Math.abs(this.camera_last_position.x - camera.position.x) < 10000 &&
-			    		Math.abs(this.camera_last_position.y - camera.position.y) < 10000 &&
-			    		Math.abs(this.camera_last_position.z - camera.position.z) < 10000 ){
+			    	
+			    	if (Math.abs(this.camera_last_position.x - c.position.x) <= th[0] &&
+			    		Math.abs(this.camera_last_position.y - c.position.y) <= th[1] &&
+			    		Math.abs(this.camera_last_position.z - c.position.z) <= th[2] ){
 
 			    		this.camera_is_moving = false;
 			    		Communicator.mediator.trigger("map:position:change", this.getMapExtent() );
+
+			    		localStorage.setItem('cameraPosition', JSON.stringify({
+								position: [c.position.x, c.position.y,c.position.z],
+								direction: [c.direction.x, c.direction.y,c.direction.z],
+								up: [c.up.x, c.up.y,c.up.z],
+								right: [c.right.x, c.right.y,c.right.z]
+							})
+						);
+
 			    	}else{
-			    		this.camera_last_position.x = camera.position.x;
-			    		this.camera_last_position.y = camera.position.y;
-			    		this.camera_last_position.z = camera.position.z;
+			    		this.camera_last_position.x = c.position.x;
+			    		this.camera_last_position.y = c.position.y;
+			    		this.camera_last_position.z = c.position.z;
 			    	}
 			    }
 			},

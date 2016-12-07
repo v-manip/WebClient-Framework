@@ -124,6 +124,13 @@ var VECTOR_BREAKDOWN = {
 
 
 				//Base Layers are loaded and added to the global collection
+				// If there are already saved baselayer config in the local
+				// storage use that instead
+
+				if(localStorage.getItem('baseLayersConfig') !== null){
+					config.mapConfig.baseLayers = JSON.parse(localStorage.getItem('baseLayersConfig'));
+				}
+
 				_.each(config.mapConfig.baseLayers, function(baselayer) {
 
 					globals.baseLayers.add(
@@ -172,6 +179,13 @@ var VECTOR_BREAKDOWN = {
                 // Remove three first colors as they are used by the products
                 autoColor.getColor();autoColor.getColor();autoColor.getColor();
 
+                // If there are already saved product config in the local
+				// storage use that instead
+
+				if(localStorage.getItem('productsConfig') !== null){
+					config.mapConfig.products = JSON.parse(localStorage.getItem('productsConfig'));
+				}
+
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
 					var lm = new m.LayerModel({
@@ -204,9 +218,20 @@ var VECTOR_BREAKDOWN = {
 						validity: product.validity,
 						showColorscale: true
 					});
+
 					if(lm.get('model')){
 						lm.set('contours', defaultFor( product.contours,false));
 					}
+
+					if(lm.get('download').id === 'Custom_Model'){
+						var shcFile = localStorage.getItem('shcFile');
+						if(shcFile !== null){
+							shcFile = JSON.parse(shcFile);
+							lm.set('shc', shcFile.data);
+							lm.set('shc_name', shcFile.name);
+						}
+					}
+					
 					globals.products.add(lm);
 
 					if(product.processes){
@@ -220,7 +245,11 @@ var VECTOR_BREAKDOWN = {
 				var productcolors = d3.scale.ordinal().domain(domain).range(range);
 
 				globals.objects.add('productcolors', productcolors);
-	      	
+
+				// If there is already saved overly configuration use that
+				if(localStorage.getItem('overlaysConfig') !== null){
+					config.mapConfig.overlays = JSON.parse(localStorage.getItem('overlaysConfig'));
+				}
 				//Overlays are loaded and added to the global collection
 				_.each(config.mapConfig.overlays, function(overlay) {
 
@@ -229,27 +258,7 @@ var VECTOR_BREAKDOWN = {
 								name: overlay.name,
 								visible: overlay.visible,
 								ordinal: ordinal,
-								view: {
-									id: overlay.id,
-									urls: overlay.urls,
-									protocol: overlay.protocol,
-									projection: overlay.projection,
-									attribution: overlay.attribution,
-									matrixSet: overlay.matrixSet,
-									style: overlay.style,
-									format: overlay.format,
-									resolutions: overlay.resolutions,
-									maxExtent: overlay.maxExtent,
-									gutter: overlay.gutter,
-									buffer: overlay.buffer,
-									units: overlay.units,
-									transitionEffect: overlay.transitionEffect,
-									isphericalMercator: overlay.isphericalMercator,
-									isBaseLayer: false,
-									wrapDateLine: overlay.wrapDateLine,
-									zoomOffset: overlay.zoomOffset,
-									//time: overlay.time // Is set in TimeSliderView on time change.
-								}
+								view: overlay.view
 							})
 						);
 						console.log("Added overlay " + overlay.id);
@@ -336,6 +345,10 @@ var VECTOR_BREAKDOWN = {
 		        	"Charlie": false
 		        };
 
+		        if(localStorage.getItem("satelliteSelection") !== null){
+		        	globals.swarm.satellites = JSON.parse(localStorage.getItem("satelliteSelection"));
+		        }
+
 		        globals.swarm["products"] = {
 		        	"MAG": {
 		        		"Alpha": "SW_OPER_MAGA_LR_1B",
@@ -354,15 +367,59 @@ var VECTOR_BREAKDOWN = {
 		        	}
 		        };
 
-		        globals.swarm["activeProducts"] = ["SW_OPER_MAGA_LR_1B"];
-		        //globals.swarm["activeProducts"] = [];
+		        globals.swarm["activeProducts"] = [];
 		        
 		        var filtered_collection = new Backbone.Collection(filtered);
+
+		        var containerSelection = {
+		        	'MAG': true,
+		        	'EFI': false,
+		        	'IBI': false
+		        };
+
+		        var clickEvent = "require(['communicator'], function(Communicator){Communicator.mediator.trigger('application:reset');});";
+
+		        if(localStorage.getItem("containerSelection") !== null){
+		        	containerSelection = JSON.parse(localStorage.getItem("containerSelection"));
+		        	showMessage('success',
+		        	 'The configuration of your last visit has been loaded, '+
+		        	 'if you would like to reset to the default configuration click '+
+		        	 '<b><a href="javascript:void(0);" onclick="'+clickEvent+'">here</a></b> '+
+		        	 'or on the Reset button above.', 35);
+		        }else{
+		        	localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
+		        }
+
+		        var csKeys = _.keys(containerSelection);
+		        for (var i = csKeys.length - 1; i >= 0; i--) {
+		        	if(containerSelection[csKeys[i]]){
+		        		var satKeys = _.keys(globals.swarm.products[csKeys[i]]);
+		        		for (var j = satKeys.length - 1; j >= 0; j--) {
+		        			if(globals.swarm.satellites[satKeys[j]]){
+		        				globals.swarm.activeProducts.push(
+		        					globals.swarm.products[csKeys[i]][satKeys[j]]
+		        				);
+		        			}
+		        		}
+		        	}
+		        }
+
+	        	for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
+		        	globals.products.forEach(function(p){
+            			if(p.get("download").id == globals.swarm.activeProducts[i]){
+            				if(!p.get("visible")){
+	            				p.set("visible", true);
+            				}
+            			}
+            		});
+		        }
+
+
 
 		        // Add generic product (which is container for A,B and C sats)
 				filtered_collection.add({
 					name: "Bubble Index data (IBI)",
-					visible: false,
+					visible: containerSelection['IBI'],
 					color: "#2ca02c",
 					protocol: null,
 					containerproduct: true,
@@ -370,7 +427,7 @@ var VECTOR_BREAKDOWN = {
 				}, {at: 0});
 				filtered_collection.add({
 					name: "Plasma data (EFI PL)",
-					visible: false,
+					visible: containerSelection['EFI'],
 					color: "#ff7f0e",
 					protocol: null,
 					containerproduct: true,
@@ -378,7 +435,7 @@ var VECTOR_BREAKDOWN = {
 				}, {at: 0});
 				filtered_collection.add({
 					name: "Magnetic data (MAG LR)",
-					visible: true,
+					visible: containerSelection['MAG'],
 					color: "#1f77b4",
 					protocol: null,
 					containerproduct: true,
@@ -504,6 +561,13 @@ var VECTOR_BREAKDOWN = {
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
 
+                // Load possible available filter selection
+				if(localStorage.getItem('filterSelection') !== null){
+					globals.swarm.set('filters', JSON.parse(localStorage.getItem('filterSelection')));
+				}
+
+				
+
 
 			},
 
@@ -526,8 +590,19 @@ var VECTOR_BREAKDOWN = {
 					this.storyView.show(this.storyBanner);
 				}*/
 
-				splitview.setSplitscreen();
-
+				if ( (typeof(Storage) !== "undefined") && localStorage.getItem("viewSelection") !== null) {
+					if(localStorage.getItem('viewSelection') == 'split'){
+						splitview.setSplitscreen();
+					}
+					if(localStorage.getItem('viewSelection') == 'globe'){
+						splitview.setSinglescreen('CesiumViewer');
+					}
+					if( localStorage.getItem('viewSelection') == 'analytics'){
+						splitview.setSinglescreen('AVViewer');
+					}
+				}else{
+					splitview.setSplitscreen();
+				}
 
 				// Try to get CSRF token, if available set it for necesary ajax requests
 				function getCookie(name) {
@@ -577,12 +652,7 @@ var VECTOR_BREAKDOWN = {
 				        return;
 				    }
 
-                    $("#error-messages").append(
-                              '<div class="alert alert-warning alert-danger">'+
-                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                              '<strong>Warning!</strong> Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0] +
-                            '</div>'
-                    );
+				    showMessage('danger', ('Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0]), 15);
                 });
 
                 // The tooltip is called twice at beginning and end, it seems to show the style of the
@@ -593,6 +663,13 @@ var VECTOR_BREAKDOWN = {
 					hide: { effect: false, duration: 0 },
 					show:{ effect: false, delay: 700}
 			    });
+
+			    // Broadcast possible area selection
+				if(localStorage.getItem('areaSelection') !== null){
+					Communicator.mediator.trigger('selection:changed', JSON.parse(localStorage.getItem('areaSelection')));
+				}
+
+				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 
 			    globals.products.each(function(product){
 					if(product.get("visible")){
@@ -608,18 +685,6 @@ var VECTOR_BREAKDOWN = {
                 $('#loadscreen').remove();
 
 
-                var data = [-10,0,1,3,5,7,8,10];
-				var min = d3.min(data);
-				var mean = d3.sum(data) / data.length;
-				var max = d3.max(data);
-
-				
-				// linear scale, 2 colors
-				/*var lScale = d3.scale.linear()
-				.domain([-1, 0, max])
-				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
-				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
-				
 			}
 
 
