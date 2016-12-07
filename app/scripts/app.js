@@ -45,7 +45,6 @@ var VECTOR_BREAKDOWN = {
 		function(Backbone, globals, DialogRegion,
 			UIRegion, LayerControlLayout, ToolControlLayout, OptionsLayout, WindowView, Communicator) {
 
-
 		var Application = Backbone.Marionette.Application.extend({
 			initialize: function(options) {
 			},
@@ -220,6 +219,10 @@ var VECTOR_BREAKDOWN = {
 						showColorscale: true
 					});
 
+					if(lm.get('model')){
+						lm.set('contours', defaultFor( product.contours,false));
+					}
+
 					if(lm.get('download').id === 'Custom_Model'){
 						var shcFile = localStorage.getItem('shcFile');
 						if(shcFile !== null){
@@ -228,7 +231,7 @@ var VECTOR_BREAKDOWN = {
 							lm.set('shc_name', shcFile.name);
 						}
 					}
-
+					
 					globals.products.add(lm);
 
 					if(product.processes){
