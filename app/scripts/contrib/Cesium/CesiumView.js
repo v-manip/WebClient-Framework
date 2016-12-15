@@ -442,7 +442,7 @@ define(['backbone.marionette',
 	            if(layerdesc.get("visible")){
 	            	if(view.attribution){
 	            		$("#cesium_custom_attribution").append(
-		            		"<div id='" + layerdesc.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
+		            		"<div id='" + layerdesc.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;margin-left: 3px;'>"+
 		            		view.attribution +
 		            		"</div>");
 	            	}
@@ -680,7 +680,7 @@ define(['backbone.marionette',
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(baselayer.get("views")[0].attribution){
 				            		$("#cesium_custom_attribution").append(
-					            		"<div id='" + baselayer.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
+					            		"<div id='" + baselayer.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left; margin-left: 3px;'>"+
 					            		baselayer.get("views")[0].attribution +
 					            		"</div>");
 					            }
@@ -708,7 +708,7 @@ define(['backbone.marionette',
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(overlay.get("view").attribution){
 				            		$("#cesium_custom_attribution").append(
-					            		"<div id='" + overlay.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
+					            		"<div id='" + overlay.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;margin-left: 3px;'>"+
 					            		overlay.get("view").attribution +
 					            		"</div>");
 					            }
