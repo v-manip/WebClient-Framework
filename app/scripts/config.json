@@ -1969,7 +1969,7 @@
             }
         },
         {
-            "name": "Graticules",
+            "name": "Graticule",
             "visible": false,
             "view":{
                 "id": "graticules",
@@ -1994,11 +1994,11 @@
                 "isphericalMercator": false,
                 "wrapDateLine": true,
                 "zoomOffset": 0,
-                "attribution": " Graticules { Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+                "attribution": " Graticule { Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
             }
         },
         {
-            "name": "Magnetic Graticules",
+            "name": "Magnetic Graticule",
             "visible": false,
             "view":{
                 "id": "magnetic_graticules",
@@ -2022,7 +2022,7 @@
                 "isphericalMercator": false,
                 "wrapDateLine": true,
                 "zoomOffset": 0,
-                "attribution": " Mag. Graticules { Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+                "attribution": " Mag. Graticule { Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
             }
         }]
     },
