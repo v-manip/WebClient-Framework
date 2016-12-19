@@ -1594,7 +1594,6 @@ define(['backbone.marionette',
                     	
 	                    ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
 
-	                    //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
 	                    var image = c.toDataURL("image/jpg");
 	                    var newmat = new Cesium.Material.fromType('Image', {
 	                        image : image,
@@ -1618,7 +1617,7 @@ define(['backbone.marionette',
 
 	                    svgContainer.remove();
 					};
-					setTimeout(renderOnScreen, 0);
+					setTimeout(renderOnScreen, 50);
 
                 }
 
