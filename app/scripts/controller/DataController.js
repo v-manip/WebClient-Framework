@@ -62,7 +62,9 @@
         if(invalid_models.length>0){
           var invalid_models_string = '';
           for (var i = invalid_models.length - 1; i >= 0; i--) {
-            invalid_models_string += invalid_models[i].model+':' + start + ' - ' + end + '<br>';
+            invalid_models_string += invalid_models[i].model+' validity:  ' + 
+              getDateString(invalid_models[i].start) +' - ' + 
+              getDateString(invalid_models[i].end) + '<br>';
           }
 
           showMessage('warning', (
@@ -70,8 +72,8 @@
                 'data is displayed for the last valid date, please take this into consideration when analysing the data.<br>'+
                 invalid_models_string+
                 'Tip: You can see the validity of the model in the time slider.'
-            )
-          , 30, 'validitywarning');
+            
+)          , 30, 'validitywarning');
 
         }
       },
