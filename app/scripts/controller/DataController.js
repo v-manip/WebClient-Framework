@@ -63,8 +63,8 @@
           var invalid_models_string = '';
           for (var i = invalid_models.length - 1; i >= 0; i--) {
             invalid_models_string += invalid_models[i].model+' validity:  ' + 
-              getDateString(invalid_models[i].start) +' - ' + 
-              getDateString(invalid_models[i].end) + '<br>';
+              getISODateTimeString(invalid_models[i].start).slice(0, -5) +'Z - ' + 
+              getISODateTimeString(invalid_models[i].end).slice(0, -5) + 'Z<br>';
           }
 
           showMessage('warning', (
