@@ -20,7 +20,13 @@
 
 			template: {type: 'handlebars', template: LayerSettingsTmpl},
 			className: "panel panel-default optionscontrol not-selectable",
-			colorscaletypes : ["coolwarm", "rainbow", "jet", "custom1", "custom2", "blackwhite"],
+			colorscaletypes : [
+				'coolwarm', 'rainbow', 'jet', 'diverging_1', 'diverging_2',
+				'blackwhite','viridis','inferno', 'hsv','hot','cool',
+				'spring', 'summer','autumn','winter','bone','copper','yignbu',
+				'greens','yiorrd','bluered', 'portland', 'blackbody','earth',
+				'electric','magma','plasma'
+			],
 
 			initialize: function(options) {
 				this.selected = null;
@@ -29,6 +35,7 @@
 					domain: [0,1]
 				});
 				this.selected_satellite = "Alpha";
+				this.colorscaletypes = _.sortBy(this.colorscaletypes, function (c) {return c;});
 			},
 
 			renderView: function(){
@@ -54,6 +61,7 @@
 		    	var protocol = this.current_model.get("views")[0].protocol;
 		    	var keys = _.keys(options);
 				var option = '';
+				var contours = this.current_model.get("contours");
 				//var 
 
 				var that = this;
@@ -150,7 +158,7 @@
 						$("#outlines").empty();
 						this.$("#outlines").append(
 							'<form style="vertical-align: middle;">'+
-							'<label class="valign" for="outlines" style="width: 70px;">Outlines </label>'+
+							'<label class="valign" for="outlines" style="width: 120px;">Outlines </label>'+
 							'<input class="valign" style="margin-top: -5px;" type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
 							'</form>'
 						);
@@ -171,7 +179,7 @@
 						$("#showColorscale").empty();
 						this.$("#showColorscale").append(
 							'<form style="vertical-align: middle;">'+
-							'<label class="valign" for="outlines" style="width: 70px; margin">Legend </label>'+
+							'<label class="valign" for="outlines" style="width: 120px; margin">Legend </label>'+
 							'<input class="valign" style="margin-top: -5px;" type="checkbox" name="outlines" value="outlines" ' + checked + '></input>'+
 							'</form>'
 						);
@@ -235,6 +243,30 @@
 					this.createHeightTextbox(this.current_model.get("height"));
 				}
 
+
+				
+				/*if(!(typeof contours === 'undefined')){
+					var checked = "";
+					if (contours)
+						checked = "checked";
+
+					$("#contours input").unbind();
+					$("#contours").empty();
+
+					this.$("#contours").append(
+						'<form style="vertical-align: middle;">'+
+						'<label class="valign" for="contours" style="width: 120px;">Contours/Isolines </label>'+
+						'<input class="valign" style="margin-top: -5px;" type="checkbox" name="contours" value="contours" ' + checked + '></input>'+
+						'</form>'
+					);
+
+					this.$("#contours input").change(function(evt){
+						var contours = !that.current_model.get("contours");
+						that.current_model.set("contours", contours);
+						Communicator.mediator.trigger("layer:parameters:changed", that.current_model.get("name"));
+					});
+				}*/
+
 				if(this.selected == "Fieldlines"){
 					$("#coefficients_range").hide();
 					$("#opacitysilder").parent().hide();
@@ -251,7 +283,7 @@
 					// Add options for three satellites
 					$("#satellite_selection").off();
 					$("#satellite_selection").empty();
-					$("#satellite_selection").append('<label for="satellite_selec" style="width:70px;">Satellite </label>');
+					$("#satellite_selection").append('<label for="satellite_selec" style="width:120px;">Satellite </label>');
 					$("#satellite_selection").append('<select style="margin-left:4px;" name="satellite_selec" id="satellite_selec"></select>');
 
 
@@ -462,11 +494,10 @@
 			},
 
 			handleRangeResponseError: function(response){
-				$("#error-messages").append(
-					'<div class="alert alert-warning">'+
-					'<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-					'Warning: There is a problem requesting the range values for the color scale, please revise and set them to adequate values if necessary.' +
-					'</div>'
+				showMessage(
+					'warning', 
+					'There is a problem requesting the range values for the color scale,'+
+					' please revise and set them to adequate values if necessary.', 15
 				);
 			},
 
@@ -631,6 +662,13 @@
 					//console.log(evt.target.result);
 					that.current_model.set('shc', evt.target.result);
 					that.current_model.set('shc_name', filename);
+
+					// Save shc file to localstorage
+					localStorage.setItem('shcFile', JSON.stringify({
+						name: filename,
+						data: evt.target.result
+					}));
+
 					that.$("#shc").find("#filename").remove();
 					that.$("#shc").append('<p id="filename" style="font-size:.9em;">Selected File: '+filename+'</p>');
 
@@ -799,13 +837,13 @@
 	      		if( (height || height==0) && this.selected != "Fieldlines"){
 					this.$("#height").append(
 						'<form style="vertical-align: middle;">'+
-						'<label for="heightvalue" style="width: 70px;">Height</label>'+
+						'<label for="heightvalue" style="width: 120px;">Height</label>'+
 						'<input id="heightvalue" type="text" style="width:30px; margin-left:8px"/>'+
 						'</form>'
 					);
 					this.$("#heightvalue").val(height);
 					this.$("#height").append(
-						'<p style="font-size:0.85em; margin-left: 70px;">Above ellipsoid (Km)</p>'
+						'<p style="font-size:0.85em; margin-left: 120px;">Above ellipsoid (Km)</p>'
 					);
 
 					// Register necessary key events

@@ -58,8 +58,8 @@ define(['backbone.marionette',
 
 				plotty.addColorScale("redblue", ["#ff0000", "#0000ff"], [0, 1]);
 				plotty.addColorScale("coolwarm", ["#ff0000", "#ffffff", "#0000ff"], [0, 0.5, 1]);
-				plotty.addColorScale("custom1", ["#400040","#3b004d","#36005b","#320068","#2d0076","#290084","#240091","#20009f","#1b00ad","#1600ba","#1200c8","#0d00d6","#0900e3","#0400f1","#0000ff","#0217ff","#042eff","#0645ff","#095cff","#0b73ff","#0d8bff","#10a2ff","#12b9ff","#14d0ff","#17e7ff","#19ffff","#3fffff","#66ffff","#8cffff","#b2ffff","#d8ffff","#ffffff","#ffffd4","#ffffaa","#ffff7f","#ffff54","#ffff2a","#ffff00","#ffed00","#ffdd00","#ffcc00","#ffba00","#ffaa00","#ff9900","#ff8700","#ff7700","#ff6600","#ff5400","#ff4400","#ff3300","#ff2100","#ff1100","#ff0000","#ff0017","#ff002e","#ff0045","#ff005c","#ff0073","#ff008b","#ff00a2","#ff00b9","#ff00d0","#ff00e7","#ff00ff"], [0.0,0.01587301587,0.03174603174,0.04761904761,0.06349206348,0.07936507935,0.09523809522,0.11111111109,0.12698412696,0.14285714283,0.15873015870,0.17460317457,0.19047619044,0.20634920631,0.22222222218,0.23809523805,0.25396825392,0.26984126979,0.28571428566,0.30158730153,0.31746031740,0.33333333327,0.34920634914,0.36507936501,0.38095238088,0.39682539675,0.41269841262,0.42857142849,0.44444444436,0.46031746023,0.47619047610,0.49206349197,0.50793650784,0.52380952371,0.53968253958,0.55555555545,0.57142857132,0.58730158719,0.60317460306,0.61904761893,0.63492063480,0.65079365067,0.66666666654,0.68253968241,0.69841269828,0.71428571415,0.73015873002,0.74603174589,0.76190476176,0.77777777763,0.79365079350,0.80952380937,0.82539682524,0.84126984111,0.85714285698,0.87301587285,0.88888888872,0.90476190459,0.92063492046,0.93650793633,0.95238095220,0.96825396807,0.98412698394,1]);
-				plotty.addColorScale("custom2", ["#000000", "#030aff", "#204aff", "#3c8aff", "#77c4ff", "#f0ffff", "#f0ffff", "#f2ff7f", "#ffff00", "#ff831e", "#ff083d", "#ff00ff"], [0, 0.0000000001, 0.1, 0.2, 0.3333, 0.4666, 0.5333, 0.6666, 0.8, 0.9, 0.999999999999, 1]);
+				plotty.addColorScale("diverging_1", ["#400040","#3b004d","#36005b","#320068","#2d0076","#290084","#240091","#20009f","#1b00ad","#1600ba","#1200c8","#0d00d6","#0900e3","#0400f1","#0000ff","#0217ff","#042eff","#0645ff","#095cff","#0b73ff","#0d8bff","#10a2ff","#12b9ff","#14d0ff","#17e7ff","#19ffff","#3fffff","#66ffff","#8cffff","#b2ffff","#d8ffff","#ffffff","#ffffd4","#ffffaa","#ffff7f","#ffff54","#ffff2a","#ffff00","#ffed00","#ffdd00","#ffcc00","#ffba00","#ffaa00","#ff9900","#ff8700","#ff7700","#ff6600","#ff5400","#ff4400","#ff3300","#ff2100","#ff1100","#ff0000","#ff0017","#ff002e","#ff0045","#ff005c","#ff0073","#ff008b","#ff00a2","#ff00b9","#ff00d0","#ff00e7","#ff00ff"], [0.0,0.01587301587,0.03174603174,0.04761904761,0.06349206348,0.07936507935,0.09523809522,0.11111111109,0.12698412696,0.14285714283,0.15873015870,0.17460317457,0.19047619044,0.20634920631,0.22222222218,0.23809523805,0.25396825392,0.26984126979,0.28571428566,0.30158730153,0.31746031740,0.33333333327,0.34920634914,0.36507936501,0.38095238088,0.39682539675,0.41269841262,0.42857142849,0.44444444436,0.46031746023,0.47619047610,0.49206349197,0.50793650784,0.52380952371,0.53968253958,0.55555555545,0.57142857132,0.58730158719,0.60317460306,0.61904761893,0.63492063480,0.65079365067,0.66666666654,0.68253968241,0.69841269828,0.71428571415,0.73015873002,0.74603174589,0.76190476176,0.77777777763,0.79365079350,0.80952380937,0.82539682524,0.84126984111,0.85714285698,0.87301587285,0.88888888872,0.90476190459,0.92063492046,0.93650793633,0.95238095220,0.96825396807,0.98412698394,1]);
+				plotty.addColorScale("diverging_2", ["#000000", "#030aff", "#204aff", "#3c8aff", "#77c4ff", "#f0ffff", "#f0ffff", "#f2ff7f", "#ffff00", "#ff831e", "#ff083d", "#ff00ff"], [0, 0.0000000001, 0.1, 0.2, 0.3333, 0.4666, 0.5333, 0.6666, 0.8, 0.9, 0.999999999999, 1]);
 				plotty.addColorScale("blackwhite", ["#000000", "#ffffff"], [0, 1]);
 
 				this.connectDataEvents();
@@ -127,9 +127,10 @@ define(['backbone.marionette',
 				   shouldAnimate: false
 				});
 
+				
 				if (layer){
-					this.map = new Cesium.Viewer(this.el,
-					{
+
+					var options = {
 						timeline: false,
 						fullscreenButton: false,
 						baseLayerPicker: false,
@@ -145,8 +146,24 @@ define(['backbone.marionette',
 						creditContainer: "cesium_attribution",
 						contextOptions: {webgl: {preserveDrawingBuffer: true}},
 						clock: clock
-					});
+					};
+					//COLUMBUS_VIEW SCENE2D SCENE3D
+
+					if(localStorage.getItem('sceneMode') !== null){
+						options['sceneMode'] = Number(localStorage.getItem('sceneMode'));
+					}
+
+					this.map = new Cesium.Viewer(this.el, options);
 				}
+
+				if(localStorage.getItem('cameraPosition') !== null){
+					var c = JSON.parse(localStorage.getItem('cameraPosition'));
+					this.map.scene.camera.position = new Cesium.Cartesian3(c.position[0], c.position[1], c.position[2]);
+					this.map.scene.camera.direction = new Cesium.Cartesian3(c.direction[0], c.direction[1], c.direction[2]);
+					this.map.scene.camera.up = new Cesium.Cartesian3(c.up[0], c.up[1], c.up[2]);
+					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
+				}
+				
 
 				var mm = globals.objects.get('mapmodel');
 
@@ -258,7 +275,29 @@ define(['backbone.marionette',
 					}
                 }, this);
 
-                
+                if(localStorage.getItem('cameraPosition') !== null){
+					var c = JSON.parse(localStorage.getItem('cameraPosition'));
+					this.map.scene.camera.position = new Cesium.Cartesian3(c.position[0], c.position[1], c.position[2]);
+					this.map.scene.camera.direction = new Cesium.Cartesian3(c.direction[0], c.direction[1], c.direction[2]);
+					this.map.scene.camera.up = new Cesium.Cartesian3(c.up[0], c.up[1], c.up[2]);
+					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
+				}
+
+				if(localStorage.getItem('areaSelection') !== null){
+					this.onSelectionChanged(JSON.parse(localStorage.getItem('areaSelection')));
+				}
+
+				this.map.scene.morphComplete.addEventListener(function (){
+				    localStorage.setItem('sceneMode', this.map.scene.mode);
+				    var c = this.map.scene.camera;
+					localStorage.setItem('cameraPosition', JSON.stringify({
+								position: [c.position.x, c.position.y,c.position.z],
+								direction: [c.direction.x, c.direction.y,c.direction.z],
+								up: [c.up.x, c.up.y,c.up.z],
+								right: [c.right.x, c.right.y,c.right.z]
+							})
+						);
+				}, this);
 
 			},
 
@@ -280,6 +319,22 @@ define(['backbone.marionette',
 
 				this.isClosed = false;
 				$("#cesium_save").on("click", this.onSaveImage.bind(this));
+
+				function synchronizeLayer(l){
+					if(l.get('ces_layer')){
+						if(l.get('ces_layer').show != l.get('visible')){
+							var isBaseLayer = defaultFor(l.get('view').isBaseLayer, false);
+							this.changeLayer({
+								name: l.get('name'), visible: l.get('visible'), isBaseLayer: isBaseLayer
+							});
+						}
+					}
+				}
+				// Go through config to make any changes done while widget
+				// not active (not in view)
+				globals.baseLayers.each(synchronizeLayer.bind(this));
+				globals.products.each(synchronizeLayer.bind(this));
+				globals.overlays.each(synchronizeLayer.bind(this));
 
 				
 				this.connectDataEvents();
@@ -310,7 +365,7 @@ define(['backbone.marionette',
 					}
 				});
 
-				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+				//Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 				//this.onResize();
 				return this;
 			},
@@ -387,7 +442,7 @@ define(['backbone.marionette',
 	            if(layerdesc.get("visible")){
 	            	if(view.attribution){
 	            		$("#cesium_custom_attribution").append(
-		            		"<div id='" + layerdesc.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
+		            		"<div id='" + layerdesc.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;margin-left: 3px;'>"+
 		            		view.attribution +
 		            		"</div>");
 	            	}
@@ -625,7 +680,7 @@ define(['backbone.marionette',
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(baselayer.get("views")[0].attribution){
 				            		$("#cesium_custom_attribution").append(
-					            		"<div id='" + baselayer.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
+					            		"<div id='" + baselayer.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left; margin-left: 3px;'>"+
 					            		baselayer.get("views")[0].attribution +
 					            		"</div>");
 					            }
@@ -653,7 +708,7 @@ define(['backbone.marionette',
 								// Manage custom attribution element (add attribution for active baselayer)
 				            	if(overlay.get("view").attribution){
 				            		$("#cesium_custom_attribution").append(
-					            		"<div id='" + overlay.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;'>"+
+					            		"<div id='" + overlay.get("name").replace(/[^A-Z0-9]/ig, "_") + "' style='float: left;margin-left: 3px;'>"+
 					            		overlay.get("view").attribution +
 					            		"</div>");
 					            }
@@ -1203,6 +1258,7 @@ define(['backbone.marionette',
             			var range = parameters[band].range;
             			var outlines = product.get("outlines");
             			var height = product.get("height");
+            			var contours = product.get("contours");
 
             			var coeff_range = product.get("coefficients_range");
 
@@ -1247,6 +1303,10 @@ define(['backbone.marionette',
 
 				                	ces_layer.imageryProvider.updateProperties("elevation", height);
 
+				                	if(contours)
+				                		ces_layer.imageryProvider.updateProperties("dim_contours", 1);
+				                	else
+				                		ces_layer.imageryProvider.updateProperties("dim_contours", 0);
 				                	if(style)
 				                		ces_layer.imageryProvider.updateProperties("styles", style);
 				                	if(coeff_range)
@@ -1534,7 +1594,6 @@ define(['backbone.marionette',
                     	
 	                    ctx.drawSvg(svg_html, 0, 0, renderHeight, renderWidth);
 
-	                    //var image = this.plot.getColorScaleImage().toDataURL("image/jpg");
 	                    var image = c.toDataURL("image/jpg");
 	                    var newmat = new Cesium.Material.fromType('Image', {
 	                        image : image,
@@ -1558,7 +1617,7 @@ define(['backbone.marionette',
 
 	                    svgContainer.remove();
 					};
-					setTimeout(renderOnScreen, 0);
+					setTimeout(renderOnScreen, 50);
 
                 }
 
@@ -1968,30 +2027,47 @@ define(['backbone.marionette',
 				}
 			},
 
+
 			handleTick: function(clock) {
 				// TODO: Cesium does not provide a method to know when the camera has stopped, 
 				//       this approach is not ideal, when the movement mantains inertia difference 
 				//       values are very low and there are comparison errors.
-			    var camera = this.map.scene.camera;
+			    var c = this.map.scene.camera;
+
+			    var th = [10000, 10000, 10000];
+			    // If current mode is either Columbus or Scene2D lower threshold
+			    if(this.map.scene.mode == 1 || this.map.scene.mode == 2){
+					th = [0, 0, 0];
+			    }
 
 			    if (!this.camera_is_moving){
-			    	if (Math.abs(this.camera_last_position.x - camera.position.x) > 10000 &&
-			    		Math.abs(this.camera_last_position.y - camera.position.y) > 10000 &&
-			    		Math.abs(this.camera_last_position.z - camera.position.z) > 10000 ){
+			    	if (Math.abs(this.camera_last_position.x - c.position.x) > th[0] &&
+			    		Math.abs(this.camera_last_position.y - c.position.y) > th[1] &&
+			    		Math.abs(this.camera_last_position.z - c.position.z) >= th[2] ){
 
 			    		this.camera_is_moving = true;
 			    	}
 			    }else{
-			    	if (Math.abs(this.camera_last_position.x - camera.position.x) < 10000 &&
-			    		Math.abs(this.camera_last_position.y - camera.position.y) < 10000 &&
-			    		Math.abs(this.camera_last_position.z - camera.position.z) < 10000 ){
+			    	
+			    	if (Math.abs(this.camera_last_position.x - c.position.x) <= th[0] &&
+			    		Math.abs(this.camera_last_position.y - c.position.y) <= th[1] &&
+			    		Math.abs(this.camera_last_position.z - c.position.z) <= th[2] ){
 
 			    		this.camera_is_moving = false;
 			    		Communicator.mediator.trigger("map:position:change", this.getMapExtent() );
+
+			    		localStorage.setItem('cameraPosition', JSON.stringify({
+								position: [c.position.x, c.position.y,c.position.z],
+								direction: [c.direction.x, c.direction.y,c.direction.z],
+								up: [c.up.x, c.up.y,c.up.z],
+								right: [c.right.x, c.right.y,c.right.z]
+							})
+						);
+
 			    	}else{
-			    		this.camera_last_position.x = camera.position.x;
-			    		this.camera_last_position.y = camera.position.y;
-			    		this.camera_last_position.z = camera.position.z;
+			    		this.camera_last_position.x = c.position.x;
+			    		this.camera_last_position.y = c.position.y;
+			    		this.camera_last_position.z = c.position.z;
 			    	}
 			    }
 			},

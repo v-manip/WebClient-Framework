@@ -47,15 +47,24 @@
 				$('#charliecheck').prop('checked', globals.swarm.satellites["Charlie"]);
 
 				$('#alphacheck').change(function(evt){
-					globals.swarm.satellites["Alpha"] = $('#alphacheck').is(':checked');
+					globals.swarm.satellites['Alpha'] = $('#alphacheck').is(':checked');
+					if (typeof(Storage) !== 'undefined') {
+						localStorage.setItem('satelliteSelection', JSON.stringify(globals.swarm.satellites));
+					}
 					self.checkMultiProduct();
 				});
 				$('#bravocheck').change(function(evt){
-					globals.swarm.satellites["Bravo"] = $('#bravocheck').is(':checked');
+					globals.swarm.satellites['Bravo'] = $('#bravocheck').is(':checked');
+					if (typeof(Storage) !== 'undefined') {
+						localStorage.setItem('satelliteSelection', JSON.stringify(globals.swarm.satellites));
+					}
 					self.checkMultiProduct();
 				});
 				$('#charliecheck').change(function(evt){
 					globals.swarm.satellites["Charlie"] = $('#charliecheck').is(':checked');
+					if (typeof(Storage) !== 'undefined') {
+						localStorage.setItem('satelliteSelection', JSON.stringify(globals.swarm.satellites));
+					}
 					self.checkMultiProduct();
 				});
 
@@ -88,26 +97,27 @@
 						if(p.get("visible")){
 
 							if($('#alphacheck').is(':checked')){
-		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Alpha']) == -1){
-		                			globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Alpha']);
+		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get('id')]['Alpha']) === -1){
+		                			globals.swarm.activeProducts.push(globals.swarm.products[p.get('id')]['Alpha']);
 		                		}
 		                	}
 
 		                	if ($('#bravocheck').is(':checked')){
-		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Bravo']) == -1){
-			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Bravo']);
+		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get('id')]['Bravo']) === -1){
+			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get('id')]['Bravo']);
 			                	}
 		                	}
 
 		                	if($('#charliecheck').is(':checked')){
-		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get("id")]['Charlie']) == -1){
-			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get("id")]['Charlie']);
+		                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[p.get('id')]['Charlie']) === -1){
+			                		globals.swarm.activeProducts.push(globals.swarm.products[p.get('id')]['Charlie']);
 			                	}
 		                	}
 
 	                	}
 	                }
 				});
+
 
         		for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
 

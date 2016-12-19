@@ -62,18 +62,19 @@
         if(invalid_models.length>0){
           var invalid_models_string = '';
           for (var i = invalid_models.length - 1; i >= 0; i--) {
-            invalid_models_string += invalid_models[i].model+':' + start + ' - ' + end + '<br>';
+            invalid_models_string += invalid_models[i].model+' validity:  ' + 
+              getISODateTimeString(invalid_models[i].start).slice(0, -5) +'Z - ' + 
+              getISODateTimeString(invalid_models[i].end).slice(0, -5) + 'Z<br>';
           }
 
-          $("#error-messages").append(
-              '<div class="alert alert-warning validitywarning">'+
-                '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                '<strong>Warning!</strong> The current time selection is outside the validity of the model, '+
+          showMessage('warning', (
+            'The current time selection is outside the validity of the model, '+
                 'data is displayed for the last valid date, please take this into consideration when analysing the data.<br>'+
                 invalid_models_string+
-                'Tip: You can see the validity of the model in the time slider.'+
-              '</div>'
-            );
+                'Tip: You can see the validity of the model in the time slider.'
+            
+)          , 30, 'validitywarning');
+
         }
       },
 
@@ -157,6 +158,7 @@
               } 
           }
         }
+        localStorage.setItem('swarmProductSelection', JSON.stringify(this.activeWPSproducts));
         this.checkSelections();
         this.checkModelValidity();
       },

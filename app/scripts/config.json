@@ -133,7 +133,6 @@
         }],
         "products": [{
             "name": "MAGA LR 1B",
-            "visible": true,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -279,7 +278,6 @@
 
         },{
             "name": "MAGB LR 1B",
-            "visible": false,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -424,7 +422,6 @@
             "satellite": "Swarm"
         },{
             "name": "MAGC LR 1B",
-            "visible": false,
             "color": "#1f77b4",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -596,14 +593,14 @@
                 "n": {
                     "range": [100000, 200000],
                     "uom":"cm -3",
-                    "colorscale": "jet",
+                    "colorscale": "plasma",
                     "selected": true,
                     "name": "Plasma density"
                 },
                 "T_elec": {
                     "range": [1000, 5000],
                     "uom":"K",
-                    "colorscale": "jet",
+                    "colorscale": "portland",
                     "name": "Plasma electron temperature"
                 },
                 "U_SC": {
@@ -814,14 +811,14 @@
                 "n": {
                     "range": [100000, 200000],
                     "uom":"cm -3",
-                    "colorscale": "jet",
+                    "colorscale": "plasma",
                     "selected": true,
                     "name": "Plasma density"
                 },
                 "T_elec": {
                     "range": [1000, 5000],
                     "uom":"K",
-                    "colorscale": "jet",
+                    "colorscale": "portland",
                     "name": "Plasma electron temperature"
                 },
                 "U_SC": {
@@ -1032,14 +1029,14 @@
                 "n": {
                     "range": [100000, 200000],
                     "uom":"cm -3",
-                    "colorscale": "jet",
+                    "colorscale": "plasma",
                     "selected": true,
                     "name": "Plasma density"
                 },
                 "T_elec": {
                     "range": [1000, 5000],
                     "uom":"K",
-                    "colorscale": "jet",
+                    "colorscale": "portland",
                     "name": "Plasma electron temperature"
                 },
                 "U_SC": {
@@ -1522,25 +1519,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Fieldlines":{
                     "range": [1, 40000],
@@ -1554,19 +1551,19 @@
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Y_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1632,25 +1629,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Fieldlines":{
                     "range": [1, 40000],
@@ -1664,19 +1661,19 @@
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Y_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1742,25 +1739,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-45000, 45000],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Fieldlines":{
                     "range": [1, 40000],
@@ -1774,19 +1771,19 @@
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Y_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z_EW": {
                     "range": [-5, 5],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1843,25 +1840,25 @@
                     "range": [-7000, 7000],
                     "uom":"nT",
                     "name": "East component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "Z": {
                     "range": [-200, 200],
                     "uom":"nT",
                     "name": "Down component",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "I": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Inclination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 },
                 "D": {
                     "range": [-80, 80],
                     "uom":"degree",
                     "name": "Declination",
-                    "colorscale": "custom1"
+                    "colorscale": "diverging_1"
                 }
             },
             "download_parameters": {
@@ -1944,58 +1941,89 @@
             "download": {}
         }],
         "overlays": [{
-            "name": "Coastline",
-            "id": "coastline",
-            "protocol": "WMTS",
+            "name": "Coastlines and Countries",
             "visible": false,
-            "urls": [
-                "//a.tiles.maps.eox.at/wmts/",
-                "//b.tiles.maps.eox.at/wmts/",
-                "//c.tiles.maps.eox.at/wmts/",
-                "//d.tiles.maps.eox.at/wmts/",
-                "//e.tiles.maps.eox.at/wmts/"
-            ],
-            "matrixSet": "WGS84",
-            "style": "default",
-            "format": "image/png",
-            "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
-            "resolutions": [0.70312500000000000000, 0.35156250000000000000, 0.17578125000000000000, 0.08789062500000000000, 0.04394531250000000000, 0.02197265625000000000, 0.01098632812500000000, 0.00549316406250000000, 0.00274658203125000000, 0.00137329101562500000, 0.00068664550781250000, 0.00034332275390625000, 0.00017166137695312500, 0.00008583068847656250, 0.00004291534423828120, 0.00002145767211914060, 0.00001072883605957030, 0.00000536441802978516],
-            "projection": "EPSG:4326",
-            "gutter": 0,
-            "buffer": 0,
-            "units": "dd",
-            "transitionEffect": "resize",
-            "isphericalMercator": false,
-            "wrapDateLine": true,
-            "zoomOffset": 0,
-            "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> contrib., Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
+            "view":{
+                "id": "coastline_black",
+                "protocol": "WMTS",
+                "urls": [
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
+                ],
+                "matrixSet": "WGS84",
+                "style": "default",
+                "format": "image/png",
+                "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+                "projection": "EPSG:4326",
+                "gutter": 0,
+                "buffer": 0,
+                "units": "dd",
+                "transitionEffect": "resize",
+                "isphericalMercator": false,
+                "wrapDateLine": true,
+                "zoomOffset": 0,
+                "attribution": " Coastlines and Countries { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> & Natural Earth, Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
+            }
         },
         {
-            "name": "Borders and Labels",
-            "id": "overlay_base",
-            "protocol": "WMTS",
+            "name": "Graticule",
             "visible": false,
-            "urls": [
-                "//a.tiles.maps.eox.at/wmts/",
-                "//b.tiles.maps.eox.at/wmts/",
-                "//c.tiles.maps.eox.at/wmts/",
-                "//d.tiles.maps.eox.at/wmts/",
-                "//e.tiles.maps.eox.at/wmts/"
-            ],
-            "matrixSet": "WGS84",
-            "style": "default",
-            "format": "image/png",
-            "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
-            "resolutions": [0.70312500000000000000, 0.35156250000000000000, 0.17578125000000000000, 0.08789062500000000000, 0.04394531250000000000, 0.02197265625000000000, 0.01098632812500000000, 0.00549316406250000000, 0.00274658203125000000, 0.00137329101562500000, 0.00068664550781250000, 0.00034332275390625000, 0.00017166137695312500, 0.00008583068847656250, 0.00004291534423828120, 0.00002145767211914060, 0.00001072883605957030, 0.00000536441802978516],
-            "projection": "EPSG:4326",
-            "gutter": 0,
-            "buffer": 0,
-            "units": "dd",
-            "transitionEffect": "resize",
-            "isphericalMercator": false,
-            "wrapDateLine": true,
-            "zoomOffset": 0,
-            "attribution": "Overlay { Data &copy; <a href=\"http://www.openstreetmap.org/copyright\" target=\"_blank\">OSM</a> contrib., Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> and <a href=\"https://github.com/mapserver/basemaps\" target=\"_blank\">MapServer</a> }"
+            "view":{
+                "id": "graticules",
+                "protocol": "WMTS",
+                "urls": [
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
+                ],
+                "matrixSet": "WGS84",
+                "style": "default",
+                "format": "image/png",
+                "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+                
+                "projection": "EPSG:4326",
+                "gutter": 0,
+                "buffer": 0,
+                "units": "dd",
+                "transitionEffect": "resize",
+                "isphericalMercator": false,
+                "wrapDateLine": true,
+                "zoomOffset": 0,
+                "attribution": " Graticule { Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+            }
+        },
+        {
+            "name": "Magnetic Graticule",
+            "visible": false,
+            "view":{
+                "id": "magnetic_graticules",
+                "protocol": "WMTS",
+                "urls": [
+                    "//a.tiles.maps.eox.at/wmts/",
+                    "//b.tiles.maps.eox.at/wmts/",
+                    "//c.tiles.maps.eox.at/wmts/",
+                    "//d.tiles.maps.eox.at/wmts/",
+                    "//e.tiles.maps.eox.at/wmts/"
+                ],
+                "matrixSet": "WGS84",
+                "style": "default",
+                "format": "image/png",
+                "maxExtent": [-180.000000, -90.000000, 180.000000, 90.000000],
+                "projection": "EPSG:4326",
+                "gutter": 0,
+                "buffer": 0,
+                "units": "dd",
+                "transitionEffect": "resize",
+                "isphericalMercator": false,
+                "wrapDateLine": true,
+                "zoomOffset": 0,
+                "attribution": " Mag. Graticule { Rendering &copy; <a href=\"http://eox.at\" target=\"_blank\">EOX</a> }"
+            }
         }]
     },
 
@@ -2065,13 +2093,17 @@
             "name": "About",
             "icon": "fa-info-circle",
             "eventToRaise": "dialog:open:about"
+        }, {
+            "name": "Reset",
+            "icon": "fa-refresh",
+            "eventToRaise": "application:reset"
         }]
     },
 
     "timeSlider": {
         "domain": {
-            "start": "2013-10-17T10:15:00Z",
-            "end": "2014-10-17T11:45:00Z"
+            "start": "2000-02-28T01:00:00Z",
+            "end": "2018-03-05T01:00:00Z"
         },
         "brush": {
             "start": "2016-03-02T10:00:00Z",
