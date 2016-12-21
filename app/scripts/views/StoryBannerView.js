@@ -131,7 +131,11 @@
           if(this.sections[index].hasAttribute('data-events')) {
             var events = this.sections[index].getAttribute('data-events').split(";");
             _.each(events, function(event){
-              Communicator.mediator.trigger(event);
+              if(event === 'layout:switch:singleview'){
+                Communicator.mediator.trigger(event, 'CesiumViewer');
+              }else{
+                Communicator.mediator.trigger(event);
+              }
             }, this);
           }
 
