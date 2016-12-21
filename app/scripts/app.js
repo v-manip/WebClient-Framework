@@ -671,15 +671,20 @@ var VECTOR_BREAKDOWN = {
 
 				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
 
-			    globals.products.each(function(product){
-					if(product.get("visible")){
-						Communicator.mediator.trigger("map:layer:change", {
-							name: product.get('name'),
-							isBaseLayer: false,
-							visible: true
-						})
-					}
-				}, this);
+				var activateproducts = function(){
+					globals.products.each(function(product){
+						if(product.get("visible")){
+							Communicator.mediator.trigger("map:layer:change", {
+								name: product.get('name'),
+								isBaseLayer: false,
+								visible: true
+							})
+						}
+					});
+				};
+
+				_.delay(activateproducts,200);
+			
 
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
