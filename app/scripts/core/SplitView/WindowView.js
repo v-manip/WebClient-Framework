@@ -28,7 +28,7 @@ define([
 			},
 
 			'click .globeview-btn': function() {
-				var options = {window:this, viewer:'VirtualGlobeViewer'};
+				var options = {window:this, viewer:'CesiumViewer'};
 				Communicator.mediator.trigger('window:view:change', options);
 			},
 
@@ -44,7 +44,7 @@ define([
 			},
 
 			'click .analyticsview-btn': function() {
-				var options = {window:this, viewer:'AnalyticsViewer'};
+				var options = {window:this, viewer:'AVViewer'};
 				Communicator.mediator.trigger('window:view:change', options);
 			}
 		},
@@ -61,6 +61,8 @@ define([
 			if (view.onResize) {
 				view.onResize();
 			}
+
+			this.delegateEvents();
 		}
 
 	});

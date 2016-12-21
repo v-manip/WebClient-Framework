@@ -15,19 +15,12 @@ $iconWhiteSpritePath: "../images/glyphicons-halflings-white.png";
 @import "colorramp";
 @import "story";
 @import "tooltip";
+@import "cesium";
+@import "layersettings";
+@import "spinner";
+@import "social";
+@import "download";
 
-/* Not used right now ;)
-#preloadedImages {
-       width: 0px;
-       height: 0px;
-       display: inline;
-       background-image: url(path/to/image1.png);
-       background-image: url(path/to/image2.png);
-       background-image: url(path/to/image3.png);
-       background-image: url(path/to/image4.png);
-       background-image: url();
-}
-*/
 
 /*
  * Basic styles
@@ -55,15 +48,17 @@ hr {
 }
 
 .not-selectable {
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
   -khtml-user-select: none;
-  -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
 }
 
-.colorlegend{
+
+/*
+ * Color legend attributes 
+ */
+
+#colorlegend{
   position: absolute;
   height: 75px;
   top: 60px;
@@ -83,8 +78,24 @@ hr {
 
 }
 
-.colorlegend img{
+#colorlegend img{
   border-radius: 5px;
+}
+
+#colorlegend g.axis line, #colorlegend g.axis path {
+    fill:none;
+    stroke: black;
+    shape-rendering:crispEdges;
+}
+
+#colorlegend g.axis text{
+    fill: black;
+    font-family:sans-serif;
+}
+
+#colorlegend > g.axis path {
+    stroke-width:2;
+    stroke: black;
 }
 
 
@@ -147,8 +158,13 @@ div#preload {
  */
 .panel .close {
   float: right;
-  margin: -.5em -.7em 0 0;
-  font-size: 1.2em;
+  margin: -.1em -.2em 0 0;
+  font-size: 2em;
+}
+
+#about .close{
+  margin: -.2em -.2em 0 0;
+  font-size: 2em;
 }
 
 .panel .no-label, .modal .no-label {
@@ -159,10 +175,24 @@ div#preload {
 
 .panel {
   z-index: $layer-gui;
+  box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.39)!important;
 }
 
-.modal{
-  overflow-y: hidden !important; 
+
+@media (min-width:768px){
+  #infoblock {    
+    width: 60%;
+    margin-left: -30%;
+    left: 50%;
+  }
+}
+
+#about ul li {
+  list-style-position: outside;
+}
+
+.panel-default {
+  border-color: #818080 !important;
 }
 
 
@@ -188,11 +218,12 @@ button[active=active] {
  * Layer control styles
  */
 .layercontrol {
-    width: 21.8em;
-    top: 10em;
+    width: 23.8em;
+    top: 8em;
     left: 3em;
     font-size: .9em;
     position: absolute;
+    z-index: 1031 !important;
 }
 .layercontrol ul {
     margin: 0 0 1em 1.5em;
@@ -220,9 +251,14 @@ button[active=active] {
   font-size: 1em;
   line-height: 1.1em;
 }
+.form-control {
+  padding-right: 6px !important;
+  padding-left: 6px !important;
+}
 .fa-sort {
     cursor: ns-resize;
 }
+
 
 /*
  * Tool control
@@ -284,6 +320,16 @@ button[active=active] {
 
 }
 
+#modal-start-download .input-group-btn{
+  height: 100%;
+}
+
+.delete-filter{
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+}
+
+
 /*
  * Empty view
  */
@@ -330,21 +376,8 @@ button[active=active] {
 /*
  * Time Slider
  */
-/*#timeslider {
-  position: fixed;
-  bottom: 2em;
-  width: 90%;
-  padding: 0 5%;
-}*/
-
-#timeslider svg.timeslider {
-  height: 4em;
-  -webkit-touch-callout: none;
-	-webkit-user-select: none;
-	-khtml-user-select: none;
-	-moz-user-select: none;
-	-ms-user-select: none;
-	user-select: none;
+.brush .extent {
+  fill-opacity: 0.8!important;
 }
 
 #viewContent{
@@ -353,6 +386,10 @@ button[active=active] {
 
 .tab-header {
 	 cursor: pointer;
+}
+
+.dropdown{
+  cursor: pointer;
 }
 
 .sidepane {
@@ -371,9 +408,16 @@ button[active=active] {
     opacity: 0.0;
     filter: alpha(opacity=0);
     -o-transform: translate(250px, -50px) scale(1);
-    -moz-transform: translate(-300px, 0) scale(4);
     direction: ltr;
     cursor: pointer;
+}
+
+.shcbutton{
+  width: 100%;
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+  overflow: hidden;
 }
 
  .myui-button
@@ -397,4 +441,18 @@ button[active=active] {
 
 .popover {
   position: fixed;
+}
+
+
+/* Util styles */
+
+#countdowncircle {
+  display: block;
+  position: absolute;
+  right: 30px;
+  margin-top: 6px;
+}
+
+#loader { 
+  fill: #999;
 }

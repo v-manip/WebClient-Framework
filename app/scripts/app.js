@@ -1,3 +1,22 @@
+
+var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability"];
+var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
+var VECTOR_BREAKDOWN = {
+	'SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
+	'IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
+	'CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+	'Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model'],
+	'B_NEC': ['B_N','B_E','B_C'],
+	'B_error': ['B_error,X', 'B_error,Y', 'B_error,Z'],
+	'B_VFM': ['B_VFM,X', 'B_VFM,Y', 'B_VFM,Z'],
+	'v_SC':  ['v_SC_N','v_SC_E','v_SC_C'],
+	'B_NEC_res_SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
+	'B_NEC_res_IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
+	'B_NEC_res_CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+	'B_NEC_res_Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model']
+};
+
+
 (function() {
 	'use strict';
 
@@ -20,7 +39,7 @@
 			'controller/LayerController',
 			'controller/SelectionController',
 			'controller/DifferenceController',
-			'vendor/colorlegend'
+			'controller/DataController'
 		],
 
 		function(Backbone, globals, DialogRegion,
@@ -51,6 +70,9 @@
 					hide: { effect: false, duration: 0 },
 					show:{ effect: false, delay: 700}
 			    });
+
+				var imagerenderercanvas = $('<canvas/>',{id: 'imagerenderercanvas'});
+				$('body').append(imagerenderercanvas);
 
 
 				var v = {}; //views
@@ -83,17 +105,32 @@
 					t[tmplDef.id] = Tmpl;
 				}, this);
 
+				this.templates = t;
+				this.views = v;
+
 
 				//Map attributes are loaded and added to the global map model
 				globals.objects.add('mapmodel', new m.MapModel({
 						visualizationLibs : config.mapConfig.visualizationLibs,
 						center: config.mapConfig.center,
-						zoom: config.mapConfig.zoom
+						zoom: config.mapConfig.zoom,
+						sun: _.has(config.mapConfig, 'showSun') ? config.mapConfig.showSun: true,
+						moon: _.has(config.mapConfig, 'showMoon') ? config.mapConfig.showMoon: true,
+						skyBox: _.has(config.mapConfig, 'showSkyBox') ? config.mapConfig.showSkyBox: true,
+						skyAtmosphere: _.has(config.mapConfig, 'skyAtmosphere') ? config.mapConfig.skyAtmosphere: true,
+						backgroundColor: _.has(config.mapConfig, 'backgroundColor') ? config.mapConfig.backgroundColor: "#000"
 					})
 				);
 
 
 				//Base Layers are loaded and added to the global collection
+				// If there are already saved baselayer config in the local
+				// storage use that instead
+
+				if(localStorage.getItem('baseLayersConfig') !== null){
+					config.mapConfig.baseLayers = JSON.parse(localStorage.getItem('baseLayersConfig'));
+				}
+
 				_.each(config.mapConfig.baseLayers, function(baselayer) {
 
 					globals.baseLayers.add(
@@ -139,30 +176,63 @@
                 var domain = [];
                 var range = [];
 
+                // Remove three first colors as they are used by the products
+                autoColor.getColor();autoColor.getColor();autoColor.getColor();
+
+                // If there are already saved product config in the local
+				// storage use that instead
+
+				if(localStorage.getItem('productsConfig') !== null){
+					config.mapConfig.products = JSON.parse(localStorage.getItem('productsConfig'));
+				}
+
 				_.each(config.mapConfig.products, function(product) {
 					var p_color = product.color ? product.color : autoColor.getColor();
-					globals.products.add(
-						new m.LayerModel({
-							name: product.name,
-							visible: product.visible,
-                            ordinal: ordinal,
-							timeSlider: product.timeSlider,
-							// Default to WMS if no protocol is defined
-							timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
-							color: p_color,
-							//time: products.time, // Is set in TimeSliderView on time change.
-								opacity: 1,
-								views: product.views,
-								view: {isBaseLayer: false},
-								download: {
-									id: product.download.id,
-									protocol: product.download.protocol,
-									url: product.download.url
-								},
-								processes: product.processes,
-								unit: product.unit 
-							})
-					);
+					var lm = new m.LayerModel({
+						name: product.name,
+						visible: product.visible,
+                        ordinal: ordinal,
+						timeSlider: product.timeSlider,
+						// Default to WMS if no protocol is defined
+						timeSliderProtocol: (product.timeSliderProtocol) ? product.timeSliderProtocol : "WMS",
+						color: p_color,
+						//time: products.time, // Is set in TimeSliderView on time change.
+						opacity: (product.opacity) ? product.opacity : 1,
+						views: product.views,
+						view: {isBaseLayer: false},
+						download: {
+							id: product.download.id,
+							protocol: product.download.protocol,
+							url: product.download.url
+						},
+						processes: product.processes,
+						unit: product.unit,
+						parameters: product.parameters,
+						download_parameters: product.download_parameters,
+						height: product.height,
+						outlines: product.outlines,
+						model: product.model,
+						coefficients_range: product.coefficients_range,
+						satellite: product.satellite,
+						tileSize: (product.tileSize) ? product.tileSize : 256,
+						validity: product.validity,
+						showColorscale: true
+					});
+
+					if(lm.get('model')){
+						lm.set('contours', defaultFor( product.contours,false));
+					}
+
+					if(lm.get('download').id === 'Custom_Model'){
+						var shcFile = localStorage.getItem('shcFile');
+						if(shcFile !== null){
+							shcFile = JSON.parse(shcFile);
+							lm.set('shc', shcFile.data);
+							lm.set('shc_name', shcFile.name);
+						}
+					}
+					
+					globals.products.add(lm);
 
 					if(product.processes){
 						domain.push(product.processes[0].layer_id);
@@ -175,7 +245,11 @@
 				var productcolors = d3.scale.ordinal().domain(domain).range(range);
 
 				globals.objects.add('productcolors', productcolors);
-	      	
+
+				// If there is already saved overly configuration use that
+				if(localStorage.getItem('overlaysConfig') !== null){
+					config.mapConfig.overlays = JSON.parse(localStorage.getItem('overlaysConfig'));
+				}
 				//Overlays are loaded and added to the global collection
 				_.each(config.mapConfig.overlays, function(overlay) {
 
@@ -184,32 +258,11 @@
 								name: overlay.name,
 								visible: overlay.visible,
 								ordinal: ordinal,
-								view: {
-									id: overlay.id,
-									urls: overlay.urls,
-									protocol: overlay.protocol,
-									projection: overlay.projection,
-									attribution: overlay.attribution,
-									matrixSet: overlay.matrixSet,
-									style: overlay.style,
-									format: overlay.format,
-									resolutions: overlay.resolutions,
-									maxExtent: overlay.maxExtent,
-									gutter: overlay.gutter,
-									buffer: overlay.buffer,
-									units: overlay.units,
-									transitionEffect: overlay.transitionEffect,
-									isphericalMercator: overlay.isphericalMercator,
-									isBaseLayer: false,
-									wrapDateLine: overlay.wrapDateLine,
-									zoomOffset: overlay.zoomOffset,
-									//time: overlay.time // Is set in TimeSliderView on time change.
-								}
+								view: overlay.view
 							})
 						);
 						console.log("Added overlay " + overlay.id);
 					}, this);
-
 
 
 				// If Navigation Bar is set in configuration go trhough the 
@@ -217,15 +270,14 @@
 				// by the marionette collection view
 				if (config.navBarConfig) {
 
+					var addNavBarItems = defaultFor(self.NAVBARITEMS, []);
+					config.navBarConfig.items = config.navBarConfig.items.concat(addNavBarItems);
 					var navBarItemCollection = new m.NavBarCollection;
 
 					_.each(config.navBarConfig.items, function(list_item){
 						navBarItemCollection.add(
-							new m.NavBarItemModel({
-								name:list_item.name,
-                                icon:list_item.icon,
-								eventToRaise:list_item.eventToRaise
-							}));
+							new m.NavBarItemModel(list_item)
+						);
 					}, this);
 
 					this.topBar.show(new v.NavBarCollectionView(
@@ -266,8 +318,133 @@
                 	})
                 });
 
+                // We want to have the full list of products as the underlying
+				// system works in this manner but in order to accomodate the 
+				// concept of one product with three satellites we remove here 
+				// Each three products and combine them to one, the logic for
+				// "separating" them is then done when activating one of this
+				// "special products"
+
+                var filtered = globals.products.filter(function (m) {
+					if (m && m.get("download").id && 
+						 (
+						 	m.get("download").id.indexOf("SW_OPER_MAG") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_EFI") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_IBI") != -1
+						 )
+					){
+						return false;
+					}else{
+						return true;
+					}
+		        });
+
+		        globals.swarm["satellites"] = {
+		        	"Alpha": true,
+		        	"Bravo": false,
+		        	"Charlie": false
+		        };
+
+		        if(localStorage.getItem("satelliteSelection") !== null){
+		        	globals.swarm.satellites = JSON.parse(localStorage.getItem("satelliteSelection"));
+		        }
+
+		        globals.swarm["products"] = {
+		        	"MAG": {
+		        		"Alpha": "SW_OPER_MAGA_LR_1B",
+		        		"Bravo": "SW_OPER_MAGB_LR_1B",
+		        		"Charlie": "SW_OPER_MAGC_LR_1B"
+		        	},
+		        	"EFI":  {
+		        		"Alpha": "SW_OPER_EFIA_PL_1B",
+		        		"Bravo": "SW_OPER_EFIB_PL_1B",
+		        		"Charlie": "SW_OPER_EFIC_PL_1B"
+		        	},
+		        	"IBI":  {
+		        		"Alpha": "SW_OPER_IBIATMS_2F",
+		        		"Bravo": "SW_OPER_IBIBTMS_2F",
+		        		"Charlie": "SW_OPER_IBICTMS_2F"
+		        	}
+		        };
+
+		        globals.swarm["activeProducts"] = [];
+		        
+		        var filtered_collection = new Backbone.Collection(filtered);
+
+		        var containerSelection = {
+		        	'MAG': true,
+		        	'EFI': false,
+		        	'IBI': false
+		        };
+
+		        var clickEvent = "require(['communicator'], function(Communicator){Communicator.mediator.trigger('application:reset');});";
+
+		        if(localStorage.getItem("containerSelection") !== null){
+		        	containerSelection = JSON.parse(localStorage.getItem("containerSelection"));
+		        	showMessage('success',
+		        	 'The configuration of your last visit has been loaded, '+
+		        	 'if you would like to reset to the default configuration click '+
+		        	 '<b><a href="javascript:void(0);" onclick="'+clickEvent+'">here</a></b> '+
+		        	 'or on the Reset button above.', 35);
+		        }else{
+		        	localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
+		        }
+
+		        var csKeys = _.keys(containerSelection);
+		        for (var i = csKeys.length - 1; i >= 0; i--) {
+		        	if(containerSelection[csKeys[i]]){
+		        		var satKeys = _.keys(globals.swarm.products[csKeys[i]]);
+		        		for (var j = satKeys.length - 1; j >= 0; j--) {
+		        			if(globals.swarm.satellites[satKeys[j]]){
+		        				globals.swarm.activeProducts.push(
+		        					globals.swarm.products[csKeys[i]][satKeys[j]]
+		        				);
+		        			}
+		        		}
+		        	}
+		        }
+
+	        	for (var i = globals.swarm.activeProducts.length - 1; i >= 0; i--) {
+		        	globals.products.forEach(function(p){
+            			if(p.get("download").id == globals.swarm.activeProducts[i]){
+            				if(!p.get("visible")){
+	            				p.set("visible", true);
+            				}
+            			}
+            		});
+		        }
+
+
+
+		        // Add generic product (which is container for A,B and C sats)
+				filtered_collection.add({
+					name: "Bubble Index data (IBI)",
+					visible: containerSelection['IBI'],
+					color: "#2ca02c",
+					protocol: null,
+					containerproduct: true,
+					id: "IBI"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Plasma data (EFI PL)",
+					visible: containerSelection['EFI'],
+					color: "#ff7f0e",
+					protocol: null,
+					containerproduct: true,
+					id: "EFI"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Magnetic data (MAG LR)",
+					visible: containerSelection['MAG'],
+					color: "#1f77b4",
+					protocol: null,
+					containerproduct: true,
+					id: "MAG"
+				}, {at: 0});
+
+
                 this.productsView = new v.LayerSelectionView({
-                	collection:globals.products,
+                	collection: filtered_collection,
                 	itemView: v.LayerItemView.extend({
                 		template: {
                 			type:'handlebars',
@@ -276,6 +453,8 @@
                 	}),
                 	className: "sortable"
                 });
+
+                globals.swarm["filtered_collection"] = filtered_collection;
 
                 this.overlaysView = new v.BaseLayerSelectionView({
                 	collection: globals.overlays,
@@ -287,6 +466,8 @@
                 	}),
                 	className: "check"
                 });
+
+
 
                 // Create layout that will hold the child views
                 this.layout = new LayerControlLayout();
@@ -370,20 +551,23 @@
                     })
                 });
 
+
+                this.layerSettings = new v.LayerSettings();
+
                 // Create layout to hold collection views
                 this.toolLayout = new ToolControlLayout();
                 this.optionsLayout = new OptionsLayout();
 
                 // Instance timeslider view
                 this.timeSliderView = new v.TimeSliderView(config.timeSlider);
-                this.colorRampView = new v.ColorRampView(config.colorRamp);
 
-                // Instance StoryBanner view
-                if(config.storyTemplate){
-                	this.storyBanner = new v.StoryBannerView({
-	                	template: t[config.storyTemplate]
-	                });
-                }
+                // Load possible available filter selection
+				if(localStorage.getItem('filterSelection') !== null){
+					globals.swarm.set('filters', JSON.parse(localStorage.getItem('filterSelection')));
+				}
+
+				
+
 
 			},
 
@@ -396,8 +580,7 @@
 				var splitview = this.module('SplitView').createController();
 				this.main.show(splitview.getView());
 
-				splitview.setSinglescreen();
-
+				
 				// Show Timsliderview after creating modules to
 				// set the selected time correctly to the products
 				this.bottomBar.show(this.timeSliderView);
@@ -406,6 +589,53 @@
 				/*if(this.storyBanner){
 					this.storyView.show(this.storyBanner);
 				}*/
+
+				if ( (typeof(Storage) !== "undefined") && localStorage.getItem("viewSelection") !== null) {
+					if(localStorage.getItem('viewSelection') == 'split'){
+						splitview.setSplitscreen();
+					}
+					if(localStorage.getItem('viewSelection') == 'globe'){
+						splitview.setSinglescreen('CesiumViewer');
+					}
+					if( localStorage.getItem('viewSelection') == 'analytics'){
+						splitview.setSinglescreen('AVViewer');
+					}
+				}else{
+					splitview.setSplitscreen();
+				}
+
+				// Try to get CSRF token, if available set it for necesary ajax requests
+				function getCookie(name) {
+				    var cookieValue = null;
+				    if (document.cookie && document.cookie != '') {
+				        var cookies = document.cookie.split(';');
+				        for (var i = 0; i < cookies.length; i++) {
+				            var cookie = jQuery.trim(cookies[i]);
+				            // Does this cookie string begin with the name we want?
+				            if (cookie.substring(0, name.length + 1) == (name + '=')) {
+				                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+				                break;
+				            }
+				        }
+				    }
+				    return cookieValue;
+				}
+				var csrftoken = getCookie('csrftoken');
+
+				function csrfSafeMethod(method) {
+				    // these HTTP methods do not require CSRF protection
+				    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+				}
+
+				if(csrftoken){
+					$.ajaxSetup({
+					    beforeSend: function(xhr, settings) {
+					        if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+					            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+					        }
+					    }
+					});
+				}
 
 			    // Add a trigger for ajax calls in order to display loading state
                 // in mouse cursor to give feedback to the user the client is busy
@@ -422,12 +652,7 @@
 				        return;
 				    }
 
-                    $("#error-messages").append(
-                              '<div class="alert alert-warning alert-danger">'+
-                              '<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>'+
-                              '<strong>Warning!</strong> Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0] +
-                            '</div>'
-                    );
+				    showMessage('danger', ('Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0]), 15);
                 });
 
                 // The tooltip is called twice at beginning and end, it seems to show the style of the
@@ -439,21 +664,30 @@
 					show:{ effect: false, delay: 700}
 			    });
 
+			    // Broadcast possible area selection
+				if(localStorage.getItem('areaSelection') !== null){
+					Communicator.mediator.trigger('selection:changed', JSON.parse(localStorage.getItem('areaSelection')));
+				}
+
+				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
+
+				var activateproducts = function(){
+					globals.products.each(function(product){
+						if(product.get("visible")){
+							Communicator.mediator.trigger("map:layer:change", {
+								name: product.get('name'),
+								isBaseLayer: false,
+								visible: true
+							})
+						}
+					});
+				};
+
+				_.delay(activateproducts,200);
+			
+
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
-
-
-                var data = [-10,0,1,3,5,7,8,10];
-				var min = d3.min(data);
-				var mean = d3.sum(data) / data.length;
-				var max = d3.max(data);
-
-				
-				// linear scale, 2 colors
-				/*var lScale = d3.scale.linear()
-				.domain([-1, 0, max])
-				.range(["rgb(255, 0, 0)", "rgb(255, 255, 255)", "rgb( 0, 0, 255)"]);
-				colorlegend("#colorlegend", lScale, "linear", {title: "Difference of  to ", boxHeight: 15, boxWidth: 50, linearBoxes:9});*/
 
 
 			}
