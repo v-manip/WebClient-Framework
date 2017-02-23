@@ -267,7 +267,10 @@
             "v_SC", "Bubble_Probability", "Kp", "Dst", "QDLat", "QDLon", "MLT",
             "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
             "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
-            "F_res_CHAOS-5-Combined", "F_res_Custom_Model"
+            "F_res_CHAOS-5-Combined", "F_res_Custom_Model",
+            "Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
+            //"S1", "S2", "P1", "P2", "L1", "L2", "DCB",
+            "IRC", "FAC"
           ];
 
           // See if magnetic data actually selected if not remove residuals

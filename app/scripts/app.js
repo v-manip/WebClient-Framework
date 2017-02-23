@@ -1,6 +1,13 @@
 
-var SCALAR_PARAM = ["F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability"];
-var VECTOR_PARAM = ["B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"];
+var SCALAR_PARAM = [
+	"F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability",
+	"Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC", "IRC", "FAC"
+];
+
+var VECTOR_PARAM = [
+	"B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"
+];
+
 var VECTOR_BREAKDOWN = {
 	'SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
 	'IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
@@ -183,7 +190,26 @@ var VECTOR_BREAKDOWN = {
 				// storage use that instead
 
 				if(localStorage.getItem('productsConfig') !== null){
-					config.mapConfig.products = JSON.parse(localStorage.getItem('productsConfig'));
+					// Need to check if we need to migrate user data to new version (new data)
+					var product_config = JSON.parse(localStorage.getItem('productsConfig'));
+
+					// Go through products in original configuration file and see if available
+					// in user configuration, if not add them to it
+					var m_p = config.mapConfig.products;
+					for (var i = 0; i < m_p.length; i++) {
+						if(product_config.length>i){
+							if(product_config[i].download.id != m_p[i].download.id){
+								// If id is not the same a new product was inserted and thus 
+								// needs to be inserted into the old configuration of the user
+								product_config.splice(i, 0, m_p[i]);
+							}
+						}else{
+							// If length of config is longer then user config new data was apended
+							product_config.push(m_p[i]);
+						}
+					}
+
+					config.mapConfig.products = product_config;
 				}
 
 				_.each(config.mapConfig.products, function(product) {
@@ -314,23 +340,25 @@ var VECTOR_BREAKDOWN = {
                 		template: {
                 			type:'handlebars',
                 			template: t.BulletLayer},
-                		className: "radio"
+                		className: "radio-inline"
                 	})
                 });
 
-                // We want to have the full list of products as the underlying
+        // We want to have the full list of products as the underlying
 				// system works in this manner but in order to accomodate the 
 				// concept of one product with three satellites we remove here 
 				// Each three products and combine them to one, the logic for
 				// "separating" them is then done when activating one of this
 				// "special products"
 
-                var filtered = globals.products.filter(function (m) {
+          var filtered = globals.products.filter(function (m) {
 					if (m && m.get("download").id && 
 						 (
 						 	m.get("download").id.indexOf("SW_OPER_MAG") != -1 ||
 						 	m.get("download").id.indexOf("SW_OPER_EFI") != -1 ||
-						 	m.get("download").id.indexOf("SW_OPER_IBI") != -1
+						 	m.get("download").id.indexOf("SW_OPER_IBI") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_TEC") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_FAC") != -1
 						 )
 					){
 						return false;
@@ -364,6 +392,16 @@ var VECTOR_BREAKDOWN = {
 		        		"Alpha": "SW_OPER_IBIATMS_2F",
 		        		"Bravo": "SW_OPER_IBIBTMS_2F",
 		        		"Charlie": "SW_OPER_IBICTMS_2F"
+		        	},
+		        	"TEC":  {
+		        		"Alpha": "SW_OPER_TECATMS_2F",
+		        		"Bravo": "SW_OPER_TECBTMS_2F",
+		        		"Charlie": "SW_OPER_TECCTMS_2F"
+		        	},
+		        	"FAC":  {
+		        		"Alpha": "SW_OPER_FACATMS_2F",
+		        		"Bravo": "SW_OPER_FACBTMS_2F",
+		        		"Charlie": "SW_OPER_FACCTMS_2F"
 		        	}
 		        };
 
@@ -374,13 +412,25 @@ var VECTOR_BREAKDOWN = {
 		        var containerSelection = {
 		        	'MAG': true,
 		        	'EFI': false,
-		        	'IBI': false
+		        	'IBI': false,
+		        	'TEC': false,
+		        	'FAC': false
 		        };
 
 		        var clickEvent = "require(['communicator'], function(Communicator){Communicator.mediator.trigger('application:reset');});";
 
 		        if(localStorage.getItem("containerSelection") !== null){
 		        	containerSelection = JSON.parse(localStorage.getItem("containerSelection"));
+
+		        	// Migration to newly available datasets
+		        	if (!containerSelection.hasOwnProperty('TEC')){
+		        		containerSelection.TEC = false;
+		        	}
+		        	if (!containerSelection.hasOwnProperty('FAC')){
+		        		containerSelection.FAC = false;
+		        	}
+
+
 		        	showMessage('success',
 		        	 'The configuration of your last visit has been loaded, '+
 		        	 'if you would like to reset to the default configuration click '+
@@ -417,6 +467,22 @@ var VECTOR_BREAKDOWN = {
 
 
 		        // Add generic product (which is container for A,B and C sats)
+		    filtered_collection.add({
+					name: "Currents data (FAC)",
+					visible: containerSelection['FAC'],
+					color: "#1f77b4",
+					protocol: null,
+					containerproduct: true,
+					id: "FAC"
+				}, {at: 0});
+				filtered_collection.add({
+					name: "Electron data (TEC)",
+					visible: containerSelection['TEC'],
+					color: "#1f77b4",
+					protocol: null,
+					containerproduct: true,
+					id: "TEC"
+				}, {at: 0});
 				filtered_collection.add({
 					name: "Bubble Index data (IBI)",
 					visible: containerSelection['IBI'],
@@ -441,6 +507,7 @@ var VECTOR_BREAKDOWN = {
 					containerproduct: true,
 					id: "MAG"
 				}, {at: 0});
+				
 
 
                 this.productsView = new v.LayerSelectionView({

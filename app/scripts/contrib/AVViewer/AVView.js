@@ -299,7 +299,13 @@ define(['backbone.marionette',
 
 							//var filterstouse = ["Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
 
-							var filterstouse = this.sp.fieldsforfiltering.concat(["n", "T_elec", "Bubble_Probability"]);
+							// Define which parameters should be selected defaultwise as filtering
+							var filterstouse = this.sp.fieldsforfiltering.concat([
+								"n", "T_elec", "Bubble_Probability",
+								"Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
+								"IRC", "FAC"
+							]);
+
 							filterstouse = filterstouse.concat(["MLT"]);
 							var residuals = _.filter(_.keys(data[0]), function(item) {
 								return item.indexOf("_res") !== -1;
@@ -342,6 +348,30 @@ define(['backbone.marionette',
 								// Make sure it is not already enabled
 								if(this.sp.sel_y.indexOf("F")==-1){
 									this.sp.sel_y.push("F");
+								}
+							}
+
+							// If previous does not contain TEC data and new one
+							// does we add Absolute_STEC parameter F to selection i plot
+							if( 
+								(this.previous_parameters.indexOf("Absolute_STEC") == -1) && 
+								(_.keys(data[0]).indexOf("Absolute_STEC") != -1)
+							){
+								// Make sure it is not already enabled
+								if(this.sp.sel_y.indexOf("Absolute_STEC")==-1){
+									this.sp.sel_y.push("Absolute_STEC");
+								}
+							}
+
+							// If previous does not contain TEC data and new one
+							// does we add Absolute_STEC parameter F to selection i plot
+							if( 
+								(this.previous_parameters.indexOf("FAC") == -1) && 
+								(_.keys(data[0]).indexOf("FAC") != -1)
+							){
+								// Make sure it is not already enabled
+								if(this.sp.sel_y.indexOf("FAC")==-1){
+									this.sp.sel_y.push("FAC");
 								}
 							}
 

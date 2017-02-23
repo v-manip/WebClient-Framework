@@ -1219,6 +1219,633 @@
             "satellite": "Swarm"
 
         },{
+            "name": "TEC A TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_TECATMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_TECATMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_TECATMS_2F"
+                }
+            ],
+            "parameters": {
+                "Absolute_STEC": {
+                    "range": [0, 50],
+                    "uom":"TECU",
+                    "colorscale": "plasma",
+                    "selected": true,
+                    "name": "Absolute slant TEC"
+                },
+                "Relative_STEC": {
+                    "range": [0, 5],
+                    "uom":"TECU",
+                    "colorscale": "portland",
+                    "name": "Relative slant TEC"
+                },
+                "Relative_STEC_RMS": {
+                    "range": [0, 40],
+                    "uom":"TECU",
+                    "colorscale": "portland",
+                    "name": "Relative STEC RMS"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "km",
+                    "name": "Geographic radius"
+                },
+                "GPS_Position": {
+                    "uom": "km",
+                    "name": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite"
+                },
+                "LEO_Position": {
+                    "uom": "m",
+                    "name": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite"
+                },
+                "PRN": {
+                    "uom": null,
+                    "name": "GPS satellite PRN"
+                },
+                "L1": {
+                    "uom": "m",
+                    "name": "GPS L1 carrier phase observation"
+                },
+                "L2": {
+                    "uom": "m",
+                    "name": "GPS L2 carrier phase observation"
+                },
+                "P1": {
+                    "uom": "m",
+                    "name": "GPS P1 code phase observation"
+                },
+                "P2": {
+                    "uom": "m",
+                    "name": "GPS P2 code phase observation"
+                },
+                "S1": {
+                    "uom": null,
+                    "name": "GPS signal-to-noise ratio or raw signal strength on L1"
+                },
+                "S2": {
+                    "uom": null,
+                    "name": "GPS signal-to-noise ratio or raw signal strength on L2"
+                },
+                "Absolute_STEC": {
+                    "uom": "TECU",
+                    "name": "Absolute slant TEC"
+                },
+                "Relative_STEC": {
+                    "uom": "TECU",
+                    "name": "Relative slant TEC"
+                },
+                "Relative_STEC_RMS": {
+                    "uom": "TECU",
+                    "name": "Root mean square error of relative slant TEC"
+                },
+                "DCB": {
+                    "uom": "TECU",
+                    "name": "GPS receiver differential code bias"
+                },
+                "DCB_Error": {
+                    "uom": "TECU",
+                    "name": "Error of the GPS receiver differential code bias"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_TECATMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+
+        },{
+            "name": "TEC B TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_TECBTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_TECBTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_TECBTMS_2F"
+                }
+            ],
+            "parameters": {
+                "Absolute_STEC": {
+                    "range": [0, 50],
+                    "uom":"TECU",
+                    "colorscale": "plasma",
+                    "selected": true,
+                    "name": "Absolute slant TEC"
+                },
+                "Relative_STEC": {
+                    "range": [0, 5],
+                    "uom":"TECU",
+                    "colorscale": "portland",
+                    "name": "Relative slant TEC"
+                },
+                "Relative_STEC_RMS": {
+                    "range": [0, 40],
+                    "uom":"TECU",
+                    "colorscale": "portland",
+                    "name": "Relative STEC RMS"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "km",
+                    "name": "Geographic radius"
+                },
+                "GPS_Position": {
+                    "uom": "km",
+                    "name": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite"
+                },
+                "LEO_Position": {
+                    "uom": "m",
+                    "name": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite"
+                },
+                "PRN": {
+                    "uom": null,
+                    "name": "GPS satellite PRN"
+                },
+                "L1": {
+                    "uom": "m",
+                    "name": "GPS L1 carrier phase observation"
+                },
+                "L2": {
+                    "uom": "m",
+                    "name": "GPS L2 carrier phase observation"
+                },
+                "P1": {
+                    "uom": "m",
+                    "name": "GPS P1 code phase observation"
+                },
+                "P2": {
+                    "uom": "m",
+                    "name": "GPS P2 code phase observation"
+                },
+                "S1": {
+                    "uom": null,
+                    "name": "GPS signal-to-noise ratio or raw signal strength on L1"
+                },
+                "S2": {
+                    "uom": null,
+                    "name": "GPS signal-to-noise ratio or raw signal strength on L2"
+                },
+                "Absolute_STEC": {
+                    "uom": "TECU",
+                    "name": "Absolute slant TEC"
+                },
+                "Relative_STEC": {
+                    "uom": "TECU",
+                    "name": "Relative slant TEC"
+                },
+                "Relative_STEC_RMS": {
+                    "uom": "TECU",
+                    "name": "Root mean square error of relative slant TEC"
+                },
+                "DCB": {
+                    "uom": "TECU",
+                    "name": "GPS receiver differential code bias"
+                },
+                "DCB_Error": {
+                    "uom": "TECU",
+                    "name": "Error of the GPS receiver differential code bias"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_TECBTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+
+        },{
+            "name": "TEC C TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_TECCTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_TECCTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_TECCTMS_2F"
+                }
+            ],
+            "parameters": {
+                "Absolute_STEC": {
+                    "range": [0, 30],
+                    "uom":"TECU",
+                    "colorscale": "plasma",
+                    "selected": true,
+                    "name": "Absolute slant TEC"
+                },
+                "Relative_STEC": {
+                    "range": [0, 70],
+                    "uom":"TECU",
+                    "colorscale": "portland",
+                    "name": "Relative slant TEC"
+                },
+                "Relative_STEC_RMS": {
+                    "range": [0, 5],
+                    "uom":"TECU",
+                    "colorscale": "portland",
+                    "name": "Relative STEC RMS"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "km",
+                    "name": "Geographic radius"
+                },
+                "GPS_Position": {
+                    "uom": "km",
+                    "name": "X-,Y-,Z-coordinates (WGS84) of the GPS satellite"
+                },
+                "LEO_Position": {
+                    "uom": "m",
+                    "name": "X-,Y-,Z-coordinates (WGS84) of the LEO satellite"
+                },
+                "PRN": {
+                    "uom": null,
+                    "name": "GPS satellite PRN"
+                },
+                "L1": {
+                    "uom": "m",
+                    "name": "GPS L1 carrier phase observation"
+                },
+                "L2": {
+                    "uom": "m",
+                    "name": "GPS L2 carrier phase observation"
+                },
+                "P1": {
+                    "uom": "m",
+                    "name": "GPS P1 code phase observation"
+                },
+                "P2": {
+                    "uom": "m",
+                    "name": "GPS P2 code phase observation"
+                },
+                "S1": {
+                    "uom": null,
+                    "name": "GPS signal-to-noise ratio or raw signal strength on L1"
+                },
+                "S2": {
+                    "uom": null,
+                    "name": "GPS signal-to-noise ratio or raw signal strength on L2"
+                },
+                "Absolute_STEC": {
+                    "uom": "TECU",
+                    "name": "Absolute slant TEC"
+                },
+                "Relative_STEC": {
+                    "uom": "TECU",
+                    "name": "Relative slant TEC"
+                },
+                "Relative_STEC_RMS": {
+                    "uom": "TECU",
+                    "name": "Root mean square error of relative slant TEC"
+                },
+                "DCB": {
+                    "uom": "TECU",
+                    "name": "GPS receiver differential code bias"
+                },
+                "DCB_Error": {
+                    "uom": "TECU",
+                    "name": "Error of the GPS receiver differential code bias"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_TECCTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+
+        },{
+            "name": "FAC A TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_FACATMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_FACATMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FACATMS_2F"
+                }
+            ],
+            "parameters": {
+                "IRC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "name": "Ionospheric radial current (IRC)"
+                },
+                "FAC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "selected": true,
+                    "name": "Field-aligned current (FAC)"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "IRC": {
+                    "uom": "uA/m2",
+                    "name": "Ionospheric radial current"
+                },
+                "IRC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of IRC"
+                },
+                "FAC": {
+                    "uom": "uA/m2",
+                    "name": "Field-aligned current"
+                },
+                "FAC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of FAC"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FACATMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
+            "name": "FAC B TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_FACBTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_FACBTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FACBTMS_2F"
+                }
+            ],
+            "parameters": {
+                "IRC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "name": "Ionospheric radial current (IRC)"
+                },
+                "FAC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "selected": true,
+                    "name": "Field-aligned current (FAC)"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "IRC": {
+                    "uom": "uA/m2",
+                    "name": "Ionospheric radial current"
+                },
+                "IRC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of IRC"
+                },
+                "FAC": {
+                    "uom": "uA/m2",
+                    "name": "Field-aligned current"
+                },
+                "FAC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of FAC"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FACBTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
+            "name": "FAC C TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_FACCTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_FACCTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FACCTMS_2F"
+                }
+            ],
+            "parameters": {
+                "IRC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "name": "Ionospheric radial current (IRC)"
+                },
+                "FAC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "selected": true,
+                    "name": "Field-aligned current (FAC)"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "IRC": {
+                    "uom": "uA/m2",
+                    "name": "Ionospheric radial current"
+                },
+                "IRC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of IRC"
+                },
+                "FAC": {
+                    "uom": "uA/m2",
+                    "name": "Field-aligned current"
+                },
+                "FAC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of FAC"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FACCTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
             "name": "SW OPER IBIA TMS 2F",
             "visible": false,
             "timeSlider": true,

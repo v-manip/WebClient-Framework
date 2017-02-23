@@ -456,3 +456,22 @@ button[active=active] {
 #loader { 
   fill: #999;
 }
+
+.radio-inline{
+  padding-left: 0px !important;
+  margin-right: 2px !important;
+}
+
+.radio-inline input{
+  margin-left: 0px !important;
+  margin-right: 2px !important;
+}
+
+.baselayerList{
+  margin-left: 0px !important;
+}
+
+.input-group-sm>.input-group-addon, .input-group-sm>.input-group-btn>.btn {
+  padding: 3px 10px !important;
+  line-height: 0.5 !important;
+}
