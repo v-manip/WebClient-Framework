@@ -1,7 +1,7 @@
 
 var SCALAR_PARAM = [
 	"F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability",
-	"Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC", "IRC", "FAC"
+	"Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC", "IRC", "FAC", "EEF"
 ];
 
 var VECTOR_PARAM = [
@@ -358,7 +358,8 @@ var VECTOR_BREAKDOWN = {
 						 	m.get("download").id.indexOf("SW_OPER_EFI") != -1 ||
 						 	m.get("download").id.indexOf("SW_OPER_IBI") != -1 ||
 						 	m.get("download").id.indexOf("SW_OPER_TEC") != -1 ||
-						 	m.get("download").id.indexOf("SW_OPER_FAC") != -1
+						 	m.get("download").id.indexOf("SW_OPER_FAC") != -1 ||
+						 	m.get("download").id.indexOf("SW_OPER_EEF") != -1
 						 )
 					){
 						return false;
@@ -402,6 +403,10 @@ var VECTOR_BREAKDOWN = {
 		        		"Alpha": "SW_OPER_FACATMS_2F",
 		        		"Bravo": "SW_OPER_FACBTMS_2F",
 		        		"Charlie": "SW_OPER_FACCTMS_2F"
+		        	},
+		        	"EEF":  {
+		        		"Alpha": "SW_OPER_EEFATMS_2F",
+		        		"Bravo": "SW_OPER_EEFBTMS_2F"
 		        	}
 		        };
 
@@ -414,7 +419,8 @@ var VECTOR_BREAKDOWN = {
 		        	'EFI': false,
 		        	'IBI': false,
 		        	'TEC': false,
-		        	'FAC': false
+		        	'FAC': false,
+		        	'EEF': false
 		        };
 
 		        var clickEvent = "require(['communicator'], function(Communicator){Communicator.mediator.trigger('application:reset');});";
@@ -428,6 +434,9 @@ var VECTOR_BREAKDOWN = {
 		        	}
 		        	if (!containerSelection.hasOwnProperty('FAC')){
 		        		containerSelection.FAC = false;
+		        	}
+		        	if (!containerSelection.hasOwnProperty('EEF')){
+		        		containerSelection.EEF = false;
 		        	}
 
 
@@ -466,8 +475,16 @@ var VECTOR_BREAKDOWN = {
 
 
 
-		        // Add generic product (which is container for A,B and C sats)
+		    // Add generic product (which is container for A,B and C sats)
 		    filtered_collection.add({
+					name: "Electric field data (EEF)",
+					visible: containerSelection['EEF'],
+					color: "#1f77b4",
+					protocol: null,
+					containerproduct: true,
+					id: "EEF"
+				}, {at: 0});
+				filtered_collection.add({
 					name: "Currents data (FAC)",
 					visible: containerSelection['FAC'],
 					color: "#1f77b4",
@@ -705,26 +722,34 @@ var VECTOR_BREAKDOWN = {
 				}
 
 			    // Add a trigger for ajax calls in order to display loading state
-                // in mouse cursor to give feedback to the user the client is busy
-                $(document).ajaxStart(function() {
-                  	Communicator.mediator.trigger("progress:change", true);
-                });
+          // in mouse cursor to give feedback to the user the client is busy
+          $(document).ajaxStart(function() {
+            	Communicator.mediator.trigger("progress:change", true);
+          });
 
-                $(document).ajaxStop(function() {
-                  	Communicator.mediator.trigger("progress:change", false);
-                });
+          $(document).ajaxStop(function() {
+            	Communicator.mediator.trigger("progress:change", false);
+          });
 
-                $(document).ajaxError(function( event, request, settings ) {
-                	if(settings.suppressErrors) {
-				        return;
+          $(document).ajaxError(function( event, request , settings, thrownError ) {
+          	if(settings.suppressErrors) {
+	        		return;
 				    }
 
-				    showMessage('danger', ('Error response on HTTP ' + settings.type + ' to '+ settings.url.split("?")[0]), 15);
-                });
+				    var error_text = request.responseText.match("<ows:ExceptionText>(.*)</ows:ExceptionText>");
 
-                // The tooltip is called twice at beginning and end, it seems to show the style of the
-                // tooltips more consistently, there is some problem where sometimes no style is shown for tooltips
-                $("body").tooltip({ 
+				    if (error_text && error_text.length > 1) {
+				    	error_text = error_text[1];
+				    } else {
+				    	error_text = 'Please contact feedback@vires.services if issue persists.'
+				    }
+
+				    showMessage('danger', ('Problem retrieving data: ' + error_text), 35);
+          });
+
+          // The tooltip is called twice at beginning and end, it seems to show the style of the
+          // tooltips more consistently, there is some problem where sometimes no style is shown for tooltips
+          $("body").tooltip({ 
 			    	selector: '[data-toggle=tooltip]',
 			    	position: { my: "left+5 center", at: "right center" },
 					hide: { effect: false, duration: 0 },

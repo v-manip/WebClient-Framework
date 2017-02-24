@@ -1245,20 +1245,20 @@
             ],
             "parameters": {
                 "Absolute_STEC": {
-                    "range": [0, 50],
+                    "range": [0, 35],
                     "uom":"TECU",
                     "colorscale": "plasma",
                     "selected": true,
                     "name": "Absolute slant TEC"
                 },
                 "Relative_STEC": {
-                    "range": [0, 5],
+                    "range": [0, 70],
                     "uom":"TECU",
                     "colorscale": "portland",
                     "name": "Relative slant TEC"
                 },
                 "Relative_STEC_RMS": {
-                    "range": [0, 40],
+                    "range": [0, 5],
                     "uom":"TECU",
                     "colorscale": "portland",
                     "name": "Relative STEC RMS"
@@ -1373,20 +1373,20 @@
             ],
             "parameters": {
                 "Absolute_STEC": {
-                    "range": [0, 50],
+                    "range": [0, 35],
                     "uom":"TECU",
                     "colorscale": "plasma",
                     "selected": true,
                     "name": "Absolute slant TEC"
                 },
                 "Relative_STEC": {
-                    "range": [0, 5],
+                    "range": [0, 70],
                     "uom":"TECU",
                     "colorscale": "portland",
                     "name": "Relative slant TEC"
                 },
                 "Relative_STEC_RMS": {
-                    "range": [0, 40],
+                    "range": [0, 5],
                     "uom":"TECU",
                     "colorscale": "portland",
                     "name": "Relative STEC RMS"
@@ -1501,7 +1501,7 @@
             ],
             "parameters": {
                 "Absolute_STEC": {
-                    "range": [0, 30],
+                    "range": [0, 35],
                     "uom":"TECU",
                     "colorscale": "plasma",
                     "selected": true,
@@ -1841,6 +1841,132 @@
                 {
                     "id": "retrieve_data",
                     "layer_id": "SW_OPER_FACCTMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
+            "name": "EEF A TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_EEFATMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_EEFATMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EEFATMS_2F"
+                }
+            ],
+            "parameters": {
+                "EEF": {
+                    "range": [-0.001, 0.001],
+                    "uom":"V/m",
+                    "selected": true,
+                    "colorscale": "diverging_1",
+                    "name": "Estimate of the equatorial electric field"
+                }
+            },
+            "download_parameters": {
+                "timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "EEF": {
+                    "uom": "V/m",
+                    "name": "Ionospheric radial current"
+                },
+                "RelErr": {
+                    "uom": null,
+                    "name": "Quality indicator of EEF estimate; relative error between modeled and observed current profil"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EEFATMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
+            "name": "EEF B TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_EEFBTMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_EEFBTMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EEFBTMS_2F"
+                }
+            ],
+            "parameters": {
+                "EEF": {
+                    "range": [-0.001, 0.001],
+                    "uom":"V/m",
+                    "selected": true,
+                    "colorscale": "diverging_1",
+                    "name": "Estimate of the equatorial electric field"
+                }
+            },
+            "download_parameters": {
+                "timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "EEF": {
+                    "uom": "V/m",
+                    "name": "Ionospheric radial current"
+                },
+                "RelErr": {
+                    "uom": null,
+                    "name": "Quality indicator of EEF estimate; relative error between modeled and observed current profil"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_EEFBTMS_2F"
                 }
             ],
             "outlines": false,

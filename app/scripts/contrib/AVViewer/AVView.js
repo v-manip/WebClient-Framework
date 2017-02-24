@@ -303,7 +303,8 @@ define(['backbone.marionette',
 							var filterstouse = this.sp.fieldsforfiltering.concat([
 								"n", "T_elec", "Bubble_Probability",
 								"Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
-								"IRC", "FAC"
+								"IRC", "FAC",
+								"EEF"
 							]);
 
 							filterstouse = filterstouse.concat(["MLT"]);
@@ -363,8 +364,8 @@ define(['backbone.marionette',
 								}
 							}
 
-							// If previous does not contain TEC data and new one
-							// does we add Absolute_STEC parameter F to selection i plot
+							// If previous does not contain FAC data and new one
+							// does we add FAC parameter FAC to selection i plot
 							if( 
 								(this.previous_parameters.indexOf("FAC") == -1) && 
 								(_.keys(data[0]).indexOf("FAC") != -1)
@@ -372,6 +373,18 @@ define(['backbone.marionette',
 								// Make sure it is not already enabled
 								if(this.sp.sel_y.indexOf("FAC")==-1){
 									this.sp.sel_y.push("FAC");
+								}
+							}
+
+							// If previous does not contain EEF data and new one
+							// does we add EEF parameter EEF to selection i plot
+							if( 
+								(this.previous_parameters.indexOf("EEF") == -1) && 
+								(_.keys(data[0]).indexOf("EEF") != -1)
+							){
+								// Make sure it is not already enabled
+								if(this.sp.sel_y.indexOf("EEF")==-1){
+									this.sp.sel_y.push("EEF");
 								}
 							}
 
