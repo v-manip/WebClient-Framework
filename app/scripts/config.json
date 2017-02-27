@@ -1846,6 +1846,87 @@
             "outlines": false,
             "satellite": "Swarm"
         },{
+            "name": "FAC AC TMS",
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "color": "#ff7f0e",
+            "views": [{
+                "id": "SW_OPER_FAC_TMS_2F",
+                "protocol": "CZML",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "SW_OPER_FAC_TMS_2F",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FAC_TMS_2F"
+                }
+            ],
+            "parameters": {
+                "IRC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "name": "Ionospheric radial current (IRC)"
+                },
+                "FAC": {
+                    "range": [-6, 6],
+                    "uom":"uA/m2",
+                    "colorscale": "diverging_1",
+                    "selected": true,
+                    "name": "Field-aligned current (FAC)"
+                }
+            },
+            "download_parameters": {
+                "Timestamp": {
+                    "uom": null,
+                    "name": "Time stamp in UTC"
+                },
+                "Latitude": {
+                    "uom": "deg",
+                    "name": "Geographic latitude"
+                },
+                "Longitude": {
+                    "uom": "deg",
+                    "name": "Geographic longitude"
+                },
+                "Radius": {
+                    "uom": "m",
+                    "name": "Geographic radius"
+                },
+                "IRC": {
+                    "uom": "uA/m2",
+                    "name": "Ionospheric radial current"
+                },
+                "IRC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of IRC"
+                },
+                "FAC": {
+                    "uom": "uA/m2",
+                    "name": "Field-aligned current"
+                },
+                "FAC_Error": {
+                    "uom": "uA/m2",
+                    "name": "uncertainty of FAC"
+                }
+            },"processes" : [
+                {
+                    "id": "retrieve_data",
+                    "layer_id": "SW_OPER_FAC_TMS_2F"
+                }
+            ],
+            "outlines": false,
+            "satellite": "Swarm"
+        },{
             "name": "EEF A TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
