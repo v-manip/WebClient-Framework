@@ -10,16 +10,57 @@
     'models/DownloadModel',
     'hbs!tmpl/DownloadFilter',
     'hbs!tmpl/FilterTemplate',
+    'hbs!tmpl/DownloadProcess',
     'hbs!tmpl/wps_retrieve_data_filtered',
     'hbs!tmpl/CoverageDownloadPost',
-    'hbs!tmpl/wps_fetchFilteredData',
+    'hbs!tmpl/wps_fetchFilteredDataAsync',
     'underscore',
     'w2ui'
   ],
   function( Backbone, Communicator, globals, m, DownloadFilterTmpl,
-            FilterTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredData ) {
+            FilterTmpl, DownloadProcessTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredDataAsync ) {
 
-    var DownloadFilterView = Backbone.Marionette.ItemView.extend({
+    var DownloadProcessView = Backbone.Marionette.ItemView.extend({
+      tagName: "div",
+      el: '#download_processes',
+      //id: "modal-start-download",
+      className: "download_process",
+      template: {
+          type: 'handlebars',
+          template: DownloadProcessTmpl
+      },
+
+      initialize: function(options) {},
+      onShow: function(view){}
+    }),
+
+    DownloadProcessModel = Backbone.Model.extend({
+      id: null,
+      status_url: null,
+      percentage: null,
+      status: null,
+      parameters: null,
+      creation_time: null,
+      download_link: null,
+
+      update: function() {
+
+        $.get(this.status_url, 'xml')
+          .done( function ( doc ){
+            console.log($(doc).find('Status').attr('creationTime'));
+            this.set('creationTime', $(doc).find('Status').attr('creationTime'));
+
+            var status = $(doc).find('Status');
+            if (status.children().length > 0){
+              if (status.children().attr('percentCompleted') !== undefined){
+                console.log(status.children().attr('percentCompleted'))
+              }
+            }
+          })
+      }
+    }),
+
+    DownloadFilterView = Backbone.Marionette.ItemView.extend({
       tagName: "div",
       id: "modal-start-download",
       className: "panel panel-default download",
@@ -90,17 +131,14 @@
 
         var timeinterval = this.model.get("ToI");
 
+
+
         this.start_picker = this.$('#starttime').datepicker({
           onSelect: function() {
-            var date1 = that.start_picker.datepicker( "getDate" );
-            var date2 = that.end_picker.datepicker( "getDate" );
-            var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>30){
-              date2 = new Date(date1);
-              date2.setDate(date2.getDate()+30);
-              that.end_picker.datepicker("setDate", date2);
-            }else if(diff<0){
-              that.start_picker.datepicker("setDate", date2);
+            var start = that.start_picker.datepicker( "getDate" );
+            var end = that.end_picker.datepicker( "getDate" );
+            if(start>end){
+              that.end_picker.datepicker("setDate", start);
             }
           }
         });
@@ -108,15 +146,10 @@
 
         this.end_picker = this.$('#endtime').datepicker({
           onSelect: function() {
-            var date1 = that.start_picker.datepicker( "getDate" );
-            var date2 = that.end_picker.datepicker( "getDate" );
-            var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>30){
-              date1 = new Date(date2);
-              date1.setDate(date1.getDate()-30);
-              that.start_picker.datepicker("setDate", date1);
-            }else if(diff<0){
-              that.end_picker.datepicker("setDate", date1);
+            var start = that.start_picker.datepicker( "getDate" );
+            var end = that.end_picker.datepicker( "getDate" );
+            if(end<start){
+              that.start_picker.datepicker("setDate", end);
             }
           }
         });
@@ -158,7 +191,7 @@
         },this);
 
         var prod_div = this.$el.find("#products");
-        prod_div.append('<div>Products:</div>');
+        prod_div.append('<div style="font-weight:bold;">Products</div>');
 
         prod_div.append('<ul style="padding-left:15px">');
         var ul = prod_div.find("ul");
@@ -188,9 +221,9 @@
 
         this.$el.find("#custom_time_cb").off();
         this.$el.find("#custom_time").empty();
-        this.$el.find("#custom_time").html(
+        /*this.$el.find("#custom_time").html(
             '<div class="checkbox" style="margin-left:0px;"><label><input type="checkbox" value="" id="custom_time_cb">Custom time selection</label></div><div id="customtimefilter"></div>'
-        );
+        );*/
 
         this.$el.find('#custom_time_cb').click(function(){
 
@@ -323,7 +356,7 @@
       renderFilterList: function(filters) {
         var fil_div = this.$el.find("#filters");
         fil_div.empty();
-        fil_div.append("<div>Filters</div>");
+        //fil_div.append("<div>Filters</div>");
 
         _.each(_.keys(filters), function(key){
 
@@ -579,10 +612,38 @@
         // TODO: Just getting last URL here think of how different urls should be handled
         var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];
 
+        var req_data = wps_fetchFilteredDataAsync(options);
+
+        var url_jobs = url + '?service=wps&request=execute&version=1.0.0&identifier=listJobs&RawDataOutput=job_list';
+
+        /*$.get(url_jobs, 'json')
+          .done(function( processes ){
+            console.log(processes);
+          });
+
+        $.post( url, req_data, 'xml' )
+          .done(function( response ) {
+            var status_url = $(response).find('ExecuteResponse').attr('statusLocation');
+            $.get(status_url, 'xml')
+              .done( function ( doc ){
+                console.log($(doc).find('Status').attr('creationTime'));
+                var status = $(doc).find('Status');
+                if (status.children().length > 0){
+                  if (status.children().attr('percentCompleted') !== undefined){
+                    console.log(status.children().attr('percentCompleted'))
+                  }
+                }
+              })
+          });*/
+
+        var dpv = new DownloadProcessView();
+        dpv.render();
+
+
         //var xml = wps_requestTmpl(options);
-        var xml = wps_fetchFilteredData(options);
+        //var xml = wps_fetchFilteredData(options);
         
-        var $form = $(CoverageDownloadPostTmpl({
+        /*var $form = $(CoverageDownloadPostTmpl({
               url: url, xml: xml
             }));
 
@@ -595,7 +656,7 @@
           return false;
         }
 
-        formsubmit();
+        formsubmit();*/
 
       },
 
