@@ -23,3 +23,33 @@
 	position: absolute;
 	margin-left: -1px;
 }
+
+/*.progress{
+	background-color: #a0a0a0 !important;
+}*/
+
+
+
+/**
+ * Progress bars with centered text
+ */
+.progress {
+	background-color: #a0a0a0 !important;
+    position: relative!important;
+}
+
+.progress-bar {
+    z-index: 1;
+    position: absolute!important;
+}
+
+.progress span {
+    position: absolute!important;
+    height: 100%;
+    top: 2px;
+    left: 0;
+    z-index: 2;
+    color: white; // You might need to change it
+    text-align: center!important;
+    width: 100%;
+}

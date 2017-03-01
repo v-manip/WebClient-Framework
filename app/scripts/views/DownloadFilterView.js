@@ -30,6 +30,10 @@
           template: DownloadProcessTmpl
       },
 
+      modelEvents: {
+        "change": "render"
+      },
+
       initialize: function(options) {},
       onShow: function(view){}
     }),
@@ -37,7 +41,8 @@
     DownloadProcessModel = Backbone.Model.extend({
       id: null,
       status_url: null,
-      percentage: null,
+      percentage: 0,
+      percentage_descriptor: 'Loading ...',
       status: null,
       parameters: null,
       creation_time: null,
@@ -45,16 +50,36 @@
 
       update: function() {
 
-        $.get(this.status_url, 'xml')
+        var that = this;
+        $.get(this.get('status_url'), 'xml')
           .done( function ( doc ){
-            console.log($(doc).find('Status').attr('creationTime'));
-            this.set('creationTime', $(doc).find('Status').attr('creationTime'));
 
             var status = $(doc).find('Status');
             if (status.children().length > 0){
-              if (status.children().attr('percentCompleted') !== undefined){
-                console.log(status.children().attr('percentCompleted'))
+              if(status.children()[0].nodeName === 'wps:ProcessSucceeded'){
+                that.set('percentage', 100);
+                that.set('percentage_descriptor', 'Ready');
+                var download_link = $(doc).find('Output').find('Reference').attr('href');
+                if(download_link){
+                  that.set('download_link', download_link);
+                }
               }
+              if(status.children()[0].nodeName === 'wps:ProcessFailed'){
+                that.set('percentage', 0);
+                that.set('percentage_descriptor', 'Error while processing');
+              }
+              
+              if (status.children().attr('percentCompleted') !== undefined){
+                var p = status.children().attr('percentCompleted');
+                that.set('percentage', p);
+                that.set('percentage_descriptor', (p+'%'));
+                setTimeout(function(){ that.update(); }, 1000);
+              } else if(status.children()[0].nodeName === 'wps:ProcessAccepted'){
+                that.set('percentage', 0);
+                that.set('percentage_descriptor', 'Starting process ...');
+                setTimeout(function(){ that.update(); }, 1000);
+              }
+
             }
           })
       }
@@ -92,6 +117,8 @@
         this.$('#btn-start-download').on("click", _.bind(this.onStartDownloadClicked, this));
 
         $('#validationwarning').remove();
+
+        this.updateJobs();
 
         var options = {};
 
@@ -338,6 +365,45 @@
 
       },
 
+      updateJobs: function(){
+
+        var url_jobs = '/ows?service=wps&request=execute&version=1.0.0&identifier=listJobs&RawDataOutput=job_list';
+
+        $.get(url_jobs, 'json')
+          .done(function( processes ){
+            $('#download_processes').empty();
+            if(processes.hasOwnProperty('vires:fetch_filtered_data_async')){
+              // Just get the last 2 for display
+              processes = processes['vires:fetch_filtered_data_async'].slice(-2);
+              for (var i = 0; i < processes.length; i++) {
+
+                var m = new DownloadProcessModel({
+                  id: processes[i].id,
+                  creation_time: processes[i].created.slice(0, -13),
+                  status_url: processes[i].url
+                });
+                var el = $('<div></div>');
+
+                $('#download_processes').append(el);
+
+                var proc_view = new DownloadProcessView({
+                  el: el,
+                  model: m
+                });
+
+                proc_view.render();
+                m.update();
+
+              }
+            }
+          });
+
+
+        /*var dpv = new DownloadProcessView();
+        dpv.render();*/
+
+      },
+
       createSubscript: function(string){
         // Adding subscript elements to string which contain underscores
         var newkey = "";
@@ -538,7 +604,7 @@
 
         // filters
         var filters = [];
-        var filter_elem = this.$el.find(".input-group");
+        var filter_elem = $('#filters').find(".input-group");
 
         _.each(filter_elem, function(fe){
 
@@ -614,49 +680,14 @@
 
         var req_data = wps_fetchFilteredDataAsync(options);
 
-        var url_jobs = url + '?service=wps&request=execute&version=1.0.0&identifier=listJobs&RawDataOutput=job_list';
-
-        /*$.get(url_jobs, 'json')
-          .done(function( processes ){
-            console.log(processes);
-          });
-
+        
+        var that = this;
         $.post( url, req_data, 'xml' )
           .done(function( response ) {
-            var status_url = $(response).find('ExecuteResponse').attr('statusLocation');
-            $.get(status_url, 'xml')
-              .done( function ( doc ){
-                console.log($(doc).find('Status').attr('creationTime'));
-                var status = $(doc).find('Status');
-                if (status.children().length > 0){
-                  if (status.children().attr('percentCompleted') !== undefined){
-                    console.log(status.children().attr('percentCompleted'))
-                  }
-                }
-              })
-          });*/
-
-        var dpv = new DownloadProcessView();
-        dpv.render();
-
-
-        //var xml = wps_requestTmpl(options);
-        //var xml = wps_fetchFilteredData(options);
-        
-        /*var $form = $(CoverageDownloadPostTmpl({
-              url: url, xml: xml
-            }));
-
-        $downloads.append($form);
-
-        var that = this;
-
-        function formsubmit(){
-          $form.submit();
-          return false;
-        }
-
-        formsubmit();*/
+            that.updateJobs();
+            //var status_url = $(response).find('ExecuteResponse').attr('statusLocation');
+            
+          });
 
       },
 

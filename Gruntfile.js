@@ -85,6 +85,14 @@ module.exports = function (grunt) {
                 https: true,*/
                 changeOrigin: true,
                 xforward: false
+            },{
+                context: '/ows',
+                host: 'localhost',
+                port: 8300
+            },{
+                context: '/wps',
+                host: 'localhost',
+                port: 8300
             }],            
             livereload: {
                 options: {
