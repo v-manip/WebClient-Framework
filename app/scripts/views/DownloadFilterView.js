@@ -1,6 +1,14 @@
 (function() {
   'use strict';
 
+  var INPUT_DESCRIPTIONS = {
+    'collection_ids': 'Products',
+    'model_ids': 'Models',
+    'begin_time': 'Start time',
+    'end_time': 'End time',
+    'filters': 'Filters'
+  }
+
 
   var root = this;
   root.define([
@@ -44,7 +52,7 @@
       percentage: 0,
       percentage_descriptor: 'Loading ...',
       status: null,
-      parameters: null,
+      datainputs: null,
       creation_time: null,
       download_link: null,
 
@@ -53,6 +61,26 @@
         var that = this;
         $.get(this.get('status_url'), 'xml')
           .done( function ( doc ){
+
+            // Collect and fill data input information
+            var datainputs = {};
+            $(doc).find('DataInputs').children().each(function(){
+              var id = $(this).find('Identifier').text();
+
+              if(id && INPUT_DESCRIPTIONS.hasOwnProperty(id)){
+                var data = $(this).find('LiteralData').text();
+                if(data){
+                  datainputs[INPUT_DESCRIPTIONS[id]] = data;
+                }else{
+                  data = $(this).find('ComplexData').text();
+                  if(data){
+                    data = data.slice(1,-1);
+                    datainputs[INPUT_DESCRIPTIONS[id]] = data;
+                  }
+                }
+              }
+            });
+            that.set('datainputs', datainputs);
 
             var status = $(doc).find('Status');
             if (status.children().length > 0){
@@ -229,7 +257,7 @@
         
         if (this.models.length>0){
           var mod_div = this.$el.find("#model");
-          mod_div.append('<div>Models:</div>');
+          mod_div.append('<div><b>Models</b></div>');
           mod_div.append('<ul style="padding-left:15px">');
           ul = mod_div.find("ul");
           _.each(this.models, function(prod){
@@ -372,10 +400,12 @@
         $.get(url_jobs, 'json')
           .done(function( processes ){
             $('#download_processes').empty();
+            $('#download_processes').append('<div><b>Download links</b></div>');
             if(processes.hasOwnProperty('vires:fetch_filtered_data_async')){
               // Just get the last 2 for display
               processes = processes['vires:fetch_filtered_data_async'].slice(-2);
-              for (var i = 0; i < processes.length; i++) {
+
+              for (var i = processes.length - 1; i >= 0; i--) {
 
                 var m = new DownloadProcessModel({
                   id: processes[i].id,

@@ -8,15 +8,19 @@
  
 
   <span class="input-group-addon">
-    <div class="progress" style="margin-bottom:0px!important; width:300px;">
+    <div class="progress" style="margin-bottom:0px!important; width:250px;">
       <div class="progress-bar" role="progressbar" aria-valuenow="70"
       aria-valuemin="0" aria-valuemax="100" style="width:{{percentage}}%"></div>
       <span>{{percentage_descriptor}}</span>
     </div>
   </span>
 
-   <span class="input-group-addon">
-  <a data-toggle="collapse" href="#collapse-{{id}}">Details</a>
+  <span class="input-group-addon">
+    <a class="collapse_object collapsed" style="text-decoration:none" data-toggle="collapse" href="#collapse-{{id}}">
+      <i class="fa fa-chevron-down" aria-hidden="true"></i> 
+      <i class="fa fa-chevron-up" aria-hidden="true"></i>
+      Process details
+    </a>
   </span>
   
 
@@ -27,7 +31,13 @@
   </span>
 </div>
 <div id="collapse-{{id}}" class="panel-collapse collapse">
-  <div class="panel-body">More Info!</div>
+  <div class="panel-body">
+    <ul>
+    {{#each datainputs}}
+        <li><b>{{@key}}:</b> {{this}}</li>
+    {{/each}}
+    </ul>
+  </div>
 </div>
 
 
