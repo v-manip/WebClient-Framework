@@ -373,6 +373,8 @@ module.exports = function (grunt) {
                         'bower_components/plotty/dist/plotty.min.js',
                         'bower_components/sumoselect/jquery.sumoselect.min.js',
                         'bower_components/w2ui/dist/w2ui-fields.min.js',
+                        'bower_components/w2ui/src/w2popup.js',
+                        'bower_components/w2ui/src/w2utils',
                         'scripts/vendor/**',
                     ]
                 },{

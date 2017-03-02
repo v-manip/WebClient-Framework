@@ -222,7 +222,7 @@
 
       fetchBubble: function(start, end, params, callback){
         var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=retrieve_bubble_index&DataInputs=collection_id='+
-        this.id + ';begin_time='+getISODateTimeString(start)+'%;end_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+        this.id + ';begin_time='+getISODateTimeString(start)+';end_time='+getISODateTimeString(end)+'&RawDataOutput=output';
         d3.csv(request)
           .row(function (row) {
             return [

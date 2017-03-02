@@ -23,7 +23,8 @@
     'hbs!tmpl/CoverageDownloadPost',
     'hbs!tmpl/wps_fetchFilteredDataAsync',
     'underscore',
-    'w2ui'
+    'w2ui',
+    'w2popup'
   ],
   function( Backbone, Communicator, globals, m, DownloadFilterTmpl,
             FilterTmpl, DownloadProcessTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredDataAsync ) {
@@ -45,6 +46,17 @@
       initialize: function(options) {},
       onShow: function(view){}
     }),
+
+    toggleDownloadButton = function(activate){
+      if(!activate){
+        $('#btn-start-download').prop('disabled', true);
+        $('#btn-start-download').attr('title', 'Please wait until previous process is finished');
+      }else{
+        $('#btn-start-download').prop('disabled', false);
+        $('#btn-start-download').removeAttr('title');
+      }
+      
+    },
 
     DownloadProcessModel = Backbone.Model.extend({
       id: null,
@@ -80,11 +92,14 @@
                 }
               }
             });
-            that.set('datainputs', datainputs);
 
             var status = $(doc).find('Status');
             if (status.children().length > 0){
               if(status.children()[0].nodeName === 'wps:ProcessSucceeded'){
+                if (that.get('percentage')!=100){
+                  // Previous status was still loading now finished, button can be enabled again
+                  toggleDownloadButton(true);
+                }
                 that.set('percentage', 100);
                 that.set('percentage_descriptor', 'Ready');
                 var download_link = $(doc).find('Output').find('Reference').attr('href');
@@ -93,22 +108,41 @@
                 }
               }
               if(status.children()[0].nodeName === 'wps:ProcessFailed'){
+                if (that.get('percentage')!=100){
+                  // Previous status was still loading now finished, button can be enabled again
+                  toggleDownloadButton(true);
+                }
+                var errmsg = $(doc).find('ExceptionText');
+                if(errmsg){
+                  datainputs['Error Message'] = errmsg.text();
+                }
+
                 that.set('percentage', 0);
                 that.set('percentage_descriptor', 'Error while processing');
               }
               
               if (status.children().attr('percentCompleted') !== undefined){
+                toggleDownloadButton(false);
                 var p = status.children().attr('percentCompleted');
                 that.set('percentage', p);
                 that.set('percentage_descriptor', (p+'%'));
-                setTimeout(function(){ that.update(); }, 1000);
+                // Only update model if download view is open
+                if(!$('#viewContent').is(':empty')){
+                  setTimeout(function(){ that.update(); }, 2000);
+                }
               } else if(status.children()[0].nodeName === 'wps:ProcessAccepted'){
+                toggleDownloadButton(false);
                 that.set('percentage', 0);
                 that.set('percentage_descriptor', 'Starting process ...');
-                setTimeout(function(){ that.update(); }, 1000);
+                if(!$('#viewContent').is(':empty')){
+                  setTimeout(function(){ that.update(); }, 2000);
+                }
               }
 
             }
+
+            that.set('datainputs', datainputs);
+
           })
       }
     }),
@@ -400,11 +434,17 @@
         $.get(url_jobs, 'json')
           .done(function( processes ){
             $('#download_processes').empty();
-            $('#download_processes').append('<div><b>Download links</b></div>');
+
+            // Button starts disabled and is enabled as soon as answer is received
+            toggleDownloadButton(true);
+
             if(processes.hasOwnProperty('vires:fetch_filtered_data_async')){
               // Just get the last 2 for display
               processes = processes['vires:fetch_filtered_data_async'].slice(-2);
 
+              if(processes.length>0){
+                $('#download_processes').append('<div><b>Download links</b></div>');
+              }
               for (var i = processes.length - 1; i >= 0; i--) {
 
                 var m = new DownloadProcessModel({
@@ -428,9 +468,6 @@
             }
           });
 
-
-        /*var dpv = new DownloadProcessView();
-        dpv.render();*/
 
       },
 
@@ -563,6 +600,8 @@
           options.end_time.setDate(options.end_time.getDate() + 1);
         }
 
+        var bt_obj = options.begin_time;
+        var et_obj = options.end_time;
         options.begin_time = getISODateTimeString(options.begin_time);
         options.end_time = getISODateTimeString(options.end_time);
 
@@ -707,17 +746,40 @@
 
         // TODO: Just getting last URL here think of how different urls should be handled
         var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];
-
         var req_data = wps_fetchFilteredDataAsync(options);
-
-        
         var that = this;
-        $.post( url, req_data, 'xml' )
-          .done(function( response ) {
-            that.updateJobs();
-            //var status_url = $(response).find('ExecuteResponse').attr('statusLocation');
-            
-          });
+
+        // Do some sanity checks before starting process
+
+        // Calculate the difference in milliseconds
+        var difference_ms = et_obj.getTime() - bt_obj.getTime();
+        var days = Math.round(difference_ms/(1000*60*60*24));
+
+        var sendProcessingRequest = function(){
+          toggleDownloadButton(false);
+          $.post( url, req_data, 'xml' )
+            .done(function( response ) {
+              that.updateJobs();
+            })
+            .error(function(resp){
+              toggleDownloadButton(true);
+            });
+        };
+
+        if (days>50 && filters.length==0){
+          w2confirm('The current selection will most likely exceed the download limit, please make sure to add filters to further subset your selection. <br> Would you still like to proceed?')
+            .yes(function () {
+              sendProcessingRequest();
+            });
+
+        }else if (days>50){
+          w2confirm('The current selected time interval is large and could result in a large download file if filters are not restrictive. The process runs in the background and the browser does not need to be open.<br>Are you sure you want to proceed?')
+            .yes(function () {
+              sendProcessingRequest();
+            });
+        }else{
+          sendProcessingRequest();
+        }
 
       },
 
