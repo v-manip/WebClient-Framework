@@ -439,8 +439,15 @@
             toggleDownloadButton(true);
 
             if(processes.hasOwnProperty('vires:fetch_filtered_data_async')){
-              // Just get the last 2 for display
-              processes = processes['vires:fetch_filtered_data_async'].slice(-2);
+
+              var processes_to_save = 2;
+              processes = processes['vires:fetch_filtered_data_async'];
+              var removal_processes = processes.splice(0,processes.length-processes_to_save );
+
+              for (var i = 0; i < removal_processes.length; i++) {
+                var remove_url = '/ows?service=WPS&request=Execute&identifier=removeJob&DataInputs=job_id='+removal_processes[i].id;
+                $.get(remove_url);
+              }
 
               if(processes.length>0){
                 $('#download_processes').append('<div><b>Download links</b></div>');
