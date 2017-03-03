@@ -76,15 +76,15 @@
 
             // Collect and fill data input information
             var datainputs = {};
-            $(doc).find('DataInputs').children().each(function(){
-              var id = $(this).find('Identifier').text();
+            $(doc).find('DataInputs, wps\\:DataInputs').children().each(function(){
+              var id = $(this).find('Identifier, ows\\:Identifier').text();
 
               if(id && INPUT_DESCRIPTIONS.hasOwnProperty(id)){
-                var data = $(this).find('LiteralData').text();
+                var data = $(this).find('LiteralData, wps\\:LiteralData').text();
                 if(data){
                   datainputs[INPUT_DESCRIPTIONS[id]] = data;
                 }else{
-                  data = $(this).find('ComplexData').text();
+                  data = $(this).find('ComplexData, wps\\:ComplexData').text();
                   if(data){
                     data = data.slice(1,-1);
                     datainputs[INPUT_DESCRIPTIONS[id]] = data;
@@ -93,8 +93,8 @@
               }
             });
 
-            var status = $(doc).find('Status');
-            if (status.children().length > 0){
+            var status = $(doc).find('Status, wps\\:Status');
+            if (status && status.children().length > 0){
               if(status.children()[0].nodeName === 'wps:ProcessSucceeded'){
                 if (that.get('percentage')!=100){
                   // Previous status was still loading now finished, button can be enabled again
@@ -102,7 +102,7 @@
                 }
                 that.set('percentage', 100);
                 that.set('percentage_descriptor', 'Ready');
-                var download_link = $(doc).find('Output').find('Reference').attr('href');
+                var download_link = $(doc).find('Output, wps\\:Output').find('Reference, wps\\:Reference').attr('href');
                 if(download_link){
                   that.set('download_link', download_link);
                 }
@@ -112,7 +112,7 @@
                   // Previous status was still loading now finished, button can be enabled again
                   toggleDownloadButton(true);
                 }
-                var errmsg = $(doc).find('ExceptionText');
+                var errmsg = $(doc).find('ExceptionText, wps\\:ExceptionText');
                 if(errmsg){
                   datainputs['Error Message'] = errmsg.text();
                 }
@@ -140,8 +140,11 @@
               }
 
             }
+            if(datainputs && Object.keys(datainputs).length>0){
+              that.set('datainputs', datainputs);
+            }
 
-            that.set('datainputs', datainputs);
+            
 
           })
       }
