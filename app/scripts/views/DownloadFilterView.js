@@ -205,7 +205,8 @@
 
 
         this.$('.delete-filter').click(function(evt){
-          this.parentElement.parentElement.remove();
+          var item = this.parentElement.parentElement;
+          this.parentElement.parentElement.parentElement.removeChild(item);
         });
 
         // Check for products and models
