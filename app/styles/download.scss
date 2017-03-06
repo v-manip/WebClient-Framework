@@ -81,3 +81,31 @@
     text-align: center!important;
     width: 100%;
 }
+
+#filters .form-control, #date .form-control, #timefilter .form-control{
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+}
+
+#filters textarea, #date textarea, #timefilter textarea{
+    height: 26px;
+}
+
+#starttime, #endtime {
+    border-radius: 0px !important;
+    border-style: solid !important;
+    border-color: rgb(169, 169, 169) !important;
+    border-width: 1px !important;
+}
+
+.ui-datepicker-trigger{
+    height: 24px;
+    border-radius: 0px !important;
+    border-style: solid !important;
+    border-color: rgb(169, 169, 169) !important;
+    border-width: 1px !important;
+}
+
+.ui-datepicker-trigger:hover{
+    border-color: rgb(110, 110, 110) !important;
+}
