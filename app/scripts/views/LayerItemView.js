@@ -169,6 +169,11 @@
 		                		globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['Charlie']);
 		                	}
 	                	}
+	                	if($('#nsccheck').is(':checked')){
+	                		if(globals.swarm.activeProducts.indexOf(globals.swarm.products[this.model.get("id")]['NSC']) == -1){
+		                		globals.swarm.activeProducts.push(globals.swarm.products[this.model.get("id")]['NSC']);
+		                	}
+	                	}
                 	}
 
             		// Activate all other layers

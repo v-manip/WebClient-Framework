@@ -1122,6 +1122,7 @@ define(['backbone.marionette',
 						var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
 						var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
 						var previous_collection = '';
+						var time_bucket = {'Alpha':{}, 'Bravo':{}, 'Charlie':{}};
 						//var line_primitives = [];
 
 						var linecnt = 0;
@@ -1171,6 +1172,19 @@ define(['backbone.marionette',
 						    				}
 						    			}
 						    			var height_offset = i*210000;
+
+						    			if(tovisualize[i] === 'Absolute_STEC' ||
+						    				 tovisualize[i] === 'Relative_STEC' ||
+												 tovisualize[i] === 'Relative_STEC_RMS'){
+						    				var ts = String(row.Timestamp.getTime());
+						    				if(time_bucket[row.id].hasOwnProperty(ts)){
+						    					time_bucket[row.id][ts] = time_bucket[row.id][ts]+1;
+						    					height_offset = (i+time_bucket[row.id][ts])*210000;
+						    				}else{
+						    					time_bucket[row.id][ts] = 1;
+						    					height_offset = (i+1)*210000;
+						    				}
+						    			}
 
 						    			if(!isNaN(row[set.band])){
 								    		var color = this.plot.getColor(row[set.band]);
