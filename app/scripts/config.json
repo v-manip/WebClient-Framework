@@ -1222,7 +1222,7 @@
             "name": "TEC A TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#990099",
             "views": [{
                 "id": "SW_OPER_TECATMS_2F",
                 "protocol": "CZML",
@@ -1350,7 +1350,7 @@
             "name": "TEC B TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#990099",
             "views": [{
                 "id": "SW_OPER_TECBTMS_2F",
                 "protocol": "CZML",
@@ -1478,7 +1478,7 @@
             "name": "TEC C TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#990099",
             "views": [{
                 "id": "SW_OPER_TECCTMS_2F",
                 "protocol": "CZML",
@@ -1606,7 +1606,7 @@
             "name": "FAC A TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#66aa00",
             "views": [{
                 "id": "SW_OPER_FACATMS_2F",
                 "protocol": "CZML",
@@ -1687,7 +1687,7 @@
             "name": "FAC B TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#66aa00",
             "views": [{
                 "id": "SW_OPER_FACBTMS_2F",
                 "protocol": "CZML",
@@ -1768,7 +1768,7 @@
             "name": "FAC C TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#66aa00",
             "views": [{
                 "id": "SW_OPER_FACCTMS_2F",
                 "protocol": "CZML",
@@ -1846,10 +1846,10 @@
             "outlines": false,
             "satellite": "Swarm"
         },{
-            "name": "FAC AC TMS",
+            "name": "FAC TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#66aa00",
             "views": [{
                 "id": "SW_OPER_FAC_TMS_2F",
                 "protocol": "CZML",
@@ -1930,7 +1930,7 @@
             "name": "EEF A TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#b82e2e",
             "views": [{
                 "id": "SW_OPER_EEFATMS_2F",
                 "protocol": "CZML",
@@ -1993,7 +1993,7 @@
             "name": "EEF B TMS",
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
-            "color": "#ff7f0e",
+            "color": "#b82e2e",
             "views": [{
                 "id": "SW_OPER_EEFBTMS_2F",
                 "protocol": "CZML",

@@ -45,6 +45,7 @@
 				$('#alphacheck').prop('checked', globals.swarm.satellites["Alpha"]);
 				$('#bravocheck').prop('checked', globals.swarm.satellites["Bravo"]);
 				$('#charliecheck').prop('checked', globals.swarm.satellites["Charlie"]);
+				$('#nsccheck').prop('checked', globals.swarm.satellites["NSC"]);
 
 				$('#alphacheck').change(function(evt){
 					globals.swarm.satellites['Alpha'] = $('#alphacheck').is(':checked');
@@ -62,6 +63,13 @@
 				});
 				$('#charliecheck').change(function(evt){
 					globals.swarm.satellites["Charlie"] = $('#charliecheck').is(':checked');
+					if (typeof(Storage) !== 'undefined') {
+						localStorage.setItem('satelliteSelection', JSON.stringify(globals.swarm.satellites));
+					}
+					self.checkMultiProduct();
+				});
+				$('#nsccheck').change(function(evt){
+					globals.swarm.satellites["NSC"] = $('#nsccheck').is(':checked');
 					if (typeof(Storage) !== 'undefined') {
 						localStorage.setItem('satelliteSelection', JSON.stringify(globals.swarm.satellites));
 					}

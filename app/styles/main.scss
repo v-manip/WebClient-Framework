@@ -218,7 +218,7 @@ button[active=active] {
  * Layer control styles
  */
 .layercontrol {
-    width: 23.8em;
+    width: 24em;
     top: 8em;
     left: 3em;
     font-size: .9em;
@@ -257,6 +257,18 @@ button[active=active] {
 }
 .fa-sort {
     cursor: ns-resize;
+}
+
+#satcheckcontainer{
+  margin-right: -5px;
+  margin-left: -5px;
+}
+
+
+#satcheckcontainer .col-md-3{
+  padding-right: 0px;
+  padding-left: 0px;
+  white-space: nowrap;
 }
 
 

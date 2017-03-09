@@ -371,11 +371,15 @@ var VECTOR_BREAKDOWN = {
 		        globals.swarm["satellites"] = {
 		        	"Alpha": true,
 		        	"Bravo": false,
-		        	"Charlie": false
+		        	"Charlie": false,
+		        	"NSC": false
 		        };
 
 		        if(localStorage.getItem("satelliteSelection") !== null){
 		        	globals.swarm.satellites = JSON.parse(localStorage.getItem("satelliteSelection"));
+		        	if(!globals.swarm.satellites.hasOwnProperty("NSC")){
+		        		globals.swarm.satellites['NSC'] = false;
+		        	}
 		        }
 
 		        globals.swarm["products"] = {
@@ -402,7 +406,8 @@ var VECTOR_BREAKDOWN = {
 		        	"FAC":  {
 		        		"Alpha": "SW_OPER_FACATMS_2F",
 		        		"Bravo": "SW_OPER_FACBTMS_2F",
-		        		"Charlie": "SW_OPER_FACCTMS_2F"
+		        		"Charlie": "SW_OPER_FACCTMS_2F",
+		        		"NSC": "SW_OPER_FAC_TMS_2F"
 		        	},
 		        	"EEF":  {
 		        		"Alpha": "SW_OPER_EEFATMS_2F",
@@ -479,7 +484,7 @@ var VECTOR_BREAKDOWN = {
 		    filtered_collection.add({
 					name: "Electric field data (EEF)",
 					visible: containerSelection['EEF'],
-					color: "#1f77b4",
+					color: "#b82e2e",
 					protocol: null,
 					containerproduct: true,
 					id: "EEF"
@@ -487,7 +492,7 @@ var VECTOR_BREAKDOWN = {
 				filtered_collection.add({
 					name: "Currents data (FAC)",
 					visible: containerSelection['FAC'],
-					color: "#1f77b4",
+					color: "#66aa00",
 					protocol: null,
 					containerproduct: true,
 					id: "FAC"
@@ -495,7 +500,7 @@ var VECTOR_BREAKDOWN = {
 				filtered_collection.add({
 					name: "Electron data (TEC)",
 					visible: containerSelection['TEC'],
-					color: "#1f77b4",
+					color: "#990099",
 					protocol: null,
 					containerproduct: true,
 					id: "TEC"

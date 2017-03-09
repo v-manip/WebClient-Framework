@@ -93,6 +93,14 @@
               }
             });
 
+            var outf = $(doc).find('OutputDefinitions, wps\\:OutputDefinitions');
+            if (outf){
+              var mt = $(outf).find('Output, wps\\:Output').attr('mimeType');
+              if (mt){
+                datainputs['Output format'] = mt;
+              }
+            }
+
             var status = $(doc).find('Status, wps\\:Status');
             if (status && status.children().length > 0){
               if(status.children()[0].nodeName === 'wps:ProcessSucceeded'){
@@ -112,7 +120,7 @@
                   // Previous status was still loading now finished, button can be enabled again
                   toggleDownloadButton(true);
                 }
-                var errmsg = $(doc).find('ExceptionText, wps\\:ExceptionText');
+                var errmsg = $(doc).find('ExceptionText, ows\\:ExceptionText');
                 if(errmsg){
                   datainputs['Error Message'] = errmsg.text();
                 }
