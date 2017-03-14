@@ -42,6 +42,15 @@
       modelEvents: {
         "change": "render"
       },
+      onBeforeRender: function(){
+        this.collapse_open = $('#collapse-'+this.model.get('id')).hasClass('in');
+      },
+      onRender: function(){
+        if(this.collapse_open){
+          $('#collapse-'+this.model.get('id')).addClass('in');
+          $('#'+this.model.get('id')+' a').removeClass('collapsed');
+        }
+      },
 
       initialize: function(options) {},
       onShow: function(view){}
@@ -73,6 +82,8 @@
         var that = this;
         $.get(this.get('status_url'), 'xml')
           .done( function ( doc ){
+
+            //
 
             // Collect and fill data input information
             var datainputs = {};
@@ -462,7 +473,7 @@
               }
 
               if(processes.length>0){
-                $('#download_processes').append('<div><b>Download links</b></div>');
+                $('#download_processes').append('<div><b>Download links</b> (Process runs in background, panel can be closed and reopened at any time)</div>');
               }
               for (var i = processes.length - 1; i >= 0; i--) {
 
