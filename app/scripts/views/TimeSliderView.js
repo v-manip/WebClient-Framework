@@ -191,13 +191,21 @@
       }, 
 
       onChangeTime: function(evt){
-        Communicator.mediator.trigger('time:change', evt.originalEvent.detail);
-        // Update ToI in the global context:
-        Communicator.mediator.timeOfInterest = {
-          start: evt.originalEvent.detail.start,
-          end: evt.originalEvent.detail.end
-        };
-        $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
+        // Check if start and end time is equal if yes increse end time by 1 minute
+        var start = evt.originalEvent.detail.start;
+        var end = evt.originalEvent.detail.end;
+
+        if(end.getTime() - start.getTime() == 0){
+          this.slider.select(start, new Date(end.getTime()+(60*1000)));
+        }else{
+          Communicator.mediator.trigger('time:change', evt.originalEvent.detail);
+          // Update ToI in the global context:
+          Communicator.mediator.timeOfInterest = {
+            start: start,
+            end: end
+          };
+          $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
+        }
       },
 
       onDisplayChanged: function(evt){
