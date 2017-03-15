@@ -503,10 +503,9 @@
                 proc_view.render();
                 m.update();
               }
-
-              /*if(active_processes){
-                setTimeout(function(){ that.updateJobs(); }, 2000);
-              }*/
+            }else{
+              // If there are no processes activate button
+              toggleDownloadButton(true);
             }
           });
 
