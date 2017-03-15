@@ -83,8 +83,6 @@
         $.get(this.get('status_url'), 'xml')
           .done( function ( doc ){
 
-            //
-
             // Collect and fill data input information
             var datainputs = {};
             $(doc).find('DataInputs, wps\\:DataInputs').children().each(function(){
@@ -115,8 +113,9 @@
             var status = $(doc).find('Status, wps\\:Status');
             if (status && status.children().length > 0){
               if(status.children()[0].nodeName === 'wps:ProcessSucceeded'){
-                if (that.get('percentage')!=100){
-                  // Previous status was still loading now finished, button can be enabled again
+                if (that.get('status')=='ACCEPTED' ||  that.get('status')=='STARTED'){
+                  // Previous status was still processing loading now finished
+                  that.set('status', 'SUCCEEDED')
                   toggleDownloadButton(true);
                 }
                 that.set('percentage', 100);
@@ -127,8 +126,9 @@
                 }
               }
               if(status.children()[0].nodeName === 'wps:ProcessFailed'){
-                if (that.get('percentage')!=100){
-                  // Previous status was still loading now finished, button can be enabled again
+                if (that.get('status')=='ACCEPTED' ||  that.get('status')=='STARTED'){
+                  // Previous status was still processing loading now finished
+                  that.set('status', 'FAILED')
                   toggleDownloadButton(true);
                 }
                 var errmsg = $(doc).find('ExceptionText, ows\\:ExceptionText');
@@ -141,7 +141,7 @@
               }
               
               if (status.children().attr('percentCompleted') !== undefined){
-                toggleDownloadButton(false);
+                //toggleDownloadButton(false);
                 var p = status.children().attr('percentCompleted');
                 that.set('percentage', p);
                 that.set('percentage_descriptor', (p+'%'));
@@ -150,7 +150,7 @@
                   setTimeout(function(){ that.update(); }, 2000);
                 }
               } else if(status.children()[0].nodeName === 'wps:ProcessAccepted'){
-                toggleDownloadButton(false);
+                //toggleDownloadButton(false);
                 that.set('percentage', 0);
                 that.set('percentage_descriptor', 'Starting process ...');
                 if(!$('#viewContent').is(':empty')){
@@ -458,13 +458,24 @@
           .done(function( processes ){
             $('#download_processes').empty();
 
-            // Button starts disabled and is enabled as soon as answer is received
-            toggleDownloadButton(true);
-
             if(processes.hasOwnProperty('vires:fetch_filtered_data_async')){
 
               var processes_to_save = 2;
               processes = processes['vires:fetch_filtered_data_async'];
+
+              // Check if any process is active
+              var active_processes = false;
+              for (var i = 0; i < processes.length; i++) {
+                if(processes[i].hasOwnProperty('status')){
+                  if(processes[i]['status']=='ACCEPTED' || processes[i]['status']=='STARTED'){
+                    active_processes = true;
+                  }
+                }
+              }
+
+              // Button will be enabled/disabled depending if there are active jobs
+              toggleDownloadButton(!active_processes);
+
               var removal_processes = processes.splice(0,processes.length-processes_to_save );
 
               for (var i = 0; i < removal_processes.length; i++) {
@@ -475,26 +486,27 @@
               if(processes.length>0){
                 $('#download_processes').append('<div><b>Download links</b> (Process runs in background, panel can be closed and reopened at any time)</div>');
               }
-              for (var i = processes.length - 1; i >= 0; i--) {
 
+              for (var i = processes.length - 1; i >= 0; i--) {
                 var m = new DownloadProcessModel({
                   id: processes[i].id,
                   creation_time: processes[i].created.slice(0, -13),
-                  status_url: processes[i].url
+                  status_url: processes[i].url,
+                  status: processes[i].status
                 });
                 var el = $('<div></div>');
-
                 $('#download_processes').append(el);
-
                 var proc_view = new DownloadProcessView({
                   el: el,
                   model: m
                 });
-
                 proc_view.render();
                 m.update();
-
               }
+
+              /*if(active_processes){
+                setTimeout(function(){ that.updateJobs(); }, 2000);
+              }*/
             }
           });
 
