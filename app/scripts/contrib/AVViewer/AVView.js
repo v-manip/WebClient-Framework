@@ -414,6 +414,17 @@ define(['backbone.marionette',
 						this.previous_parameters = _.keys(data[0]);
 						localStorage.setItem('previousParameters', JSON.stringify(this.previous_parameters));
 
+						// Check for special case of only EEF selected
+						var only_EEF = true;
+
+						globals.swarm.filtered_collection.each(function(layer){
+							if(layer.get("containerproduct")){
+								if(layer.get('id') !== 'EEF' && layer.get('visible')){
+									only_EEF = false;
+								}
+							}
+						});
+
 						if(this.$('.d3canvas').length == 1){
 							$('#scatterdiv').empty();
 							$('#parallelsdiv').empty();
@@ -421,6 +432,13 @@ define(['backbone.marionette',
 								selector: this.$('.d3canvas')[0],
 								parsedData: data
 							};
+
+							if(only_EEF){
+								args['toIgnore'] = ['id','active', 'Radius'];
+								for (var i = 0; i < data.length; i++) {
+									delete(data[i]['Radius']);
+								}
+							}
 
 							this.sp.loadData(args);
 						}
