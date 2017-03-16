@@ -20,6 +20,12 @@
         <wps:LiteralData>{{end_time}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
+    {{#if bbox}}<wps:Input>
+      <ows:Identifier>bbox</ows:Identifier>
+      <wps:Data>
+        <wps:ComplexData>{{bbox}}</wps:ComplexData>
+      </wps:Data>
+    </wps:Input>{{/if}}
     <wps:Input>
       <ows:Identifier>elevation</ows:Identifier>
       <wps:Data>
