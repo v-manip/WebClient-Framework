@@ -112,10 +112,10 @@
 					var url = "http://localhost:3080/browse/ows" + "?service=WPS&version=1.0.0&request=Execute&" +
 							  "identifier=getCoverageDifference&" +
 							  "DataInputs="+
-							  "collections="+ getcoveragedifflist +"%3B"+
-							  "begin_time="+ getISODateTimeString(this.selected_time.start) +"%3B"+
-							  "end_time="+ getISODateTimeString(this.selected_time.end) +"%3B"+
-							  "bbox="+ bbox +"%3B"+
+							  "collections="+ getcoveragedifflist +";"+
+							  "begin_time="+ getISODateTimeString(this.selected_time.start) +";"+
+							  "end_time="+ getISODateTimeString(this.selected_time.end) +";"+
+							  "bbox="+ bbox +";"+
 							  "crs=4326&"+
 							  "rawdataoutput=processed";
 
@@ -139,11 +139,11 @@
 					var label_url = "http://localhost:3080/browse/ows" + "?service=WPS&version=1.0.0&request=Execute&" +
 							  "identifier=getCoverageDifferenceLabel&" +
 							  "DataInputs="+
-							  "collections="+ getcoveragedifflist +"%3B"+
-							  "begin_time="+ getISODateTimeString(this.selected_time.start) +"%3B"+
-							  "end_time="+ getISODateTimeString(this.selected_time.end) +"%3B"+
-							  "bbox="+ bbox +"%3B"+
-							  "crs=4326" +"%3B"+
+							  "collections="+ getcoveragedifflist +";"+
+							  "begin_time="+ getISODateTimeString(this.selected_time.start) +";"+
+							  "end_time="+ getISODateTimeString(this.selected_time.end) +";"+
+							  "bbox="+ bbox +";"+
+							  "crs=4326" +";"+
 							  "unit="+unit+"&"+
 							  "rawdataoutput=processed";
 
