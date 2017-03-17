@@ -286,10 +286,16 @@
 					$("#satellite_selection").append('<label for="satellite_selec" style="width:120px;">Satellite </label>');
 					$("#satellite_selection").append('<select style="margin-left:4px;" name="satellite_selec" id="satellite_selec"></select>');
 
-
-					$('#satellite_selec').append('<option value="Alpha" selected>Alpha</option>');
-					$('#satellite_selec').append('<option value="Bravo">Bravo</option>');
-					$('#satellite_selec').append('<option value="Charlie">Charlie</option>');
+					if( globals.swarm.products.hasOwnProperty(this.model.get('id')) ){
+						var options = Object.keys(globals.swarm.products[this.model.get('id')]);
+						for (var i = 0; i < options.length; i++) {
+							var selected = '';
+							if (options[i] == 'Alpha'){
+								selected = 'selected';
+							}
+							$('#satellite_selec').append('<option value="'+options[i]+'"'+selected+'>'+options[i]+'</option>');
+						}
+					}
 
 					$("#satellite_selec option[value="+this.selected_satellite+"]").prop("selected", "selected");
 

@@ -434,10 +434,7 @@ define(['backbone.marionette',
 							};
 
 							if(only_EEF){
-								args['toIgnore'] = ['id','active', 'Radius'];
-								for (var i = 0; i < data.length; i++) {
-									delete(data[i]['Radius']);
-								}
+								this.sp.toIgnore = ['id','active', 'Radius'];
 							}
 
 							this.sp.loadData(args);
