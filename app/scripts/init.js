@@ -62,7 +62,11 @@
             },
             w2ui: {
                 deps: ['jquery']
-            }
+            },
+            w2popup: {
+                deps: ['w2utils', 'jquery']
+            },
+            
         },
 
         paths: {
@@ -119,7 +123,9 @@
 
             sumoselect: '../bower_components/sumoselect/jquery.sumoselect.min',
 
-            w2ui: '../bower_components/w2ui/dist/w2ui-fields.min'
+            w2ui: '../bower_components/w2ui/dist/w2ui-fields.min',
+            w2popup: '../bower_components/w2ui/src/w2popup',
+            w2utils: '../bower_components/w2ui/src/w2utils'
 
         },
 

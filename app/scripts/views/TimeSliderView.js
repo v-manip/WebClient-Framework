@@ -191,13 +191,21 @@
       }, 
 
       onChangeTime: function(evt){
-        Communicator.mediator.trigger('time:change', evt.originalEvent.detail);
-        // Update ToI in the global context:
-        Communicator.mediator.timeOfInterest = {
-          start: evt.originalEvent.detail.start,
-          end: evt.originalEvent.detail.end
-        };
-        $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
+        // Check if start and end time is equal if yes increse end time by 1 minute
+        var start = evt.originalEvent.detail.start;
+        var end = evt.originalEvent.detail.end;
+
+        if(end.getTime() - start.getTime() == 0){
+          this.slider.select(start, new Date(end.getTime()+(60*1000)));
+        }else{
+          Communicator.mediator.trigger('time:change', evt.originalEvent.detail);
+          // Update ToI in the global context:
+          Communicator.mediator.timeOfInterest = {
+            start: start,
+            end: end
+          };
+          $('#calendarwidgetholder').datepicker('setDate', evt.originalEvent.detail.start);
+        }
       },
 
       onDisplayChanged: function(evt){
@@ -210,7 +218,7 @@
 
       fetch: function(start, end, params, callback){
         var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=get_indices&DataInputs=index_id='+
-        this.id + '%3Bbegin_time='+getISODateTimeString(start)+'%3Bend_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+        this.id + ';begin_time='+getISODateTimeString(start)+';end_time='+getISODateTimeString(end)+'&RawDataOutput=output';
         d3.csv(request)
           .row(function (row) {
             return [new Date(row.time), Number(row.value), row.id];
@@ -222,7 +230,7 @@
 
       fetchBubble: function(start, end, params, callback){
         var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=retrieve_bubble_index&DataInputs=collection_id='+
-        this.id + '%3Bbegin_time='+getISODateTimeString(start)+'%3Bend_time='+getISODateTimeString(end)+'&RawDataOutput=output';
+        this.id + ';begin_time='+getISODateTimeString(start)+';end_time='+getISODateTimeString(end)+'&RawDataOutput=output';
         d3.csv(request)
           .row(function (row) {
             return [
@@ -237,6 +245,26 @@
             callback(rows);
           });
       },
+
+
+      fetchWPS: function(start, end, params, callback){
+        var request = this.url + '?service=wps&request=execute&version=1.0.0&identifier=getTimeData&DataInputs=collection='+
+        this.id + ';begin_time='+getISODateTimeString(start)+';end_time='+getISODateTimeString(end)+'&RawDataOutput=times';
+        d3.csv(request)
+          .row(function (row) {
+            return [
+              new Date(row.starttime),
+              new Date(row.endtime), {
+                id: row.identifier,
+                bbox: row.bbox.replace(/[()]/g,'').split(',').map(parseFloat)
+              }
+            ];
+          })
+          .get(function(error, rows) { 
+            callback(rows);
+          });
+      },
+
 
       changeLayer: function (options) {
         if (!options.isBaseLayer){
@@ -274,15 +302,17 @@
                   });
                   break;
                 case "WPS":
+
+                  var attrs = {
+                    id: product.get('download').id,
+                    url: product.get('download').url
+                  };
                   
                   this.slider.addDataset({
                     id: product.get('download').id,
                     color: product.get('color'),
                     records: null,
-                    source: new TimeSlider.Sources.EOxServerWPSSource({
-                        url: product.get('download').url,
-                        eoid: product.get('download').id
-                     })
+                    source: {fetch: this.fetchWPS.bind(attrs)}
                   });
                   this.activeWPSproducts.push(product.get('download').id);
                   // For some reason updateBBox is needed, altough bbox it is initialized already.

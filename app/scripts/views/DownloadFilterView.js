@@ -1,6 +1,14 @@
 (function() {
   'use strict';
 
+  var INPUT_DESCRIPTIONS = {
+    'collection_ids': 'Products',
+    'model_ids': 'Models',
+    'begin_time': 'Start time',
+    'end_time': 'End time',
+    'filters': 'Filters'
+  }
+
 
   var root = this;
   root.define([
@@ -10,16 +18,158 @@
     'models/DownloadModel',
     'hbs!tmpl/DownloadFilter',
     'hbs!tmpl/FilterTemplate',
+    'hbs!tmpl/DownloadProcess',
     'hbs!tmpl/wps_retrieve_data_filtered',
     'hbs!tmpl/CoverageDownloadPost',
-    'hbs!tmpl/wps_fetchFilteredData',
+    'hbs!tmpl/wps_fetchFilteredDataAsync',
     'underscore',
-    'w2ui'
+    'w2ui',
+    'w2popup'
   ],
   function( Backbone, Communicator, globals, m, DownloadFilterTmpl,
-            FilterTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredData ) {
+            FilterTmpl, DownloadProcessTmpl, wps_requestTmpl, CoverageDownloadPostTmpl, wps_fetchFilteredDataAsync ) {
 
-    var DownloadFilterView = Backbone.Marionette.ItemView.extend({
+    var DownloadProcessView = Backbone.Marionette.ItemView.extend({
+      tagName: "div",
+      el: '#download_processes',
+      //id: "modal-start-download",
+      className: "download_process",
+      template: {
+          type: 'handlebars',
+          template: DownloadProcessTmpl
+      },
+
+      modelEvents: {
+        "change": "render"
+      },
+      onBeforeRender: function(){
+        this.collapse_open = $('#collapse-'+this.model.get('id')).hasClass('in');
+      },
+      onRender: function(){
+        if(this.collapse_open){
+          $('#collapse-'+this.model.get('id')).addClass('in');
+          $('#'+this.model.get('id')+' a').removeClass('collapsed');
+        }
+      },
+
+      initialize: function(options) {},
+      onShow: function(view){}
+    }),
+
+    toggleDownloadButton = function(activate){
+      if(!activate){
+        $('#btn-start-download').prop('disabled', true);
+        $('#btn-start-download').attr('title', 'Please wait until previous process is finished');
+      }else{
+        $('#btn-start-download').prop('disabled', false);
+        $('#btn-start-download').removeAttr('title');
+      }
+      
+    },
+
+    DownloadProcessModel = Backbone.Model.extend({
+      id: null,
+      status_url: null,
+      percentage: 0,
+      percentage_descriptor: 'Loading ...',
+      status: null,
+      datainputs: null,
+      creation_time: null,
+      download_link: null,
+
+      update: function() {
+
+        var that = this;
+        $.get(this.get('status_url'), 'xml')
+          .done( function ( doc ){
+
+            // Collect and fill data input information
+            var datainputs = {};
+            $(doc).find('DataInputs, wps\\:DataInputs').children().each(function(){
+              var id = $(this).find('Identifier, ows\\:Identifier').text();
+
+              if(id && INPUT_DESCRIPTIONS.hasOwnProperty(id)){
+                var data = $(this).find('LiteralData, wps\\:LiteralData').text();
+                if(data){
+                  datainputs[INPUT_DESCRIPTIONS[id]] = data;
+                }else{
+                  data = $(this).find('ComplexData, wps\\:ComplexData').text();
+                  if(data){
+                    data = data.slice(1,-1);
+                    datainputs[INPUT_DESCRIPTIONS[id]] = data;
+                  }
+                }
+              }
+            });
+
+            var outf = $(doc).find('OutputDefinitions, wps\\:OutputDefinitions');
+            if (outf){
+              var mt = $(outf).find('Output, wps\\:Output').attr('mimeType');
+              if (mt){
+                datainputs['Output format'] = mt;
+              }
+            }
+
+            var status = $(doc).find('Status, wps\\:Status');
+            if (status && status.children().length > 0){
+              if(status.children()[0].nodeName === 'wps:ProcessSucceeded'){
+                if (that.get('status')=='ACCEPTED' ||  that.get('status')=='STARTED'){
+                  // Previous status was still processing loading now finished
+                  that.set('status', 'SUCCEEDED')
+                  toggleDownloadButton(true);
+                }
+                that.set('percentage', 100);
+                that.set('percentage_descriptor', 'Ready');
+                var download_link = $(doc).find('Output, wps\\:Output').find('Reference, wps\\:Reference').attr('href');
+                if(download_link){
+                  that.set('download_link', download_link);
+                }
+              }
+              if(status.children()[0].nodeName === 'wps:ProcessFailed'){
+                if (that.get('status')=='ACCEPTED' ||  that.get('status')=='STARTED'){
+                  // Previous status was still processing loading now finished
+                  that.set('status', 'FAILED')
+                  toggleDownloadButton(true);
+                }
+                var errmsg = $(doc).find('ExceptionText, ows\\:ExceptionText');
+                if(errmsg){
+                  datainputs['Error Message'] = errmsg.text();
+                }
+
+                that.set('percentage', 0);
+                that.set('percentage_descriptor', 'Error while processing');
+              }
+              
+              if (status.children().attr('percentCompleted') !== undefined){
+                //toggleDownloadButton(false);
+                var p = status.children().attr('percentCompleted');
+                that.set('percentage', p);
+                that.set('percentage_descriptor', (p+'%'));
+                // Only update model if download view is open
+                if(!$('#viewContent').is(':empty')){
+                  setTimeout(function(){ that.update(); }, 2000);
+                }
+              } else if(status.children()[0].nodeName === 'wps:ProcessAccepted'){
+                //toggleDownloadButton(false);
+                that.set('percentage', 0);
+                that.set('percentage_descriptor', 'Starting process ...');
+                if(!$('#viewContent').is(':empty')){
+                  setTimeout(function(){ that.update(); }, 2000);
+                }
+              }
+
+            }
+            if(datainputs && Object.keys(datainputs).length>0){
+              that.set('datainputs', datainputs);
+            }
+
+            
+
+          })
+      }
+    }),
+
+    DownloadFilterView = Backbone.Marionette.ItemView.extend({
       tagName: "div",
       id: "modal-start-download",
       className: "panel panel-default download",
@@ -52,6 +202,8 @@
 
         $('#validationwarning').remove();
 
+        this.updateJobs();
+
         var options = {};
 
         // Check for filters
@@ -72,7 +224,8 @@
 
 
         this.$('.delete-filter').click(function(evt){
-          this.parentElement.parentElement.remove();
+          var item = this.parentElement.parentElement;
+          this.parentElement.parentElement.parentElement.removeChild(item);
         });
 
         // Check for products and models
@@ -90,17 +243,14 @@
 
         var timeinterval = this.model.get("ToI");
 
+
+
         this.start_picker = this.$('#starttime').datepicker({
           onSelect: function() {
-            var date1 = that.start_picker.datepicker( "getDate" );
-            var date2 = that.end_picker.datepicker( "getDate" );
-            var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>30){
-              date2 = new Date(date1);
-              date2.setDate(date2.getDate()+30);
-              that.end_picker.datepicker("setDate", date2);
-            }else if(diff<0){
-              that.start_picker.datepicker("setDate", date2);
+            var start = that.start_picker.datepicker( "getDate" );
+            var end = that.end_picker.datepicker( "getDate" );
+            if(start>end){
+              that.end_picker.datepicker("setDate", start);
             }
           }
         });
@@ -108,15 +258,10 @@
 
         this.end_picker = this.$('#endtime').datepicker({
           onSelect: function() {
-            var date1 = that.start_picker.datepicker( "getDate" );
-            var date2 = that.end_picker.datepicker( "getDate" );
-            var diff = Math.floor((date2 - date1) / (1000*60*60*24));
-            if (diff>30){
-              date1 = new Date(date2);
-              date1.setDate(date1.getDate()-30);
-              that.start_picker.datepicker("setDate", date1);
-            }else if(diff<0){
-              that.end_picker.datepicker("setDate", date1);
+            var start = that.start_picker.datepicker( "getDate" );
+            var end = that.end_picker.datepicker( "getDate" );
+            if(end<start){
+              that.start_picker.datepicker("setDate", end);
             }
           }
         });
@@ -158,7 +303,7 @@
         },this);
 
         var prod_div = this.$el.find("#products");
-        prod_div.append('<div>Products:</div>');
+        prod_div.append('<div style="font-weight:bold;">Products</div>');
 
         prod_div.append('<ul style="padding-left:15px">');
         var ul = prod_div.find("ul");
@@ -169,7 +314,7 @@
         
         if (this.models.length>0){
           var mod_div = this.$el.find("#model");
-          mod_div.append('<div>Models:</div>');
+          mod_div.append('<div><b>Models</b></div>');
           mod_div.append('<ul style="padding-left:15px">');
           ul = mod_div.find("ul");
           _.each(this.models, function(prod){
@@ -188,9 +333,9 @@
 
         this.$el.find("#custom_time_cb").off();
         this.$el.find("#custom_time").empty();
-        this.$el.find("#custom_time").html(
+        /*this.$el.find("#custom_time").html(
             '<div class="checkbox" style="margin-left:0px;"><label><input type="checkbox" value="" id="custom_time_cb">Custom time selection</label></div><div id="customtimefilter"></div>'
-        );
+        );*/
 
         this.$el.find('#custom_time_cb').click(function(){
 
@@ -305,6 +450,68 @@
 
       },
 
+      updateJobs: function(){
+
+        var url_jobs = '/ows?service=wps&request=execute&version=1.0.0&identifier=listJobs&RawDataOutput=job_list';
+
+        $.get(url_jobs, 'json')
+          .done(function( processes ){
+            $('#download_processes').empty();
+
+            if(processes.hasOwnProperty('vires:fetch_filtered_data_async')){
+
+              var processes_to_save = 2;
+              processes = processes['vires:fetch_filtered_data_async'];
+
+              // Check if any process is active
+              var active_processes = false;
+              for (var i = 0; i < processes.length; i++) {
+                if(processes[i].hasOwnProperty('status')){
+                  if(processes[i]['status']=='ACCEPTED' || processes[i]['status']=='STARTED'){
+                    active_processes = true;
+                  }
+                }
+              }
+
+              // Button will be enabled/disabled depending if there are active jobs
+              toggleDownloadButton(!active_processes);
+
+              var removal_processes = processes.splice(0,processes.length-processes_to_save );
+
+              for (var i = 0; i < removal_processes.length; i++) {
+                var remove_url = '/ows?service=WPS&request=Execute&identifier=removeJob&DataInputs=job_id='+removal_processes[i].id;
+                $.get(remove_url);
+              }
+
+              if(processes.length>0){
+                $('#download_processes').append('<div><b>Download links</b> (Process runs in background, panel can be closed and reopened at any time)</div>');
+              }
+
+              for (var i = processes.length - 1; i >= 0; i--) {
+                var m = new DownloadProcessModel({
+                  id: processes[i].id,
+                  creation_time: processes[i].created.slice(0, -13),
+                  status_url: processes[i].url,
+                  status: processes[i].status
+                });
+                var el = $('<div></div>');
+                $('#download_processes').append(el);
+                var proc_view = new DownloadProcessView({
+                  el: el,
+                  model: m
+                });
+                proc_view.render();
+                m.update();
+              }
+            }else{
+              // If there are no processes activate button
+              toggleDownloadButton(true);
+            }
+          });
+
+
+      },
+
       createSubscript: function(string){
         // Adding subscript elements to string which contain underscores
         var newkey = "";
@@ -323,7 +530,7 @@
       renderFilterList: function(filters) {
         var fil_div = this.$el.find("#filters");
         fil_div.empty();
-        fil_div.append("<div>Filters</div>");
+        //fil_div.append("<div>Filters</div>");
 
         _.each(_.keys(filters), function(key){
 
@@ -434,6 +641,8 @@
           options.end_time.setDate(options.end_time.getDate() + 1);
         }
 
+        var bt_obj = options.begin_time;
+        var et_obj = options.end_time;
         options.begin_time = getISODateTimeString(options.begin_time);
         options.end_time = getISODateTimeString(options.end_time);
 
@@ -505,7 +714,7 @@
 
         // filters
         var filters = [];
-        var filter_elem = this.$el.find(".input-group");
+        var filter_elem = $('#filters').find(".input-group");
 
         _.each(filter_elem, function(fe){
 
@@ -578,24 +787,40 @@
 
         // TODO: Just getting last URL here think of how different urls should be handled
         var url = this.swarm_prod.map(function(m){return m.get("views")[0].urls[0];})[0];
-
-        //var xml = wps_requestTmpl(options);
-        var xml = wps_fetchFilteredData(options);
-        
-        var $form = $(CoverageDownloadPostTmpl({
-              url: url, xml: xml
-            }));
-
-        $downloads.append($form);
-
+        var req_data = wps_fetchFilteredDataAsync(options);
         var that = this;
 
-        function formsubmit(){
-          $form.submit();
-          return false;
-        }
+        // Do some sanity checks before starting process
 
-        formsubmit();
+        // Calculate the difference in milliseconds
+        var difference_ms = et_obj.getTime() - bt_obj.getTime();
+        var days = Math.round(difference_ms/(1000*60*60*24));
+
+        var sendProcessingRequest = function(){
+          toggleDownloadButton(false);
+          $.post( url, req_data, 'xml' )
+            .done(function( response ) {
+              that.updateJobs();
+            })
+            .error(function(resp){
+              toggleDownloadButton(true);
+            });
+        };
+
+        if (days>50 && filters.length==0){
+          w2confirm('The current selection will most likely exceed the download limit, please make sure to add filters to further subset your selection. <br> Would you still like to proceed?')
+            .yes(function () {
+              sendProcessingRequest();
+            });
+
+        }else if (days>50){
+          w2confirm('The current selected time interval is large and could result in a large download file if filters are not restrictive. The process runs in the background and the browser does not need to be open.<br>Are you sure you want to proceed?')
+            .yes(function () {
+              sendProcessingRequest();
+            });
+        }else{
+          sendProcessingRequest();
+        }
 
       },
 

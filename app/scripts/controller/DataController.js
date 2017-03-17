@@ -249,6 +249,19 @@
             }
            
           }
+          var longest = 0;
+          for (var key in collections) {
+            if (collections[key].length > longest){
+              longest = collections[key].length;
+            }
+          }
+          var previous_amount = null;
+          var to_delete = null;
+          for (var key in collections) {
+            if(collections[key].length !== longest){
+              delete collections[key];
+            }
+          }
 
           var collection_keys = _.keys(collections);
           for (var i = collection_keys.length - 1; i >= 0; i--) {
@@ -267,7 +280,10 @@
             "v_SC", "Bubble_Probability", "Kp", "Dst", "QDLat", "QDLon", "MLT",
             "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
             "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
-            "F_res_CHAOS-5-Combined", "F_res_Custom_Model"
+            "F_res_CHAOS-5-Combined", "F_res_Custom_Model",
+            "Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
+            "IRC", "IRC_Error", "FAC", "FAC_Error",
+            "EEF", "RelErr"
           ];
 
           // See if magnetic data actually selected if not remove residuals
@@ -284,6 +300,31 @@
           if(!magdata){
             variables = _.filter(variables, function(v){
               if(v.indexOf("_res_")!=-1){
+                return false;
+              }else{
+                return true;
+              }
+            })
+          }
+
+          // Remove parameters that need calculation if EEF is selected as data
+          // has no radius and can't be calculated without it
+          var eef_data = false;
+          _.each(collections, function(vals){
+            if(_.find(vals, function(v){
+              if(v.indexOf("EEF")!=-1){
+                return true}
+              })){
+              eef_data = true;
+            }
+          });
+
+          if (eef_data){
+            variables = _.filter(variables, function(v){
+              if(v.indexOf("_res_")!=-1 ||
+                 v.indexOf("QDLat")!=-1 ||
+                 v.indexOf("QDLon")!=-1 ||
+                 v.indexOf("MLT")!=-1){
                 return false;
               }else{
                 return true;
@@ -322,6 +363,21 @@
                   for (var i = dat.length - 1; i >= 0; i--) {
                     if(dat[i].hasOwnProperty('Timestamp')) {
                       dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']*1000);
+                    }
+                    if(dat[i].hasOwnProperty('timestamp')) {
+                      dat[i]['Timestamp'] = new Date(dat[i]['timestamp']*1000);
+                      delete dat[i].timestamp;
+                    }
+                    if(dat[i].hasOwnProperty('latitude')) {
+                      dat[i]['Latitude'] = dat[i]['latitude'];
+                      delete dat[i].latitude;
+                    }
+                    if(dat[i].hasOwnProperty('longitude')) {
+                      dat[i]['Longitude'] = dat[i]['longitude'];
+                      delete dat[i].longitude;
+                    }
+                    if(!dat[i].hasOwnProperty('Radius')) {
+                      dat[i]['Radius'] = 6832000;
                     }
 
                     $.each(dat[i], function(key, value){

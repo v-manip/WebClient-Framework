@@ -218,7 +218,7 @@ button[active=active] {
  * Layer control styles
  */
 .layercontrol {
-    width: 23.8em;
+    width: 24em;
     top: 8em;
     left: 3em;
     font-size: .9em;
@@ -257,6 +257,18 @@ button[active=active] {
 }
 .fa-sort {
     cursor: ns-resize;
+}
+
+#satcheckcontainer{
+  margin-right: -5px;
+  margin-left: -5px;
+}
+
+
+#satcheckcontainer .col-md-3{
+  padding-right: 0px;
+  padding-left: 0px;
+  white-space: nowrap;
 }
 
 
@@ -455,4 +467,27 @@ button[active=active] {
 
 #loader { 
   fill: #999;
+}
+
+.radio-inline{
+  padding-left: 0px !important;
+  margin-right: 2px !important;
+}
+
+.radio-inline input{
+  margin-left: 0px !important;
+  margin-right: 2px !important;
+}
+
+.baselayerList{
+  margin-left: 0px !important;
+}
+
+.input-group-sm>.input-group-addon, .input-group-sm>.input-group-btn>.btn {
+  padding: 3px 10px !important;
+  line-height: 0.5 !important;
+}
+
+.w2ui-list ul li{
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif !important;
 }

@@ -299,7 +299,14 @@ define(['backbone.marionette',
 
 							//var filterstouse = ["Dst", "QDLat", "MLT", "n", "T_elec", "Bubble_Probability"];
 
-							var filterstouse = this.sp.fieldsforfiltering.concat(["n", "T_elec", "Bubble_Probability"]);
+							// Define which parameters should be selected defaultwise as filtering
+							var filterstouse = this.sp.fieldsforfiltering.concat([
+								"n", "T_elec", "Bubble_Probability",
+								"Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
+								"IRC", "FAC",
+								"EEF"
+							]);
+
 							filterstouse = filterstouse.concat(["MLT"]);
 							var residuals = _.filter(_.keys(data[0]), function(item) {
 								return item.indexOf("_res") !== -1;
@@ -345,6 +352,42 @@ define(['backbone.marionette',
 								}
 							}
 
+							// If previous does not contain TEC data and new one
+							// does we add Absolute_STEC parameter F to selection i plot
+							if( 
+								(this.previous_parameters.indexOf("Absolute_STEC") == -1) && 
+								(_.keys(data[0]).indexOf("Absolute_STEC") != -1)
+							){
+								// Make sure it is not already enabled
+								if(this.sp.sel_y.indexOf("Absolute_STEC")==-1){
+									this.sp.sel_y.push("Absolute_STEC");
+								}
+							}
+
+							// If previous does not contain FAC data and new one
+							// does we add FAC parameter FAC to selection i plot
+							if( 
+								(this.previous_parameters.indexOf("FAC") == -1) && 
+								(_.keys(data[0]).indexOf("FAC") != -1)
+							){
+								// Make sure it is not already enabled
+								if(this.sp.sel_y.indexOf("FAC")==-1){
+									this.sp.sel_y.push("FAC");
+								}
+							}
+
+							// If previous does not contain EEF data and new one
+							// does we add EEF parameter EEF to selection i plot
+							if( 
+								(this.previous_parameters.indexOf("EEF") == -1) && 
+								(_.keys(data[0]).indexOf("EEF") != -1)
+							){
+								// Make sure it is not already enabled
+								if(this.sp.sel_y.indexOf("EEF")==-1){
+									this.sp.sel_y.push("EEF");
+								}
+							}
+
 							// If previous does not contain a residual a new one does
 							// we switch the selection to residual value
 							var res_index = residuals.indexOf(
@@ -371,6 +414,17 @@ define(['backbone.marionette',
 						this.previous_parameters = _.keys(data[0]);
 						localStorage.setItem('previousParameters', JSON.stringify(this.previous_parameters));
 
+						// Check for special case of only EEF selected
+						var only_EEF = true;
+
+						globals.swarm.filtered_collection.each(function(layer){
+							if(layer.get("containerproduct")){
+								if(layer.get('id') !== 'EEF' && layer.get('visible')){
+									only_EEF = false;
+								}
+							}
+						});
+
 						if(this.$('.d3canvas').length == 1){
 							$('#scatterdiv').empty();
 							$('#parallelsdiv').empty();
@@ -378,6 +432,10 @@ define(['backbone.marionette',
 								selector: this.$('.d3canvas')[0],
 								parsedData: data
 							};
+
+							if(only_EEF){
+								this.sp.toIgnore = ['id','active', 'Radius'];
+							}
 
 							this.sp.loadData(args);
 						}

@@ -193,6 +193,13 @@ define(['backbone.marionette',
 
 				//this.map.scene.fxaaOrderIndependentTranslucency = false;
 
+				var handler = new Cesium.ScreenSpaceEventHandler(this.map.scene.canvas);
+				var self = this;
+				handler.setInputAction(function(click) {
+					 //hide the selectionIndicator
+					self.map.selectionIndicator.viewModel.selectionIndicatorElement.style.visibility = 'hidden'; 
+				}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
 
 				this.billboards = this.map.scene.primitives.add(new Cesium.BillboardCollection());
 
@@ -941,7 +948,7 @@ define(['backbone.marionette',
 
 
             checkShc: function(product, visible){
-            	if(visible){
+            if(visible){
 
     				if(product.get('shc') != null){
 
@@ -971,7 +978,7 @@ define(['backbone.marionette',
 
 						var coefficients_range = product.get("coefficients_range");
 
-						$.post(url, Tmpl_eval_model({
+						var req_options = {
 							"model": "Custom_Model",
 							"variable": band,
 							"begin_time": getISODateTimeString(this.begin_time),
@@ -985,7 +992,14 @@ define(['backbone.marionette',
 							"style": style,
 							"range_min": range[0],
 							"range_max": range[1],
-						}))
+						};
+
+						if (this.bboxsel !== null){
+							var bb = this.bboxsel;
+							req_options['bbox'] =  bb.join();
+						}
+
+						$.post(url, Tmpl_eval_model(req_options))
 
 							.done(function( data ) {
 
@@ -994,9 +1008,22 @@ define(['backbone.marionette',
 									that.map.scene.imageryLayers.remove(that.customModelLayer);	
 									that.customModelLayer = false;		
 								}
-													
-							    imageURI = "data:image/gif;base64,"+data;
-							    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
+
+								var imageURI = "data:image/gif;base64,"+data;
+								var layer_options = {url: imageURI};
+								if(bb && bb.length==4){
+									var rec = new Cesium.Rectangle(
+										Cesium.Math.toRadians(bb[1]),
+										Cesium.Math.toRadians(bb[0]),
+										Cesium.Math.toRadians(bb[3]),
+										Cesium.Math.toRadians(bb[2])
+									);
+									layer_options['rectangle'] = rec;
+								}
+
+						    
+						    var imagelayer = new Cesium.SingleTileImageryProvider(layer_options);
+
 								that.customModelLayer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
 								product.set("ces_layer", that.customModelLayer);
 								// TODO: Hack to position layer at correct index, adding imagery provider  
@@ -1122,6 +1149,7 @@ define(['backbone.marionette',
 						var max_rad = this.map.scene.globe.ellipsoid.maximumRadius;
 						var scaltype = new Cesium.NearFarScalar(1.0e2, 4, 14.0e6, 0.8);
 						var previous_collection = '';
+						var time_bucket = {'Alpha':{}, 'Bravo':{}, 'Charlie':{}};
 						//var line_primitives = [];
 
 						var linecnt = 0;
@@ -1171,6 +1199,19 @@ define(['backbone.marionette',
 						    				}
 						    			}
 						    			var height_offset = i*210000;
+
+						    			if(tovisualize[i] === 'Absolute_STEC' ||
+						    				 tovisualize[i] === 'Relative_STEC' ||
+												 tovisualize[i] === 'Relative_STEC_RMS'){
+						    				var ts = String(row.Timestamp.getTime());
+						    				if(time_bucket[row.id].hasOwnProperty(ts)){
+						    					time_bucket[row.id][ts] = time_bucket[row.id][ts]+1;
+						    					height_offset = (i+time_bucket[row.id][ts])*210000;
+						    				}else{
+						    					time_bucket[row.id][ts] = 1;
+						    					height_offset = (i+1)*210000;
+						    				}
+						    			}
 
 						    			if(!isNaN(row[set.band])){
 								    		var color = this.plot.getColor(row[set.band]);
@@ -1662,17 +1703,12 @@ define(['backbone.marionette',
 
 					// Remove any possible selection and field lines (e.g.by tutorial)
 					if(this.extentPrimitive)
-						this.map.scene.primitives.remove(this.extentPrimitive);
+						this.map.entities.remove(this.extentPrimitive);
 					_.each(_.keys(this.FL_collection), function(key){
-	            		this.map.scene.primitives.remove(this.FL_collection[key]);
-                		delete this.FL_collection[key];
-	            	}, this);
+          		this.map.scene.primitives.remove(this.FL_collection[key]);
+            		delete this.FL_collection[key];
+          	}, this);
 
-					var color = "#6699FF";
-
-					var material = new Cesium.Material.fromType('Color');
-					material.uniforms.color = new Cesium.Color.fromCssColorString(color);
-					material.uniforms.color.alpha = 0.2;
 
 					var e = new Cesium.Rectangle(
 						Cesium.Math.toRadians(bbox.w),
@@ -1681,22 +1717,28 @@ define(['backbone.marionette',
 						Cesium.Math.toRadians(bbox.n)
 					);
 
-			        this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
+			    this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
 
-		            this.extentPrimitive = new DrawHelper.RectanglePrimitive({
-		                rectangle: e,
-		                material: material
-		            });
 
-		            this.map.scene.primitives.add(this.extentPrimitive);
+					var rectangle = Cesium.Rectangle.fromDegrees(bbox.w, bbox.s, bbox.e, bbox.n);
+					this.extentPrimitive = this.map.entities.add({
+						id: 'selectionrectangle',
+						rectangle : {
+							coordinates : rectangle,
+							fill : false,
+							outline : true,
+							outlineColor : Cesium.Color.BLUE,
+							outlineWidth: 2
+						}
+					});
 
-		            this.checkFieldLines();
-		            $('#bb_selection').html('Clear Selection');
+            this.checkFieldLines();
+            $('#bb_selection').html('Clear Selection');
 
 				}else{
 					this.bboxsel = null;
 					if(this.extentPrimitive){
-						this.map.scene.primitives.remove(this.extentPrimitive);
+						this.map.entities.remove(this.extentPrimitive);
 					}
 					_.each(_.keys(this.FL_collection), function(key){
 	            		this.map.scene.primitives.remove(this.FL_collection[key]);
@@ -1704,6 +1746,12 @@ define(['backbone.marionette',
 	            	}, this);
 	            	$('#bb_selection').html('Select Area');
 				}
+
+				globals.products.each(function(product) {
+	      	if (product.get("views")[0].protocol == "WPS"){
+	      			this.checkShc(product, product.get('visible'));
+	      		}
+	      	},this);
 
 
 			},
@@ -1877,97 +1925,41 @@ define(['backbone.marionette',
 
 				this.begin_time = time.start;
 				this.end_time = time.end;
-                                        
-	            globals.products.each(function(product) {
-                    if(product.get("timeSlider")){
-                    	product.set("time",string);
-                    	var ces_layer = product.get("ces_layer");
+        globals.products.each(function(product) {
+              if(product.get("timeSlider")){
+              	product.set("time",string);
+              	var ces_layer = product.get("ces_layer");
 
-                    	if(ces_layer){
-	                    	ces_layer.imageryProvider.updateProperties("time", string);
-	                    	if (ces_layer.show){
-	                    		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-	                    		this.map.scene.imageryLayers.remove(ces_layer, false);
-	                    		this.map.scene.imageryLayers.add(ces_layer, index);
-	                    	}
-	                    }
-
-	                    if(product.get("views")[0].protocol == "CZML"){
-	                    	//this.checkLayerFeatures(product, product.get("visible"));
-                			
-		        		}else if (product.get("views")[0].protocol == "WPS"){
-
-                			if(product.get("visible")){
-
-                				if(product.get('shc') != null){
-
-                					var parameters = product.get("parameters");
-		                			var band;
-		                			var keys = _.keys(parameters);
-									_.each(keys, function(key){
-										if(parameters[key].selected)
-											band = key;
-									});
-		                			var style = parameters[band].colorscale;
-		                			var range = parameters[band].range;
-
-
-                					var imageURI;
-									var that = this;
-									var imagelayer;
-									//product.set("visible", true);
-
-									var ces_layer = product.get("ces_layer");
-									var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-									
-									var url = product.get("views")[0].urls[0];
-
-									$.post( url, Tmpl_eval_model({
-										"model": "Custom_Model",
-										"variable": band,
-										"begin_time": getISODateTimeString(this.begin_time),
-										"end_time": getISODateTimeString(this.end_time),
-										"elevation": product.get("height"),
-										"shc": product.get('shc'),
-										"height": 512,
-										"width": 1024,
-										"style": style,
-										"range_min": range[0],
-										"range_max": range[1],
-									}))
-
-										.done(function( data ) {	
-											that.map.scene.imageryLayers.remove(ces_layer);									
-										    imageURI = "data:image/gif;base64,"+data;
-										    var imagelayer = new Cesium.SingleTileImageryProvider({url: imageURI});
-											ces_layer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-											product.set("ces_layer", ces_layer);
-										});
-                				}
-							}
-						}
-                    }
-	            }, this);
-
+              	if(ces_layer){
+                	ces_layer.imageryProvider.updateProperties("time", string);
+                	if (ces_layer.show){
+                		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
+                		this.map.scene.imageryLayers.remove(ces_layer, false);
+                		this.map.scene.imageryLayers.add(ces_layer, index);
+                	}
+                }
+              }else if (product.get("views")[0].protocol == "WPS"){
+              	this.checkShc(product, product.get('visible'));
+              }
+        }, this);
 
 				this.checkFieldLines();
-            },
+      },
 
-            onSetExtent: function(bbox) {
-            	//this.map.zoomToExtent(bbox);
-            	/*this.map.scene.camera.flyToRectangle({
-            		destination: Cesium.Rectangle.fromDegrees(bbox[0], bbox[1], bbox[2], bbox[3])
-            	});*/
+      onSetExtent: function(bbox) {
+      	//this.map.zoomToExtent(bbox);
+      	/*this.map.scene.camera.flyToRectangle({
+      		destination: Cesium.Rectangle.fromDegrees(bbox[0], bbox[1], bbox[2], bbox[3])
+      	});*/
+      },
 
-            },
-
-            onChangeZoom: function (zoom) {
-            	if(zoom<0){
-					this.map.scene.camera.zoomOut(Math.abs(zoom));
-            	}else{
-            		this.map.scene.camera.zoomIn(Math.abs(zoom));
-            	}
-            },
+      onChangeZoom: function (zoom) {
+      	if(zoom<0){
+		this.map.scene.camera.zoomOut(Math.abs(zoom));
+      	}else{
+      		this.map.scene.camera.zoomIn(Math.abs(zoom));
+      	}
+      },
 
 
 			onClose: function(){
