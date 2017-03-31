@@ -25,6 +25,8 @@
             "views": [{
                 "id": "terrain-light",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=terrain-light&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fjpg",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
                     "//b.tiles.maps.eox.at/wmts/",

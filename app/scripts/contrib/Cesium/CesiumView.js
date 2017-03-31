@@ -290,9 +290,6 @@ define(['backbone.marionette',
 					this.map.scene.camera.right = new Cesium.Cartesian3(c.right[0], c.right[1], c.right[2]);
 				}
 
-				if(localStorage.getItem('areaSelection') !== null){
-					this.onSelectionChanged(JSON.parse(localStorage.getItem('areaSelection')));
-				}
 
 				this.map.scene.morphComplete.addEventListener(function (){
 				    localStorage.setItem('sceneMode', this.map.scene.mode);
@@ -311,6 +308,14 @@ define(['backbone.marionette',
 			onShow: function() {
 				if (!this.map) {
 					this.createMap();
+				}
+
+				// Check for possible already available selection
+				if(localStorage.getItem('areaSelection') !== null){
+					var bbox = JSON.parse(localStorage.getItem('areaSelection'));
+					if(bbox){
+						this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
+					}
 				}
 
 				if(this.navigationhelp){
@@ -457,22 +462,27 @@ define(['backbone.marionette',
 	            
                 switch(view.protocol){
                     case "WMTS":
-                    	return_layer = new Cesium.WebMapTileServiceImageryProvider({
-						    url : view.urls[0],
-						    layer : view.id,
-						    style : view.style,
-						    format : view.format,
-						    tileMatrixSetID : view.matrixSet,
-						    maximumLevel: 12,
-						    tilingScheme: new Cesium.GeographicTilingScheme({numberOfLevelZeroTilesX: 2, numberOfLevelZeroTilesY: 1}),
-						    credit : new Cesium.Credit(view.attribution),
-						    show: layerdesc.get("visible")
-						});
+                      var options = {
+											    url : view.urls[0],
+											    layer : view.id,
+											    style : view.style,
+											    format : view.format,
+											    tileMatrixSetID : view.matrixSet,
+											    maximumLevel: 12,
+											    tilingScheme: new Cesium.GeographicTilingScheme({numberOfLevelZeroTilesX: 2, numberOfLevelZeroTilesY: 1}),
+											    credit : new Cesium.Credit(view.attribution),
+											    show: layerdesc.get("visible")
+											}
+											if(view.hasOwnProperty('urlTemplate') && view.hasOwnProperty('subdomains')){
+												options.url = view.urlTemplate;
+												options.subdomains = view.subdomains;
+											}
+                    	return_layer = new Cesium.WebMapTileServiceImageryProvider(options);
                     break;
 
                     case "WMS":
                     	params = $.extend({
-                    		/*transparent: 'true'*/
+                    		transparent: 'true',
                     	},  Cesium.WebMapServiceImageryProvider.DefaultParameters);
 
                     	// Check if layer has additional parameters configured
@@ -483,11 +493,16 @@ define(['backbone.marionette',
                     		var keys = _.keys(options);
                     		_.each(keys, function(key){
 								if(options[key].selected){
-									//additional_parameters.dim_bands = key;
+									additional_parameters.dim_bands = key;
 									additional_parameters.dim_range = options[key].range[0]+","+options[key].range[1];
 									styles = options[key].colorscale;
 								}
 							});
+                    	}
+
+                    	var cr = layerdesc.get('coefficients_range');
+                    	if(cr){
+                    		additional_parameters['coefficients_range'] = cr.join();
                     	}
 
                     	additional_parameters['styles'] = styles; 
@@ -776,12 +791,6 @@ define(['backbone.marionette',
 					                		ces_layer.imageryProvider.updateProperties("dim_coeff", (coeff_range[0]+","+coeff_range[1]));
 
 										ces_layer.show = options.visible;
-
-					                	if (ces_layer.show){
-						            		var index = this.map.scene.imageryLayers.indexOf(ces_layer);
-						            		this.map.scene.imageryLayers.remove(ces_layer, false);
-						            		this.map.scene.imageryLayers.add(ces_layer, index);
-						            	}
 									}
                     			}else{
                     				var ces_layer = product.get("ces_layer");
@@ -965,14 +974,8 @@ define(['backbone.marionette',
 						var that = this;
 						var imagelayer;
 
-						//var ces_layer = product.get("ces_layer");
-						var index = this.map.scene.imageryLayers.indexOf(product.get("ces_layer"));
 						this.customModelLayer = product.get("ces_layer");
-						if(this.customModelLayer){
-							this.map.scene.imageryLayers.remove(this.customModelLayer);
-							this.customModelLayer = false;
-						}
-						
+						this.customModelLayer.show = false;
 						
 						var url = product.get("views")[0].urls[0];
 
@@ -1003,12 +1006,6 @@ define(['backbone.marionette',
 
 							.done(function( data ) {
 
-								if(that.customModelLayer){
-									index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
-									that.map.scene.imageryLayers.remove(that.customModelLayer);	
-									that.customModelLayer = false;		
-								}
-
 								var imageURI = "data:image/gif;base64,"+data;
 								var layer_options = {url: imageURI};
 								if(bb && bb.length==4){
@@ -1021,21 +1018,15 @@ define(['backbone.marionette',
 									layer_options['rectangle'] = rec;
 								}
 
-						    
+								var index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
+								that.map.scene.imageryLayers.remove(that.customModelLayer);
+								
 						    var imagelayer = new Cesium.SingleTileImageryProvider(layer_options);
 
 								that.customModelLayer = that.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
 								product.set("ces_layer", that.customModelLayer);
-								// TODO: Hack to position layer at correct index, adding imagery provider  
-								// with index does not seem to be working
-								var ces_index = that.map.scene.imageryLayers.indexOf(that.customModelLayer);
-								var to_move = index - ces_index;
-								for(var i=0; i<Math.abs(to_move); ++i){
-									if(to_move < 0)
-										that.map.scene.imageryLayers.lower(ces_layer);
-									else if(to_move>0)
-										that.map.scene.imageryLayers.raise(ces_layer);
-								}
+								that.customModelLayer.show = true;
+
 							});
     				}
     			}else{

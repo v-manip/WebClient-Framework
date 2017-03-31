@@ -28,11 +28,19 @@
         this.listenTo(Communicator.mediator, "map:multilayer:change",this.multiChangeLayer);
         this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChanged);
         this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
+        this.listenTo(Communicator.mediator, 'manual:init', this.onManualInit);
 
         this.listenTo(Communicator.mediator, "analytics:set:filter", this.onAnalyticsFilterChanged);
-
-        // TODO: Check to see if already active products are configured
        
+      },
+
+      onManualInit: function(){
+        // TODO: Check to see if already active products are configured
+        for (var i = 0; i < globals.products.models.length; i++) {
+          if(globals.products.models[i].get('model') && globals.products.models[i].get('visible')){
+            this.activeModels.push(globals.products.models[i].get("download").id);
+          }
+        }
       },
 
       checkModelValidity: function(){

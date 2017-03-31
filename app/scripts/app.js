@@ -761,27 +761,15 @@ var VECTOR_BREAKDOWN = {
 					show:{ effect: false, delay: 700}
 			    });
 
+			  // Now that products and data are loaded make sure datacontroller is correctly initialized
+				Communicator.mediator.trigger('manual:init');
+
 			    // Broadcast possible area selection
 				if(localStorage.getItem('areaSelection') !== null){
 					Communicator.mediator.trigger('selection:changed', JSON.parse(localStorage.getItem('areaSelection')));
 				}
 
 				Communicator.mediator.trigger('map:multilayer:change', globals.swarm.activeProducts);
-
-				var activateproducts = function(){
-					globals.products.each(function(product){
-						if(product.get("visible")){
-							Communicator.mediator.trigger("map:layer:change", {
-								name: product.get('name'),
-								isBaseLayer: false,
-								visible: true
-							})
-						}
-					});
-				};
-
-				_.delay(activateproducts,200);
-			
 
                 // Remove loading screen when this point is reached in the script
                 $('#loadscreen').remove();
