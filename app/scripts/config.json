@@ -29,10 +29,7 @@
                 "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -64,12 +61,11 @@
             "views": [{
                 "id": "terrain",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=terrain&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fjpg",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -101,12 +97,11 @@
             "views": [{
                 "id": "bluemarble",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=bluemarble&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fjpg",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -2782,12 +2777,11 @@
             "view":{
                 "id": "coastline_black",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=coastline_black&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fpng",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -2810,12 +2804,11 @@
             "view":{
                 "id": "graticules",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=graticules&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fpng",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -2839,12 +2832,11 @@
             "view":{
                 "id": "magnetic_graticules",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=magnetic_graticules&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fpng",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
