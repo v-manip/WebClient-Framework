@@ -763,6 +763,7 @@ var VECTOR_BREAKDOWN = {
 
 			  // Now that products and data are loaded make sure datacontroller is correctly initialized
 				Communicator.mediator.trigger('manual:init');
+				this.timeSliderView.manualInit();
 
 			    // Broadcast possible area selection
 				if(localStorage.getItem('areaSelection') !== null){
