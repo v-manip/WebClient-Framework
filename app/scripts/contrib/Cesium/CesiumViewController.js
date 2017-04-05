@@ -59,7 +59,7 @@ define([
 			this.cesiumView.listenTo(Communicator.mediator, "layer:parameters:changed", _.bind(this.cesiumView.OnLayerParametersChanged, this.cesiumView));
 
 			this.cesiumView.listenTo(Communicator.mediator, "layer:outlines:changed", _.bind(this.cesiumView.onLayerOutlinesChanged, this.cesiumView));
-			this.cesiumView.listenTo(Communicator.mediator, "layer:colorscale:show", _.bind(this.cesiumView.onShowColorscale, this.cesiumView));
+			this.cesiumView.listenTo(Communicator.mediator, "layer:colorscale:show", _.bind(this.cesiumView.checkColorscale, this.cesiumView));
 
 			this.cesiumView.listenTo(Communicator.mediator, 'time:change', _.bind(this.cesiumView.onTimeChange, this.cesiumView));
  
