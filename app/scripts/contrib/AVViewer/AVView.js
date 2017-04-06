@@ -5,8 +5,7 @@ define(['backbone.marionette',
     'globals',
     'd3',
     'analytics'
-  ],
-  function(Marionette, Communicator, App, AVModel, globals) {
+], function(Marionette, Communicator, App, AVModel, globals) {
     'use strict';
     var AVView = Marionette.View.extend({
         model: new AVModel.AVModel(),
