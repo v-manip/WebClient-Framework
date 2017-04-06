@@ -291,8 +291,21 @@ define([
                            product.get('views')[0].protocol !== 'WMTS'){
                             imagerylayer.show = false;
                         }
-                        // If the product is set to visible trigger its
-                        // activation event which handles all protocols
+                        // If product is model and active parameters is Fieldline 
+                        // do not activate dummy layer and check for fieldlines
+                        if(product.get('model')){
+                            // Find active key
+                            var active;
+                            var params = product.get('parameters');
+                            for (var key in params) {
+                                if (params[key].selected) {
+                                    active = key;
+                                }
+                            }
+                            if (active === 'Fieldlines'){
+                                imagerylayer.show = false;
+                            }
+                        }
                     }
                 }, this);
 
@@ -357,11 +370,17 @@ define([
                         }
                     }
                 }
+                function synchronizeColorLegend(p){
+                    this.checkColorscale(p.get('download').id);
+                }
                 // Go through config to make any changes done while widget
                 // not active (not in view)
                 globals.baseLayers.each(synchronizeLayer.bind(this));
                 globals.products.each(synchronizeLayer.bind(this));
                 globals.overlays.each(synchronizeLayer.bind(this));
+
+                // Recheck color legends
+                globals.products.each(synchronizeColorLegend.bind(this));
 
                 this.connectDataEvents();
 
@@ -693,8 +712,8 @@ define([
 
                     globals.products.each(function(product) {
                         if(product.get('name') === options.name){
-                            this.checkColorscale(product.get('download').id);
                             product.set('visible', options.visible);
+                            this.checkColorscale(product.get('download').id);
 
                             if (product.get('views')[0].protocol === 'WPS'){
                                 this.checkShc(product, options.visible);
@@ -824,6 +843,9 @@ define([
                             options.bbox =  bb.join();
                         }
 
+                        var map = this.map;
+                        var customModelLayer = this.customModelLayer;
+
                         $.post(url, tmplEvalModel(options))
                             .done(function( data ) {
                                 var imageURI = 'data:image/gif;base64,'+data;
@@ -837,14 +859,14 @@ define([
                                     );
                                     layerOptions.rectangle = rec;
                                 }
-                                var index = this.map.scene.imageryLayers.indexOf(this.customModelLayer);
+                                var index = map.scene.imageryLayers.indexOf(customModelLayer);
                                 var imagelayer = new Cesium.SingleTileImageryProvider(layerOptions);
-                                this.map.scene.imageryLayers.remove(this.customModelLayer);
-                                this.customModelLayer = 
-                                    this.map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-                                product.set('ces_layer', this.customModelLayer);
-                                this.customModelLayer.show = true;
-                            }, this);
+                                map.scene.imageryLayers.remove(customModelLayer);
+                                customModelLayer = 
+                                    map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+                                product.set('ces_layer', customModelLayer);
+                                customModelLayer.show = true;
+                            });
                     } // END if product has shc
                 }else{ 
                     var cesLayer = product.get('ces_layer');
@@ -1253,6 +1275,9 @@ define([
                 var visible = true;
                 var product = false;
                 var indexDel;
+                var margin = 20;
+                var width = 300;
+                var scalewidth =  width - margin *2;
 
                 globals.products.each(function(p) {
                     if(p.get('download').id === pId){
@@ -1271,25 +1296,30 @@ define([
                     // which are over deleted position
 
                     _.each(this.colorscales, function(value, key, obj) {
-                        if (obj[key].index >= indexDel){
-                            obj[key].index = obj[key].index-1;
-                            var scaleMat = obj[key].prim.material;
-                            var csMat = obj[key].csPrim.material;
+                        var i = obj[key].index-1;
+                        if (i >= indexDel){
+                            var scaleImg = obj[key].prim.material.uniforms.image;
+                            var csImg = obj[key].csPrim.material.uniforms.image;
                             this.map.scene.primitives.remove(obj[key].prim);
                             this.map.scene.primitives.remove(obj[key].csPrim);
                             obj[key].prim = this.map.scene.primitives.add(
-                                this.createViewportQuad(scaleMat, 0, obj[key].index*55 +5, 300, 55)
+                                this.createViewportQuad(scaleImg, 0, i*55 +5, width, 55)
                             );
                             obj[key].csPrim = this.map.scene.primitives.add(
-                                this.createViewportQuad(csMat, 20, index*55 +45, scalewidth, 10)
+                                this.createViewportQuad(csImg, 20, i*55 +42, scalewidth, 10)
                             );
+                            obj[key].index = i;
                       
                         }
                     },this);
                 }
 
                 if(product && product.get('views')[0].protocol === 'WPS' &&
-                   product.get('shc') === null){
+                    product.get('shc') === null){
+                    visible = false;
+                }
+
+                if(product.get('timeSliderProtocol') === 'INDEX'){
                     visible = false;
                 }
 
@@ -1300,47 +1330,17 @@ define([
                     var keys = _.keys(options);
                     var sel = false;
 
-                    if (_.has(this.colorscales, pId)){
-                        // remove object from cesium scene
-                        this.map.scene.primitives.remove(this.colorscales[pId].prim);
-                        indexDel = this.colorscales[pId].index;
-                        delete this.colorscales[pId];
-
-                        // Modify all indices and related height of all colorscales 
-                        // which are over deleted position
-
-                        _.each(this.colorscales, function(value, key, obj) {
-                            if (obj[key].index >= indexDel){
-                                obj[key].index = obj[key].index-1;
-                                var scaleMat = obj[key].prim.material;
-                                var csMat = obj[key].csPrim.material;
-                                this.map.scene.primitives.remove(obj[key].prim);
-                                this.map.scene.primitives.remove(obj[key].csPrim);
-                                obj[key].prim = this.map.scene.primitives.add(
-                                    this.createViewportQuad(scaleMat, 0, obj[key].index*55 +5, 300, 55)
-                                );
-                                obj[key].csPrim = this.map.scene.primitives.add(
-                                    this.createViewportQuad(csMat, 20, index*55 +45, scalewidth, 10)
-                                );
-                            }
-                        },this);
-                    }
-
-
                     _.each(keys, function(key){
                         if(options[key].selected){
                             sel = key;
                         }
                     });
 
-                    var range_min = product.get('parameters')[sel].range[0];
-                    var range_max = product.get('parameters')[sel].range[1];
+                    var rangeMin = product.get('parameters')[sel].range[0];
+                    var rangeMax = product.get('parameters')[sel].range[1];
                     var uom = product.get('parameters')[sel].uom;
                     var style = product.get('parameters')[sel].colorscale;
                     var logscale = defaultFor(product.get('parameters')[sel].logarithmic, false);
-                    var margin = 20;
-                    var width = 300;
-                    var scalewidth =  width - margin *2;
                     var axisScale;
 
 
@@ -1359,7 +1359,7 @@ define([
                             axisScale = d3.scale.linear();
                         }
 
-                        axisScale.domain([range_min, range_max]);
+                        axisScale.domain([rangeMin, rangeMax]);
                         axisScale.range([0, scalewidth]);
 
                         var xAxis = d3.svg.axis()
@@ -1369,14 +1369,14 @@ define([
                             var numberFormat = d3.format(',f');
                             function logFormat(d) {
                                 var x = Math.log(d) / Math.log(10) + 1e-6;
-                                return Math.abs(x - Math.floor(x)) < .3 ? numberFormat(d) : '';
+                                return Math.abs(x - Math.floor(x)) < 0.3 ? numberFormat(d) : '';
                             }
                              xAxis.tickFormat(logFormat);
 
                         }else{
-                            var step = (range_max - range_min)/5
+                            var step = (rangeMax - rangeMin)/5;
                             xAxis.tickValues(
-                                d3.range(range_min,range_max+step, step)
+                                d3.range(rangeMin,rangeMax+step, step)
                             );
                             xAxis.tickFormat(d3.format('g'));
                         }
@@ -1436,7 +1436,7 @@ define([
                         );
                         var csPrim = this.map.scene.primitives.add(
                             this.createViewportQuad(
-                                colorscaleimage, 20, index*55 +45, scalewidth, 10
+                                colorscaleimage, 20, index*55 +42, scalewidth, 10
                             )
                         );
 
@@ -1473,36 +1473,26 @@ define([
                     // it creates issues in cesium picking for some reason so
                     // we deactivate them again
                     this.drawhelper._handlersMuted = true;
-            }
-        },
+                }
+            },
 
-      onSelectionChanged: function(bbox){
+            onSelectionChanged: function(bbox){
 
-        // It seems the drawhelper muted handlers reset to false and 
-        // it creates issues in cesium picking for some reason so
-        // we deactivate them again
-        this.drawhelper._handlersMuted = true;
-        
-        if(bbox){
+                // It seems the drawhelper muted handlers reset to false and 
+                // it creates issues in cesium picking for some reason so
+                // we deactivate them again
+                this.drawhelper._handlersMuted = true;
+                if(bbox){
+                    // Remove any possible selection and field lines (e.g.by tutorial)
+                    if(this.extentPrimitive){
+                        this.map.entities.remove(this.extentPrimitive);
+                    }
+                    _.each(_.keys(this.FLCollection), function(key){
+                        this.map.scene.primitives.remove(this.FLCollection[key]);
+                        delete this.FLCollection[key];
+                    }, this);
 
-          // Remove any possible selection and field lines (e.g.by tutorial)
-          if(this.extentPrimitive)
-            this.map.entities.remove(this.extentPrimitive);
-          _.each(_.keys(this.FLCollection), function(key){
-              this.map.scene.primitives.remove(this.FLCollection[key]);
-                delete this.FLCollection[key];
-            }, this);
-
-
-          var e = new Cesium.Rectangle(
-            Cesium.Math.toRadians(bbox.w),
-            Cesium.Math.toRadians(bbox.s),
-            Cesium.Math.toRadians(bbox.e),
-            Cesium.Math.toRadians(bbox.n)
-          );
-
-          this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
-
+                    this.bboxsel = [bbox.s, bbox.w, bbox.n, bbox.e ];
 
           var rectangle = Cesium.Rectangle.fromDegrees(bbox.w, bbox.s, bbox.e, bbox.n);
           this.extentPrimitive = this.map.entities.add({
@@ -1764,30 +1754,7 @@ define([
         return !!this._events[eventName];
       },
 
-      onLoadImage: function(url, selection_bounds){
-
-        /*proj4326 = new OpenLayers.Projection('EPSG:4326');
-        bounds = selection_bounds;
-
-        bounds.transform(proj4326, this.map.getProjectionObject());
-        this.diffOverlay = new OpenLayers.Layer.Image('diffOverlay', url, bounds, new OpenLayers.Size(3400, 1600), {
-         'isBaseLayer': false,
-         'alwaysInRange': true
-        });
-        this.map.addLayer(this.diffOverlay);
-        this.diffimageIndex = this.map.getLayerIndex(this.diffOverlay);
-        console.log('image '+this.diffimageIndex);
-
-        var minzindex = 9999;
-
-        _.each(this.overlayLayers, function(layer){
-           var zindex = layer.getZIndex();
-           if (zindex < minzindex)
-            minzindex = zindex;
-        }.bind(this));
-
-        this.diffOverlay.setZIndex(minzindex-1);*/
-  
+      onLoadImage: function(url, selection_bounds){  
       },
 
       onSaveImage: function(){

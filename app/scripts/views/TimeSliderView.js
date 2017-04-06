@@ -24,7 +24,7 @@
             manualInit: function(){
                 for (var i = 0; i < globals.products.models.length; i++) {
                     var prot = globals.products.models[i].get('timeSliderProtocol');
-                    if(prot === 'WPS' || prot === 'WPS-INDEX'){
+                    if(prot === 'WPS' || prot === 'INDEX'){
                         this.changeLayer({
                             name: globals.products.models[i].get('name'),
                             visible: globals.products.models[i].get('visible')
