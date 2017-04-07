@@ -2,13 +2,13 @@
 @import "nv.d3";
 
 .d3canvas {
-	background-color: white;
+    background-color: white;
 
-	width: 100%;
-	height: 100%;
+    width: 100%;
+    height: 100%;
 
-	margin: 0;
-	padding: 0;
+    margin: 0;
+    padding: 0;
 }
 
 text.nvd3.nv-noData {
@@ -16,35 +16,35 @@ text.nvd3.nv-noData {
 }
 
 .analytics {
-	width: 100%;
-	height: 100%;
-	padding-top: 50px;
-	padding-left: 5px;
-	padding-bottom: 8.9em;
-	padding-right: 0px;
-	float: left;
-	background-color: white;
+    width: 100%;
+    height: 100%;
+    padding-top: 50px;
+    padding-left: 5px;
+    padding-bottom: 8.9em;
+    padding-right: 0px;
+    float: left;
+    background-color: white;
 }
 
 .analytics .gui {
-	top:220px;
+    top:220px;
 }
 
 //nvd3 needs this
 .analytics svg{
-  	/* Trying to get SVG to act like a greedy block in all browsers */
-	display: block;
-	width:100%;
-	height:100%;
+    /* Trying to get SVG to act like a greedy block in all browsers */
+    display: block;
+    width:100%;
+    height:100%;
 }
 
 .analytics .disabled{
-	display: inline;
+    display: inline;
 }
 
 .analytics .highlight {
-	padding: 1px;
-	margin-top: 2px;
+    padding: 1px;
+    margin-top: 2px;
 }
 
 
@@ -68,60 +68,60 @@ text.nvd3.nv-noData {
 
 
 #tmp_download_button, #save, #grid, #download_button, #reset_filters, #reset, #toggle_filters {
-	background-color: #333 !important;
- 	border-color: #444 !important;
- 	height:32px;
+    background-color: #333 !important;
+    border-color: #444 !important;
+    height:32px;
 }
 
 #tmp_download_button:hover, #save:hover, #grid:hover, #reset_filters:hover, #reset:hover, #toggle_filters:hover{
     background-color: #48b !important;
-  	border-color: #aef !important;
+    border-color: #aef !important;
 }
 
 #reset_filters.disabled, #reset_filters[disabled], fieldset[disabled] #reset_filters{
-	color: #999;
+    color: #999;
 }
 
 
 .xselectdropdown{
-	position: absolute !important;
-	float: right;
-	bottom: -31px !important;
+    position: absolute !important;
+    float: right;
+    bottom: -31px !important;
 }
 
 #save, #grid, #download_button, #reset{
-	top: -43px!important;
+    top: -43px!important;
 }
 
 #save{
-	right: 134px!important;
+    right: 134px!important;
 }
 
 #grid{
-	right: 260px!important;
+    right: 260px!important;
 }
 
 #download_button, #tmp_download_button{
-	right: 40px!important;
+    right: 40px!important;
 }
 
 #reset{
-	right: 365px!important;
+    right: 365px!important;
 }
 
 #reset_filters, #toggle_filters{
-	position: absolute !important;
-	top: -27px !important;
+    position: absolute !important;
+    top: -27px !important;
 }
 
 #scatterdiv{
-	position: relative;
+    position: relative;
 }
 
 #parallelsdiv{
-	position: relative;
-	margin-top: 27px;
-	margin-left: -55px;
+    position: relative;
+    margin-top: 27px;
+    margin-left: -55px;
 }
 
 .w2ui-overlay {
@@ -130,38 +130,38 @@ text.nvd3.nv-noData {
 }
 
 .parallels .tick text{
-	cursor: default!important;
+    cursor: default!important;
 }
 
 #addfilteropen{
-	height: 33px;
+    height: 33px;
 }
 
 #filterinputgroup .w2ui-field-helper.w2ui-list{
-	border-bottom-left-radius: 0px;
-	border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+    border-top-left-radius: 0px;
 }
 
 #filtermanager{
-	pointer-events: none;
+    pointer-events: none;
     opacity: 0;
 }
 
 #w2ui-overlay.downloadsection{
-	margin-left: -18px!important;
+    margin-left: -18px!important;
 }
 
 #custom_download .w2ui-field-helper.w2ui-list{
-	height: auto !important;
+    height: auto !important;
 }
 
 #nodatainfo{
-	text-align: center;
-	color: grey;
-	font-size: 2em;
-	font-weight: bold;
-	opacity: 0.6;
-	bottom: 20px;
-	position: absolute;
-	width: 100%;
+    text-align: center;
+    color: grey;
+    font-size: 2em;
+    font-weight: bold;
+    opacity: 0.6;
+    bottom: 20px;
+    position: absolute;
+    width: 100%;
 }

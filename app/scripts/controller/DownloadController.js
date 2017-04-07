@@ -1,80 +1,80 @@
 (function() {
-	'use strict';
+    'use strict';
 
-	var root = this;
+    var root = this;
 
-	root.require([
-		'backbone',
-		'communicator',
-    	'globals',
-		'app',
-		'views/DownloadView',
-		'views/DownloadFilterView',
-    	'models/DownloadModel'
-	],
+    root.require([
+        'backbone',
+        'communicator',
+        'globals',
+        'app',
+        'views/DownloadView',
+        'views/DownloadFilterView',
+        'models/DownloadModel'
+    ],
 
-	function( Backbone, Communicator, globals, App, v, v2, m ) {
+    function( Backbone, Communicator, globals, App, v, v2, m ) {
 
-		var DownloadController = Backbone.Marionette.Controller.extend({
-			model: new m.DownloadModel(),
+        var DownloadController = Backbone.Marionette.Controller.extend({
+            model: new m.DownloadModel(),
 
-	    initialize: function(options){
-	        //App.downloadView.model = this.model;
-	      	this.model.set('products', {});
-	        this.listenTo(Communicator.mediator, "map:layer:change", this.onChangeLayer);
-	        this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
-	        this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChange);
-	        this.listenTo(Communicator.mediator, "dialog:open:download", this.onDownloadToolOpen);
-	        this.listenTo(Communicator.mediator, "analytics:set:filter", this.onDownloadSetFilter);
-	        this.listenTo(Communicator.mediator, "dialog:open:download:filter", this.onDownloadToolFilterOpen);
-		},
+        initialize: function(options){
+            //App.downloadView.model = this.model;
+            this.model.set('products', {});
+            this.listenTo(Communicator.mediator, "map:layer:change", this.onChangeLayer);
+            this.listenTo(Communicator.mediator, 'time:change', this.onTimeChange);
+            this.listenTo(Communicator.mediator, "selection:changed", this.onSelectionChange);
+            this.listenTo(Communicator.mediator, "dialog:open:download", this.onDownloadToolOpen);
+            this.listenTo(Communicator.mediator, "analytics:set:filter", this.onDownloadSetFilter);
+            this.listenTo(Communicator.mediator, "dialog:open:download:filter", this.onDownloadToolFilterOpen);
+        },
 
-		onChangeLayer: function (options) {
-	        if (!options.isBaseLayer){
-	            var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
-	            if (layer) { // Layer will be empty if it is an overlay layer
-					var products = this.model.get('products');
-		        	if(options.visible){
-		        		products[layer.get('download').id] = layer;    
-		          	}else{
-		            	delete products[layer.get('download').id];
-		          	}
-		          	this.model.set('products', products);
-	            }
-	        }
-        	this.checkDownload();
-	    },
-
-	    onTimeChange: function(time) {
-	        this.model.set('ToI',time);
+        onChangeLayer: function (options) {
+            if (!options.isBaseLayer){
+                var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
+                if (layer) { // Layer will be empty if it is an overlay layer
+                    var products = this.model.get('products');
+                    if(options.visible){
+                        products[layer.get('download').id] = layer;    
+                    }else{
+                        delete products[layer.get('download').id];
+                    }
+                    this.model.set('products', products);
+                }
+            }
             this.checkDownload();
-		},
+        },
 
-		onDownloadSetFilter: function(filter){
-			this.model.set('filter', filter);
-		},
-
-	    onSelectionChange: function(bbox) {
-	        if (bbox != null) {
-	            this.model.set('AoI', bbox);
-	        }else{
-	          this.model.set('AoI', null);
-	        }
+        onTimeChange: function(time) {
+            this.model.set('ToI',time);
             this.checkDownload();
-		},
+        },
 
-		checkDownload: function() {
-	      	// Check that all necessary selections are available
-	        if(this.model.get('ToI') != null &&
-	           this.model.get('AoI') != null &&
-	           _.size(this.model.get('products')) > 0){
-	          Communicator.mediator.trigger('selection:enabled', {id:"download", enabled:true} );
-	        }else{
-	          Communicator.mediator.trigger('selection:enabled', {id:"download", enabled:false} );
-	        }
-	      },
+        onDownloadSetFilter: function(filter){
+            this.model.set('filter', filter);
+        },
 
-		onDownloadToolOpen: function(toOpen) {
+        onSelectionChange: function(bbox) {
+            if (bbox != null) {
+                this.model.set('AoI', bbox);
+            }else{
+              this.model.set('AoI', null);
+            }
+            this.checkDownload();
+        },
+
+        checkDownload: function() {
+            // Check that all necessary selections are available
+            if(this.model.get('ToI') != null &&
+               this.model.get('AoI') != null &&
+               _.size(this.model.get('products')) > 0){
+              Communicator.mediator.trigger('selection:enabled', {id:"download", enabled:true} );
+            }else{
+              Communicator.mediator.trigger('selection:enabled', {id:"download", enabled:false} );
+            }
+          },
+
+        onDownloadToolOpen: function(toOpen) {
             if(toOpen){
               App.viewContent.show(new v.DownloadView({model:this.model}));
             }else{
@@ -92,8 +92,8 @@
         }
 
 
-		});
-		return new DownloadController();
-	});
+        });
+        return new DownloadController();
+    });
 
 }).call( this );

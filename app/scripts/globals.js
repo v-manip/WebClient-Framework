@@ -2,14 +2,14 @@
 // globals
 define(['backbone', 'objectStore'], function(Backbone, ObjectStore) {
 
-	var swarm_model = Backbone.Model.extend({data:[]});
-	return {
-		version: "2.0",
-		objects: new ObjectStore(),
-		selections: new ObjectStore(),
-		baseLayers: new Backbone.Collection(),
-		products: new Backbone.Collection(),
-		overlays: new Backbone.Collection(),
-		swarm: new swarm_model()
-	}
+    var swarm_model = Backbone.Model.extend({data:[]});
+    return {
+        version: "2.0",
+        objects: new ObjectStore(),
+        selections: new ObjectStore(),
+        baseLayers: new Backbone.Collection(),
+        products: new Backbone.Collection(),
+        overlays: new Backbone.Collection(),
+        swarm: new swarm_model()
+    }
 });
