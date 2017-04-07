@@ -40,7 +40,7 @@
             },
             lm:{
                 exports: 'lm'
-			},
+            },
             timeslider: {
                 deps: ['d3']
             },
