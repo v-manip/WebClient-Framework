@@ -27,6 +27,20 @@
             this.listenTo(Communicator.mediator, "dialog:open:download", this.onDownloadToolOpen);
             this.listenTo(Communicator.mediator, "analytics:set:filter", this.onDownloadSetFilter);
             this.listenTo(Communicator.mediator, "dialog:open:download:filter", this.onDownloadToolFilterOpen);
+            this.listenTo(Communicator.mediator, 'manual:init', this.onManualInit);
+        },
+
+        onManualInit: function(){
+            var products = this.model.get('products');
+            for (var i = 0; i < globals.products.models.length; i++) {
+                var p = globals.products.models[i];
+                if(p.get('visible')){
+                    products[p.get('download').id] = p;
+                }else{
+                    delete products[p.get('download').id];
+                }
+                this.model.set('products', products);
+            }
         },
 
         onChangeLayer: function (options) {
@@ -35,7 +49,7 @@
                 if (layer) { // Layer will be empty if it is an overlay layer
                     var products = this.model.get('products');
                     if(options.visible){
-                        products[layer.get('download').id] = layer;    
+                        products[layer.get('download').id] = layer;
                     }else{
                         delete products[layer.get('download').id];
                     }
