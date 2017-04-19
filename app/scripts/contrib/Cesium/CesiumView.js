@@ -122,6 +122,7 @@ define([
                 }
             };
 
+            this.$el.append('<div id="coordinates_label"></div>');
             this.$el.append('<div id="cesium_attribution"></div>');
             this.$el.append('<div id="cesium_custom_attribution"></div>');
             $('#cesium_custom_attribution').append(
@@ -131,7 +132,7 @@ define([
 
             this.$el.append('<div type="button" class="btn btn-success darkbutton" id="cesium_save">Save as Image</div>');
             this.$el.append('<div type="button" class="btn btn-success darkbutton"  id="bb_selection">Select Area</div>');
-    
+
             var layer;
 
             this.colors = globals.objects.get('color');
@@ -236,6 +237,21 @@ define([
                 //hide the selectionIndicator
                 this.map.selectionIndicator.viewModel.selectionIndicatorElement.style.visibility = 'hidden'; 
             }.bind(this), Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+            handler.setInputAction(function(movement) {
+                var ellipsoid = Cesium.Ellipsoid.WGS84;
+                var position = this.map.scene.camera.pickEllipsoid(movement.endPosition, ellipsoid);
+                if (Cesium.defined(position)) {
+                    var cartographic = ellipsoid.cartesianToCartographic(position);
+                    var lat = Cesium.Math.toDegrees(cartographic.latitude);
+                    var lon = Cesium.Math.toDegrees(cartographic.longitude);
+                    //var height = cartographic.height;
+                    //$('#coordinates_label').show();
+                    $('#coordinates_label').html(
+                        'Lat: ' + lat.toFixed(4) + '</br>Lon: '+lon.toFixed(4)
+                    );
+                }
+            }.bind(this), Cesium.ScreenSpaceEventType.MOUSE_MOVE);
 
             this.billboards = this.map.scene.primitives.add(
                 new Cesium.BillboardCollection()
@@ -1231,7 +1247,7 @@ define([
                 // Try to get center point
                 var center = new Cesium.Cartesian2(this.map.scene.canvas.width/2, this.map.scene.canvas.height/2);
                 center = this.map.scene.camera.pickEllipsoid(center, ellipsoid);
-                if (center !== null){
+                if (center && center !== null){
                     center = ellipsoid.cartesianToCartographic(center);
                     return {
                         left: Cesium.Math.toDegrees(center.longitude) - 90,
