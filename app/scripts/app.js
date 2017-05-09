@@ -209,6 +209,11 @@ var VECTOR_BREAKDOWN = {
                         }
                     }
 
+                    // Make sure download parameters are always loaded from script
+                    for (var i = product_config.length - 1; i >= 0; i--) {
+                        product_config[i].download_parameters = m_p[i].download_parameters;
+                    }
+
                     config.mapConfig.products = product_config;
                 }
 

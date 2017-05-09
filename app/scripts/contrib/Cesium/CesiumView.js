@@ -1339,31 +1339,33 @@ define([
                 product.get('visible') && visible){
 
                 var options = product.get('parameters');
-                var keys = _.keys(options);
-                var sel = false;
 
-                _.each(keys, function(key){
-                    if(options[key].selected){
-                        sel = key;
-                    }
-                });
+                if(options){
+                    var keys = _.keys(options);
+                    var sel = false;
 
-                var rangeMin = product.get('parameters')[sel].range[0];
-                var rangeMax = product.get('parameters')[sel].range[1];
-                var uom = product.get('parameters')[sel].uom;
-                var style = product.get('parameters')[sel].colorscale;
-                var logscale = defaultFor(product.get('parameters')[sel].logarithmic, false);
-                var axisScale;
+                    _.each(keys, function(key){
+                        if(options[key].selected){
+                            sel = key;
+                        }
+                    });
+
+                    var rangeMin = product.get('parameters')[sel].range[0];
+                    var rangeMax = product.get('parameters')[sel].range[1];
+                    var uom = product.get('parameters')[sel].uom;
+                    var style = product.get('parameters')[sel].colorscale;
+                    var logscale = defaultFor(product.get('parameters')[sel].logarithmic, false);
+                    var axisScale;
 
 
-                this.plot.setColorScale(style);
-                var colorscaleimage = this.plot.getColorScaleImage().toDataURL();
+                    this.plot.setColorScale(style);
+                    var colorscaleimage = this.plot.getColorScaleImage().toDataURL();
 
-                $('#svgcolorscalecontainer').remove();
-                var svgContainer = d3.select('body').append('svg')
-                    .attr('width', 300)
-                    .attr('height', 60)
-                    .attr('id', 'svgcolorscalecontainer');
+                    $('#svgcolorscalecontainer').remove();
+                    var svgContainer = d3.select('body').append('svg')
+                        .attr('width', 300)
+                        .attr('height', 60)
+                        .attr('id', 'svgcolorscalecontainer');
 
                     if(logscale){
                         axisScale = d3.scale.log();
@@ -1459,7 +1461,7 @@ define([
                     };
 
                     svgContainer.remove();
-                
+                }
             }
 
         },
