@@ -25,12 +25,11 @@
             "views": [{
                 "id": "terrain-light",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=terrain-light&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fjpg",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -62,12 +61,11 @@
             "views": [{
                 "id": "terrain",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=terrain&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fjpg",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -99,12 +97,11 @@
             "views": [{
                 "id": "bluemarble",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=bluemarble&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fjpg",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -1674,6 +1671,22 @@
                 "FAC_Error": {
                     "uom": "uA/m2",
                     "name": "uncertainty of FAC"
+                },
+                "Flags": {
+                    "uom": null,
+                    "name": "Flags characterizing the product quality (processing flags)"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from L1b and accumulated for quad points"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from L1b and accumulated for quad points"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from L1b and accumulated for quad points"
                 }
             },"processes" : [
                 {
@@ -1755,6 +1768,22 @@
                 "FAC_Error": {
                     "uom": "uA/m2",
                     "name": "uncertainty of FAC"
+                },
+                "Flags": {
+                    "uom": null,
+                    "name": "Flags characterizing the product quality (processing flags)"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from L1b and accumulated for quad points"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from L1b and accumulated for quad points"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from L1b and accumulated for quad points"
                 }
             },"processes" : [
                 {
@@ -1836,6 +1865,22 @@
                 "FAC_Error": {
                     "uom": "uA/m2",
                     "name": "uncertainty of FAC"
+                },
+                "Flags": {
+                    "uom": null,
+                    "name": "Flags characterizing the product quality (processing flags)"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from L1b and accumulated for quad points"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from L1b and accumulated for quad points"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from L1b and accumulated for quad points"
                 }
             },"processes" : [
                 {
@@ -1917,6 +1962,22 @@
                 "FAC_Error": {
                     "uom": "uA/m2",
                     "name": "uncertainty of FAC"
+                },
+                "Flags": {
+                    "uom": null,
+                    "name": "Flags characterizing the product quality (processing flags)"
+                },
+                "Flags_F": {
+                    "uom": null,
+                    "name": "Flags_F passed through from L1b and accumulated for quad points"
+                },
+                "Flags_B": {
+                    "uom": null,
+                    "name": "Flags_B passed through from L1b and accumulated for quad points"
+                },
+                "Flags_q": {
+                    "uom": null,
+                    "name": "Flags_q passed through from L1b and accumulated for quad points"
                 }
             },"processes" : [
                 {
@@ -1980,6 +2041,10 @@
                 "RelErr": {
                     "uom": null,
                     "name": "Quality indicator of EEF estimate; relative error between modeled and observed current profil"
+                },
+                "flags": {
+                    "uom": null,
+                    "name": "Flags describing data gaps and satellite identification"
                 }
             },"processes" : [
                 {
@@ -2043,6 +2108,10 @@
                 "RelErr": {
                     "uom": null,
                     "name": "Quality indicator of EEF estimate; relative error between modeled and observed current profil"
+                },
+                "flags": {
+                    "uom": null,
+                    "name": "Flags describing data gaps and satellite identification"
                 }
             },"processes" : [
                 {
@@ -2780,12 +2849,11 @@
             "view":{
                 "id": "coastline_black",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=coastline_black&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fpng",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -2808,12 +2876,11 @@
             "view":{
                 "id": "graticules",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=graticules&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fpng",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",
@@ -2837,12 +2904,11 @@
             "view":{
                 "id": "magnetic_graticules",
                 "protocol": "WMTS",
+                "urlTemplate": "https://{s}.tiles.maps.eox.at/wmts/?service=WMTS&version=1.0.0&request=GetTile&tilematrix={TileMatrix}&layer=magnetic_graticules&style={Style}&tilerow={TileRow}&tilecol={TileCol}&tilematrixset={TileMatrixSet}&format=image%2Fpng",
+                "subdomains": "abcdef",
                 "urls": [
                     "//a.tiles.maps.eox.at/wmts/",
-                    "//b.tiles.maps.eox.at/wmts/",
-                    "//c.tiles.maps.eox.at/wmts/",
-                    "//d.tiles.maps.eox.at/wmts/",
-                    "//e.tiles.maps.eox.at/wmts/"
+                    "//b.tiles.maps.eox.at/wmts/"
                 ],
                 "matrixSet": "WGS84",
                 "style": "default",

@@ -3,15 +3,15 @@
 
 // Overwriting absolute positions to show correct positions in scrollable objects
 .w2ui-list{
-	position: relative !important;
+    position: relative !important;
 }
 
 .w2ui-field-helper{
-	position: relative !important;
+    position: relative !important;
 }
 
 #validationwarning{
-	font-size: 0.8em;
+    font-size: 0.8em;
     float: right;
     position: absolute;
     right: 140px;
@@ -20,12 +20,12 @@
 }
 
 #modal-start-download .ui-datepicker-trigger{
-	position: absolute;
-	margin-left: -1px;
+    position: absolute;
+    margin-left: -1px;
 }
 
 .panel-collapse{
-	border-right-style: solid;
+    border-right-style: solid;
     border-bottom-style: solid;
     border-left-style: solid;
     border-color: #ccc;
@@ -36,10 +36,10 @@
 }
 
 .panel-collapse > .panel-body{
-	padding-top: 10px;
-	padding-left: 3px;
-	padding-right: 3px;
-	padding-bottom: 0px;
+    padding-top: 10px;
+    padding-left: 3px;
+    padding-right: 3px;
+    padding-bottom: 0px;
 }
 
 #download_processes .collapse_object .fa-chevron-down {
@@ -61,7 +61,7 @@
  * Progress bars with centered text
  */
 .progress {
-	background-color: #a0a0a0 !important;
+    background-color: #a0a0a0 !important;
     position: relative!important;
 }
 
@@ -109,4 +109,8 @@
 
 .ui-datepicker-trigger:hover{
     border-color: rgb(110, 110, 110) !important;
+}
+
+#param_enum{
+    display: none!important;
 }
