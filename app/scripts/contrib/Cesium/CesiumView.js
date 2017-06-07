@@ -857,27 +857,29 @@ define([
 
                     var map = this.map;
                     var customModelLayer = this.customModelLayer;
+                    var index = this.map.scene.imageryLayers.indexOf(customModelLayer);
+                    this.map.scene.imageryLayers.remove(customModelLayer);
 
                     $.post(url, tmplEvalModel(options))
                         .done(function( data ) {
-                            var imageURI = 'data:image/gif;base64,'+data;
-                            var layerOptions = {url: imageURI};
-                            if(bb && bb.length === 4){
-                                var rec = new Cesium.Rectangle(
-                                    Cesium.Math.toRadians(bb[1]),
-                                    Cesium.Math.toRadians(bb[0]),
-                                    Cesium.Math.toRadians(bb[3]),
-                                    Cesium.Math.toRadians(bb[2])
-                                );
-                                layerOptions.rectangle = rec;
+                            if(index>0){
+                                var imageURI = 'data:image/gif;base64,'+data;
+                                var layerOptions = {url: imageURI};
+                                if(bb && bb.length === 4){
+                                    var rec = new Cesium.Rectangle(
+                                        Cesium.Math.toRadians(bb[1]),
+                                        Cesium.Math.toRadians(bb[0]),
+                                        Cesium.Math.toRadians(bb[3]),
+                                        Cesium.Math.toRadians(bb[2])
+                                    );
+                                    layerOptions.rectangle = rec;
+                                }
+                                var imagelayer = new Cesium.SingleTileImageryProvider(layerOptions);
+                                customModelLayer = 
+                                    map.scene.imageryLayers.addImageryProvider(imagelayer, index);
+                                product.set('ces_layer', customModelLayer);
+                                customModelLayer.show = true;
                             }
-                            var index = map.scene.imageryLayers.indexOf(customModelLayer);
-                            var imagelayer = new Cesium.SingleTileImageryProvider(layerOptions);
-                            map.scene.imageryLayers.remove(customModelLayer);
-                            customModelLayer = 
-                                map.scene.imageryLayers.addImageryProvider(imagelayer, index);
-                            product.set('ces_layer', customModelLayer);
-                            customModelLayer.show = true;
                         });
                 } // END if product has shc
             }else{ 
