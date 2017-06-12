@@ -16,9 +16,9 @@ define(['backbone.marionette',
             this.plotType = 'scatter';
             this.sp = undefined;
 
-            $(window).resize(function() {
+            /*$(window).resize(function() {
               this.onResize();
-            }.bind(this));
+            }.bind(this));*/
             this.connectDataEvents();
         },
 
