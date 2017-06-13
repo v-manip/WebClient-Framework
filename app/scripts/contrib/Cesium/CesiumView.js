@@ -47,11 +47,11 @@ define([
             this.endTime = null;
             this.plot = null;
 
-            $(window).resize(function() {
+            /*$(window).resize(function() {
                 if (this.map) {
                     this.onResize();
                 }
-            },this);
+            },this);*/
 
             plotty.addColorScale('redblue', ['#ff0000', '#0000ff'], [0, 1]);
             plotty.addColorScale('coolwarm', 
