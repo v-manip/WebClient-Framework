@@ -173,6 +173,16 @@ define(['backbone.marionette',
                         'Component of '+this.sp.uom_set[previousKey].name;
                 }, this);
             }
+            if (this.activeParameters.hasOwnProperty(previousKey)){
+                _.each(vectorChars, function(k){
+                    this.activeParameters[key+separator+k] = 
+                        $.extend({}, this.activeParameters[previousKey]);
+                    this.activeParameters[key+separator+k].name = 
+                        'Component of '+this.activeParameters[previousKey].name;
+                }, this);
+                delete this.activeParameters[previousKey];
+            }
+
         },
 
         checkPrevious: function(key, previousIndex, newIndex, replace){
@@ -193,16 +203,22 @@ define(['backbone.marionette',
             if( $(this.el).html()){
                 // Prepare to create list of available parameters
                 var availableParameters = {};
+                var activeParameters = {};
                 globals.products.each(function(prod) {
                     if(prod.get('download_parameters')){
                         var par = prod.get('download_parameters');
                         var newKeys = _.keys(par);
                         _.each(newKeys, function(key){
                             availableParameters[key] = par[key];
+                            if(prod.get('visible')){
+                                activeParameters[key] = par[key];
+                            }
                         });
+                        
                     }
                 });
                 this.sp.uom_set = availableParameters;
+                this.activeParameters = activeParameters;
 
                 // Remove uom of time
                 if(this.sp.uom_set.hasOwnProperty('Timestamp')){
@@ -235,6 +251,8 @@ define(['backbone.marionette',
                 this.sp.uom_set['QDLon'] = {uom: 'deg', name:'Quasi-Dipole Longitude'};
                 this.sp.uom_set['Dst'] = {uom: null, name:'Disturbance storm time Index'};
                 this.sp.uom_set['Kp'] = {uom: null, name:'Global geomagnetic storm Index'};
+
+                globals.swarm.set('uom_set', this.activeParameters);
 
                 $('#tmp_download_button').unbind( 'click' );
                 $('#tmp_download_button').remove();

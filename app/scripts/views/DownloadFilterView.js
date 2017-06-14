@@ -67,6 +67,7 @@
       
     },
 
+
     DownloadProcessModel = Backbone.Model.extend({
       id: null,
       status_url: null,
@@ -188,6 +189,35 @@
         this.loadcounter = 0;
 
       },
+
+      createSubscript: function createSubscript(string){
+        // Adding subscript elements to string which contain underscores
+        var newkey = "";
+        var parts = string.split("_");
+        if (parts.length>1){
+          newkey = parts[0];
+          for (var i=1; i<parts.length; i++){
+            newkey+=(" "+parts[i]).sub();
+          }
+        }else{
+          newkey = string;
+        }
+
+        return newkey;
+      },
+
+      handleItemSelected: function handleItemSelected(evt){
+        var selected = $('#addfilter').val();
+        delete this.available_uom[selected];
+        //globals.swarm.get('uom_set');
+        var filters = this.model.get("filter");
+        filters[selected] = [0,0];
+        this.model.set('filter', filters);
+        //this.onShow();
+        this.renderFilterList(filters);
+      },
+
+
       onShow: function(view){
 
         this.listenTo(this.coverages, "reset", this.onCoveragesReset);
@@ -218,9 +248,9 @@
           filters["Latitude"] = [aoi.s, aoi.n];
         }
 
-        if (!$.isEmptyObject(filters)){
+        //if (!$.isEmptyObject(filters)){
           this.renderFilterList(filters);
-        }
+        //}
 
 
         this.$('.delete-filter').click(function(evt){
@@ -485,6 +515,10 @@
 
               if(processes.length>0){
                 $('#download_processes').append('<div><b>Download links</b> (Process runs in background, panel can be closed and reopened at any time)</div>');
+                $('#download_processes').append('<div style="float: left; margin-left:20px;"><b>Process started</b></div>');
+                $('#download_processes').append('<div style="float: left; margin-left:100px;"><b>Status</b></div>');
+                $('#download_processes').append('<div style="float: left; margin-left:240px;"><b>Info</b></div>');
+                $('#download_processes').append('<div style="float: left; margin-left:110px;"><b>Link</b></div>');
               }
 
               for (var i = processes.length - 1; i >= 0; i--) {
@@ -512,20 +546,6 @@
 
       },
 
-      createSubscript: function(string){
-        // Adding subscript elements to string which contain underscores
-        var newkey = "";
-        var parts = string.split("_");
-        if (parts.length>1){
-          newkey = parts[0];
-          for (var i=1; i<parts.length; i++){
-            newkey+=(" "+parts[i]).sub();
-          }
-        }else{
-          newkey = string;
-        }
-        return newkey;
-      },
 
       renderFilterList: function(filters) {
         var fil_div = this.$el.find("#filters");
@@ -554,6 +574,30 @@
           );
           fil_div.append($html);
         }, this);
+
+        var available_uom = globals.swarm.get('uom_set');
+        this.available_uom = available_uom;
+
+        $('#filters').append(
+          '<div class="w2ui-field"> <input type="list" id="addfilter"> <span class="legend">Additional filters</span> </div>'
+        );
+        var that = this;
+
+        $('#addfilter').w2field('list', { 
+          items: _.keys(available_uom),
+          renderDrop: function (item, options) {
+            var html = '<b>'+that.createSubscript(item.id)+'</b>';
+            if(available_uom[item.id].uom != null){
+              html += ' ['+available_uom[item.id].uom+']';
+            }
+            if(available_uom[item.id].name != null){
+              html+= ': '+available_uom[item.id].name;
+            }
+            return html;
+          }
+        });
+
+        $('#addfilter').change( this.handleItemSelected.bind(this));
 
       },
 
