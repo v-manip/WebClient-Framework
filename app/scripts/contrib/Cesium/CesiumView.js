@@ -175,7 +175,7 @@ define([
                     animation: false,
                     imageryProvider: initialLayer,
                     terrainProvider : new Cesium.CesiumTerrainProvider({
-                        url : '//tiles.maps.eox.at/dem'
+                        url : '//dem.maps.eox.at/'
                     }),
                     creditContainer: 'cesium_attribution',
                     contextOptions: {webgl: {preserveDrawingBuffer: true}},
