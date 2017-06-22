@@ -487,7 +487,7 @@ var VECTOR_BREAKDOWN = {
 
             // Add generic product (which is container for A,B and C sats)
             filtered_collection.add({
-                    name: "Electric field data (EEF)",
+                    name: "Equatorial electric field (EEF)",
                     visible: containerSelection['EEF'],
                     color: "#b82e2e",
                     protocol: null,
@@ -495,7 +495,7 @@ var VECTOR_BREAKDOWN = {
                     id: "EEF"
                 }, {at: 0});
                 filtered_collection.add({
-                    name: "Currents data (FAC)",
+                    name: "Electric current data (FAC)",
                     visible: containerSelection['FAC'],
                     color: "#66aa00",
                     protocol: null,
@@ -503,7 +503,7 @@ var VECTOR_BREAKDOWN = {
                     id: "FAC"
                 }, {at: 0});
                 filtered_collection.add({
-                    name: "Electron data (TEC)",
+                    name: "Total electron content (TEC)",
                     visible: containerSelection['TEC'],
                     color: "#990099",
                     protocol: null,
