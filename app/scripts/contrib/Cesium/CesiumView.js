@@ -241,12 +241,13 @@ define([
             handler.setInputAction(function(movement) {
                 var ellipsoid = Cesium.Ellipsoid.WGS84;
                 var position = this.map.scene.camera.pickEllipsoid(movement.endPosition, ellipsoid);
+                $('#coordinates_label').hide();
                 if (Cesium.defined(position)) {
                     var cartographic = ellipsoid.cartesianToCartographic(position);
                     var lat = Cesium.Math.toDegrees(cartographic.latitude);
                     var lon = Cesium.Math.toDegrees(cartographic.longitude);
                     //var height = cartographic.height;
-                    //$('#coordinates_label').show();
+                    $('#coordinates_label').show();
                     $('#coordinates_label').html(
                         'Lat: ' + lat.toFixed(4) + '</br>Lon: '+lon.toFixed(4)
                     );
