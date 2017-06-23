@@ -128,6 +128,20 @@
 
                     if(visible){
                         this.model.set("visible", true);
+                        // Activate setting directly when product is being activated
+                        if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+                            App.layerSettings.setModel(this.model);
+                            App.optionsBar.show(App.layerSettings);
+                            //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                            $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
+                        } else {
+                            if(!App.layerSettings.sameModel(this.model)){
+                                App.layerSettings.setModel(this.model);
+                                App.optionsBar.show(App.layerSettings);
+                                //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                                $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
+                            }
+                        }
 
                     }else{
                         this.model.set("visible", false);
