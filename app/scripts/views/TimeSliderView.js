@@ -245,7 +245,7 @@
 
                 d3.csv(request)
                     .row(function (row) {
-                        return [new Date(row.time), Number(row.value), row.id];
+                        return [new Date(row.time.replace(/\s+/g, 'T')), Number(row.value), row.id];
                     })
                     .get(function(error, rows) { 
                         callback(rows);
