@@ -187,6 +187,7 @@
         this.models = [];
         this.swarm_prod = [];
         this.loadcounter = 0;
+        this.currentFilters = {};
 
       },
 
@@ -208,13 +209,8 @@
 
       handleItemSelected: function handleItemSelected(evt){
         var selected = $('#addfilter').val();
-        delete this.available_uom[selected];
-        //globals.swarm.get('uom_set');
-        var filters = this.model.get("filter");
-        filters[selected] = [0,0];
-        this.model.set('filter', filters);
-        //this.onShow();
-        this.renderFilterList(filters);
+        this.currentFilters[selected] = [0,0];
+        this.renderFilterList();
       },
 
 
@@ -237,26 +233,23 @@
         var options = {};
 
         // Check for filters
+
         var filters = this.model.get("filter");
+        if (typeof filters === 'undefined') {
+          filters = {};
+        }
 
         var aoi = this.model.get("AoI");
         if (aoi){
-          if (typeof filters === 'undefined') {
-            filters = {};
-          }
           filters["Longitude"] = [aoi.w, aoi.e];
           filters["Latitude"] = [aoi.s, aoi.n];
         }
 
+        this.currentFilters = filters;
+
         //if (!$.isEmptyObject(filters)){
-          this.renderFilterList(filters);
+        this.renderFilterList();
         //}
-
-
-        this.$('.delete-filter').click(function(evt){
-          var item = this.parentElement.parentElement;
-          this.parentElement.parentElement.parentElement.removeChild(item);
-        });
 
         // Check for products and models
         var products;
@@ -547,10 +540,13 @@
       },
 
 
-      renderFilterList: function(filters) {
+      renderFilterList: function() {
+        var filters = this.currentFilters;
         var fil_div = this.$el.find("#filters");
         fil_div.empty();
         //fil_div.append("<div>Filters</div>");
+
+        var tabindex = 1;
 
         _.each(_.keys(filters), function(key){
 
@@ -569,18 +565,35 @@
           var $html = $(FilterTmpl({
               id: key,
               name: name,
-              extent: extent
+              extent: extent,
+              index1: tabindex++,
+              index2: tabindex++,
+              index3: tabindex++
             })
           );
+
+          
           fil_div.append($html);
         }, this);
 
         var available_uom = globals.swarm.get('uom_set');
-        this.available_uom = available_uom;
+        
+        var filterkeys = _.keys(this.currentFilters);
+        for (var i = 0; i < filterkeys.length; i++) {
+          if(available_uom.hasOwnProperty(filterkeys[i])){
+            delete available_uom[filterkeys[i]];
+          }
+        }
 
         $('#filters').append(
-          '<div class="w2ui-field"> <input type="list" id="addfilter"> <span class="legend">Additional filters</span> </div>'
+          '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-default dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
         );
+
+
+        $( "#downloadAddFilter" ).click(function(){
+          $("#addfilter").focus();
+        });
+
         var that = this;
 
         $('#addfilter').w2field('list', { 
@@ -597,7 +610,16 @@
           }
         });
 
-        $('#addfilter').change( this.handleItemSelected.bind(this));
+        $('#addfilter').change(this.handleItemSelected.bind(this));
+
+        var that = this;
+
+        this.$('.delete-filter').click(function(evt){
+          var item = this.parentElement.parentElement;
+          this.parentElement.parentElement.parentElement.removeChild(item);
+          delete that.currentFilters[item.id];
+          
+        });
 
       },
 
