@@ -125,8 +125,18 @@
     //float: right;
     margin-left: 95px;
     opacity: 0;
+    pointer-events: none;
 }
 
 #downloadAddFilter {
     margin-left: -270px;
+}
+
+#filters .w2ui-field-helper input {
+    opacity: 0!important;
+    pointer-events: none;
+}
+
+#filters > .w2ui-field-helper{
+    pointer-events: none;
 }

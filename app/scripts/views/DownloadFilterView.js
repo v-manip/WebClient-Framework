@@ -209,8 +209,10 @@
 
       handleItemSelected: function handleItemSelected(evt){
         var selected = $('#addfilter').val();
-        this.currentFilters[selected] = [0,0];
-        this.renderFilterList();
+        if(selected !== ''){
+          this.currentFilters[selected] = [0,0];
+          this.renderFilterList();
+        }
       },
 
 
@@ -544,39 +546,50 @@
         var filters = this.currentFilters;
         var fil_div = this.$el.find("#filters");
         fil_div.empty();
+        var available_uom = {};
+        // Clone object
+        _.each(globals.swarm.get('uom_set'), function(obj, key){
+          available_uom[key] = obj;
+        });
         //fil_div.append("<div>Filters</div>");
 
         var tabindex = 1;
 
         _.each(_.keys(filters), function(key){
 
-          var extent = filters[key].map(this.round);
-          var name = "";
-          var parts = key.split("_");
-          if (parts.length>1){
-            name = parts[0];
-            for (var i=1; i<parts.length; i++){
-              name+=(" "+parts[i]).sub();
+          // Check if filter part of parameters od currently selected products
+          if (!available_uom.hasOwnProperty(key)){
+            delete this.currentFilters[key];
+
+          } else {
+            var extent = filters[key].map(this.round);
+            var name = "";
+            var parts = key.split("_");
+            if (parts.length>1){
+              name = parts[0];
+              for (var i=1; i<parts.length; i++){
+                name+=(" "+parts[i]).sub();
+              }
+            }else{
+              name = key;
             }
-          }else{
-            name = key;
+
+            var $html = $(FilterTmpl({
+                id: key,
+                name: name,
+                extent: extent,
+                index1: tabindex++,
+                index2: tabindex++,
+                index3: tabindex++
+              })
+            );
+
+            
+            fil_div.append($html);
           }
 
-          var $html = $(FilterTmpl({
-              id: key,
-              name: name,
-              extent: extent,
-              index1: tabindex++,
-              index2: tabindex++,
-              index3: tabindex++
-            })
-          );
-
           
-          fil_div.append($html);
         }, this);
-
-        var available_uom = globals.swarm.get('uom_set');
         
         var filterkeys = _.keys(this.currentFilters);
         for (var i = 0; i < filterkeys.length; i++) {
@@ -584,6 +597,17 @@
             delete available_uom[filterkeys[i]];
           }
         }
+
+
+        // Remove unwanted parameters
+        if(available_uom.hasOwnProperty('Timestamp')){delete available_uom['Timestamp'];}
+        if(available_uom.hasOwnProperty('timestamp')){delete available_uom['timestamp'];}
+        if(available_uom.hasOwnProperty('q_NEC_CRF')){delete available_uom['q_NEC_CRF'];}
+        if(available_uom.hasOwnProperty('GPS_Position')){delete available_uom['GPS_Position'];}
+        if(available_uom.hasOwnProperty('LEO_Position')){delete available_uom['LEO_Position'];}
+        
+        
+           
 
         $('#filters').append(
           '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-default dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
@@ -597,7 +621,7 @@
         var that = this;
 
         $('#addfilter').w2field('list', { 
-          items: _.keys(available_uom),
+          items: _.keys(available_uom).sort(),
           renderDrop: function (item, options) {
             var html = '<b>'+that.createSubscript(item.id)+'</b>';
             if(available_uom[item.id].uom != null){

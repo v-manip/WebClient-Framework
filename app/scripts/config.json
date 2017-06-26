@@ -769,6 +769,18 @@
                 "Maneuver_Id": {
                     "uom": null,
                     "name": "Current maneuver identification code"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -987,6 +999,18 @@
                 "Maneuver_Id": {
                     "uom": null,
                     "name": "Current maneuver identification code"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1205,6 +1229,18 @@
                 "Maneuver_Id": {
                     "uom": null,
                     "name": "Current maneuver identification code"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1333,6 +1369,18 @@
                 "DCB_Error": {
                     "uom": "TECU",
                     "name": "Error of the GPS receiver differential code bias"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1461,6 +1509,18 @@
                 "DCB_Error": {
                     "uom": "TECU",
                     "name": "Error of the GPS receiver differential code bias"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1589,6 +1649,18 @@
                 "DCB_Error": {
                     "uom": "TECU",
                     "name": "Error of the GPS receiver differential code bias"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1687,6 +1759,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from L1b and accumulated for quad points"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1784,6 +1868,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from L1b and accumulated for quad points"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1881,6 +1977,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from L1b and accumulated for quad points"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -1978,6 +2086,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from L1b and accumulated for quad points"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -2022,15 +2142,15 @@
                 }
             },
             "download_parameters": {
-                "timestamp": {
+                "Timestamp": {
                     "uom": null,
                     "name": "Time stamp in UTC"
                 },
-                "latitude": {
+                "Latitude": {
                     "uom": "deg",
                     "name": "Geographic latitude"
                 },
-                "longitude": {
+                "Longitude": {
                     "uom": "deg",
                     "name": "Geographic longitude"
                 },
@@ -2089,15 +2209,15 @@
                 }
             },
             "download_parameters": {
-                "timestamp": {
+                "Timestamp": {
                     "uom": null,
                     "name": "Time stamp in UTC"
                 },
-                "latitude": {
+                "Latitude": {
                     "uom": "deg",
                     "name": "Geographic latitude"
                 },
-                "longitude": {
+                "Longitude": {
                     "uom": "deg",
                     "name": "Geographic longitude"
                 },
@@ -2196,6 +2316,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -2280,6 +2412,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
@@ -2364,6 +2508,18 @@
                 "Flags_q": {
                     "uom": null,
                     "name": "Flags_q passed through from MAGx_L1_B"
+                },
+                "QDLat": {
+                    "uom": "deg",
+                    "name": "Quasi dipole latitude"
+                },
+                "QDLon": {
+                    "uom": "deg",
+                    "name": "Quasi dipole longitude"
+                },
+                "MLT": {
+                    "uom": null,
+                    "name": "Magnetic local time"
                 }
             },"processes" : [
                 {
