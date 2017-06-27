@@ -6,9 +6,9 @@
     position: relative !important;
 }
 
-.w2ui-field-helper{
+/*.w2ui-field-helper{
     position: relative !important;
-}
+}*/
 
 #validationwarning{
     font-size: 0.8em;
@@ -113,4 +113,30 @@
 
 #param_enum{
     display: none!important;
+}
+
+.w2ui-field .legend {
+    font-size: 1em!important;
+    font-style: normal!important;
+}
+
+
+#addfilter {
+    //float: right;
+    margin-left: 95px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#downloadAddFilter {
+    margin-left: -270px;
+}
+
+#filters .w2ui-field-helper input {
+    opacity: 0!important;
+    pointer-events: none;
+}
+
+#filters > .w2ui-field-helper{
+    pointer-events: none;
 }

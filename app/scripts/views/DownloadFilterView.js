@@ -67,6 +67,7 @@
       
     },
 
+
     DownloadProcessModel = Backbone.Model.extend({
       id: null,
       status_url: null,
@@ -186,8 +187,35 @@
         this.models = [];
         this.swarm_prod = [];
         this.loadcounter = 0;
+        this.currentFilters = {};
 
       },
+
+      createSubscript: function createSubscript(string){
+        // Adding subscript elements to string which contain underscores
+        var newkey = "";
+        var parts = string.split("_");
+        if (parts.length>1){
+          newkey = parts[0];
+          for (var i=1; i<parts.length; i++){
+            newkey+=(" "+parts[i]).sub();
+          }
+        }else{
+          newkey = string;
+        }
+
+        return newkey;
+      },
+
+      handleItemSelected: function handleItemSelected(evt){
+        var selected = $('#addfilter').val();
+        if(selected !== ''){
+          this.currentFilters[selected] = [0,0];
+          this.renderFilterList();
+        }
+      },
+
+
       onShow: function(view){
 
         this.listenTo(this.coverages, "reset", this.onCoveragesReset);
@@ -207,26 +235,23 @@
         var options = {};
 
         // Check for filters
+
         var filters = this.model.get("filter");
+        if (typeof filters === 'undefined') {
+          filters = {};
+        }
 
         var aoi = this.model.get("AoI");
         if (aoi){
-          if (typeof filters === 'undefined') {
-            filters = {};
-          }
           filters["Longitude"] = [aoi.w, aoi.e];
           filters["Latitude"] = [aoi.s, aoi.n];
         }
 
-        if (!$.isEmptyObject(filters)){
-          this.renderFilterList(filters);
-        }
+        this.currentFilters = filters;
 
-
-        this.$('.delete-filter').click(function(evt){
-          var item = this.parentElement.parentElement;
-          this.parentElement.parentElement.parentElement.removeChild(item);
-        });
+        //if (!$.isEmptyObject(filters)){
+        this.renderFilterList();
+        //}
 
         // Check for products and models
         var products;
@@ -485,6 +510,10 @@
 
               if(processes.length>0){
                 $('#download_processes').append('<div><b>Download links</b> (Process runs in background, panel can be closed and reopened at any time)</div>');
+                $('#download_processes').append('<div style="float: left; margin-left:20px;"><b>Process started</b></div>');
+                $('#download_processes').append('<div style="float: left; margin-left:100px;"><b>Status</b></div>');
+                $('#download_processes').append('<div style="float: left; margin-left:240px;"><b>Info</b></div>');
+                $('#download_processes').append('<div style="float: left; margin-left:110px;"><b>Link</b></div>');
               }
 
               for (var i = processes.length - 1; i >= 0; i--) {
@@ -512,48 +541,109 @@
 
       },
 
-      createSubscript: function(string){
-        // Adding subscript elements to string which contain underscores
-        var newkey = "";
-        var parts = string.split("_");
-        if (parts.length>1){
-          newkey = parts[0];
-          for (var i=1; i<parts.length; i++){
-            newkey+=(" "+parts[i]).sub();
-          }
-        }else{
-          newkey = string;
-        }
-        return newkey;
-      },
 
-      renderFilterList: function(filters) {
+      renderFilterList: function() {
+        var filters = this.currentFilters;
         var fil_div = this.$el.find("#filters");
         fil_div.empty();
+        var available_uom = {};
+        // Clone object
+        _.each(globals.swarm.get('uom_set'), function(obj, key){
+          available_uom[key] = obj;
+        });
         //fil_div.append("<div>Filters</div>");
+
+        var tabindex = 1;
 
         _.each(_.keys(filters), function(key){
 
-          var extent = filters[key].map(this.round);
-          var name = "";
-          var parts = key.split("_");
-          if (parts.length>1){
-            name = parts[0];
-            for (var i=1; i<parts.length; i++){
-              name+=(" "+parts[i]).sub();
+          // Check if filter part of parameters od currently selected products
+          if (!available_uom.hasOwnProperty(key)){
+            delete this.currentFilters[key];
+
+          } else {
+            var extent = filters[key].map(this.round);
+            var name = "";
+            var parts = key.split("_");
+            if (parts.length>1){
+              name = parts[0];
+              for (var i=1; i<parts.length; i++){
+                name+=(" "+parts[i]).sub();
+              }
+            }else{
+              name = key;
             }
-          }else{
-            name = key;
+
+            var $html = $(FilterTmpl({
+                id: key,
+                name: name,
+                extent: extent,
+                index1: tabindex++,
+                index2: tabindex++,
+                index3: tabindex++
+              })
+            );
+
+            
+            fil_div.append($html);
           }
 
-          var $html = $(FilterTmpl({
-              id: key,
-              name: name,
-              extent: extent
-            })
-          );
-          fil_div.append($html);
+          
         }, this);
+        
+        var filterkeys = _.keys(this.currentFilters);
+        for (var i = 0; i < filterkeys.length; i++) {
+          if(available_uom.hasOwnProperty(filterkeys[i])){
+            delete available_uom[filterkeys[i]];
+          }
+        }
+
+
+        // Remove unwanted parameters
+        if(available_uom.hasOwnProperty('Timestamp')){delete available_uom['Timestamp'];}
+        if(available_uom.hasOwnProperty('timestamp')){delete available_uom['timestamp'];}
+        if(available_uom.hasOwnProperty('q_NEC_CRF')){delete available_uom['q_NEC_CRF'];}
+        if(available_uom.hasOwnProperty('GPS_Position')){delete available_uom['GPS_Position'];}
+        if(available_uom.hasOwnProperty('LEO_Position')){delete available_uom['LEO_Position'];}
+        
+        
+           
+
+        $('#filters').append(
+          '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-default dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
+        );
+
+
+        $( "#downloadAddFilter" ).click(function(){
+          $("#addfilter").focus();
+        });
+
+        var that = this;
+
+        $('#addfilter').w2field('list', { 
+          items: _.keys(available_uom).sort(),
+          renderDrop: function (item, options) {
+            var html = '<b>'+that.createSubscript(item.id)+'</b>';
+            if(available_uom[item.id].uom != null){
+              html += ' ['+available_uom[item.id].uom+']';
+            }
+            if(available_uom[item.id].name != null){
+              html+= ': '+available_uom[item.id].name;
+            }
+            return html;
+          }
+        });
+
+        $('#addfilter').change(this.handleItemSelected.bind(this));
+
+        var that = this;
+
+        this.$('.delete-filter').click(function(evt){
+          var item = this.parentElement.parentElement;
+          this.parentElement.parentElement.parentElement.removeChild(item);
+          delete that.currentFilters[item.id];
+          
+        });
 
       },
 
