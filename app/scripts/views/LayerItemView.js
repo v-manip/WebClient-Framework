@@ -146,6 +146,10 @@
                     }else{
                         this.model.set("visible", false);
 
+                        if (!(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed)) {
+                            App.optionsBar.close();
+                        }
+
                         var product_keys = _.keys(globals.swarm.products[this.model.get("id")]);
 
                         for (var i = product_keys.length - 1; i >= 0; i--) {
@@ -223,10 +227,26 @@
                         var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
                         if (layer != -1  && !(typeof layer === 'undefined')) {
 
-                            if(options.visible)
+                            if(options.visible){
                                 this.model.set("visible", true);
-                            else
+                                if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+                                    App.layerSettings.setModel(this.model);
+                                    App.optionsBar.show(App.layerSettings);
+                                    //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                                    $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
+                                } else {
+                                    if(!App.layerSettings.sameModel(this.model)){
+                                        App.layerSettings.setModel(this.model);
+                                        App.optionsBar.show(App.layerSettings);
+                                        //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                                        $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
+                                    }
+                                }
+                            }
+                            else{
                                 this.model.set("visible", false);
+                                
+                            }
 
                             // TODO: Here we should go through all views, or maybe only url is necessary?
                             var url = layer.get('views')[0].urls[0]+"?";
@@ -269,17 +289,6 @@
                                     Communicator.mediator.trigger('map:layer:change', options);
                                 }else{
                                     // If an shc file is not loaded open settings and show message to select shc file
-                                    if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-                                        App.layerSettings.setModel(this.model);
-                                        App.optionsBar.show(App.layerSettings);
-                                    } else {
-                                        if(App.layerSettings.sameModel(this.model)){
-                                            App.optionsBar.close();
-                                        }else{
-                                            App.layerSettings.setModel(this.model);
-                                            App.optionsBar.show(App.layerSettings);
-                                        }
-                                    }
                                     showMessage('info','Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer.', 20);
 
                                     var checkbox = $( "input[type$='checkbox']", this.$el);
@@ -296,6 +305,9 @@
                         }
                     } else if (!evt.target.checked){
                         Communicator.mediator.trigger('map:layer:change', options);
+                        if (!(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed)) {
+                            App.optionsBar.close();
+                        }
 
                     } else if (isBaseLayer && evt.target.checked){
                         Communicator.mediator.trigger('map:layer:change', options);

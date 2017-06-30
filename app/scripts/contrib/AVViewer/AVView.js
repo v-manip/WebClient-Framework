@@ -153,6 +153,8 @@ define(['backbone.marionette',
 
             }
 
+            $('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
+
             if(swarmdata && swarmdata.length>0){
                 args.parsedData = swarmdata;
                 that.sp.loadData(args);
