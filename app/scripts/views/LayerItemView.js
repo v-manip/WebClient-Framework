@@ -132,7 +132,6 @@
                         if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
                             App.layerSettings.setModel(this.model);
                             App.optionsBar.show(App.layerSettings);
-                            //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
                             $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
                         } else {
                             if(!App.layerSettings.sameModel(this.model)){
@@ -230,16 +229,20 @@
                             if(options.visible){
                                 this.model.set("visible", true);
                                 if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-                                    App.layerSettings.setModel(this.model);
-                                    App.optionsBar.show(App.layerSettings);
-                                    //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                                    $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
-                                } else {
-                                    if(!App.layerSettings.sameModel(this.model)){
+                                    if(this.model.get('views')[0].protocol !== 'INDEX'){
                                         App.layerSettings.setModel(this.model);
                                         App.optionsBar.show(App.layerSettings);
                                         //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                                        $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
+                                        $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
+                                    }
+                                } else {
+                                    if(!App.layerSettings.sameModel(this.model)){
+                                        if(this.model.get('views')[0].protocol !== 'INDEX'){
+                                            App.layerSettings.setModel(this.model);
+                                            App.optionsBar.show(App.layerSettings);
+                                            //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
+                                            $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
+                                        }
                                     }
                                 }
                             }
