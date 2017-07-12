@@ -257,7 +257,7 @@
             }
            
           }
-          var longest = 0;
+          /*var longest = 0;
           for (var key in collections) {
             if (collections[key].length > longest){
               longest = collections[key].length;
@@ -269,7 +269,7 @@
             if(collections[key].length !== longest){
               delete collections[key];
             }
-          }
+          }*/
 
           var collection_keys = _.keys(collections);
           for (var i = collection_keys.length - 1; i >= 0; i--) {
