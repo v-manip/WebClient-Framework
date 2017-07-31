@@ -356,6 +356,27 @@
           '</div>'
         );
 
+        var subsetting_cb = '<div class="checkbox"><label><input type="checkbox" value="" id="custom_subsetting_cb">Custom time subsetting value</label></div>';
+        var subsettingFilter =
+          '<div class="input-group" id=custom_subsetting_filter style="margin:7px">'+
+            '<span class="form-control">'+
+              'Time subsetting (Expected format ISO-8601 duration e.g. PT23H59M59S)'+
+              '<textarea id="custom_subsetting_ta" rows="1" cols="20" style="float:right; resize:none;">PT1H</textarea>'+
+            '</span>'+
+        '</div>';
+
+        this.$el.find("#custom_subsetting_cb").off();
+        this.$el.find("#custom_subsetting").empty();
+        this.$el.find("#custom_subsetting").append(subsetting_cb);
+
+        $("#custom_subsetting_cb").click(function(evt){
+          if ($('#custom_subsetting_cb').is(':checked')) {
+            $("#custom_subsetting").append(subsettingFilter);
+          }else{
+            $("#custom_subsetting_filter").remove();
+          }
+        });
+
         this.$el.find("#custom_time_cb").off();
         this.$el.find("#custom_time").empty();
         /*this.$el.find("#custom_time").html(
@@ -668,6 +689,13 @@
               }else{
                 $(extent_elem[i]).css('background-color', 'transparent');
               }
+            }else if(extent_elem.context.id == 'custom_subsetting_filter'){
+              if((extent_elem[i].value)[0]!=='P'){
+                $(extent_elem[i]).css('background-color', 'rgb(255, 215, 215)');
+                valid = false;
+              }else{
+                $(extent_elem[i]).css('background-color', 'transparent');
+              }
             }else{
               if(!$.isNumeric(extent_elem[i].value)){
                 $(extent_elem[i]).css('background-color', 'rgb(255, 215, 215)');
@@ -718,7 +746,11 @@
         //options.end_time.setUTCHours(23,59,59,999);
         options.end_time.setUTCHours(0,0,0,0);
         
-        
+
+        // Add time subsetting option
+        if($('#custom_subsetting_filter').length!=0){
+          options.sampling_step = $('#custom_subsetting_ta').val();
+        }
 
 
         // Rewrite time for start and end date if custom time is active

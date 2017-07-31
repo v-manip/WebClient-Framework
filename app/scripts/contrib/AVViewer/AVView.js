@@ -230,18 +230,19 @@ define(['backbone.marionette',
                 // Special cases for separeted vectors
                 this.separateVector('B_error', 'B_error', ['X', 'Y', 'Z'], ',');
                 this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
+                this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
                 this.separateVector('v_SC', 'v_SC', ['N', 'E', 'C'], '_');
                 this.separateVector('B_VFM', 'B_VFM', ['X', 'Y', 'Z'], ',');
-                this.separateVector('B', 'B_NEC_res_IGRF12',
-                    ['N_res_IGRF12', 'E_res_IGRF12', 'C_res_IGRF12'], '_'
+                this.separateVector('B', 'B_NEC_resAC',
+                    ['resAC_N', 'resAC_E', 'resAC_C'], '_'
                 );
                 this.separateVector('B', 'B_NEC_res_SIFM',
                     ['N_res_SIFM', 'E_res_SIFM', 'C_res_SIFM'], '_'
                 );
-                this.separateVector('B', 'B_NEC_res_CHAOS-5-Combined',
-                    ['N_res_CHAOS-5-Combined',
-                    'E_res_CHAOS-5-Combined',
-                    'C_res_CHAOS-5-Combined'], '_'
+                this.separateVector('B', 'B_NEC_res_CHAOS-6-Combined',
+                    ['N_res_CHAOS-6-Combined',
+                    'E_res_CHAOS-6-Combined',
+                    'C_res_CHAOS-6-Combined'], '_'
                 );
                 this.separateVector('B', 'B_NEC_res_Custom_Model',
                     ['N_res_Custom_Model',
@@ -285,7 +286,7 @@ define(['backbone.marionette',
 
                         filterstouse = filterstouse.concat(['MLT']);
                         var residuals = _.filter(_.keys(data[0]), function(item) {
-                            return item.indexOf('_res') !== -1;
+                            return item.indexOf('_res_') !== -1;
                         });
                         // If new datasets contains residuals add those instead of normal components
                         if(residuals.length > 0){

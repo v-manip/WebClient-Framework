@@ -166,6 +166,12 @@
                     "colorscale": "jet",
                     "selected": true,
                     "name": "Magnetic field intensity"
+                },
+                "B_NEC_resAC":{
+                    "range": [-600, 600],
+                    "uom":"nT",
+                    "colorscale": "jet",
+                    "name": "Magnetic field intensity residual A - C"
                 }
             },
             "download_parameters": {
@@ -212,6 +218,10 @@
                 "B_NEC": {
                     "uom":"nT",
                     "name": "Magnetic field vector, NEC frame"
+                },
+                "B_NEC_resAC": {
+                    "uom":"nT",
+                    "name": "Magnetic field residual (A-C) vector, NEC frame"
                 },
                 "dB_Sun": {
                     "uom": "nT",
@@ -268,6 +278,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },
             "outlines": false,
@@ -413,6 +427,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },
             "outlines": false,
@@ -557,6 +575,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },
             "outlines": false,
@@ -781,6 +803,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1011,6 +1037,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1241,6 +1271,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1381,6 +1415,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1521,6 +1559,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1661,6 +1703,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1771,6 +1817,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1880,6 +1930,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -1989,6 +2043,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2098,6 +2156,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2165,6 +2227,10 @@
                 "flags": {
                     "uom": null,
                     "name": "Flags describing data gaps and satellite identification"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2232,6 +2298,10 @@
                 "flags": {
                     "uom": null,
                     "name": "Flags describing data gaps and satellite identification"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2328,6 +2398,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2424,6 +2498,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2520,6 +2598,10 @@
                 "MLT": {
                     "uom": null,
                     "name": "Magnetic local time"
+                },
+                "OrbitNumber": {
+                    "uom": null,
+                    "name": "Orbit Number"
                 }
             },"processes" : [
                 {
@@ -2750,7 +2832,7 @@
             "coefficients_range": [-1,-1]
 
         },{
-            "name": "CHAOS-5",
+            "name": "CHAOS-6",
             "visible": false,
             "timeSlider": true,
             "timeSliderProtocol": "WPS",
@@ -2758,10 +2840,10 @@
             "tileSize":1024,
             "validity":{
                 "start": "1997-02-07T05:31:12Z",
-                "end": "2016-02-07T14:07:00Z"
+                "end": "2017-08-08T14:07:00Z"
             },
             "views": [{
-                "id": "CHAOS-5-Combined_view",
+                "id": "CHAOS-6-Combined_view",
                 "protocol": "WMS",
                 "urls": [
                     "http://localhost:9000/vires00/ows"
@@ -2770,7 +2852,7 @@
                 "format": "image/png"
             }],
             "download": {
-                "id": "CHAOS-5-Combined",
+                "id": "CHAOS-6-Combined",
                 "protocol": "EOWCS",
                 "url": "http://localhost:9000/vires00/ows"
             },
@@ -2846,13 +2928,13 @@
                 }
             },
             "download_parameters": {
-                "B_NEC_res_CHAOS-5-Combined": {
+                "B_NEC_res_CHAOS-6-Combined": {
                     "uom":"nT",
-                    "name": "Residuals to CHAOS-5 model of Magnetic field vector, NEC frame"
+                    "name": "Residuals to CHAOS-6 model of Magnetic field vector, NEC frame"
                 },
-                "F_res_CHAOS-5-Combined": {
+                "F_res_CHAOS-6-Combined": {
                     "uom":"nT",
-                    "name": "Residuals of Magnetic field intensity to CHAOS-5 model"
+                    "name": "Residuals of Magnetic field intensity to CHAOS-6 model"
                 }
             },
             "height": 450,
