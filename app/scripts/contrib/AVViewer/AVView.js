@@ -239,10 +239,10 @@ define(['backbone.marionette',
                 this.separateVector('B', 'B_NEC_res_SIFM',
                     ['N_res_SIFM', 'E_res_SIFM', 'C_res_SIFM'], '_'
                 );
-                this.separateVector('B', 'B_NEC_res_CHAOS-5-Combined',
-                    ['N_res_CHAOS-5-Combined',
-                    'E_res_CHAOS-5-Combined',
-                    'C_res_CHAOS-5-Combined'], '_'
+                this.separateVector('B', 'B_NEC_res_CHAOS-6-Combined',
+                    ['N_res_CHAOS-6-Combined',
+                    'E_res_CHAOS-6-Combined',
+                    'C_res_CHAOS-6-Combined'], '_'
                 );
                 this.separateVector('B', 'B_NEC_res_Custom_Model',
                     ['N_res_Custom_Model',
