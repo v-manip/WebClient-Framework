@@ -5,7 +5,8 @@ var SCALAR_PARAM = [
 ];
 
 var VECTOR_PARAM = [
-    "B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"
+    "B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model",
+    "B_NEC_resAC"
 ];
 
 var VECTOR_BREAKDOWN = {
@@ -14,6 +15,7 @@ var VECTOR_BREAKDOWN = {
     'CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
     'Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model'],
     'B_NEC': ['B_N','B_E','B_C'],
+    'B_NEC_resAC': ['B_resAC_N','B_resAC_E','B_resAC_C'],
     'B_error': ['B_error,X', 'B_error,Y', 'B_error,Z'],
     'B_VFM': ['B_VFM,X', 'B_VFM,Y', 'B_VFM,Z'],
     'v_SC':  ['v_SC_N','v_SC_E','v_SC_C'],
@@ -197,6 +199,22 @@ var VECTOR_BREAKDOWN = {
                     // in user configuration, if not add them to it
                     var m_p = config.mapConfig.products;
                     for (var i = 0; i < m_p.length; i++) {
+
+                        // Check if MAG A product has new residual parameter loaded
+                        if(product_config[i].download.id === 'SW_OPER_MAGA_LR_1B'){
+                            if(!product_config[i].parameters.hasOwnProperty('B_NEC_resAC')){
+                                product_config[i].parameters.B_NEC_resAC = 
+                                {
+                                    'range': [-600, 600],
+                                    'uom':'nT',
+                                    'colorscale': 'jet',
+                                    'name': 'Magnetic field intensity residual A - C'
+                                };
+                            }
+                        }
+                        
+
+
                         if(product_config.length>i){
                             if(product_config[i].download.id != m_p[i].download.id){
                                 // If id is not the same a new product was inserted and thus 
@@ -208,6 +226,9 @@ var VECTOR_BREAKDOWN = {
                             product_config.push(m_p[i]);
                         }
                     }
+
+                    
+
 
                     // Make sure download parameters are always loaded from script
                     for (var i = product_config.length - 1; i >= 0; i--) {

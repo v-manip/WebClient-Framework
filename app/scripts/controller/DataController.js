@@ -266,7 +266,7 @@
 
           
           var variables = [
-            "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
+            "F", "F_error", "B_NEC_resAC", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
             "v_SC", "Bubble_Probability", "Kp", "Dst", "QDLat", "QDLon", "MLT",
             "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
             "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
