@@ -743,8 +743,8 @@
         options.end_time = new Date(Date.UTC(options.end_time.getFullYear(), options.end_time.getMonth(),
         options.end_time.getDate(), options.end_time.getHours(), 
         options.end_time.getMinutes(), options.end_time.getSeconds()));
-        //options.end_time.setUTCHours(23,59,59,999);
-        options.end_time.setUTCHours(0,0,0,0);
+        options.end_time.setUTCHours(23,59,59,999);
+        //options.end_time.setUTCHours(0,0,0,0);
         
 
         // Add time subsetting option
@@ -759,8 +759,6 @@
           var e = parseTime($($("#timefilter").find('textarea')[0]).val());
           options.begin_time.setUTCHours(s[0],s[1],s[2],s[3]);
           options.end_time.setUTCHours(e[0],e[1],e[2],e[3]);
-        }else{
-          options.end_time.setDate(options.end_time.getDate() + 1);
         }
 
         var bt_obj = options.begin_time;
