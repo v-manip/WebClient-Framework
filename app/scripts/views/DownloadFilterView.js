@@ -38,7 +38,6 @@
           type: 'handlebars',
           template: DownloadProcessTmpl
       },
-
       modelEvents: {
         "change": "render"
       },
@@ -188,6 +187,7 @@
         this.swarm_prod = [];
         this.loadcounter = 0;
         this.currentFilters = {};
+        this.tabindex = 1;
 
       },
 
@@ -566,7 +566,10 @@
       renderFilterList: function() {
         var filters = this.currentFilters;
         var fil_div = this.$el.find("#filters");
-        fil_div.empty();
+        fil_div.find('.w2ui-field').remove();
+        $('#downloadAddFilter').remove();
+        //fil_div.empty();
+
         var available_uom = {};
         // Clone object
         _.each(globals.swarm.get('uom_set'), function(obj, key){
@@ -574,15 +577,15 @@
         });
         //fil_div.append("<div>Filters</div>");
 
-        var tabindex = 1;
+        
 
         _.each(_.keys(filters), function(key){
 
-          // Check if filter part of parameters od currently selected products
+          // Check if filter part of parameters of currently selected products
           if (!available_uom.hasOwnProperty(key)){
             delete this.currentFilters[key];
 
-          } else {
+          } else if($('#'+key).length==0){
             var extent = filters[key].map(this.round);
             var name = "";
             var parts = key.split("_");
@@ -599,9 +602,9 @@
                 id: key,
                 name: name,
                 extent: extent,
-                index1: tabindex++,
-                index2: tabindex++,
-                index3: tabindex++
+                index1: this.tabindex++,
+                index2: this.tabindex++,
+                index3: this.tabindex++
               })
             );
 
@@ -659,11 +662,13 @@
 
         var that = this;
 
-        this.$('.delete-filter').click(function(evt){
+        // Remove previosly set click bindings
+        this.$('.delete-filter').off('click');
+        this.$('.delete-filter').on('click', function(evt){
           var item = this.parentElement.parentElement;
           this.parentElement.parentElement.parentElement.removeChild(item);
           delete that.currentFilters[item.id];
-          
+          that.renderFilterList();
         });
 
       },
