@@ -823,7 +823,12 @@
             collections[collection_keys[i]] = collections[collection_keys[i]].reverse();
           }
 
-          options["collections_ids"] = JSON.stringify(collections);
+          // Sort the "layers" to sort the master products based on priority
+          for (var k in collections){
+            collections[k].sort(productSortingFunction);
+          }
+
+          options["collections_ids"] = JSON.stringify(collections, Object.keys(collections).sort());
         }
 
 

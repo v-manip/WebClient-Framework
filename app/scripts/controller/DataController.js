@@ -258,6 +258,11 @@
            
           }
 
+          // Sort the "layers" to sort the master products based on priority
+          for (var k in collections){
+            collections[k].sort(productSortingFunction);
+          }
+
           var options = {
             "collections_ids": JSON.stringify(collections, Object.keys(collections).sort()),
             "begin_time": getISODateTimeString(this.selected_time.start),

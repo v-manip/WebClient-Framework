@@ -25,6 +25,28 @@ var VECTOR_BREAKDOWN = {
     'B_NEC_res_Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model']
 };
 
+// Ordered from highest resolution to lowest with the exception of FAC that 
+// needs to be first as the master product needs to be the same
+var MASTER_PRIORITY = [
+    'SW_OPER_FACATMS_2F', 'SW_OPER_FACBTMS_2F', 'SW_OPER_FACCTMS_2F', 'SW_OPER_FAC_TMS_2F',
+    'SW_OPER_EFIA_PL_1B', 'SW_OPER_EFIB_PL_1B', 'SW_OPER_EFIC_PL_1B',
+    'SW_OPER_MAGA_LR_1B', 'SW_OPER_MAGB_LR_1B', 'SW_OPER_MAGC_LR_1B',
+    'SW_OPER_TECATMS_2F', 'SW_OPER_TECBTMS_2F', 'SW_OPER_TECCTMS_2F',
+    'SW_OPER_IBIATMS_2F', 'SW_OPER_IBIBTMS_2F', 'SW_OPER_IBICTMS_2F',
+    'SW_OPER_EEFATMS_2F', 'SW_OPER_EEFBTMS_2F', 'SW_OPER_EEFCTMS_2F'
+];
+
+function productSortingFunction(a, b) {
+    'use strict';
+    if (MASTER_PRIORITY.indexOf(a) < MASTER_PRIORITY.indexOf(b)) {
+        return -1;
+    }
+    if (MASTER_PRIORITY.indexOf(a) > MASTER_PRIORITY.indexOf(b)) {
+        return 1;
+    }
+    return 0;
+}
+
 
 (function() {
     'use strict';
