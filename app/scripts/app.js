@@ -509,7 +509,7 @@ function productSortingFunction(a, b) {
                     // Chech if succesfull login info is being shown, if yes, 
                     // add padding to not overlap messages
                     if($('.alert.alert-success.fade.in').length>0){
-                        $('.alert.alert-success.fade.in').style('margin-top', '100px');
+                        $('.alert.alert-success.fade.in').css('margin-top', '100px');
                     }
                 }else{
                     localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
