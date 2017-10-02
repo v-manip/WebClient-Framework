@@ -505,6 +505,12 @@ function productSortingFunction(a, b) {
                      'if you would like to reset to the default configuration click '+
                      '<b><a href="javascript:void(0);" onclick="'+clickEvent+'">here</a></b> '+
                      'or on the Reset button above.', 35);
+
+                    // Chech if succesfull login info is being shown, if yes, 
+                    // add padding to not overlap messages
+                    if($('.alert.alert-success.fade.in').length>0){
+                        $('.alert.alert-success.fade.in').style('margin-top', '100px');
+                    }
                 }else{
                     localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
                 }
