@@ -1122,6 +1122,7 @@ define([
         },
 
         OnLayerParametersChanged: function(layer){
+
             globals.products.each(function(product) {
                 if(product.get('name')===layer){
 
@@ -1165,6 +1166,66 @@ define([
                                 }
                             }
                             this.checkFieldLines();
+                        }if (product.get('differenceTo') !== null ){
+                            if(product.get('visible')){
+                                cesLayer = product.get('ces_layer');
+                                cesLayer.show = false;
+                                this.map.scene.imageryLayers.remove(cesLayer, false);
+
+
+
+
+
+
+                               /* name = product.get('name');
+                                url = product.get('views')[0].urls[0];
+                                modelId = product.get('download').id;
+                                color = product.get('color');
+                                color = color.substring(1, color.length);
+                                parameters = product.get('parameters');
+                                _.each(_.keys(parameters), function(key){
+                                    if(parameters[key].selected){
+                                        band = key;
+                                    }
+                                });
+                                style = parameters[band].colorscale;
+                                range = parameters[band].range;
+                                logarithmic = parameters[band].logarithmic;
+
+                                if(this.FLCollection.hasOwnProperty( name )) {
+                                    this.map.scene.primitives.remove(this.FLCollection[name]);
+                                    delete this.FLCollection[name];
+                                }
+
+                                var that = this;
+
+                                $.post( url, tmplEvalModelDiff({
+                                    'model_ids': modelId,
+                                    'begin_time': getISODateTimeString(this.beginTime),
+                                    'end_time': getISODateTimeString(this.endTime),
+                                    'bbox': this.bboxsel[0] +','+ this.bboxsel[1] +','+
+                                            this.bboxsel[2] +','+ this.bboxsel[3],
+                                    'style': style,
+                                    'range_min': range[0],
+                                    'range_max': range[1],
+                                    'log_scale': logarithmic
+                                }))
+                                .done(function( data ) {
+                                    
+                                });*/
+
+
+
+
+
+                                
+                            }else{
+                                
+                            }
+                            var refProd = globals.products.filter(function(p){
+                                return p.get('download').id === product.get('differenceTo');
+                            });
+                            this.checkModelDifference(product, refProd[0]);
                         }else{
                             if (this.activeFL.indexOf(product.get('download').id)!==-1){
                                 this.activeFL.splice(this.activeFL.indexOf(product.get('download').id), 1);
@@ -1284,6 +1345,97 @@ define([
             return new Cesium.ViewportQuad(
                 new Cesium.BoundingRectangle(x, y, width, height), newmat
             );
+        },
+
+        checkModelDifference: function(model, referenceModel){
+
+            var that = this;
+            var url = model.get('views')[0].urls[0];
+            var models = [model.get('download').id, referenceModel.get('download').id];
+            var shc = null;
+
+            // Remove custom model with id shc if selected
+            if (models.indexOf('shc')!==-1){
+                shc = _.find(globals.products.models, function(p){return p.get('shc') !== null;}).get('shc');
+                models.splice(models.indexOf('shc'), 1);
+            }
+            var parameters = model.get('parameters');
+            var band;
+            var keys = _.keys(parameters);
+            _.each(keys, function(key){
+                if(parameters[key].selected)
+                    band = key;
+            });
+
+            var style = parameters[band].colorscale;
+            var height = model.get('height');
+            var uom = parameters[band].uom;
+            var imageURI;
+
+            $.post(url, tmplEvalModelDiff({
+                'model': models[0],
+                'reference_model': models[1],
+                'variable': band,
+                'begin_time': getISODateTimeString(this.beginTime),
+                'end_time': getISODateTimeString(this.endTime),
+                'elevation': height,
+                'shc': shc,
+                'height': 512,
+                'width': 1024,
+                'style': style,
+            }), 'xml')
+                .done(function( data ) {
+                    // Remove previous and add colorlegend to cesium view
+                    $('#colorlegend').remove();
+                    $('.cesium-viewer').append('<div id="colorlegend"></div>');
+
+                    //data = $.parseXML(data);
+
+                    if(that.differenceImage){
+                        that.map.scene.imageryLayers.remove(that.differenceImage);
+                    }
+                    //var img64 = $(data.getElementsByTagName('ComplexData')).text();
+                    //imageURI = 'data:image/gif;base64,'+img64;
+                    imageURI = 'data:image/gif;base64,'+data;
+                    var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
+                    that.differenceImage = that.map.scene.imageryLayers.addImageryProvider(prov);
+                    that.map.scene.imageryLayers.lower(that.differenceImage);
+                    
+
+                    //var style = $(data.getElementsByTagName('LiteralData')).text().split(',');
+                    
+                    //console.log(style);
+
+                    /*var margin = 20;
+                    var width = $('#colorlegend').width();
+                    var scalewidth =  width - margin *2;
+                    console.log(width);
+                    
+                    $('#colorlegend').append(
+                        '<div class="'+style[0]+'" style="width:'+scalewidth+'px; height:20px; margin-left:'+margin+'px"></div>'
+                    );
+                    var svgContainer = d3.select('#colorlegend').append('svg')
+                        .attr('width', width)
+                        .attr('height', 60);
+                    var axisScale = d3.scale.linear();
+                    axisScale.domain([parseFloat(style[1]), parseFloat(style[2])]);
+                    axisScale.range([0, scalewidth]);
+                    var xAxis = d3.svg.axis()
+                        .scale(axisScale);
+                    xAxis.tickValues( axisScale.ticks( 5 ).concat( axisScale.domain() ) );
+                    xAxis.tickFormat(d3.format('.02f'));
+                    svgContainer.append('g')
+                        .attr('class', 'x axis')
+                        .attr('transform', 'translate(' + [margin, 3]+')')
+                        .call(xAxis)
+                        .append('text')
+                            .style('text-anchor', 'middle')
+                            .style('font-size', '1.1em')
+                            .attr('transform', 'translate(' + [scalewidth/2, 40]+')')
+                            .text(uom);
+                    $('#colorlegend').show();*/
+                });
+            
         },
 
         checkColorscale: function(pId){

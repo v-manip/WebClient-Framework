@@ -300,8 +300,15 @@ function productSortingFunction(a, b) {
                         showColorscale: true
                     });
 
+                    if(product.hasOwnProperty('differenceTo')){
+                        lm.set('differenceTo', product.differenceTo);
+                    }
+
                     if(lm.get('model')){
                         lm.set('contours', defaultFor( product.contours,false));
+                        lm.set('differenceTo', defaultFor( 
+                            product.differenceTo, null)
+                        );
                     }
 
                     if(lm.get('download').id === 'Custom_Model'){

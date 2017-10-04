@@ -2719,7 +2719,8 @@
             },
             "height": 450,
             "model": true,
-            "coefficients_range": [-1,-1]
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
 
         },{
             "name": "IGRF12",
@@ -2829,7 +2830,8 @@
             },
             "height": 450,
             "model": true,
-            "coefficients_range": [-1,-1]
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
 
         },{
             "name": "CHAOS-6",
@@ -2939,7 +2941,8 @@
             },
             "height": 450,
             "model": true,
-            "coefficients_range": [-1,-1]
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
 
         },{
             "name": "Custom Model",
@@ -3014,7 +3017,8 @@
             },
             "height": 450,
             "model": true,
-            "coefficients_range": [-1,-1]
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
 
         },{
             "name": "Dst Index",

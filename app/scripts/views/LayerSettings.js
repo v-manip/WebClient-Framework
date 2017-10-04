@@ -290,6 +290,48 @@
 
             onShow: function(view){
 
+                var that = this;
+
+                if(this.model.attributes.hasOwnProperty("differenceTo")){
+                    // Add options for three satellites
+                    $("#difference_selection").off();
+                    $("#difference_selection").empty();
+                    $("#difference_selection").append('<label for="satellite_selec" style="width:120px;">Show difference to </label>');
+                    $("#difference_selection").append('<select style="margin-left:4px;" name="difference_selec" id="difference_selec"></select>');
+
+
+                    var models = globals.products.filter(function (p) {
+                        return p.get('model');
+                    });
+
+                    for (var i = 0; i < models.length; i++) {
+                        var selected = '';
+                        var name = models[i].get('name');
+                        var id = models[i].get('download').id;
+                        if(this.model.get('differenceTo') === id){
+                            selected = 'selected';
+                        }
+                        if(id !== this.model.get('download').id){
+                            $('#difference_selec').append('<option value="'+id+'"'+selected+'>'+name+'</option>');
+                        }
+                    }
+                    if(this.model.get('differenceTo') === null){
+                        $('#difference_selec').prepend('<option value="none" selected>-none-</option>');
+                    }else{
+                        
+                        $('#difference_selec').prepend('<option value="none">-none-</option>');
+                    }
+
+                    $("#difference_selection").on('change', function(){
+                        var differenceModel = $("#difference_selection").find("option:selected").val();
+                        if(differenceModel==='none'){
+                            differenceModel = null;
+                        }
+                        that.model.set('differenceTo', differenceModel);
+                        that.onOptionsChanged();
+                    });
+                }
+
                 if(this.model.get("containerproduct")){
                     // Add options for three satellites
                     $("#satellite_selection").off();
@@ -311,7 +353,6 @@
                     $("#satellite_selec option[value="+this.selected_satellite+"]").prop("selected", "selected");
 
                     var model = null;
-                    var that = this;
                     globals.products.forEach(function(p){
                         if(p.get("download").id == globals.swarm.products[that.model.get("id")][that.selected_satellite]){
                             model = p;
@@ -410,7 +451,9 @@
                 }
 
                 // request range for selected parameter if layer is of type model
-                if(this.current_model.get("model") && this.selected != "Fieldlines"){
+                if(this.current_model.get("model") && 
+                    this.selected != "Fieldlines" && 
+                    this.current_model.get("differenceTo") === null){
 
                     var that = this;
 
