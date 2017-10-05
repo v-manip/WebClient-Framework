@@ -116,6 +116,7 @@
                 function replacer(key,value)
                 {
                     if (key==='ces_layer') {return undefined;}
+                    else if (key==='backupLayer') {return undefined;}
                     else if (key==='ordinal') {return undefined;}
                     //else if (key==='download_parameters') {return undefined;}
                     else {return value;}

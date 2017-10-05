@@ -10,11 +10,12 @@
         'hbs!tmpl/LayerSettings',
         'hbs!tmpl/wps_eval_model_GET',
         'hbs!tmpl/wps_eval_model',
+        'hbs!tmpl/wps_eval_model_diff',
         'underscore',
         'plotty'
     ],
 
-    function( Backbone, Communicator, globals, LayerSettingsTmpl, evalModelTmpl, evalModelTmpl_POST ) {
+    function( Backbone, Communicator, globals, LayerSettingsTmpl, evalModelTmpl, evalModelTmpl_POST, tmplEvalModelDiff ) {
 
         var LayerSettings = Backbone.Marionette.Layout.extend({
 
@@ -39,7 +40,7 @@
             },
 
             renderView: function(){
-                                // Unbind first to make sure we are not binding to many times
+                // Unbind first to make sure we are not binding to many times
                 this.stopListening(Communicator.mediator, "layer:settings:changed", this.onParameterChange);
 
                 // Event handler to check if tutorial banner made changes to a model in order to redraw settings
@@ -452,8 +453,8 @@
 
                 // request range for selected parameter if layer is of type model
                 if(this.current_model.get("model") && 
-                    this.selected != "Fieldlines" && 
-                    this.current_model.get("differenceTo") === null){
+                    this.selected != "Fieldlines" /*&& 
+                    this.current_model.get("differenceTo") === null*/){
 
                     var that = this;
 
@@ -493,7 +494,30 @@
                                 .always(this.handleRangeChange.bind(this));
                         }
 
-                    }else {
+                    }else if(this.current_model.get("differenceTo") !== null){
+                        var product = this.current_model;
+                        var refProd = globals.products.filter(function(p){
+                            return p.get('download').id === product.get('differenceTo');
+                        });
+                        var payload = tmplEvalModelDiff({
+                                'model': product.get("download").id,
+                                'reference_model': refProd[0].get("download").id,
+                                "variable": this.selected,
+                                "begin_time": getISODateTimeString(sel_time.start),
+                                "end_time": getISODateTimeString(sel_time.end),
+                                "elevation": this.current_model.get("height"),
+                                "coeff_min": this.current_model.get("coefficients_range")[0],
+                                "coeff_max": this.current_model.get("coefficients_range")[1],
+                                //"shc": this.current_model.get('shc'),
+                                "height": 24,
+                                "width": 24,
+                                "getonlyrange": true
+                            });
+
+                            $.post(this.current_model.get("download").url, payload)
+                                .success(this.handleRangeRespone.bind(this))
+                                .fail(this.handleRangeResponseError);
+                    } else {
 
                         var req = evalModelTmpl({
                             url: this.current_model.get("download").url,
@@ -675,7 +699,30 @@
                                     .fail(this.handleRangeResponseError);
                             }
 
-                        }else {
+                        } else if(this.current_model.get("differenceTo") !== null){
+                            var product = this.current_model;
+                            var refProd = globals.products.filter(function(p){
+                                return p.get('download').id === product.get('differenceTo');
+                            });
+                            var payload = tmplEvalModelDiff({
+                                'model': product.get("download").id,
+                                'reference_model': refProd[0].get("download").id,
+                                "variable": this.selected,
+                                "begin_time": getISODateTimeString(sel_time.start),
+                                "end_time": getISODateTimeString(sel_time.end),
+                                "elevation": this.current_model.get("height"),
+                                "coeff_min": this.current_model.get("coefficients_range")[0],
+                                "coeff_max": this.current_model.get("coefficients_range")[1],
+                                //"shc": this.current_model.get('shc'),
+                                "height": 24,
+                                "width": 24,
+                                "getonlyrange": true
+                            });
+
+                            $.post(this.current_model.get("download").url, payload)
+                                .success(this.handleRangeRespone.bind(this))
+                                .fail(this.handleRangeResponseError);
+                        } else {
 
                             var req = evalModelTmpl({
                                 url: this.current_model.get("download").url,
