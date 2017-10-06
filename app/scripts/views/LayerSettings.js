@@ -312,7 +312,7 @@
                         if(this.model.get('differenceTo') === id){
                             selected = 'selected';
                         }
-                        if(id !== this.model.get('download').id){
+                        if(id !== this.model.get('download').id && id!=='Custom_Model'){
                             $('#difference_selec').append('<option value="'+id+'"'+selected+'>'+name+'</option>');
                         }
                     }
@@ -470,7 +470,8 @@
                         elevation: this.current_model.get("height")
                     });
 
-                    if(this.current_model.get("views")[0].id == "shc"){
+                    if(this.current_model.get("views")[0].id == "shc" && 
+                        this.current_model.get("differenceTo") === null){
 
                         if(this.current_model.attributes.hasOwnProperty("shc")){
 
@@ -495,10 +496,14 @@
                         }
 
                     }else if(this.current_model.get("differenceTo") !== null){
+
                         var product = this.current_model;
                         var refProd = globals.products.filter(function(p){
                             return p.get('download').id === product.get('differenceTo');
                         });
+
+                        var shc = defaultFor(refProd[0].get('shc'), product.get('shc'));
+
                         var payload = tmplEvalModelDiff({
                                 'model': product.get("download").id,
                                 'reference_model': refProd[0].get("download").id,
@@ -508,7 +513,7 @@
                                 "elevation": this.current_model.get("height"),
                                 "coeff_min": this.current_model.get("coefficients_range")[0],
                                 "coeff_max": this.current_model.get("coefficients_range")[1],
-                                //"shc": this.current_model.get('shc'),
+                                "shc": shc,
                                 "height": 24,
                                 "width": 24,
                                 "getonlyrange": true
@@ -678,7 +683,8 @@
 
                         if(this.current_model.get("views")[0].id == "shc"){
 
-                            if(this.current_model.attributes.hasOwnProperty("shc")){
+                            if(this.current_model.attributes.hasOwnProperty("shc") && 
+                                this.current_model.get("differenceTo") === null){
 
                                 var payload = evalModelTmpl_POST({
                                     "model": "Custom_Model",
@@ -700,10 +706,14 @@
                             }
 
                         } else if(this.current_model.get("differenceTo") !== null){
+
                             var product = this.current_model;
                             var refProd = globals.products.filter(function(p){
                                 return p.get('download').id === product.get('differenceTo');
                             });
+
+                            var shc = defaultFor(refProd[0].get('shc'), product.get('shc'));
+
                             var payload = tmplEvalModelDiff({
                                 'model': product.get("download").id,
                                 'reference_model': refProd[0].get("download").id,
@@ -713,7 +723,7 @@
                                 "elevation": this.current_model.get("height"),
                                 "coeff_min": this.current_model.get("coefficients_range")[0],
                                 "coeff_max": this.current_model.get("coefficients_range")[1],
-                                //"shc": this.current_model.get('shc'),
+                                "shc": shc,
                                 "height": 24,
                                 "width": 24,
                                 "getonlyrange": true
@@ -791,7 +801,61 @@
 
                     var sel_time = Communicator.reqres.request('get:time');
 
-                    var payload = evalModelTmpl_POST({
+                    if(that.current_model.get("views")[0].id == "shc" && 
+                        that.current_model.get("differenceTo") === null){
+
+                        if(that.current_model.attributes.hasOwnProperty("shc")){
+
+                            var payload = evalModelTmpl_POST({
+                                "model": "Custom_Model",
+                                "variable": that.selected,
+                                "begin_time": getISODateTimeString(sel_time.start),
+                                "end_time": getISODateTimeString(sel_time.end),
+                                "elevation": that.current_model.get("height"),
+                                "coeff_min": that.current_model.get("coefficients_range")[0],
+                                "coeff_max": that.current_model.get("coefficients_range")[1],
+                                "shc": that.current_model.get('shc'),
+                                "height": 24,
+                                "width": 24,
+                                "getonlyrange": true
+                            });
+
+                            $.post(that.current_model.get("download").url, payload)
+                                .success(that.handleRangeRespone.bind(that))
+                                .fail(that.handleRangeResponseError)
+                                .always(that.handleRangeChange.bind(that));
+                        }
+
+                    }else if(that.current_model.get("differenceTo") !== null){
+
+                        var product = that.current_model;
+                        var refProd = globals.products.filter(function(p){
+                            return p.get('download').id === product.get('differenceTo');
+                        });
+
+                        var shc = defaultFor(refProd[0].get('shc'), product.get('shc'));
+
+                        var payload = tmplEvalModelDiff({
+                                'model': product.get("download").id,
+                                'reference_model': refProd[0].get("download").id,
+                                "variable": that.selected,
+                                "begin_time": getISODateTimeString(sel_time.start),
+                                "end_time": getISODateTimeString(sel_time.end),
+                                "elevation": that.current_model.get("height"),
+                                "coeff_min": that.current_model.get("coefficients_range")[0],
+                                "coeff_max": that.current_model.get("coefficients_range")[1],
+                                "shc": shc,
+                                "height": 24,
+                                "width": 24,
+                                "getonlyrange": true
+                            });
+
+                            $.post(that.current_model.get("download").url, payload)
+                                .success(that.handleRangeRespone.bind(that))
+                                .fail(that.handleRangeResponseError);
+                    }
+
+                    /*var payload = evalModelTmpl_POST({
                         "model": "Custom_Model",
                         "variable": that.selected,
                         "begin_time": getISODateTimeString(sel_time.start),
@@ -825,7 +889,7 @@
                             Communicator.mediator.trigger("layer:activate", that.current_model.get("views")[0].id);
                         })
                         .fail(that.handleRangeResponseError);
-                        //.always(that.handleRangeChange.bind(that));
+                        //.always(that.handleRangeChange.bind(that));*/
 
                     
 
