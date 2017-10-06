@@ -323,10 +323,12 @@ define([
 
                         // Check if model is set to show difference
                         if(product.get('differenceTo') !== null){
+                            imagerylayer.show = false;
+                            /*imagerylayer.show = false;
                             var refProd = globals.products.filter(function(p){
                                 return p.get('download').id === product.get('differenceTo');
                             });
-                            this.checkModelDifference(product, refProd[0]);
+                            this.checkModelDifference(product, refProd[0]);*/
                         }
                     }
                 }
@@ -766,7 +768,16 @@ define([
                                         }
                                     }
                                     this.checkFieldLines();
-                                }else{
+                                }else if (product.get('differenceTo') !== null){
+                                    if(product.get('visible')){
+                                        var refProd = globals.products.filter(function(p){
+                                            return p.get('download').id === product.get('differenceTo');
+                                        });
+                                        this.checkModelDifference(product, refProd[0]);
+                                    }else{
+                                        product.get('ces_layer').show = false;
+                                    }
+                                } else {
 
                                     cesLayer = product.get('ces_layer');
                                     if(band){
@@ -1162,18 +1173,15 @@ define([
                             this.checkFieldLines();
                         }if (product.get('differenceTo') !== null ){
                             if(product.get('visible')){
-
+                                var refProd = globals.products.filter(function(p){
+                                    return p.get('download').id === product.get('differenceTo');
+                                });
+                                this.checkModelDifference(product, refProd[0]);
                             }else{
-                                
+                                product.get('ces_layer').show = false;
                             }
-                            var refProd = globals.products.filter(function(p){
-                                return p.get('download').id === product.get('differenceTo');
-                            });
-                            this.checkModelDifference(product, refProd[0]);
 
                         } else {
-
-                            
 
                             if (this.activeFL.indexOf(product.get('download').id)!==-1){
                                 this.activeFL.splice(this.activeFL.indexOf(product.get('download').id), 1);
@@ -1196,7 +1204,7 @@ define([
                                         this.map.scene.imageryLayers.remove(differenceLayer);
                                         this.map.scene.imageryLayers.add(modelLayer, index);
                                         product.set('ces_layer', modelLayer);
-                                       // modelLayer.show = product.get('visible');
+                                        modelLayer.alpha = product.get('opacity');
                                     }
                                 }
 
@@ -1321,6 +1329,7 @@ define([
             var url = model.get('views')[0].urls[0];
             var models = [model.get('download').id, referenceModel.get('download').id];
             var shc = null;
+            var product = model;
 
             // Remove custom model with id shc if selected
             if (models.indexOf('shc')!==-1){
@@ -1331,22 +1340,18 @@ define([
             var band;
             var keys = _.keys(parameters);
             _.each(keys, function(key){
-                if(parameters[key].selected)
+                if(parameters[key].selected){
                     band = key;
+                }
             });
-
 
             var rangeMin = parameters[band].range[0];
             var rangeMax = parameters[band].range[1];
-
-            
-
             var style = parameters[band].colorscale;
             var height = model.get('height');
             var imageURI;
 
             var cesLayer = model.get('ces_layer');
-            cesLayer.show = false;
 
             var reqOptions = {
                 'model': models[0],
@@ -1364,55 +1369,58 @@ define([
             };
 
 
+            // Remove current layer if available
+            var differenceLayer = product.get('ces_layer');
+            var modelLayer = product.get('backupLayer');
+
+            // Check if we are looking to original WMS
+            // layer by checking layer property
+            if(modelLayer && 
+                !differenceLayer._imageryProvider.hasOwnProperty('_layers')
+            ){
+                var index = this.map.scene.imageryLayers.indexOf(differenceLayer);
+                this.map.scene.imageryLayers.remove(differenceLayer);
+                this.map.scene.imageryLayers.add(modelLayer, index);
+                product.set('ces_layer', modelLayer);
+                modelLayer.alpha = product.get('opacity');
+            }
+
+
             $.post(url, tmplEvalModelDiff(reqOptions), 'xml')
                 .done(function( data ) {
-                    
-                    //var cesLayer = model.get('ces_layer');
+
                     var index = that.map.scene.imageryLayers.indexOf(cesLayer);
-                    //cesLayer.show = false;
 
-                    that.map.scene.imageryLayers.remove(cesLayer, false);
+                    var differenceLayer = product.get('ces_layer');
+                    var imageURI = 'data:image/gif;base64,'+data;
 
-                    //var img64 = $(data).find('wps\\:ComplexData').text();
-                    //imageURI = 'data:image/gif;base64,'+img64;
-                    imageURI = 'data:image/gif;base64,'+data;
-                    var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
+                    // Check if we are looking to original WMS
+                    // layer by checking layer property
+                    if( !differenceLayer._imageryProvider.hasOwnProperty('_layers')){
+                        //that.map.scene.imageryLayers.remove(cesLayer);
+                        
+                        /*var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
 
-                    var differenceLayer = that.map.scene.imageryLayers.addImageryProvider(prov, index);
-                    model.set('ces_layer', differenceLayer);
+                        differenceLayer = that.map.scene.imageryLayers.addImageryProvider(prov, index);
+                        differenceLayer.show = model.get('visible');
+                        model.set('ces_layer', differenceLayer);
+
+                        differenceLayer.alpha = model.get('opacity');*/
+                    } else {
+
+                        that.map.scene.imageryLayers.remove(cesLayer, false);
+                        imageURI = 'data:image/gif;base64,'+data;
+                        var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
+
+                        differenceLayer = that.map.scene.imageryLayers.addImageryProvider(prov, index);
+                        differenceLayer.show = model.get('visible');
+                        model.set('ces_layer', differenceLayer);
+
+                        differenceLayer.alpha = model.get('opacity');
+                    }
                     
-                    //that.map.scene.imageryLayers.lower(that.differenceLayer);
-                    differenceLayer.alpha = model.get('opacity');
 
-
-                    /*var style = $(data).find('wps\\:LiteralData').text().split(',');
-
-                    var options = model.get('parameters');
                     
-                    var range = [
-                        Math.round(Number(style[1]) * 100) / 100,
-                        Math.round(Number(style[2]) * 100) / 100,
-                    ];
-
-                    // Make range "nicer", rounding depending on extent
-                    //range = d3.scale.linear().domain(range).nice().domain();
-
-
-                    $('#range_min').val(range[0]);
-                    $('#range_max').val(range[1]);
-
-                    options[band].range = range;
-                    model.set('parameters', options);
-                    that.checkColorscale(model.get('download').id);*/
-                    //this.createScale();
-                    //Communicator.mediator.trigger('layer:parameters:changed', model.get('name'));
-
-                   
-
-
-
-
-
 
                 });
             
@@ -1537,6 +1545,10 @@ define([
 
                     // Add layer info
                     var info = product.get('name');
+                    if(product.attributes.hasOwnProperty('differenceTo') &&
+                        product.get('differenceTo') !== null){
+                        info = 'Difference between ' +info+ ' and '+product.get('differenceTo');
+                    }
                     info += ' - ' + sel;
                     if(uom){
                         info += ' ['+uom+']';
@@ -1825,20 +1837,29 @@ define([
             this.beginTime = time.start;
             this.endTime = time.end;
             globals.products.each(function(product) {
-                if(product.get('timeSlider')){
-                    product.set('time',string);
-                    var cesLayer = product.get('ces_layer');
-                    if(cesLayer){
-                        cesLayer.imageryProvider.updateProperties('time', string);
-                        if (cesLayer.show){
-                            var index = this.map.scene.imageryLayers.indexOf(cesLayer);
-                            this.map.scene.imageryLayers.remove(cesLayer, false);
-                            this.map.scene.imageryLayers.add(cesLayer, index);
+                if(product.attributes.hasOwnProperty('differenceTo') && 
+                    product.get('differenceTo') !== null){
+                    var refProd = globals.products.filter(function(p){
+                        return p.get('download').id === product.get('differenceTo');
+                    });
+                    this.checkModelDifference(product, refProd[0]);
+                }else{
+                    if(product.get('timeSlider')){
+                        product.set('time',string);
+                        var cesLayer = product.get('ces_layer');
+                        if(cesLayer){
+                            cesLayer.imageryProvider.updateProperties('time', string);
+                            if (cesLayer.show){
+                                var index = this.map.scene.imageryLayers.indexOf(cesLayer);
+                                this.map.scene.imageryLayers.remove(cesLayer, false);
+                                this.map.scene.imageryLayers.add(cesLayer, index);
+                            }
                         }
+                    }else if (product.get('views')[0].protocol === 'WPS'){
+                        this.checkShc(product, product.get('visible'));
                     }
-                }else if (product.get('views')[0].protocol === 'WPS'){
-                    this.checkShc(product, product.get('visible'));
                 }
+                
             }, this);
             this.checkFieldLines();
         },
