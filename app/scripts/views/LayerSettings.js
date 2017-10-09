@@ -297,7 +297,7 @@
                     // Add options for three satellites
                     $("#difference_selection").off();
                     $("#difference_selection").empty();
-                    $("#difference_selection").append('<label for="satellite_selec" style="width:120px;">Show difference to </label>');
+                    $("#difference_selection").append('<label for="satellite_selec" style="width:120px;">Model difference </label>');
                     $("#difference_selection").append('<select style="margin-left:4px;" name="difference_selec" id="difference_selec"></select>');
 
 
