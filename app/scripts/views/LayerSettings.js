@@ -681,29 +681,28 @@
 
                         var sel_time = Communicator.reqres.request('get:time');
 
-                        if(this.current_model.get("views")[0].id == "shc"){
+                        
 
-                            if(this.current_model.attributes.hasOwnProperty("shc") && 
-                                this.current_model.get("differenceTo") === null){
+                        if(this.current_model.attributes.hasOwnProperty("shc") && 
+                            this.current_model.get("differenceTo") === null){
 
-                                var payload = evalModelTmpl_POST({
-                                    "model": "Custom_Model",
-                                    "variable": this.selected,
-                                    "begin_time": getISODateTimeString(sel_time.start),
-                                    "end_time": getISODateTimeString(sel_time.end),
-                                    "elevation": this.current_model.get("height"),
-                                    "coeff_min": this.current_model.get("coefficients_range")[0],
-                                    "coeff_max": this.current_model.get("coefficients_range")[1],
-                                    "shc": this.current_model.get('shc'),
-                                    "height": 24,
-                                    "width": 24,
-                                    "getonlyrange": true
-                                });
+                            var payload = evalModelTmpl_POST({
+                                "model": "Custom_Model",
+                                "variable": this.selected,
+                                "begin_time": getISODateTimeString(sel_time.start),
+                                "end_time": getISODateTimeString(sel_time.end),
+                                "elevation": this.current_model.get("height"),
+                                "coeff_min": this.current_model.get("coefficients_range")[0],
+                                "coeff_max": this.current_model.get("coefficients_range")[1],
+                                "shc": this.current_model.get('shc'),
+                                "height": 24,
+                                "width": 24,
+                                "getonlyrange": true
+                            });
 
-                                $.post(this.current_model.get("download").url, payload)
-                                    .success(this.handleRangeRespone.bind(this))
-                                    .fail(this.handleRangeResponseError);
-                            }
+                            $.post(this.current_model.get("download").url, payload)
+                                .success(this.handleRangeRespone.bind(this))
+                                .fail(this.handleRangeResponseError);
 
                         } else if(this.current_model.get("differenceTo") !== null){
 
