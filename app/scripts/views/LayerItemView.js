@@ -80,7 +80,7 @@
                         }
                     });
 
-                }else{
+                }else if (this.model.get('model')){
                     if (this.$el.has( ".fa-sliders" ).length){
 
                         if(this.model.get("satellite")==="Swarm"){
@@ -92,11 +92,11 @@
                             this.$el.find( ".fa-sort" ).css("visibility", "hidden");
                         }else{
                             this.$el.find('.fa-sliders').click(function(){
-                                
-                                if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+                                if(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
                                     App.layerSettings.setModel(that.model);
                                     App.optionsBar.show(App.layerSettings);
                                 } else {
+                                    
                                     if(App.layerSettings.sameModel(that.model)){
                                         App.optionsBar.close();
                                     }else{
@@ -116,6 +116,29 @@
                 var visible = evt.target.checked;
                 var that = this;
 
+                if (this.model.get('model') || this.model.get("containerproduct")){
+
+                    if(visible){
+                         // Activate setting directly when product is being activated
+                        if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+                            App.layerSettings.setModel(this.model);
+                            App.optionsBar.show(App.layerSettings);
+                            $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
+                        } else {
+                            if(!App.layerSettings.sameModel(this.model)){
+                                App.layerSettings.setModel(this.model);
+                                App.optionsBar.show(App.layerSettings);
+                                $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
+                            }
+                        }
+                    } else {
+                        if (!(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed)) {
+                            App.optionsBar.close();
+                        }
+                    }
+                   
+                }
+
                 if(this.model.get("containerproduct")){
 
                     var cs = {};
@@ -128,26 +151,8 @@
 
                     if(visible){
                         this.model.set("visible", true);
-                        // Activate setting directly when product is being activated
-                        if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-                            App.layerSettings.setModel(this.model);
-                            App.optionsBar.show(App.layerSettings);
-                            $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
-                        } else {
-                            if(!App.layerSettings.sameModel(this.model)){
-                                App.layerSettings.setModel(this.model);
-                                App.optionsBar.show(App.layerSettings);
-                                //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                                $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
-                            }
-                        }
-
                     }else{
                         this.model.set("visible", false);
-
-                        if (!(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed)) {
-                            App.optionsBar.close();
-                        }
 
                         var product_keys = _.keys(globals.swarm.products[this.model.get("id")]);
 
@@ -228,27 +233,9 @@
 
                             if(options.visible){
                                 this.model.set("visible", true);
-                                if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-                                    if(this.model.get('views')[0].protocol !== 'INDEX'){
-                                        App.layerSettings.setModel(this.model);
-                                        App.optionsBar.show(App.layerSettings);
-                                        //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                                        $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
-                                    }
-                                } else {
-                                    if(!App.layerSettings.sameModel(this.model)){
-                                        if(this.model.get('views')[0].protocol !== 'INDEX'){
-                                            App.layerSettings.setModel(this.model);
-                                            App.optionsBar.show(App.layerSettings);
-                                            //$("#optionsBar").fadeIn(100).fadeOut(100).fadeIn(100).fadeOut(100).fadeIn(100);
-                                            $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
-                                        }
-                                    }
-                                }
                             }
                             else{
                                 this.model.set("visible", false);
-                                
                             }
 
                             // TODO: Here we should go through all views, or maybe only url is necessary?
@@ -308,10 +295,6 @@
                         }
                     } else if (!evt.target.checked){
                         Communicator.mediator.trigger('map:layer:change', options);
-                        if (!(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed)) {
-                            App.optionsBar.close();
-                        }
-
                     } else if (isBaseLayer && evt.target.checked){
                         Communicator.mediator.trigger('map:layer:change', options);
                     }

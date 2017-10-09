@@ -295,6 +295,8 @@ define([
                 if (layer) {
                     var imagerylayer = this.map.scene.imageryLayers.addImageryProvider(layer);
                     product.set('ces_layer', imagerylayer);
+                    product.set('backupLayer', imagerylayer);
+
                     imagerylayer.show = product.get('visible');
                     imagerylayer.alpha = product.get('opacity');
 
@@ -317,6 +319,16 @@ define([
                         }
                         if (active === 'Fieldlines'){
                             imagerylayer.show = false;
+                        }
+
+                        // Check if model is set to show difference
+                        if(product.get('differenceTo') !== null){
+                            imagerylayer.show = false;
+                            /*imagerylayer.show = false;
+                            var refProd = globals.products.filter(function(p){
+                                return p.get('download').id === product.get('differenceTo');
+                            });
+                            this.checkModelDifference(product, refProd[0]);*/
                         }
                     }
                 }
@@ -756,7 +768,16 @@ define([
                                         }
                                     }
                                     this.checkFieldLines();
-                                }else{
+                                }else if (product.get('differenceTo') !== null){
+                                    if(product.get('visible')){
+                                        var refProd = globals.products.filter(function(p){
+                                            return p.get('download').id === product.get('differenceTo');
+                                        });
+                                        this.checkModelDifference(product, refProd[0]);
+                                    }else{
+                                        product.get('ces_layer').show = false;
+                                    }
+                                } else {
 
                                     cesLayer = product.get('ces_layer');
                                     if(band){
@@ -796,22 +817,6 @@ define([
                             );
                         }
 
-                        if (this.activeModels.length !== 2){
-                            if(this.differenceImage) {
-                                this.map.scene.imageryLayers.remove(
-                                    this.differenceImage
-                                );
-                            }
-                            this.differenceImage = null;
-                            if($('#colorlegend').is(':visible')){
-                                $('#colorlegend').hide();
-                            }
-                        }
-
-                        // Compare models if two are selected
-                        if (this.activeModels.length === 2){
-                        }
-
                     }
                 }, this); // END of global products loop
             }
@@ -821,6 +826,11 @@ define([
         checkShc: function(product, visible){
             if(visible){
                 if(product.get('shc') !== null){
+
+                    var payload;
+                    var url = product.get('views')[0].urls[0];
+
+                    var shc = product.get('shc');
                     var parameters = product.get('parameters');
                     var band;
                     var keys = _.keys(parameters);
@@ -830,38 +840,79 @@ define([
                         }
                     });
                     var style = parameters[band].colorscale;
+                    var height = product.get('height');
                     var range = parameters[band].range;
-                    var url = product.get('views')[0].urls[0];
+                    var coeffRange = product.get('coefficients_range');
+
+
+                    if(product.get('differenceTo') !== null){
+
+                        var refProd = globals.products.filter(function(p){
+                            return p.get('download').id === product.get('differenceTo');
+                        });
+                        var models = [product.get('download').id, refProd[0].get('download').id];
+
+                        var cesLayer = product.get('ces_layer');
+
+                        var reqOptions = {
+                            'model': models[0],
+                            'reference_model': models[1],
+                            'variable': band,
+                            'begin_time': getISODateTimeString(this.beginTime),
+                            'end_time': getISODateTimeString(this.endTime),
+                            'elevation': height,
+                            'coeff_min': coeffRange[0],
+                            'coeff_max': coeffRange[1],
+                            'shc': shc,
+                            'height': 512,
+                            'width': 512,
+                            'style': style,
+                            'range_min': range[0],
+                            'range_max': range[1]
+                        };
+
+                        if (this.bboxsel !== null){
+                            var bb = this.bboxsel;
+                            reqOptions.bbox =  bb.join();
+                        }
+
+                        payload = tmplEvalModelDiff(reqOptions);
+
+                    }else{
+
+                        var options = {
+                            'model': 'Custom_Model',
+                            'variable': band,
+                            'begin_time': getISODateTimeString(this.beginTime),
+                            'end_time': getISODateTimeString(this.endTime),
+                            'elevation': product.get('height'),
+                            'coeff_min': coeffRange[0],
+                            'coeff_max': coeffRange[1],
+                            'shc': product.get('shc'),
+                            'height': 512,
+                            'width': 1024,
+                            'style': style,
+                            'range_min': range[0],
+                            'range_max': range[1],
+                        };
+
+                        if (this.bboxsel !== null){
+                            var bb = this.bboxsel;
+                            options.bbox =  bb.join();
+                        }
+
+                        payload = tmplEvalModel(options);
+                    }
+
                     this.customModelLayer = product.get('ces_layer');
                     this.customModelLayer.show = false;
-
-                    var coeffRange = product.get('coefficients_range');
-                    var options = {
-                        'model': 'Custom_Model',
-                        'variable': band,
-                        'begin_time': getISODateTimeString(this.beginTime),
-                        'end_time': getISODateTimeString(this.endTime),
-                        'elevation': product.get('height'),
-                        'coeff_min': coeffRange[0],
-                        'coeff_max': coeffRange[1],
-                        'shc': product.get('shc'),
-                        'height': 512,
-                        'width': 1024,
-                        'style': style,
-                        'range_min': range[0],
-                        'range_max': range[1],
-                    };
-                    if (this.bboxsel !== null){
-                        var bb = this.bboxsel;
-                        options.bbox =  bb.join();
-                    }
 
                     var map = this.map;
                     var customModelLayer = this.customModelLayer;
                     var index = this.map.scene.imageryLayers.indexOf(customModelLayer);
                     this.map.scene.imageryLayers.remove(customModelLayer);
 
-                    $.post(url, tmplEvalModel(options))
+                    $.post(url, payload)
                         .done(function( data ) {
                             if(index>0){
                                 var imageURI = 'data:image/gif;base64,'+data;
@@ -879,6 +930,7 @@ define([
                                 customModelLayer = 
                                     map.scene.imageryLayers.addImageryProvider(imagelayer, index);
                                 product.set('ces_layer', customModelLayer);
+                                customModelLayer.alpha = product.get('opacity');
                                 customModelLayer.show = true;
                             }
                         });
@@ -1122,6 +1174,7 @@ define([
         },
 
         OnLayerParametersChanged: function(layer){
+
             globals.products.each(function(product) {
                 if(product.get('name')===layer){
 
@@ -1165,12 +1218,43 @@ define([
                                 }
                             }
                             this.checkFieldLines();
-                        }else{
+                        }if (product.get('differenceTo') !== null ){
+                            if(product.get('visible')){
+                                var refProd = globals.products.filter(function(p){
+                                    return p.get('download').id === product.get('differenceTo');
+                                });
+                                this.checkModelDifference(product, refProd[0]);
+                            }else{
+                                product.get('ces_layer').show = false;
+                            }
+
+                        } else {
+
                             if (this.activeFL.indexOf(product.get('download').id)!==-1){
                                 this.activeFL.splice(this.activeFL.indexOf(product.get('download').id), 1);
                             }
+
                             this.checkFieldLines();
+
                             if(product.get('name')===layer){
+
+                                if (product.get('differenceTo') === null ){
+                                    var differenceLayer = product.get('ces_layer');
+                                    var modelLayer = product.get('backupLayer');
+
+                                    // Check if we are looking to original WMS
+                                    // layer by checking layer property
+                                    if(modelLayer && 
+                                        !differenceLayer._imageryProvider.hasOwnProperty('_layers')
+                                    ){
+                                        var index = this.map.scene.imageryLayers.indexOf(differenceLayer);
+                                        this.map.scene.imageryLayers.remove(differenceLayer);
+                                        this.map.scene.imageryLayers.add(modelLayer, index);
+                                        product.set('ces_layer', modelLayer);
+                                        modelLayer.alpha = product.get('opacity');
+                                    }
+                                }
+
                                 cesLayer = product.get('ces_layer');
 
                                 if(product.get('visible')){
@@ -1199,6 +1283,19 @@ define([
                             }
                         }
                     }else if (product.get('views')[0].protocol === 'WPS'){
+                        /*if (product.get('differenceTo') !== null ){
+                            if(product.get('visible')){
+                                var refProd = globals.products.filter(function(p){
+                                    return p.get('download').id === product.get('differenceTo');
+                                });
+                                this.checkModelDifference(product, refProd[0]);
+                            }else{
+                                product.get('ces_layer').show = false;
+                            }
+
+                        }else{
+                            this.checkShc(product, product.get('visible'));
+                        }*/
                         this.checkShc(product, product.get('visible'));
                     }
                 }
@@ -1284,6 +1381,118 @@ define([
             return new Cesium.ViewportQuad(
                 new Cesium.BoundingRectangle(x, y, width, height), newmat
             );
+        },
+
+        checkModelDifference: function(model, referenceModel){
+
+            if(model.get('download').id === 'Custom_Model' || !model.get('visible')){
+                return;
+            }
+            model.get('ces_layer').show = false;
+            var that = this;
+            var url = model.get('views')[0].urls[0];
+            var models = [model.get('download').id, referenceModel.get('download').id];
+            var product = model;
+
+            var shc = defaultFor(referenceModel.get('shc'), model.get('shc'));
+
+            var parameters = model.get('parameters');
+            var band;
+            var keys = _.keys(parameters);
+            _.each(keys, function(key){
+                if(parameters[key].selected){
+                    band = key;
+                }
+            });
+
+            var rangeMin = parameters[band].range[0];
+            var rangeMax = parameters[band].range[1];
+            var style = parameters[band].colorscale;
+            var height = model.get('height');
+
+            var reqOptions = {
+                'model': models[0],
+                'reference_model': models[1],
+                'variable': band,
+                'begin_time': getISODateTimeString(this.beginTime),
+                'end_time': getISODateTimeString(this.endTime),
+                'elevation': height,
+                'shc': shc,
+                'height': 512,
+                'width': 512,
+                'style': style,
+                'range_min': rangeMin,
+                'range_max': rangeMax
+            };
+
+             if (this.bboxsel !== null){
+                var bb = this.bboxsel;
+                reqOptions.bbox =  bb.join();
+            }
+
+
+            // Remove current layer if available
+            var differenceLayer = product.get('ces_layer');
+            var modelLayer = product.get('backupLayer');
+
+            // Check if we are looking to original WMS
+            // layer by checking layer property
+            if(modelLayer && 
+                !differenceLayer._imageryProvider.hasOwnProperty('_layers')
+            ){
+                var index = this.map.scene.imageryLayers.indexOf(differenceLayer);
+                this.map.scene.imageryLayers.remove(differenceLayer);
+                this.map.scene.imageryLayers.add(modelLayer, index);
+                product.set('ces_layer', modelLayer);
+                modelLayer.alpha = product.get('opacity');
+            }
+
+
+            $.post(url, tmplEvalModelDiff(reqOptions), 'xml')
+                .done(function( data ) {
+
+                    var productLayer = product.get('ces_layer');
+                    var index = that.map.scene.imageryLayers.indexOf(productLayer);
+                    var imageURI = 'data:image/png;base64,'+data;
+
+                    // Check if we are looking to original WMS
+                    // layer by checking layer property
+                    if( !productLayer._imageryProvider.hasOwnProperty('_layers')){
+                        //that.map.scene.imageryLayers.remove(cesLayer);
+                        
+                        /*var prov = new Cesium.SingleTileImageryProvider({url: imageURI});
+
+                        differenceLayer = that.map.scene.imageryLayers.addImageryProvider(prov, index);
+                        differenceLayer.show = model.get('visible');
+                        model.set('ces_layer', differenceLayer);
+
+                        differenceLayer.alpha = model.get('opacity');*/
+                    } else {
+
+                        that.map.scene.imageryLayers.remove(productLayer, false);
+                        
+                        var layerOptions = {url: imageURI};
+                        if(bb && bb.length === 4){
+                            var rec = new Cesium.Rectangle(
+                                Cesium.Math.toRadians(bb[1]),
+                                Cesium.Math.toRadians(bb[0]),
+                                Cesium.Math.toRadians(bb[3]),
+                                Cesium.Math.toRadians(bb[2])
+                            );
+                            layerOptions.rectangle = rec;
+                        }
+
+                        var prov = new Cesium.SingleTileImageryProvider(layerOptions);
+
+                        differenceLayer = that.map.scene.imageryLayers.addImageryProvider(prov, index);
+                        differenceLayer.show = model.get('visible');
+                        model.set('ces_layer', differenceLayer);
+
+                        differenceLayer.alpha = model.get('opacity');
+                    }
+
+                });
+            
         },
 
         checkColorscale: function(pId){
@@ -1405,6 +1614,10 @@ define([
 
                     // Add layer info
                     var info = product.get('name');
+                    if(product.attributes.hasOwnProperty('differenceTo') &&
+                        product.get('differenceTo') !== null){
+                        info = 'Difference between ' +info+ ' and '+product.get('differenceTo');
+                    }
                     info += ' - ' + sel;
                     if(uom){
                         info += ' ['+uom+']';
@@ -1539,6 +1752,15 @@ define([
             globals.products.each(function(product) {
                 if (product.get('views')[0].protocol === 'WPS'){
                     this.checkShc(product, product.get('visible'));
+                }
+
+                if(product.attributes.hasOwnProperty('differenceTo') && 
+                    product.get('differenceTo') !== null){
+                    
+                    var refProd = globals.products.filter(function(p){
+                        return p.get('download').id === product.get('differenceTo');
+                    });
+                    this.checkModelDifference(product, refProd[0]);
                 }
             },this);
         },
@@ -1693,20 +1915,33 @@ define([
             this.beginTime = time.start;
             this.endTime = time.end;
             globals.products.each(function(product) {
-                if(product.get('timeSlider')){
-                    product.set('time',string);
-                    var cesLayer = product.get('ces_layer');
-                    if(cesLayer){
-                        cesLayer.imageryProvider.updateProperties('time', string);
-                        if (cesLayer.show){
-                            var index = this.map.scene.imageryLayers.indexOf(cesLayer);
-                            this.map.scene.imageryLayers.remove(cesLayer, false);
-                            this.map.scene.imageryLayers.add(cesLayer, index);
-                        }
+
+                if(product.attributes.hasOwnProperty('differenceTo') && 
+                    product.get('differenceTo') !== null){
+                    var refProd = globals.products.filter(function(p){
+                        return p.get('download').id === product.get('differenceTo');
+                    });
+                    this.checkModelDifference(product, refProd[0]);
+                    if (product.get('views')[0].protocol === 'WPS'){
+                        this.checkShc(product, product.get('visible'));
                     }
-                }else if (product.get('views')[0].protocol === 'WPS'){
-                    this.checkShc(product, product.get('visible'));
+                }else{
+                    if(product.get('timeSlider')){
+                        product.set('time',string);
+                        var cesLayer = product.get('ces_layer');
+                        if(cesLayer){
+                            cesLayer.imageryProvider.updateProperties('time', string);
+                            if (cesLayer.show){
+                                var index = this.map.scene.imageryLayers.indexOf(cesLayer);
+                                this.map.scene.imageryLayers.remove(cesLayer, false);
+                                this.map.scene.imageryLayers.add(cesLayer, index);
+                            }
+                        }
+                    }else if (product.get('views')[0].protocol === 'WPS'){
+                        this.checkShc(product, product.get('visible'));
+                    }
                 }
+                
             }, this);
             this.checkFieldLines();
         },
