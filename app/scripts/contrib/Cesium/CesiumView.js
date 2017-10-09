@@ -1052,6 +1052,7 @@ define([
                         if(filters){
                             for (var k in filters){
                                 show = !(row[k]<filters[k][0] || row[k]>filters[k][1]);
+                                if(!show){break;}
                             }
                         }
                         if (show){

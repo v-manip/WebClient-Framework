@@ -360,6 +360,8 @@ define(['backbone.marionette',
                         };
                         if(onlyEEF){
                             this.sp.toIgnore = ['id','active', 'Radius'];
+                        }else{
+                            this.sp.toIgnore = ['id','active', 'Spacecraft'];
                         }
                         this.sp.loadData(args);
                     }
