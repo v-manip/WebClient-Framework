@@ -986,10 +986,9 @@
                     xAxis.tickFormat(logFormat);
 
                 }else{
-                    var step = (range_max - range_min)/5
-                    xAxis.tickValues(
-                        d3.range(range_min,range_max+step, step)
-                    );
+                    var step = Number(((range_max - range_min)/5).toPrecision(3));
+                    var ticks = d3.range(range_min,range_max+step, step);
+                    xAxis.tickValues(ticks);
                     xAxis.tickFormat(d3.format("g"));
                 }
 

@@ -159,7 +159,15 @@ function productSortingFunction(a, b) {
                 // storage use that instead
 
                 if(localStorage.getItem('baseLayersConfig') !== null){
-                    config.mapConfig.baseLayers = JSON.parse(localStorage.getItem('baseLayersConfig'));
+                    // If newly added v2.1 s2 cloudless is not listed 
+                    // reload baselayer config
+                    var savedConfig = JSON.parse(localStorage.getItem('baseLayersConfig'));
+                    if(savedConfig.filter(function(bl){
+                        return bl.views[0].id === 's2cloudless';
+                    }).length===0){
+                        savedConfig = config.mapConfig.baseLayers;
+                    }
+                    config.mapConfig.baseLayers = savedConfig;
                 }
 
                 _.each(config.mapConfig.baseLayers, function(baselayer) {

@@ -523,7 +523,7 @@ define([
                         style : view.style,
                         format : view.format,
                         tileMatrixSetID : view.matrixSet,
-                        maximumLevel: 12,
+                        maximumLevel: 13,
                         tilingScheme: new Cesium.GeographicTilingScheme({
                             numberOfLevelZeroTilesX: 2, numberOfLevelZeroTilesY: 1
                         }),
@@ -1601,10 +1601,9 @@ define([
                          xAxis.tickFormat(logFormat);
 
                     }else{
-                        var step = (rangeMax - rangeMin)/5;
-                        xAxis.tickValues(
-                            d3.range(rangeMin,rangeMax+step, step)
-                        );
+                        var step = Number( ((rangeMax - rangeMin)/5).toPrecision(3) );
+                        var ticks = d3.range(rangeMin,rangeMax+step, step);
+                        xAxis.tickValues(ticks);
                         xAxis.tickFormat(d3.format('g'));
                     }
 
