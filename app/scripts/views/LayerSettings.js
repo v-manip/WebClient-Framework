@@ -24,8 +24,8 @@
             colorscaletypes : [
                 'coolwarm', 'rainbow', 'jet', 'diverging_1', 'diverging_2',
                 'blackwhite','viridis','inferno', 'hsv','hot','cool',
-                'spring', 'summer','autumn','winter','bone','copper','yignbu',
-                'greens','yiorrd','bluered', 'portland', 'blackbody','earth',
+                'spring', 'summer','autumn','winter','bone','copper','ylgnbu',
+                'greens','ylorrd','bluered', 'portland', 'blackbody','earth',
                 'electric','magma','plasma'
             ],
 

@@ -55,7 +55,7 @@ define([
 
             plotty.addColorScale('redblue', ['#ff0000', '#0000ff'], [0, 1]);
             plotty.addColorScale('coolwarm', 
-                ['#ff0000', '#ffffff', '#0000ff'],
+                ['#0000ff','#ffffff', '#ff0000'],
                 [0, 0.5, 1]
             );
             plotty.addColorScale('diverging_1',
@@ -95,6 +95,16 @@ define([
                  0.8, 0.9, 0.999999999999, 1]
             );
             plotty.addColorScale('blackwhite', ['#000000', '#ffffff'], [0, 1]);
+
+            plotty.addColorScale('ylgnbu', 
+                ["#081d58","#253494","#225ea8","#1d91c0","#41b6c4","#7fcdbb","#c7e9b4","#edf8d9","#ffffd9"],
+                [1,0.875,0.75,0.625,0.5,0.375,0.25,0.125,0]
+            );
+
+            plotty.addColorScale('ylorrd', 
+                ["#800026","#bd0026","#e31a1c","#fc4e2a","#fd8d3c","#feb24c","#fed976","#ffeda0","#ffffcc"],
+                [1,0.875,0.75,0.625,0.5,0.375,0.25,0.125,0]
+            );
 
             this.connectDataEvents();
         },
