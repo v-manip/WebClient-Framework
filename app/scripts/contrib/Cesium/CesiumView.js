@@ -569,7 +569,7 @@ define([
                     }
                     var cr = layerdesc.get('coefficients_range');
                     if(cr){
-                        addParams.coefficients_range = cr.join();
+                        addParams.dim_coeff = cr.join();
                     }
                     addParams.styles = styles; 
                     if(layerdesc.get('timeSlider')){
@@ -1428,6 +1428,8 @@ define([
                 'begin_time': getISODateTimeString(this.beginTime),
                 'end_time': getISODateTimeString(this.endTime),
                 'elevation': height,
+                "coeff_min": model.get("coefficients_range")[0],
+                "coeff_max": model.get("coefficients_range")[1],
                 'shc': shc,
                 'height': 512,
                 'width': 512,

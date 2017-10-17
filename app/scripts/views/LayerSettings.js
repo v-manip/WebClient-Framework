@@ -629,8 +629,6 @@
                 var range_max = parseFloat($("#range_max").val());
                 error = error || this.checkValue(range_max,$("#range_max"));
 
-                
-                
                 // Set parameters and redraw color scale
                 if(!error){
                     options[this.selected].range = [range_min, range_max];
@@ -648,6 +646,19 @@
 
                     var coef_range_max = parseFloat($("#coefficients_range_max").val());
                     error = error || this.checkValue(coef_range_max,$("#coefficients_range_max"));
+
+                    if(coef_range_min>coef_range_max){
+                        error = true;
+                        $("#coefficients_range_min").addClass("text_error");
+                        $("#coefficients_range_max").addClass("text_error");
+                        $("#coefficients_range_min").parent()
+                            .append('<div id="coefficient_error">Please make sure first value is lower than second</div>')
+                    }else{
+                        $("#coefficients_range_min").removeClass("text_error");
+                        $("#coefficients_range_max").removeClass("text_error");
+                        $("#coefficient_error").remove();
+                    }
+                
 
                     if(!error){
                         if(this.current_model.get("coefficients_range")[0]!=coef_range_min || 
