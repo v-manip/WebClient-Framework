@@ -892,6 +892,9 @@
           // product parameters in configuration
           var variables = [];
 
+                 
+
+
           // Separate models and Swarm products and add lists to ui
           _.each(this.model.get("products"), function(prod){
 
@@ -901,7 +904,9 @@
                   var new_keys = _.keys(par);
                   _.each(new_keys, function(key){
                     // Remove unwanted keys
-                    if(key != "QDLat" && key != "QDLon" && key != "MLT"){
+                    if(key != "QDLat" && key != "QDLon" && key != "MLT" &&
+                       key != "OrbitNumber" && key != "SunDeclination" && key != "SunRightAscension" && 
+                       key != "SunHourAngle" && key != "SunAzimuthAngle" && key != "SunZenithAngle"){
                       if(!_.find(variables, function(item){
                         return item == key;
                       })){

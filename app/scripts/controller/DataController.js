@@ -278,7 +278,8 @@
             "F_res_CHAOS-6-Combined", "F_res_Custom_Model",
             "Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
             "IRC", "IRC_Error", "FAC", "FAC_Error",
-            "EEF", "RelErr", "OrbitNumber"
+            "EEF", "RelErr", "OrbitNumber",
+            "SunDeclination","SunRightAscension","SunHourAngle","SunAzimuthAngle","SunZenithAngle"
           ];
 
           // See if magnetic data actually selected if not remove residuals
