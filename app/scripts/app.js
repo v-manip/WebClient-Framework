@@ -264,39 +264,36 @@ function productSortingFunction(a, b) {
                         }
                     }
 
-                    
-
-
-                    // Make sure download parameters are always loaded from script
-                    for (var i = product_config.length - 1; i >= 0; i--) {
-                        if(product_config[i].hasOwnProperty('satellite') && 
-                           product_config[i].satellite === 'Swarm') {
-
-                            m_p[i].download_parameters['SunDeclination'] = {
-                                "uom": null,
-                                "name": "Sun declination"
-                            };
-                            m_p[i].download_parameters['SunRightAscension'] = {
-                                "uom": null,
-                                "name": "Sun right ascension"
-                            };
-                            m_p[i].download_parameters['SunHourAngle'] = {
-                                "uom": "deg",
-                                "name": "Sun hour angle"
-                            };
-                            m_p[i].download_parameters['SunAzimuthAngle'] = {
-                                "uom": "deg",
-                                "name": "Sun azimuth angle"
-                            };
-                            m_p[i].download_parameters['SunZenithAngle'] = {
-                                "uom": "deg",
-                                "name": "Sun zenith angle"
-                            };
-                        }
-                        product_config[i].download_parameters = m_p[i].download_parameters;
-                    }
-
                     config.mapConfig.products = product_config;
+                }
+
+                // Make sure download parameters are always loaded from script
+                var mapConfProds = config.mapConfig.products;
+                for (var i = mapConfProds.length - 1; i >= 0; i--) {
+                    if(mapConfProds[i].hasOwnProperty('satellite') && 
+                       mapConfProds[i].satellite === 'Swarm') {
+
+                        mapConfProds[i].download_parameters['SunDeclination'] = {
+                            "uom": null,
+                            "name": "Sun declination"
+                        };
+                        mapConfProds[i].download_parameters['SunRightAscension'] = {
+                            "uom": null,
+                            "name": "Sun right ascension"
+                        };
+                        mapConfProds[i].download_parameters['SunHourAngle'] = {
+                            "uom": "deg",
+                            "name": "Sun hour angle"
+                        };
+                        mapConfProds[i].download_parameters['SunAzimuthAngle'] = {
+                            "uom": "deg",
+                            "name": "Sun azimuth angle"
+                        };
+                        mapConfProds[i].download_parameters['SunZenithAngle'] = {
+                            "uom": "deg",
+                            "name": "Sun zenith angle"
+                        };
+                    }
                 }
 
                 _.each(config.mapConfig.products, function(product) {
