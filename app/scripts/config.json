@@ -171,7 +171,7 @@
                     "range": [-600, 600],
                     "uom":"nT",
                     "colorscale": "jet",
-                    "name": "Magnetic field intensity residual A - C"
+                    "name": "Magnetic field vector residual A - C"
                 }
             },
             "download_parameters": {

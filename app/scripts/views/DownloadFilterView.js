@@ -356,12 +356,12 @@
           '</div>'
         );
 
-        var subsetting_cb = '<div class="checkbox"><label><input type="checkbox" value="" id="custom_subsetting_cb">Custom time subsetting value</label></div>';
+        var subsetting_cb = '<div class="checkbox"><label><input type="checkbox" value="" id="custom_subsetting_cb">Custom time subsampling</label></div>';
         var subsettingFilter =
           '<div class="input-group" id=custom_subsetting_filter style="margin:7px">'+
             '<span class="form-control">'+
-              'Time subsetting (Expected format ISO-8601 duration e.g. PT23H59M59S)'+
-              '<textarea id="custom_subsetting_ta" rows="1" cols="20" style="float:right; resize:none;">PT1H</textarea>'+
+              'Time subsetting (Expected format ISO-8601 duration e.g. PT1H10M30S)'+
+              '<textarea id="custom_subsetting_ta" rows="1" cols="20" style="float:right; resize:none;">PT10S</textarea>'+
             '</span>'+
         '</div>';
 
