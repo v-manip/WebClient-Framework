@@ -906,7 +906,8 @@
                     // Remove unwanted keys
                     if(key != "QDLat" && key != "QDLon" && key != "MLT" &&
                        key != "OrbitNumber" && key != "SunDeclination" && key != "SunRightAscension" && 
-                       key != "SunHourAngle" && key != "SunAzimuthAngle" && key != "SunZenithAngle"){
+                       key != "SunHourAngle" && key != "SunAzimuthAngle" && key != "SunZenithAngle" &&
+                       key != "B_NEC_resAC"){
                       if(!_.find(variables, function(item){
                         return item == key;
                       })){
