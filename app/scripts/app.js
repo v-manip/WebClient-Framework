@@ -5,23 +5,47 @@ var SCALAR_PARAM = [
 ];
 
 var VECTOR_PARAM = [
-    "B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-5-Combined", "Custom_Model"
+    "B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-6-Combined", "Custom_Model",
+    "B_NEC_resAC"
 ];
 
 var VECTOR_BREAKDOWN = {
     'SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
     'IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
-    'CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+    'CHAOS-6-Combined': ['B_N_res_CHAOS-6-Combined','B_E_res_CHAOS-6-Combined','B_C_res_CHAOS-6-Combined'],
     'Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model'],
     'B_NEC': ['B_N','B_E','B_C'],
+    'B_NEC_resAC': ['B_resAC_N','B_resAC_E','B_resAC_C'],
     'B_error': ['B_error,X', 'B_error,Y', 'B_error,Z'],
     'B_VFM': ['B_VFM,X', 'B_VFM,Y', 'B_VFM,Z'],
     'v_SC':  ['v_SC_N','v_SC_E','v_SC_C'],
     'B_NEC_res_SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
     'B_NEC_res_IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
-    'B_NEC_res_CHAOS-5-Combined': ['B_N_res_CHAOS-5-Combined','B_E_res_CHAOS-5-Combined','B_C_res_CHAOS-5-Combined'],
+    'B_NEC_res_CHAOS-6-Combined': ['B_N_res_CHAOS-6-Combined','B_E_res_CHAOS-6-Combined','B_C_res_CHAOS-6-Combined'],
     'B_NEC_res_Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model']
 };
+
+// Ordered from highest resolution to lowest with the exception of FAC that 
+// needs to be first as the master product needs to be the same
+var MASTER_PRIORITY = [
+    'SW_OPER_FACATMS_2F', 'SW_OPER_FACBTMS_2F', 'SW_OPER_FACCTMS_2F', 'SW_OPER_FAC_TMS_2F',
+    'SW_OPER_EFIA_PL_1B', 'SW_OPER_EFIB_PL_1B', 'SW_OPER_EFIC_PL_1B',
+    'SW_OPER_MAGA_LR_1B', 'SW_OPER_MAGB_LR_1B', 'SW_OPER_MAGC_LR_1B',
+    'SW_OPER_TECATMS_2F', 'SW_OPER_TECBTMS_2F', 'SW_OPER_TECCTMS_2F',
+    'SW_OPER_IBIATMS_2F', 'SW_OPER_IBIBTMS_2F', 'SW_OPER_IBICTMS_2F',
+    'SW_OPER_EEFATMS_2F', 'SW_OPER_EEFBTMS_2F', 'SW_OPER_EEFCTMS_2F'
+];
+
+function productSortingFunction(a, b) {
+    'use strict';
+    if (MASTER_PRIORITY.indexOf(a) < MASTER_PRIORITY.indexOf(b)) {
+        return -1;
+    }
+    if (MASTER_PRIORITY.indexOf(a) > MASTER_PRIORITY.indexOf(b)) {
+        return 1;
+    }
+    return 0;
+}
 
 
 (function() {
@@ -135,7 +159,15 @@ var VECTOR_BREAKDOWN = {
                 // storage use that instead
 
                 if(localStorage.getItem('baseLayersConfig') !== null){
-                    config.mapConfig.baseLayers = JSON.parse(localStorage.getItem('baseLayersConfig'));
+                    // If newly added v2.1 s2 cloudless is not listed 
+                    // reload baselayer config
+                    var savedConfig = JSON.parse(localStorage.getItem('baseLayersConfig'));
+                    if(savedConfig.filter(function(bl){
+                        return bl.views[0].id === 's2cloudless';
+                    }).length===0){
+                        savedConfig = config.mapConfig.baseLayers;
+                    }
+                    config.mapConfig.baseLayers = savedConfig;
                 }
 
                 _.each(config.mapConfig.baseLayers, function(baselayer) {
@@ -197,6 +229,29 @@ var VECTOR_BREAKDOWN = {
                     // in user configuration, if not add them to it
                     var m_p = config.mapConfig.products;
                     for (var i = 0; i < m_p.length; i++) {
+
+                        // Check if MAG A product has new residual parameter loaded
+                        if(product_config[i].download.id === 'SW_OPER_MAGA_LR_1B'){
+                            if(!product_config[i].parameters.hasOwnProperty('B_NEC_resAC')){
+                                product_config[i].parameters.B_NEC_resAC = 
+                                {
+                                    'range': [-600, 600],
+                                    'uom':'nT',
+                                    'colorscale': 'jet',
+                                    'name': 'Magnetic field intensity residual A - C'
+                                };
+                            }
+                        }
+                        
+                        // If old CHAOS model is available load new model
+                        if(product_config[i].name === 'CHAOS-5'){
+                            // Make sure corresponding config is new model
+                            if(m_p[i].name === 'CHAOS-6'){
+                                product_config[i] = m_p[i];
+                            }
+                        }
+
+
                         if(product_config.length>i){
                             if(product_config[i].download.id != m_p[i].download.id){
                                 // If id is not the same a new product was inserted and thus 
@@ -209,12 +264,36 @@ var VECTOR_BREAKDOWN = {
                         }
                     }
 
-                    // Make sure download parameters are always loaded from script
-                    for (var i = product_config.length - 1; i >= 0; i--) {
-                        product_config[i].download_parameters = m_p[i].download_parameters;
-                    }
-
                     config.mapConfig.products = product_config;
+                }
+
+                // Make sure download parameters are always loaded from script
+                var mapConfProds = config.mapConfig.products;
+                for (var i = mapConfProds.length - 1; i >= 0; i--) {
+                    if(mapConfProds[i].hasOwnProperty('satellite') && 
+                       mapConfProds[i].satellite === 'Swarm') {
+
+                        mapConfProds[i].download_parameters['SunDeclination'] = {
+                            "uom": null,
+                            "name": "Sun declination"
+                        };
+                        mapConfProds[i].download_parameters['SunRightAscension'] = {
+                            "uom": null,
+                            "name": "Sun right ascension"
+                        };
+                        mapConfProds[i].download_parameters['SunHourAngle'] = {
+                            "uom": "deg",
+                            "name": "Sun hour angle"
+                        };
+                        mapConfProds[i].download_parameters['SunAzimuthAngle'] = {
+                            "uom": "deg",
+                            "name": "Sun azimuth angle, degrees clockwise from North"
+                        };
+                        mapConfProds[i].download_parameters['SunZenithAngle'] = {
+                            "uom": "deg",
+                            "name": "Sun zenith angle"
+                        };
+                    }
                 }
 
                 _.each(config.mapConfig.products, function(product) {
@@ -250,8 +329,15 @@ var VECTOR_BREAKDOWN = {
                         showColorscale: true
                     });
 
+                    if(product.hasOwnProperty('differenceTo')){
+                        lm.set('differenceTo', product.differenceTo);
+                    }
+
                     if(lm.get('model')){
                         lm.set('contours', defaultFor( product.contours,false));
+                        lm.set('differenceTo', defaultFor( 
+                            product.differenceTo, null)
+                        );
                     }
 
                     if(lm.get('download').id === 'Custom_Model'){
@@ -455,6 +541,12 @@ var VECTOR_BREAKDOWN = {
                      'if you would like to reset to the default configuration click '+
                      '<b><a href="javascript:void(0);" onclick="'+clickEvent+'">here</a></b> '+
                      'or on the Reset button above.', 35);
+
+                    // Chech if succesfull login info is being shown, if yes, 
+                    // add padding to not overlap messages
+                    if($('.alert.alert-success.fade.in').length>0){
+                        $('.alert.alert-success.fade.in').css('margin-top', '100px');
+                    }
                 }else{
                     localStorage.setItem("containerSelection", JSON.stringify(containerSelection));
                 }
@@ -487,7 +579,7 @@ var VECTOR_BREAKDOWN = {
 
             // Add generic product (which is container for A,B and C sats)
             filtered_collection.add({
-                    name: "Electric field data (EEF)",
+                    name: "Equatorial electric field (EEF)",
                     visible: containerSelection['EEF'],
                     color: "#b82e2e",
                     protocol: null,
@@ -495,7 +587,7 @@ var VECTOR_BREAKDOWN = {
                     id: "EEF"
                 }, {at: 0});
                 filtered_collection.add({
-                    name: "Currents data (FAC)",
+                    name: "Electric current data (FAC)",
                     visible: containerSelection['FAC'],
                     color: "#66aa00",
                     protocol: null,
@@ -503,7 +595,7 @@ var VECTOR_BREAKDOWN = {
                     id: "FAC"
                 }, {at: 0});
                 filtered_collection.add({
-                    name: "Electron data (TEC)",
+                    name: "Total electron content (TEC)",
                     visible: containerSelection['TEC'],
                     color: "#990099",
                     protocol: null,

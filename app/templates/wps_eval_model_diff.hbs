@@ -26,6 +26,12 @@
         <wps:LiteralData>{{end_time}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
+    {{#if bbox}}<wps:Input>
+      <ows:Identifier>bbox</ows:Identifier>
+      <wps:Data>
+        <wps:ComplexData>{{bbox}}</wps:ComplexData>
+      </wps:Data>
+    </wps:Input>{{/if}}
     <wps:Input>
       <ows:Identifier>elevation</ows:Identifier>
       <wps:Data>
@@ -62,12 +68,13 @@
         <wps:LiteralData>{{height}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>
+    {{#if style}}
     <wps:Input>
       <ows:Identifier>style</ows:Identifier>
       <wps:Data>
         <wps:LiteralData>{{style}}</wps:LiteralData>
       </wps:Data>
-    </wps:Input>
+    </wps:Input>{{/if}}
     {{#if range_min}}<wps:Input>
       <ows:Identifier>range_min</ows:Identifier>
       <wps:Data>
@@ -87,9 +94,15 @@
       </wps:Data>
     </wps:Input>{{/if}}
   </wps:DataInputs>
-  <wps:ResponseForm>
+   <wps:ResponseForm>
+  {{#if getonlyrange}}
+    <wps:RawDataOutput mimeType="text/plain" encoding="base64">
+      <ows:Identifier>style_range</ows:Identifier>
+    </wps:RawDataOutput>
+  {{else}}
     <wps:RawDataOutput mimeType="image/png" encoding="base64">
       <ows:Identifier>output</ows:Identifier>
     </wps:RawDataOutput>
+  {{/if}}
   </wps:ResponseForm>
 </wps:Execute>

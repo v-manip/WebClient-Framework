@@ -67,13 +67,35 @@
                     }
                 }
 
-                var selectionstart = new Date(this.options.brush.start);
-                var selectionend = new Date(this.options.brush.end);
+                /*var selectionstart = new Date(this.options.brush.start);
+                var selectionend = new Date(this.options.brush.end);*/
+                var selectionstart, selectionend;
 
                 if(localStorage.getItem('timeSelection')){
                     var time = JSON.parse(localStorage.getItem('timeSelection'));
                     selectionstart = new Date(time[0]);
                     selectionend = new Date(time[1]);
+                }else{
+                    // If time not in localstorage use default of current date
+                    // minus 7 days
+                    selectionstart = new Date();
+                    selectionstart.setDate(selectionstart.getDate() - 7);
+                    selectionend = new Date(selectionstart.getTime());
+
+                    selectionstart.setUTCHours(0,0,0,0);
+                    selectionend.setUTCHours(23,59,59,999);
+                }
+
+                var domainStart, domainEnd;
+                if(localStorage.getItem('timeDomain')){
+                    var domain = JSON.parse(localStorage.getItem('timeDomain'));
+                    domainStart = new Date(domain[0]);
+                    domainEnd = new Date(domain[1]);
+                }else{
+                    domainStart = new Date(selectionstart.getTime());
+                    domainStart.setDate(domainStart.getDate() - 7);
+                    domainEnd = new Date(selectionend.getTime());
+                    domainEnd.setDate(domainEnd.getDate() + 7);
                 }
 
                 this.activeWPSproducts = [];
@@ -82,6 +104,10 @@
                     domain: {
                         start: new Date(this.options.domain.start),
                         end: new Date(this.options.domain.end)
+                    },
+                    display: {
+                        start: domainStart,
+                        end: domainEnd
                     },
                     displayLimit: 'P1Y2M',
                     brush: {
@@ -96,20 +122,7 @@
                     datasets: []
                 };
 
-                if (this.options.display){
-                    initopt.display = {
-                        start: new Date(this.options.display.start),
-                        end: new Date(this.options.display.end)
-                    };
-                }
 
-                if(localStorage.getItem('timeDomain')){
-                    var domain = JSON.parse(localStorage.getItem('timeDomain'));
-                    initopt.display = {
-                        start: new Date(domain[0]),
-                        end: new Date(domain[1])
-                    };
-                }
 
                 this.slider = new TimeSlider(this.el, initopt);
 
@@ -232,7 +245,7 @@
 
                 d3.csv(request)
                     .row(function (row) {
-                        return [new Date(row.time), Number(row.value), row.id];
+                        return [new Date(row.time.replace(/\s+/g, 'T')), Number(row.value), row.id];
                     })
                     .get(function(error, rows) { 
                         callback(rows);

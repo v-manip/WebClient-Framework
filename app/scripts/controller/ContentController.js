@@ -125,7 +125,7 @@
             onApplicationReset: function(){
                 if (typeof(Storage) !== "undefined") {
                     localStorage.clear();
-                    location = location;
+                    location.reload(true);
                 }
             }
 

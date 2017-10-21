@@ -257,41 +257,29 @@
             }
            
           }
-          var longest = 0;
-          for (var key in collections) {
-            if (collections[key].length > longest){
-              longest = collections[key].length;
-            }
-          }
-          var previous_amount = null;
-          var to_delete = null;
-          for (var key in collections) {
-            if(collections[key].length !== longest){
-              delete collections[key];
-            }
-          }
 
-          var collection_keys = _.keys(collections);
-          for (var i = collection_keys.length - 1; i >= 0; i--) {
-            collections[collection_keys[i]] = collections[collection_keys[i]].reverse();
+          // Sort the "layers" to sort the master products based on priority
+          for (var k in collections){
+            collections[k].sort(productSortingFunction);
           }
 
           var options = {
-            "collections_ids": JSON.stringify(collections),
+            "collections_ids": JSON.stringify(collections, Object.keys(collections).sort()),
             "begin_time": getISODateTimeString(this.selected_time.start),
             "end_time": getISODateTimeString(this.selected_time.end)
           };
 
           
           var variables = [
-            "F", "F_error", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
+            "F", "F_error", "B_NEC_resAC", "B_VFM", "B_error", "B_NEC", "n", "T_elec", "U_SC",
             "v_SC", "Bubble_Probability", "Kp", "Dst", "QDLat", "QDLon", "MLT",
-            "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-5-Combined",
+            "B_NEC_res_IGRF12","B_NEC_res_SIFM","B_NEC_res_CHAOS-6-Combined",
             "B_NEC_res_Custom_Model", "F_res_IGRF12","F_res_SIFM",
-            "F_res_CHAOS-5-Combined", "F_res_Custom_Model",
+            "F_res_CHAOS-6-Combined", "F_res_Custom_Model",
             "Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC",
             "IRC", "IRC_Error", "FAC", "FAC_Error",
-            "EEF", "RelErr"
+            "EEF", "RelErr", "OrbitNumber",
+            "SunDeclination","SunRightAscension","SunHourAngle","SunAzimuthAngle","SunZenithAngle"
           ];
 
           // See if magnetic data actually selected if not remove residuals

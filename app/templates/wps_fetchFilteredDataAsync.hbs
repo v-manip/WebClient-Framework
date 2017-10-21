@@ -58,6 +58,12 @@
         <wps:LiteralData>{{time_format}}</wps:LiteralData>
       </wps:Data>
     </wps:Input>{{/if}}
+    {{#if sampling_step}}<wps:Input>
+      <ows:Identifier>sampling_step</ows:Identifier>
+      <wps:Data>
+        <wps:LiteralData>{{sampling_step}}</wps:LiteralData>
+      </wps:Data>
+    </wps:Input>{{/if}}
   </wps:DataInputs>
   <wps:ResponseForm>
     <wps:ResponseDocument lineage="true" storeExecuteResponse="true" status="true">

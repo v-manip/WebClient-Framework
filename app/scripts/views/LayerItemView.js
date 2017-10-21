@@ -80,7 +80,7 @@
                         }
                     });
 
-                }else{
+                }else if (this.model.get('model')){
                     if (this.$el.has( ".fa-sliders" ).length){
 
                         if(this.model.get("satellite")==="Swarm"){
@@ -92,11 +92,11 @@
                             this.$el.find( ".fa-sort" ).css("visibility", "hidden");
                         }else{
                             this.$el.find('.fa-sliders').click(function(){
-                                
-                                if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+                                if(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
                                     App.layerSettings.setModel(that.model);
                                     App.optionsBar.show(App.layerSettings);
                                 } else {
+                                    
                                     if(App.layerSettings.sameModel(that.model)){
                                         App.optionsBar.close();
                                     }else{
@@ -116,6 +116,29 @@
                 var visible = evt.target.checked;
                 var that = this;
 
+                if (this.model.get('model') || this.model.get("containerproduct")){
+
+                    if(visible){
+                         // Activate setting directly when product is being activated
+                        if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
+                            App.layerSettings.setModel(this.model);
+                            App.optionsBar.show(App.layerSettings);
+                            $('#optionsBar').fadeTo(100, 0.3, function() {$(this).fadeTo(100, 1.0); });
+                        } else {
+                            if(!App.layerSettings.sameModel(this.model)){
+                                App.layerSettings.setModel(this.model);
+                                App.optionsBar.show(App.layerSettings);
+                                $('#optionsBar').fadeTo(100, 0.3, function() { $(this).fadeTo(100, 1.0); });
+                            }
+                        }
+                    } else {
+                        if (!(_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed)) {
+                            App.optionsBar.close();
+                        }
+                    }
+                   
+                }
+
                 if(this.model.get("containerproduct")){
 
                     var cs = {};
@@ -128,7 +151,6 @@
 
                     if(visible){
                         this.model.set("visible", true);
-
                     }else{
                         this.model.set("visible", false);
 
@@ -209,10 +231,12 @@
                         var layer = globals.products.find(function(model) { return model.get('name') == options.name; });
                         if (layer != -1  && !(typeof layer === 'undefined')) {
 
-                            if(options.visible)
+                            if(options.visible){
                                 this.model.set("visible", true);
-                            else
+                            }
+                            else{
                                 this.model.set("visible", false);
+                            }
 
                             // TODO: Here we should go through all views, or maybe only url is necessary?
                             var url = layer.get('views')[0].urls[0]+"?";
@@ -255,17 +279,6 @@
                                     Communicator.mediator.trigger('map:layer:change', options);
                                 }else{
                                     // If an shc file is not loaded open settings and show message to select shc file
-                                    if (_.isUndefined(App.layerSettings.isClosed) || App.layerSettings.isClosed) {
-                                        App.layerSettings.setModel(this.model);
-                                        App.optionsBar.show(App.layerSettings);
-                                    } else {
-                                        if(App.layerSettings.sameModel(this.model)){
-                                            App.optionsBar.close();
-                                        }else{
-                                            App.layerSettings.setModel(this.model);
-                                            App.optionsBar.show(App.layerSettings);
-                                        }
-                                    }
                                     showMessage('info','Please click on Upload SHC and select a spherical harmonics coefficients file before activating this layer.', 20);
 
                                     var checkbox = $( "input[type$='checkbox']", this.$el);
@@ -282,7 +295,6 @@
                         }
                     } else if (!evt.target.checked){
                         Communicator.mediator.trigger('map:layer:change', options);
-
                     } else if (isBaseLayer && evt.target.checked){
                         Communicator.mediator.trigger('map:layer:change', options);
                     }
