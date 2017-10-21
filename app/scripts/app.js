@@ -287,7 +287,7 @@ function productSortingFunction(a, b) {
                         };
                         mapConfProds[i].download_parameters['SunAzimuthAngle'] = {
                             "uom": "deg",
-                            "name": "Sun azimuth angle"
+                            "name": "Sun azimuth angle, degrees clockwise from North"
                         };
                         mapConfProds[i].download_parameters['SunZenithAngle'] = {
                             "uom": "deg",
