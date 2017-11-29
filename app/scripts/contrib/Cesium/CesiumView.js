@@ -1209,7 +1209,9 @@ define([
 
                     if(product.get('views')[0].protocol === 'CZML'){
                         this.createDataFeatures(globals.swarm.get('data'), 'pointcollection', 'band');
+
                     }else if(product.get('views')[0].protocol === 'WMS'){
+
                         if (band === 'Fieldlines' ){
                             if(product.get('visible')){
                                 cesLayer = product.get('ces_layer');
@@ -1229,7 +1231,8 @@ define([
                                 }
                             }
                             this.checkFieldLines();
-                        }if (product.get('differenceTo') !== null ){
+                            
+                        } else if (product.get('differenceTo') !== null ){
                             if(product.get('visible')){
                                 var refProd = globals.products.filter(function(p){
                                     return p.get('download').id === product.get('differenceTo');
