@@ -13,7 +13,7 @@ var padLeft = function(str, pad, size) {
 };
 
 var getDateString = function(date) {
-  return date.getFullYear() + "-" 
+  return date.getUTCFullYear() + "-" 
     + padLeft(String(date.getUTCMonth() + 1), "0", 2) + "-"
     + padLeft(String(date.getUTCDate()), "0", 2);
 };
