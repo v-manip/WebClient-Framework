@@ -1099,19 +1099,6 @@ define([
                                     }
                                     heightOffset = i*210000;
 
-                                    if(tovisualize[i] === 'Absolute_STEC' ||
-                                       tovisualize[i] === 'Relative_STEC' ||
-                                       tovisualize[i] === 'Relative_STEC_RMS'){
-                                        var ts = String(row.Timestamp.getTime());
-                                        if(timeBucket[row.id].hasOwnProperty(ts)){
-                                            timeBucket[row.id][ts] = timeBucket[row.id][ts]+1;
-                                            heightOffset = (i+timeBucket[row.id][ts])*210000;
-                                        }else{
-                                            timeBucket[row.id][ts] = 1;
-                                            heightOffset = (i+1)*210000;
-                                        }
-                                    }
-
                                     if(!isNaN(row[set.band])){
                                         color = this.plot.getColor(row[set.band]);
                                         var options = {
@@ -1132,10 +1119,52 @@ define([
                                         }
                                         this.featuresCollection[row.id+set.band].add(options);
                                     }
-                                }else if (
+                                    
+                                } else if (
                                     _.find(VECTOR_PARAM, function(par){
                                         return set.band === par;
                                     })) {
+
+                                    if(tovisualize[i] === 'Absolute_STEC' ||
+                                       tovisualize[i] === 'Relative_STEC' ||
+                                       tovisualize[i] === 'Relative_STEC_RMS'){
+
+                                        color = this.plot.getColor(row[set.band]);
+                                        var addLen = 10;
+                                        var dir = [
+                                            row.GPS_Position_X - row.LEO_Position_X,
+                                            row.GPS_Position_Y - row.LEO_Position_Y,
+                                            row.GPS_Position_Z - row.LEO_Position_Z
+                                        ];
+                                        var len = Math.sqrt((dir[0]*dir[0])+(dir[1]*dir[1])+(dir[2]*dir[2]));
+                                        var uvec = dir.map(function(x) { return x / len; });
+                                        var secPos = [
+                                            row.LEO_Position_X + uvec[0]*500000,
+                                            row.LEO_Position_Y + uvec[1]*500000,
+                                            row.LEO_Position_Z + uvec[2]*500000
+                                        ];
+
+                                        this.featuresCollection[row.id+set.band].geometryInstances.push( 
+                                            new Cesium.GeometryInstance({
+                                                geometry : new Cesium.SimplePolylineGeometry({
+                                                    positions : [
+                                                        new Cesium.Cartesian3(row.LEO_Position_X, row.LEO_Position_Y, row.LEO_Position_Z),
+                                                        new Cesium.Cartesian3(secPos[0], secPos[1], secPos[2])
+                                                    ],
+                                                    followSurface: false
+                                                }),
+                                                id: 'vec_line_'+linecnt,
+                                                attributes : {
+                                                    color : Cesium.ColorGeometryInstanceAttribute.fromColor(
+                                                        new Cesium.Color.fromBytes(color[0], color[1], color[2], alpha)
+                                                    )
+                                                }
+                                            })
+                                        );
+                                        linecnt++;
+
+                                    } else {
+
                                         var sb = VECTOR_BREAKDOWN[set.band];
                                         heightOffset = i*210000;
 
@@ -1168,10 +1197,13 @@ define([
                                             );
                                             linecnt++;
                                         }
-                                    } // END of if vector parameter
-                                }
+
+                                    }
+
+                                } // END of if vector parameter
                             }
-                        }, this);
+                        }
+                    }, this);
 
                     for (var j = 0; j < this.activeCollections.length; j++) {
                         this.map.scene.primitives.add(this.featuresCollection[this.activeCollections[j]]);
