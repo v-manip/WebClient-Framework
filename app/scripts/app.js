@@ -1,12 +1,12 @@
 
 var SCALAR_PARAM = [
     "F", "n", "T_elec", "U_SC", "Bubble_Index", "Bubble_Probability",
-    "Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC", "IRC", "FAC", "EEF"
+    "IRC", "FAC", "EEF"
 ];
 
 var VECTOR_PARAM = [
     "B_NEC", "v_SC", "SIFM", "IGRF12", "CHAOS-6-Combined", "Custom_Model",
-    "B_NEC_resAC"
+    "B_NEC_resAC", "GPS_Position", "LEO_Position", "Relative_STEC_RMS", "Relative_STEC", "Absolute_STEC"
 ];
 
 var VECTOR_BREAKDOWN = {
@@ -19,6 +19,8 @@ var VECTOR_BREAKDOWN = {
     'B_error': ['B_error,X', 'B_error,Y', 'B_error,Z'],
     'B_VFM': ['B_VFM,X', 'B_VFM,Y', 'B_VFM,Z'],
     'v_SC':  ['v_SC_N','v_SC_E','v_SC_C'],
+    'GPS_Position':  ['GPS_Position_X','GPS_Position_Y','GPS_Position_Z'],
+    'LEO_Position':  ['LEO_Position_X','LEO_Position_Y','LEO_Position_Z'],
     'B_NEC_res_SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
     'B_NEC_res_IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
     'B_NEC_res_CHAOS-6-Combined': ['B_N_res_CHAOS-6-Combined','B_E_res_CHAOS-6-Combined','B_C_res_CHAOS-6-Combined'],
