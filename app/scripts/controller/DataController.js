@@ -11,6 +11,8 @@
     'hbs!tmpl/wps_fetchData',
     'app',
     'papaparse',
+    'msgpack',
+    'graphly'
   ],
 
   function( Backbone, Communicator, globals, wps_getdataTmpl, wps_fetchDataTmpl, App, Papa) {
@@ -328,7 +330,8 @@
             })
           }
 
-          options.variables = variables.join(",")
+          options.variables = variables.join(",");
+          options.mimeType = 'application/msgpack';
 
 
           if(this.selection_list.length > 0){
@@ -347,58 +350,84 @@
 
           var req_data = wps_fetchDataTmpl(options);
 
-          $.post( retrieve_data[0].url, req_data)
-            .done(function( data ) {
-              // Parse data here centrally so other modules do not have to do it again
-              Papa.parse(data, {
-                header: true,
-                dynamicTyping: true,
-                skipEmptyLines: true,
-                complete: function(results) {
-                  var dat = results.data; 
-                  for (var i = dat.length - 1; i >= 0; i--) {
-                    if(dat[i].hasOwnProperty('Timestamp')) {
-                      dat[i]['Timestamp'] = new Date(dat[i]['Timestamp']*1000);
-                    }
-                    if(dat[i].hasOwnProperty('timestamp')) {
-                      dat[i]['Timestamp'] = new Date(dat[i]['timestamp']*1000);
-                      delete dat[i].timestamp;
-                    }
-                    if(dat[i].hasOwnProperty('latitude')) {
-                      dat[i]['Latitude'] = dat[i]['latitude'];
-                      delete dat[i].latitude;
-                    }
-                    if(dat[i].hasOwnProperty('longitude')) {
-                      dat[i]['Longitude'] = dat[i]['longitude'];
-                      delete dat[i].longitude;
-                    }
-                    if(!dat[i].hasOwnProperty('Radius')) {
-                      dat[i]['Radius'] = 6832000;
-                    }
+          var xhr = new XMLHttpRequest();
+          xhr.open('POST', retrieve_data[0].url, true);
+          xhr.responseType = 'arraybuffer';
+          var that = this;
 
-                    $.each(dat[i], function(key, value){
-                      if(VECTOR_BREAKDOWN.hasOwnProperty(key)) {
-                        var d = dat[i][key];
-                        d = d.slice(1,-1).split(';').map(Number);
-                        delete dat[i][key];
-                        dat[i][VECTOR_BREAKDOWN[key][0]] = d[0];
-                        dat[i][VECTOR_BREAKDOWN[key][1]] = d[1];
-                        dat[i][VECTOR_BREAKDOWN[key][2]] = d[2];
-                      }
+           xhr.onerror = function(e) {
+            Communicator.mediator.trigger("progress:change", false);
+        }
 
-                      if(dat[i][key] === "nan"){
-                        dat[i][key] = NaN;
-                      }
-                    });
-                    
-                    
+        xhr.onload = function(e) {
+            Communicator.mediator.trigger("progress:change", false);
 
-                  }
-                  globals.swarm.set({data: results.data});
+              var tmp = new Uint8Array(this.response);
+              var dat = msgpack.decode(tmp);
+
+              var ids = {
+                'A': 'Alpha',
+                'B': 'Bravo',
+                'C': 'Charlie',
+                'NSC': 'NSC'
+              }
+
+              if(dat.hasOwnProperty('Spacecraft')) {
+                dat['id'] = [];
+                for (var i = 0; i < dat.Timestamp.length; i++) {
+                  dat.id.push(ids[dat.Spacecraft[i]]);
                 }
-              });
-              
-          });
+              }
+
+              if(dat.hasOwnProperty('Timestamp')) {
+                for (var i = 0; i < dat.Timestamp.length; i++) {
+                  dat.Timestamp[i] = new Date(dat.Timestamp[i]*1000);
+                }
+              }
+              if(dat.hasOwnProperty('timestamp')) {
+                for (var i = 0; i < dat.Timestamp.length; i++) {
+                  dat.Timestamp[i] = new Date(dat.timestamp[i]*1000);
+                }
+              }
+              if(dat.hasOwnProperty('latitude')) {
+                dat['Latitude'] = dat['latitude'];
+                delete dat.latitude;
+              }
+              if(dat.hasOwnProperty('longitude')) {
+                dat['Longitude'] = dat['longitude'];
+                delete dat.longitude;
+              }
+              if(!dat.hasOwnProperty('Radius')) {
+                dat['Radius'] = [];
+                var refKey = 'Timestamp';
+                if(!dat.hasOwnProperty(refKey)){
+                  refKey = 'timestamp';
+                }
+                for (var i = 0; i < dat[refKey].length; i++) {
+                  dat['Radius'].push(6832000)
+                }
+              }
+
+              for(var key in dat){
+                if(VECTOR_BREAKDOWN.hasOwnProperty(key)){
+                  dat[VECTOR_BREAKDOWN[key][0]] = [];
+                  dat[VECTOR_BREAKDOWN[key][1]] = [];
+                  dat[VECTOR_BREAKDOWN[key][2]] = [];
+                  for (var i = 0; i < dat[key].length; i++) {
+                    dat[key][i]
+                    dat[VECTOR_BREAKDOWN[key][0]].push(dat[key][i][0]);
+                    dat[VECTOR_BREAKDOWN[key][1]].push(dat[key][i][1]);
+                    dat[VECTOR_BREAKDOWN[key][2]].push(dat[key][i][2]);
+                  }
+                  delete dat[key];
+                }
+              }
+
+              globals.swarm.set({data: dat});
+          };
+
+          Communicator.mediator.trigger("progress:change", true);
+          xhr.send(req_data);
 
         }
       },

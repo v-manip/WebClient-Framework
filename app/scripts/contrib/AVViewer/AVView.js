@@ -4,6 +4,7 @@ define(['backbone.marionette',
     'models/AVModel',
     'globals',
     'd3',
+    'graphly',
     'analytics'
 ], function(Marionette, Communicator, App, AVModel, globals) {
     'use strict';
@@ -16,9 +17,12 @@ define(['backbone.marionette',
             this.plotType = 'scatter';
             this.sp = undefined;
 
-            /*$(window).resize(function() {
-              this.onResize();
-            }.bind(this));*/
+            $(window).resize(function() {
+                if(this.graph){
+                    this.graph.resize();
+                }
+            }.bind(this));
+
             this.connectDataEvents();
         },
 
@@ -37,30 +41,50 @@ define(['backbone.marionette',
             this.plotType = 'scatter';
             this.prevParams = [];
 
-            $('#tmp_download_button').unbind( 'click' );
-            $('#tmp_download_button').remove();
+           if (typeof this.graph === 'undefined') {
+                this.$el.append('<div class="d3canvas"></div>');
+                this.$('.d3canvas').append('<div id="graph"></div>');
+                this.$('.d3canvas').append('<div id="filterDivContainer"></div>');
+                this.$('#filterDivContainer').append('<div id="filters"></div>');
+                this.$el.append('<div id="nodataavailable"></div>');
+                $('#nodataavailable').text('No data available for current selection');
+                
+            }else if(this.graph){
+                this.graph.resize();
+            }
 
-            // TODO: Hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
-            d3.select(this.el).append('button')
-                .attr('type', 'button')
-                .attr('id', 'tmp_download_button')
-                .attr('class', 'btn btn-success')
-                .attr('style', 'position: absolute; right: 55px; top: 7px; z-index: 1000;')
-                .text('Download');
-
-
-            $('#tmp_download_button').click(function(){
-                Communicator.mediator.trigger('dialog:open:download:filter', true);
-            });
-
-            this.$('.d3canvas').remove();
-            this.$el.append('<div class="d3canvas"></div>');
-            this.$('.d3canvas').append('<div id="scatterdiv" style="height:60%;"></div>');
-            this.$('.d3canvas').append('<div id="parallelsdiv" style="height:39%;"></div>');
 
             var swarmdata = globals.swarm.get('data');
 
-            var args = {
+            this.filterManager = new FilterManager({
+                el:'#filters',
+                filterSettings: {
+                    visibleFilters: [
+                        'F','B_N', 'B_E', 'B_C', 'Dst', 'QDLat','MLT'
+                    ],
+                    parameterMatrix:{}
+                },
+            });
+
+            this.renderSettings = {
+                xAxis:  'Latitude',
+                yAxis: [ 'F' ],
+                colorAxis: [null],
+                dataIdentifier: {
+                    parameter: 'Spacecraft',
+                    identifiers: ['A', 'B']
+                }
+            };
+
+            this.graph = new graphly.graphly({
+                el: '#graph',
+                dataSettings: {},
+                renderSettings: this.renderSettings,
+                filterManager: this.filterManager,
+                //debounceActive: false
+            });
+
+            /*var args = {
                 scatterEl: '#scatterdiv',
                 histoEl: '#parallelsdiv',
                 selection_x: 'Latitude',
@@ -112,9 +136,9 @@ define(['backbone.marionette',
                 this.prevParams = JSON.parse(
                     localStorage.getItem('prevParams')
                 );
-            }
+            }*/
 
-            if (this.sp === undefined){
+            /*if (this.sp === undefined){
                 this.sp = new scatterPlot(
                     args, function(){},
                     function (values) {
@@ -151,9 +175,9 @@ define(['backbone.marionette',
                     that.sp.sel_y = JSON.parse(localStorage.getItem('yAxisSelection'));
                 }
 
-            }
+            }*/
 
-            $('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
+            //$('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
 
             if(swarmdata && swarmdata.length>0){
                 args.parsedData = swarmdata;
@@ -203,8 +227,15 @@ define(['backbone.marionette',
         reloadData: function(model, data) {
             // If element already has plot rendering
             if( $(this.el).html()){
+                var idKeys = Object.keys(data);
+                if(idKeys.length > 0){
+                    $('#nodataavailable').hide();
+                    //this.graph.renderSettings = this.renderSettings[idKeys[0]];
+                        this.graph.loadData(data);
+                        this.filterManager.loadData(data);
+                }
                 // Prepare to create list of available parameters
-                var availableParameters = {};
+                /*var availableParameters = {};
                 var activeParameters = {};
                 globals.products.each(function(prod) {
                     if(prod.get('download_parameters')){
@@ -369,7 +400,7 @@ define(['backbone.marionette',
                     $('#scatterdiv').empty();
                     $('#parallelsdiv').empty();
                     $('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
-                }
+                }*/
             }
         },
 

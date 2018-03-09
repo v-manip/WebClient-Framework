@@ -18,7 +18,6 @@ text.nvd3.nv-noData {
 .analytics {
     width: 100%;
     height: 100%;
-    padding-top: 50px;
     padding-left: 5px;
     padding-bottom: 8.9em;
     padding-right: 0px;
@@ -26,17 +25,23 @@ text.nvd3.nv-noData {
     background-color: white;
 }
 
+#graph {
+    height: 65%;
+    position: absolute;
+}
+
+.filterContainer{
+    padding-top: 0px!important;
+}
+
+.editButton{
+    box-sizing: content-box!important;
+}
+
 .analytics .gui {
     top:220px;
 }
 
-//nvd3 needs this
-.analytics svg{
-    /* Trying to get SVG to act like a greedy block in all browsers */
-    display: block;
-    width:100%;
-    height:100%;
-}
 
 .analytics .disabled{
     display: inline;
