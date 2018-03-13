@@ -39,9 +39,13 @@ define(['backbone.marionette',
             this.overlay = null;
             this.activeWPSproducts = [];
             this.plotType = 'scatter';
-            this.prevParams = [];
+            this.prevParams = null;
             this.fieldsforfiltering = [];
 
+
+            $('#saveRendering').off();
+            $('#saveRendering').remove();
+            this.$el.append('<div type="button" class="btn btn-success darkbutton" id="saveRendering"><i class="fa fa-floppy-o" aria-hidden="true"></i></div>');
 
            if (typeof this.graph === 'undefined') {
                 this.$el.append('<div class="d3canvas"></div>');
@@ -54,6 +58,65 @@ define(['backbone.marionette',
             }else if(this.graph){
                 this.graph.resize();
             }
+
+            $('#saveRendering').click(function(){
+                that.graph.saveImage();
+            });
+
+
+            this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
+            $('#filterSelectDrop').append('<select id="filterSelect" multiple></select>');
+
+            $('#filterSelect').SumoSelect({ okCancelInMulti: true });
+
+            /*var y_select = d3.select(this.scatterEl)
+                .insert("div")
+                .attr("id", "yselectiondropdown")
+                .attr("style", "position: absolute;"+
+                    "margin-left:"+(this.margin.left)+
+                    "px; margin-top:"+(this.margin.top-40)+"px;")
+                .append("select")
+                    .attr("multiple", "multiple");
+
+        y_select.selectAll("option")
+            .data(this.headerNames)
+            .enter()
+            .append("option")
+            .text(function (d) { 
+                if(self.sel_y.indexOf(d) != -1)
+                    d3.select(this).attr("selected","selected");
+
+                // Renaming of keys introducing subscript
+                var newkey = "";
+                var parts = d.split("_");
+                if (parts.length>1){
+                    newkey = parts[0];
+                    for (var i=1; i<parts.length; i++){
+                        newkey+=(" "+parts[i]).sub();
+                    }
+                }else{
+                    newkey = d;
+                }
+
+                d3.select(this).attr("value", d)
+                return newkey; 
+            });
+
+        $(y_select).SumoSelect({ okCancelInMulti: true });*/
+
+
+        $(".SumoSelect").change(function(evt){
+            var objs = [];
+            $('#yselectiondropdown option:selected').each(function(i) {
+                objs.push($(this).val());
+            });
+
+            self.sel_y = objs;
+            self.yAxisSelectionChanged(self.sel_y);
+            self.render();
+            self.parallelsPlot();
+        
+        });
 
             this.reloadUOM();
 
@@ -102,7 +165,23 @@ define(['backbone.marionette',
             }
             if(localStorage.getItem('yAxisSelection') !== null){
                 this.graph.renderSettings.yAxis = JSON.parse(localStorage.getItem('yAxisSelection'));
+                var nllArray = [];
+                for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                    nllArray.push(null);
+                }
+                this.graph.renderSettings.colorAxis = nllArray;
             }
+
+            this.graph.on('axisChange', function(){
+                localStorage.setItem(
+                    'xAxisSelection',
+                    JSON.stringify(this.renderSettings.xAxis)
+                );
+                localStorage.setItem(
+                    'yAxisSelection',
+                    JSON.stringify(this.renderSettings.yAxis)
+                );
+            });
 
 
 
@@ -140,7 +219,7 @@ define(['backbone.marionette',
               localStorage.setItem('xAxisSelection', JSON.stringify(param));
             };
             args.yAxisSelectionChanged = function(param){
-              localStorage.setItem('yAxisSelection', JSON.stringify(param));
+              localStorage.setItem('xAxisSelection', JSON.stringify(param));
             };
             args.filtersViewChanged = function(param){
               localStorage.setItem('filterViewHidden', JSON.stringify(param));
@@ -364,7 +443,10 @@ define(['backbone.marionette',
 
 
 
-
+                    if(this.prevParams === null){
+                        // First time loading data we set previous to current data
+                        this.prevParams = idKeys;
+                    }
 
 
 
@@ -404,63 +486,51 @@ define(['backbone.marionette',
                             'n', 'F', 'Bubble_Probability', 'Absolute_STEC', 'FAC', 'EEF'
                         ];
 
-                        // check if y axis still has available data
-                        /*for (var i = 0; i < this.renderSettings.yAxis.length; i++) {
-                            if(idKeys.indexOf(this.renderSettings.yAxis[i]) === -1){
-                                var index = this.renderSettings.yAxis.indexOf(this.prevParams[i]);
-                                this.renderSettings.yAxis.splice(index, 1);
-                                this.renderSettings.colorAxis.splice(index, 1);
-                            }
-                        }*/
 
-                        for (var i = this.renderSettings.yAxis.length - 1; i >= 0; i--) {
-                            if(idKeys.indexOf(this.renderSettings.yAxis[i]) === -1){
+                        for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                            if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
                                 this.renderSettings.yAxis.splice(i, 1);
-                                this.renderSettings.colorAxis.splice(i, 1);
+                                this.graph.renderSettings.colorAxis.splice(i, 1);
                             }
                         }
 
-                        // Check if new data parameter has been added
+                        // Check if new data parameter has been added and is not
+                        // part of previous parameters
                         for (var i = 0; i < parasToCheck.length; i++) {
-                            if(idKeys.indexOf(parasToCheck[i]) !== -1){
+                            if(idKeys.indexOf(parasToCheck[i]) !== -1 && 
+                                this.prevParams.indexOf(parasToCheck[i])=== -1 ){
                                 // New parameter is available and is not selected in 
                                 // y Axis yet
-                                if(this.renderSettings.yAxis.indexOf(parasToCheck[i])){
+                                if(this.graph.renderSettings.yAxis.indexOf(parasToCheck[i]) === -1){
                                     // If second y axis is free we can use it to render
                                     // newly added parameter
-                                    if(this.renderSettings.y2Axis.length === 0){
-                                        this.renderSettings.y2Axis.push(parasToCheck[i]);
-                                        this.renderSettings.colorAxis.push(null);
+
+                                    /*if(this.graph.renderSettings.y2Axis.length === 0){
+                                        // TODO: For now we add it to yAxis, when y2 axis working correctly
+                                        // we will need to add it to y2 axis
+                                        this.graph.renderSettings.y2Axis.push(parasToCheck[i]);
+                                        this.graph.renderSettings.colorAxis.push(null);
                                     } else {
                                         // TODO: Decide based on extent where the parameter
                                         // fits best
-                                    }
+                                    }*/
+                                    this.graph.renderSettings.yAxis.push(parasToCheck[i]);
+                                    this.graph.renderSettings.colorAxis.push(null);
                                     
                                 }
+                                
                             }
                         }
 
-                        /*_.each(parasToCheck, function(p){
-                            this.checkPrevious(
-                                p, this.prevParams.indexOf(p), idKeys.indexOf(p)
-                            );
-                        }, this);
+                        // Check if x selection still available in new parameters
+                        if(idKeys.indexOf(this.graph.renderSettings.xAxis) === -1){
+                            if(idKeys.indexOf('Latitude') !== -1){
+                                this.graph.renderSettings.xAxis = 'Latitude';
+                            } else if (idKeys.indexOf('latitude') !== -1){
+                                this.graph.renderSettings.xAxis = 'latitude';
+                            }
+                        }
 
-                        // If previous does not contain a residual a new one does
-                        // we switch the selection to residual value
-                        var resIndex = residuals.indexOf(
-                            _.find(idKeys, function(item) {
-                                return item.indexOf('F_res') !== -1;
-                            })
-                        );
-                        if(resIndex !== -1){
-                            var resPar = residuals[resIndex];
-                            this.checkPrevious(
-                                resPar, this.prevParams.indexOf(resPar),
-                                idKeys.indexOf(resPar),
-                                true
-                            );
-                        }*/
 
                         localStorage.setItem('yAxisSelection', JSON.stringify(this.graph.renderSettings.yAxis));
                         localStorage.setItem('xAxisSelection', JSON.stringify(this.graph.renderSettings.xAxis));

@@ -187,3 +187,25 @@ text.nvd3.nv-noData {
 .SumoSelect p{
     width: 160px!important;
 }
+
+.axisOption label{
+    font-weight: normal!important; 
+}
+
+#saveRendering{
+    margin-top: 7px;
+    position: absolute;
+    padding: 2px 7px 1px 7px;
+    font-size: 20px;
+    z-index: 20;
+}
+
+#filterSelectDrop{
+    position: absolute;
+    margin-top: -40px;
+    margin-left: 20px;
+}
+
+#filterDivContainer{
+    margin-top: 20px;
+}
