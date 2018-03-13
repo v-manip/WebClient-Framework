@@ -1074,8 +1074,9 @@ define([
                         var heightOffset, color;
 
                         if(filters){
-                            for (var k in filters){
-                                show = !(row[k]<filters[k][0] || row[k]>filters[k][1]);
+                            for (var f in filters){
+                                show = filters[f](row[f]);
+                                //show = !(row[k]<filters[k][0] || row[k]>filters[k][1]);
                                 if(!show){break;}
                             }
                         }

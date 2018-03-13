@@ -40,6 +40,8 @@ define(['backbone.marionette',
             this.activeWPSproducts = [];
             this.plotType = 'scatter';
             this.prevParams = [];
+            this.fieldsforfiltering = [];
+
 
            if (typeof this.graph === 'undefined') {
                 this.$el.append('<div class="d3canvas"></div>');
@@ -53,8 +55,11 @@ define(['backbone.marionette',
                 this.graph.resize();
             }
 
+            this.reloadUOM();
+
 
             var swarmdata = globals.swarm.get('data');
+
 
             this.filterManager = new FilterManager({
                 el:'#filters',
@@ -62,27 +67,57 @@ define(['backbone.marionette',
                     visibleFilters: [
                         'F','B_N', 'B_E', 'B_C', 'Dst', 'QDLat','MLT'
                     ],
+                    dataSettings: globals.swarm.get('uom_set'),
                     parameterMatrix:{}
                 },
             });
 
+            var identifiers = [];
+            for (var key in globals.swarm.satellites) {
+                if(globals.swarm.satellites[key]){
+                    identifiers.push(key);
+                }
+            }
+
             this.renderSettings = {
                 xAxis:  'Latitude',
-                yAxis: [ 'F' ],
+                yAxis: ['F'],
                 colorAxis: [null],
                 dataIdentifier: {
-                    parameter: 'Spacecraft',
-                    identifiers: ['A', 'B']
+                    parameter: 'id',
+                    identifiers: identifiers
                 }
             };
 
             this.graph = new graphly.graphly({
                 el: '#graph',
-                dataSettings: {},
+                dataSettings: globals.swarm.get('uom_set'),
                 renderSettings: this.renderSettings,
                 filterManager: this.filterManager,
                 //debounceActive: false
             });
+
+            if(localStorage.getItem('xAxisSelection') !== null){
+                this.graph.renderSettings.xAxis =JSON.parse(localStorage.getItem('xAxisSelection'));
+            }
+            if(localStorage.getItem('yAxisSelection') !== null){
+                this.graph.renderSettings.yAxis = JSON.parse(localStorage.getItem('yAxisSelection'));
+            }
+
+
+
+            if(localStorage.getItem('filterSelection') !== null){
+                var filters = JSON.parse(localStorage.getItem('filterSelection'));
+                this.filterManager.brushes = filters;
+                this.graph.filters = globals.swarm.get('filters');
+                this.filterManager.filters = globals.swarm.get('filters');
+                //globals.swarm.set('filters', filterfunc);
+                //Communicator.mediator.trigger('analytics:set:filter', filters);
+                /*_.map(filters, function(value, key){
+                    that.sp.active_brushes.push(key);
+                    that.sp.brush_extents[key] = value;
+                });*/
+            }
 
             /*var args = {
                 scatterEl: '#scatterdiv',
@@ -179,6 +214,13 @@ define(['backbone.marionette',
 
             //$('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
 
+            this.filterManager.on('filterChange', function(filters){
+                //console.log(this.brushes);
+                localStorage.setItem('filterSelection', JSON.stringify(this.brushes));
+                Communicator.mediator.trigger('analytics:set:filter', filters);
+
+            });
+
             if(swarmdata && swarmdata.length>0){
                 args.parsedData = swarmdata;
                 that.sp.loadData(args);
@@ -214,81 +256,238 @@ define(['backbone.marionette',
         checkPrevious: function(key, previousIndex, newIndex, replace){
             replace = defaultFor(replace, false);
             if( previousIndex === -1 && newIndex !== -1){
-                if(this.sp.sel_y.indexOf(key)===-1){
+                if(this.graph.renderSettings.yAxis.indexOf(key)===-1){
                     if(!replace){
-                        this.sp.sel_y.push(key);
+                        this.graph.renderSettings.yAxis.push(key);
                     }else{
-                        this.sp.sel_y = [key];
+                        this.graph.renderSettings.yAxis = [key];
                     }
                 }
             }
+        },
+
+        reloadUOM: function(){
+            // Prepare to create list of available parameters
+            var availableParameters = {};
+            var activeParameters = {};
+            this.sp = {
+                uom_set: {}
+            };
+            globals.products.each(function(prod) {
+                if(prod.get('download_parameters')){
+                    var par = prod.get('download_parameters');
+                    var newKeys = _.keys(par);
+                    _.each(newKeys, function(key){
+                        availableParameters[key] = par[key];
+                        if(prod.get('visible')){
+                            activeParameters[key] = par[key];
+                        }
+                    });
+                    
+                }
+            });
+            this.sp.uom_set = availableParameters;
+            this.activeParameters = activeParameters;
+
+            // Remove uom of time
+            if(this.sp.uom_set.hasOwnProperty('Timestamp')){
+                this.sp.uom_set['Timestamp'].uom = null;
+                this.sp.uom_set['Timestamp'].scaleFormat = 'time';
+            }else{
+                this.sp.uom_set['Timestamp'] = {scaleFormat: 'time'};
+            }
+            // Remove uom of time
+            if(this.sp.uom_set.hasOwnProperty('timestamp')){
+                this.sp.uom_set['timestamp'].uom = null;
+                this.sp.uom_set['timestamp'].scaleFormat = 'time';
+            } else {
+                this.sp.uom_set['timestamp'] = {scaleFormat: 'time'};
+            }
+
+            // Special cases for separeted vectors
+            this.separateVector('B_error', 'B_error', ['X', 'Y', 'Z'], ',');
+            this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
+            this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
+            this.separateVector('v_SC', 'v_SC', ['N', 'E', 'C'], '_');
+            this.separateVector('B_VFM', 'B_VFM', ['X', 'Y', 'Z'], ',');
+            this.separateVector('B', 'B_NEC_resAC',
+                ['resAC_N', 'resAC_E', 'resAC_C'], '_'
+            );
+            this.separateVector('B', 'B_NEC_res_SIFM',
+                ['N_res_SIFM', 'E_res_SIFM', 'C_res_SIFM'], '_'
+            );
+            this.separateVector('B', 'B_NEC_res_CHAOS-6-Combined',
+                ['N_res_CHAOS-6-Combined',
+                'E_res_CHAOS-6-Combined',
+                'C_res_CHAOS-6-Combined'], '_'
+            );
+            this.separateVector('B', 'B_NEC_res_Custom_Model',
+                ['N_res_Custom_Model',
+                'E_res_Custom_Model',
+                'C_res_Custom_Model'], '_'
+            );
+            this.sp.uom_set['MLT'] = {uom: null, name:'Magnetic Local Time'};
+            this.sp.uom_set['QDLat'] = {uom: 'deg', name:'Quasi-Dipole Latitude'};
+            this.sp.uom_set['QDLon'] = {uom: 'deg', name:'Quasi-Dipole Longitude'};
+            this.sp.uom_set['Dst'] = {uom: null, name:'Disturbance storm time Index'};
+            this.sp.uom_set['Kp'] = {uom: null, name:'Global geomagnetic storm Index'};
+
+            globals.swarm.set('uom_set', this.sp.uom_set);
         },
 
         reloadData: function(model, data) {
             // If element already has plot rendering
             if( $(this.el).html()){
                 var idKeys = Object.keys(data);
+
                 if(idKeys.length > 0){
                     $('#nodataavailable').hide();
-                    //this.graph.renderSettings = this.renderSettings[idKeys[0]];
-                        this.graph.loadData(data);
-                        this.filterManager.loadData(data);
-                }
-                // Prepare to create list of available parameters
-                /*var availableParameters = {};
-                var activeParameters = {};
-                globals.products.each(function(prod) {
-                    if(prod.get('download_parameters')){
-                        var par = prod.get('download_parameters');
-                        var newKeys = _.keys(par);
-                        _.each(newKeys, function(key){
-                            availableParameters[key] = par[key];
-                            if(prod.get('visible')){
-                                activeParameters[key] = par[key];
-                            }
-                        });
-                        
+
+                    var identifiers = [];
+                    for (var key in globals.swarm.satellites) {
+                        if(globals.swarm.satellites[key]){
+                            identifiers.push(key);
+                        }
                     }
-                });
-                this.sp.uom_set = availableParameters;
-                this.activeParameters = activeParameters;
 
-                // Remove uom of time
-                if(this.sp.uom_set.hasOwnProperty('Timestamp')){
-                    this.sp.uom_set['Timestamp'].uom = null;
+                    this.graph.renderSettings.dataIdentifier = {
+                        parameter: 'id',
+                        identifiers: identifiers
+                    };
+
+                    //this.graph.renderSettings = this.renderSettings[idKeys[0]];
+                    if(data[idKeys[0]].length < 4000){
+                        this.graph.debounceActive = false;
+                    }else{
+                        this.graph.debounceActive = true;
+                    }
+
+
+
+
+
+
+
+                    // If data parameters have changed
+                    if (!_.isEqual(this.prevParams, idKeys)){
+                        // Define which parameters should be selected defaultwise as filtering
+                        var filterstouse = this.fieldsforfiltering.concat([
+                            'n', 'T_elec', 'Bubble_Probability',
+                            'Relative_STEC_RMS', 'Relative_STEC', 'Absolute_STEC',
+                            'IRC', 'FAC',
+                            'EEF'
+                        ]);
+
+                        filterstouse = filterstouse.concat(['MLT']);
+                        var residuals = _.filter(idKeys, function(item) {
+                            return item.indexOf('_res_') !== -1;
+                        });
+                        // If new datasets contains residuals add those instead of normal components
+                        if(residuals.length > 0){
+                            filterstouse = filterstouse.concat(residuals);
+                        }else{
+                            if(filterstouse.indexOf('F') === -1){
+                              filterstouse.push('F');
+                            }
+                            if(filterstouse.indexOf('F_error') === -1){
+                                filterstouse.push('F_error');
+                            }
+                        }
+
+                        this.fieldsforfiltering = filterstouse;
+                        localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
+
+                        // Check if we want to change the y-selection
+                        // If previous does not contain key data and new one
+                        // does we add key parameter to selection in plot
+                        var parasToCheck = [
+                            'n', 'F', 'Bubble_Probability', 'Absolute_STEC', 'FAC', 'EEF'
+                        ];
+
+                        // check if y axis still has available data
+                        /*for (var i = 0; i < this.renderSettings.yAxis.length; i++) {
+                            if(idKeys.indexOf(this.renderSettings.yAxis[i]) === -1){
+                                var index = this.renderSettings.yAxis.indexOf(this.prevParams[i]);
+                                this.renderSettings.yAxis.splice(index, 1);
+                                this.renderSettings.colorAxis.splice(index, 1);
+                            }
+                        }*/
+
+                        for (var i = this.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                            if(idKeys.indexOf(this.renderSettings.yAxis[i]) === -1){
+                                this.renderSettings.yAxis.splice(i, 1);
+                                this.renderSettings.colorAxis.splice(i, 1);
+                            }
+                        }
+
+                        // Check if new data parameter has been added
+                        for (var i = 0; i < parasToCheck.length; i++) {
+                            if(idKeys.indexOf(parasToCheck[i]) !== -1){
+                                // New parameter is available and is not selected in 
+                                // y Axis yet
+                                if(this.renderSettings.yAxis.indexOf(parasToCheck[i])){
+                                    // If second y axis is free we can use it to render
+                                    // newly added parameter
+                                    if(this.renderSettings.y2Axis.length === 0){
+                                        this.renderSettings.y2Axis.push(parasToCheck[i]);
+                                        this.renderSettings.colorAxis.push(null);
+                                    } else {
+                                        // TODO: Decide based on extent where the parameter
+                                        // fits best
+                                    }
+                                    
+                                }
+                            }
+                        }
+
+                        /*_.each(parasToCheck, function(p){
+                            this.checkPrevious(
+                                p, this.prevParams.indexOf(p), idKeys.indexOf(p)
+                            );
+                        }, this);
+
+                        // If previous does not contain a residual a new one does
+                        // we switch the selection to residual value
+                        var resIndex = residuals.indexOf(
+                            _.find(idKeys, function(item) {
+                                return item.indexOf('F_res') !== -1;
+                            })
+                        );
+                        if(resIndex !== -1){
+                            var resPar = residuals[resIndex];
+                            this.checkPrevious(
+                                resPar, this.prevParams.indexOf(resPar),
+                                idKeys.indexOf(resPar),
+                                true
+                            );
+                        }*/
+
+                        localStorage.setItem('yAxisSelection', JSON.stringify(this.graph.renderSettings.yAxis));
+                        localStorage.setItem('xAxisSelection', JSON.stringify(this.graph.renderSettings.xAxis));
+                    } // End of IF to see if data parameters have changed
+
+
+                    this.prevParams = idKeys;
+                    localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
+
+
+
+
+
+
+
+
+
+
+
+
+
+                    this.graph.loadData(data);
+                    this.filterManager.loadData(data);
                 }
 
-                // Special cases for separeted vectors
-                this.separateVector('B_error', 'B_error', ['X', 'Y', 'Z'], ',');
-                this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
-                this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
-                this.separateVector('v_SC', 'v_SC', ['N', 'E', 'C'], '_');
-                this.separateVector('B_VFM', 'B_VFM', ['X', 'Y', 'Z'], ',');
-                this.separateVector('B', 'B_NEC_resAC',
-                    ['resAC_N', 'resAC_E', 'resAC_C'], '_'
-                );
-                this.separateVector('B', 'B_NEC_res_SIFM',
-                    ['N_res_SIFM', 'E_res_SIFM', 'C_res_SIFM'], '_'
-                );
-                this.separateVector('B', 'B_NEC_res_CHAOS-6-Combined',
-                    ['N_res_CHAOS-6-Combined',
-                    'E_res_CHAOS-6-Combined',
-                    'C_res_CHAOS-6-Combined'], '_'
-                );
-                this.separateVector('B', 'B_NEC_res_Custom_Model',
-                    ['N_res_Custom_Model',
-                    'E_res_Custom_Model',
-                    'C_res_Custom_Model'], '_'
-                );
-                this.sp.uom_set['MLT'] = {uom: null, name:'Magnetic Local Time'};
-                this.sp.uom_set['QDLat'] = {uom: 'deg', name:'Quasi-Dipole Latitude'};
-                this.sp.uom_set['QDLon'] = {uom: 'deg', name:'Quasi-Dipole Longitude'};
-                this.sp.uom_set['Dst'] = {uom: null, name:'Disturbance storm time Index'};
-                this.sp.uom_set['Kp'] = {uom: null, name:'Global geomagnetic storm Index'};
 
-                globals.swarm.set('uom_set', this.activeParameters);
-
-                $('#tmp_download_button').unbind( 'click' );
+                /*$('#tmp_download_button').unbind( 'click' );
                 $('#tmp_download_button').remove();
 
                 if(data.length > 0){

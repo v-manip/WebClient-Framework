@@ -355,80 +355,82 @@
           xhr.responseType = 'arraybuffer';
           var that = this;
 
-           xhr.onerror = function(e) {
+          xhr.onerror = function(e) {
             Communicator.mediator.trigger("progress:change", false);
-        }
+          }
 
-        xhr.onload = function(e) {
+          xhr.onload = function(e) {
             Communicator.mediator.trigger("progress:change", false);
 
-              var tmp = new Uint8Array(this.response);
-              var dat = msgpack.decode(tmp);
+            if(e.target.status !== 200){
+              globals.swarm.set({data: {}});
+              return;
+            }
 
-              var ids = {
-                'A': 'Alpha',
-                'B': 'Bravo',
-                'C': 'Charlie',
-                'NSC': 'NSC'
-              }
+            var tmp = new Uint8Array(this.response);
+            var dat = msgpack.decode(tmp);
 
-              if(dat.hasOwnProperty('Spacecraft')) {
-                dat['id'] = [];
-                for (var i = 0; i < dat.Timestamp.length; i++) {
-                  dat.id.push(ids[dat.Spacecraft[i]]);
-                }
-              }
+            var ids = {
+              'A': 'Alpha',
+              'B': 'Bravo',
+              'C': 'Charlie',
+              'NSC': 'NSC'
+            };
 
-              if(dat.hasOwnProperty('Timestamp')) {
-                for (var i = 0; i < dat.Timestamp.length; i++) {
-                  dat.Timestamp[i] = new Date(dat.Timestamp[i]*1000);
-                }
+            if(dat.hasOwnProperty('Spacecraft')) {
+              dat['id'] = [];
+              for (var i = 0; i < dat.Timestamp.length; i++) {
+                dat.id.push(ids[dat.Spacecraft[i]]);
               }
-              if(dat.hasOwnProperty('timestamp')) {
-                for (var i = 0; i < dat.Timestamp.length; i++) {
-                  dat.Timestamp[i] = new Date(dat.timestamp[i]*1000);
-                }
-              }
-              if(dat.hasOwnProperty('latitude')) {
-                dat['Latitude'] = dat['latitude'];
-                delete dat.latitude;
-              }
-              if(dat.hasOwnProperty('longitude')) {
-                dat['Longitude'] = dat['longitude'];
-                delete dat.longitude;
-              }
-              if(!dat.hasOwnProperty('Radius')) {
-                dat['Radius'] = [];
-                var refKey = 'Timestamp';
-                if(!dat.hasOwnProperty(refKey)){
-                  refKey = 'timestamp';
-                }
-                for (var i = 0; i < dat[refKey].length; i++) {
-                  dat['Radius'].push(6832000)
-                }
-              }
+            }
 
-              for(var key in dat){
-                if(VECTOR_BREAKDOWN.hasOwnProperty(key)){
-                  dat[VECTOR_BREAKDOWN[key][0]] = [];
-                  dat[VECTOR_BREAKDOWN[key][1]] = [];
-                  dat[VECTOR_BREAKDOWN[key][2]] = [];
-                  for (var i = 0; i < dat[key].length; i++) {
-                    dat[key][i]
-                    dat[VECTOR_BREAKDOWN[key][0]].push(dat[key][i][0]);
-                    dat[VECTOR_BREAKDOWN[key][1]].push(dat[key][i][1]);
-                    dat[VECTOR_BREAKDOWN[key][2]].push(dat[key][i][2]);
-                  }
-                  delete dat[key];
-                }
+            if(dat.hasOwnProperty('Timestamp')) {
+              for (var i = 0; i < dat.Timestamp.length; i++) {
+                dat.Timestamp[i] = new Date(dat.Timestamp[i]*1000);
               }
+            }
+            if(dat.hasOwnProperty('timestamp')) {
+              for (var i = 0; i < dat.Timestamp.length; i++) {
+                dat.Timestamp[i] = new Date(dat.timestamp[i]*1000);
+              }
+            }
+            if(dat.hasOwnProperty('latitude')) {
+              dat['Latitude'] = dat['latitude'];
+              delete dat.latitude;
+            }
+            if(dat.hasOwnProperty('longitude')) {
+              dat['Longitude'] = dat['longitude'];
+              delete dat.longitude;
+            }
+            if(!dat.hasOwnProperty('Radius')) {
+              dat['Radius'] = [];
+              var refKey = 'Timestamp';
+              if(!dat.hasOwnProperty(refKey)){
+                refKey = 'timestamp';
+              }
+              for (var i = 0; i < dat[refKey].length; i++) {
+                dat['Radius'].push(6832000)
+              }
+            }
 
-              globals.swarm.set({data: dat});
+            for(var key in dat){
+              if(VECTOR_BREAKDOWN.hasOwnProperty(key)){
+                dat[VECTOR_BREAKDOWN[key][0]] = [];
+                dat[VECTOR_BREAKDOWN[key][1]] = [];
+                dat[VECTOR_BREAKDOWN[key][2]] = [];
+                for (var i = 0; i < dat[key].length; i++) {
+                  dat[key][i]
+                  dat[VECTOR_BREAKDOWN[key][0]].push(dat[key][i][0]);
+                  dat[VECTOR_BREAKDOWN[key][1]].push(dat[key][i][1]);
+                  dat[VECTOR_BREAKDOWN[key][2]].push(dat[key][i][2]);
+                }
+                delete dat[key];
+              }
+            }
+            globals.swarm.set({data: dat});
           };
-
           Communicator.mediator.trigger("progress:change", true);
           xhr.send(req_data);
-
         }
       },
 
