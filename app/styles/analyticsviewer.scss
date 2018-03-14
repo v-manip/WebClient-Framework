@@ -204,8 +204,23 @@ text.nvd3.nv-noData {
     position: absolute;
     margin-top: -40px;
     margin-left: 20px;
+    top: 0px;
 }
 
 #filterDivContainer{
+    position: absolute;
     margin-top: 20px;
+}
+
+
+#filters {
+    max-height: 255px;
+    overflow-y: scroll;
+    overflow-x: none;
+}
+
+
+.w2ui-field-helper input {
+    padding-left: 10px!important;
+    margin-top: 3px!important;
 }

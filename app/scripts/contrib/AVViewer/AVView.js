@@ -65,9 +65,9 @@ define(['backbone.marionette',
 
 
             this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
-            $('#filterSelectDrop').append('<select id="filterSelect" multiple></select>');
+            //$('#filterSelectDrop').append('<select id="filterSelect" multiple></select>');
 
-            $('#filterSelect').SumoSelect({ okCancelInMulti: true });
+            //$('#filterSelect').SumoSelect({ okCancelInMulti: true });
 
             /*var y_select = d3.select(this.scatterEl)
                 .insert("div")
@@ -105,7 +105,7 @@ define(['backbone.marionette',
         $(y_select).SumoSelect({ okCancelInMulti: true });*/
 
 
-        $(".SumoSelect").change(function(evt){
+        /*$(".SumoSelect").change(function(evt){
             var objs = [];
             $('#yselectiondropdown option:selected').each(function(i) {
                 objs.push($(this).val());
@@ -116,24 +116,31 @@ define(['backbone.marionette',
             self.render();
             self.parallelsPlot();
         
-        });
+        });*/
 
             this.reloadUOM();
 
 
             var swarmdata = globals.swarm.get('data');
 
+            var filterList = localStorage.getItem('selectedFilterList');
+            if(filterList !== null){
+                filterList = JSON.parse(filterList);
+                this.selectedFilterList = filterList;
+            } else {
+                this.selectedFilterList = ['F','B_N', 'B_E', 'B_C', 'Dst', 'QDLat','MLT'];
+            }
+
 
             this.filterManager = new FilterManager({
                 el:'#filters',
                 filterSettings: {
-                    visibleFilters: [
-                        'F','B_N', 'B_E', 'B_C', 'Dst', 'QDLat','MLT'
-                    ],
+                    visibleFilters: this.selectedFilterList,
                     dataSettings: globals.swarm.get('uom_set'),
                     parameterMatrix:{}
                 },
             });
+
 
             var identifiers = [];
             for (var key in globals.swarm.satellites) {
@@ -160,6 +167,13 @@ define(['backbone.marionette',
                 //debounceActive: false
             });
 
+            if(localStorage.getItem('filterSelection') !== null){
+                var filters = JSON.parse(localStorage.getItem('filterSelection'));
+                this.filterManager.brushes = filters;
+                this.graph.filters = globals.swarm.get('filters');
+                this.filterManager.filters = globals.swarm.get('filters');
+            }
+
             if(localStorage.getItem('xAxisSelection') !== null){
                 this.graph.renderSettings.xAxis =JSON.parse(localStorage.getItem('xAxisSelection'));
             }
@@ -183,20 +197,6 @@ define(['backbone.marionette',
                 );
             });
 
-
-
-            if(localStorage.getItem('filterSelection') !== null){
-                var filters = JSON.parse(localStorage.getItem('filterSelection'));
-                this.filterManager.brushes = filters;
-                this.graph.filters = globals.swarm.get('filters');
-                this.filterManager.filters = globals.swarm.get('filters');
-                //globals.swarm.set('filters', filterfunc);
-                //Communicator.mediator.trigger('analytics:set:filter', filters);
-                /*_.map(filters, function(value, key){
-                    that.sp.active_brushes.push(key);
-                    that.sp.brush_extents[key] = value;
-                });*/
-            }
 
             /*var args = {
                 scatterEl: '#scatterdiv',
@@ -345,6 +345,21 @@ define(['backbone.marionette',
             }
         },
 
+        createSubscript: function createSubscript(string){
+            // Adding subscript elements to string which contain underscores
+            var newkey = "";
+            var parts = string.split("_");
+            if (parts.length>1){
+                newkey = parts[0];
+                for (var i=1; i<parts.length; i++){
+                    newkey+=(" "+parts[i]).sub();
+                }
+            }else{
+                newkey = string;
+            }
+            return newkey;
+        },
+
         reloadUOM: function(){
             // Prepare to create list of available parameters
             var availableParameters = {};
@@ -414,11 +429,127 @@ define(['backbone.marionette',
             globals.swarm.set('uom_set', this.sp.uom_set);
         },
 
+        handleItemSelected: function handleItemSelected(evt){
+            var selected = $('#addfilter').val();
+            if(selected !== ''){
+                this.selectedFilterList.push(selected);
+                var setts = this.graph.filterManager.filterSettings;
+                setts.visibleFilters = this.selectedFilterList;
+                this.graph.filterManager.updateFilterSettings(setts);
+                localStorage.setItem(
+                    'selectedFilterList',
+                    JSON.stringify(this.selectedFilterList)
+                );
+                this.renderFilterList();
+            }
+        },
+
+        renderFilterList: function() {
+
+            this.$el.find("#filterSelectDrop").empty();
+            var filCon = this.$el.find("#filterSelectDrop");
+            filCon.find('.w2ui-field').remove();
+
+            var aUOM = {};
+            // Clone object
+            _.each(globals.swarm.get('uom_set'), function(obj, key){
+                aUOM[key] = obj;
+            });
+
+            // Remove currently visible filters from list
+            for (var i = 0; i < this.selectedFilterList.length; i++) {
+              if(aUOM.hasOwnProperty(this.selectedFilterList[i])){
+                delete aUOM[this.selectedFilterList[i]];
+              }
+            }
+
+            // Show only filters for currently available data
+            for (var key in aUOM) {
+              if(this.currentKeys.indexOf(key) === -1){
+                delete aUOM[key];
+              }
+            }
+
+
+            // Remove unwanted parameters
+            if(aUOM.hasOwnProperty('Timestamp')){delete aUOM.Timestamp;}
+            if(aUOM.hasOwnProperty('timestamp')){delete aUOM.timestamp;}
+            if(aUOM.hasOwnProperty('q_NEC_CRF')){delete aUOM.q_NEC_CRF;}
+            if(aUOM.hasOwnProperty('GPS_Position')){delete aUOM.GPS_Position;}
+            if(aUOM.hasOwnProperty('LEO_Position')){delete aUOM.LEO_Position;}
+            if(aUOM.hasOwnProperty('Spacecraft')){delete aUOM.Spacecraft;}
+            if(aUOM.hasOwnProperty('id')){delete aUOM.id;}
+
+            $('#filterSelectDrop').append(
+              '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-default dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
+            );
+
+            $( "#downloadAddFilter" ).click(function(){
+                $('.w2ui-field-helper input').css('text-indent', '0em');
+                $("#addfilter").focus();
+            });
+
+            var that = this;
+            $('#addfilter').off();
+
+            $('#addfilter').w2field('list', { 
+              items: _.keys(aUOM).sort(),
+              renderDrop: function (item, options) {
+                var html = '<b>'+that.createSubscript(item.id)+'</b>';
+                if(aUOM[item.id].uom != null){
+                  html += ' ['+aUOM[item.id].uom+']';
+                }
+                if(aUOM[item.id].name != null){
+                  html+= ': '+aUOM[item.id].name;
+                }
+                return html;
+              },
+              compare: function(item){
+                var userIn = $('.w2ui-field-helper input').val();
+                //console.log(item, $('.w2ui-field-helper input').val());
+                if (userIn.length === 0){
+                    return true;
+                } else {
+                    userIn = userIn.toLowerCase();
+                    var par = aUOM[item.id];
+                    var inputInId = item.id.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
+                        .includes(userIn.replace(/[^a-zA-Z0-9]/g, ''));
+                    var inputInUOM = par.hasOwnProperty('uom') && 
+                        par.uom !== null && 
+                        par.uom.toLowerCase().includes(userIn);
+                    var inputInName = par.hasOwnProperty('name') && 
+                        par.name !== null && 
+                        par.name.toLowerCase().includes(userIn);
+                    if(inputInId || inputInUOM || inputInName){
+                        return true;
+                    } else {
+                        return false;
+                    }
+                }
+                
+              }
+            });
+
+            $('.w2ui-field-helper input').attr('placeholder', 'Type to search');
+
+            $('#addfilter').change(this.handleItemSelected.bind(this));
+
+            // Remove previosly set click bindings
+            /*this.$('.delete-filter').off('click');
+            this.$('.delete-filter').on('click', function(evt){
+              var item = this.parentElement.parentElement;
+              this.parentElement.parentElement.parentElement.removeChild(item);
+              delete that.currentFilters[item.id];
+              that.renderFilterList();
+            });*/
+
+        },
+
         reloadData: function(model, data) {
             // If element already has plot rendering
             if( $(this.el).html()){
                 var idKeys = Object.keys(data);
-
+                this.currentKeys = idKeys;
                 if(idKeys.length > 0){
                     $('#nodataavailable').hide();
 
@@ -477,7 +608,7 @@ define(['backbone.marionette',
                         }
 
                         this.fieldsforfiltering = filterstouse;
-                        localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
+                        //localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
 
                         // Check if we want to change the y-selection
                         // If previous does not contain key data and new one
@@ -540,10 +671,9 @@ define(['backbone.marionette',
                     this.prevParams = idKeys;
                     localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
 
-
-
-
-
+                    this.$('#filterSelectDrop').remove();
+                    this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
+                    this.renderFilterList();
 
 
 
