@@ -1040,8 +1040,7 @@ define([
                                 this.activeCollections.push(obj.id+parameters[i]);
                                 this.featuresCollection[obj.id+parameters[i]] = new Cesium.Primitive({
                                     geometryInstances : [],
-                                    appearance : new Cesium.PerInstanceColorAppearance({
-                                        flat : true,
+                                    appearance : new Cesium.PolylineColorAppearance({
                                         translucent : true
                                     }),
                                     releaseGeometryInstances: false
@@ -1146,12 +1145,14 @@ define([
 
                                         this.featuresCollection[row.id+set.band].geometryInstances.push( 
                                             new Cesium.GeometryInstance({
-                                                geometry : new Cesium.SimplePolylineGeometry({
+                                                geometry : new Cesium.PolylineGeometry({
                                                     positions : [
                                                         new Cesium.Cartesian3(row.LEO_Position_X, row.LEO_Position_Y, row.LEO_Position_Z),
                                                         new Cesium.Cartesian3(secPos[0], secPos[1], secPos[2])
                                                     ],
-                                                    followSurface: false
+                                                    followSurface: false,
+                                                    width: 1.7,
+                                                    vertexFormat : Cesium.PolylineColorAppearance.VERTEX_FORMAT
                                                 }),
                                                 id: 'vec_line_'+linecnt,
                                                 attributes : {
@@ -1161,6 +1162,7 @@ define([
                                                 }
                                             })
                                         );
+
                                         linecnt++;
 
                                     } else {
@@ -1180,12 +1182,13 @@ define([
                                             var vC = (row[sb[2]]/vLen)*addLen;
                                             this.featuresCollection[row.id+set.band].geometryInstances.push( 
                                                 new Cesium.GeometryInstance({
-                                                    geometry : new Cesium.SimplePolylineGeometry({
+                                                    geometry : new Cesium.PolylineGeometry({
                                                         positions : Cesium.Cartesian3.fromDegreesArrayHeights([
                                                             row.Longitude, row.Latitude, (row.Radius-maxRad+heightOffset),
                                                             (row.Longitude+vE), (row.Latitude+vN), ((row.Radius-maxRad)+vC*30000)
                                                         ]),
-                                                        followSurface: false
+                                                        followSurface: false,
+                                                        width: 1.7
                                                     }),
                                                     id: 'vec_line_'+linecnt,
                                                     attributes : {
