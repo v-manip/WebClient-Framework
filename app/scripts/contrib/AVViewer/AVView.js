@@ -139,6 +139,7 @@ define(['backbone.marionette',
                     dataSettings: globals.swarm.get('uom_set'),
                     parameterMatrix:{}
                 },
+                showCloseButtons: true
             });
 
 
@@ -163,8 +164,7 @@ define(['backbone.marionette',
                 el: '#graph',
                 dataSettings: globals.swarm.get('uom_set'),
                 renderSettings: this.renderSettings,
-                filterManager: this.filterManager,
-                //debounceActive: false
+                filterManager: this.filterManager
             });
 
             if(localStorage.getItem('filterSelection') !== null){
@@ -294,10 +294,26 @@ define(['backbone.marionette',
             //$('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
 
             this.filterManager.on('filterChange', function(filters){
-                //console.log(this.brushes);
                 localStorage.setItem('filterSelection', JSON.stringify(this.brushes));
                 Communicator.mediator.trigger('analytics:set:filter', filters);
 
+            });
+
+            this.filterManager.on('removeFilter', function(filter){
+                var index = that.selectedFilterList.indexOf(filter);
+                if(index !== -1){
+                    that.selectedFilterList.splice(index, 1);
+                    // Check if filter was set
+                    if (that.graph.filterManager.filters.hasOwnProperty(filter)){
+                        delete that.graph.filterManager.filters[filter];
+                        delete that.graph.filterManager.brushes[filter];
+                    }
+                    that.graph.filterManager._filtersChanged();
+                    localStorage.setItem(
+                        'selectedFilterList',
+                        JSON.stringify(that.selectedFilterList)
+                    );
+                }
             });
 
             if(swarmdata && swarmdata.length>0){
@@ -330,19 +346,6 @@ define(['backbone.marionette',
                 delete this.activeParameters[previousKey];
             }
 
-        },
-
-        checkPrevious: function(key, previousIndex, newIndex, replace){
-            replace = defaultFor(replace, false);
-            if( previousIndex === -1 && newIndex !== -1){
-                if(this.graph.renderSettings.yAxis.indexOf(key)===-1){
-                    if(!replace){
-                        this.graph.renderSettings.yAxis.push(key);
-                    }else{
-                        this.graph.renderSettings.yAxis = [key];
-                    }
-                }
-            }
         },
 
         createSubscript: function createSubscript(string){
@@ -534,15 +537,6 @@ define(['backbone.marionette',
 
             $('#addfilter').change(this.handleItemSelected.bind(this));
 
-            // Remove previosly set click bindings
-            /*this.$('.delete-filter').off('click');
-            this.$('.delete-filter').on('click', function(evt){
-              var item = this.parentElement.parentElement;
-              this.parentElement.parentElement.parentElement.removeChild(item);
-              delete that.currentFilters[item.id];
-              that.renderFilterList();
-            });*/
-
         },
 
         reloadData: function(model, data) {
@@ -584,12 +578,12 @@ define(['backbone.marionette',
                     // If data parameters have changed
                     if (!_.isEqual(this.prevParams, idKeys)){
                         // Define which parameters should be selected defaultwise as filtering
-                        var filterstouse = this.fieldsforfiltering.concat([
+                        var filterstouse = [
                             'n', 'T_elec', 'Bubble_Probability',
                             'Relative_STEC_RMS', 'Relative_STEC', 'Absolute_STEC',
                             'IRC', 'FAC',
                             'EEF'
-                        ]);
+                        ];
 
                         filterstouse = filterstouse.concat(['MLT']);
                         var residuals = _.filter(idKeys, function(item) {
@@ -607,7 +601,19 @@ define(['backbone.marionette',
                             }
                         }
 
-                        this.fieldsforfiltering = filterstouse;
+                        for (var i = filterstouse.length - 1; i >= 0; i--) {
+                            if(this.selectedFilterList.indexOf(filterstouse[i]) === -1){
+                                this.selectedFilterList.push(filterstouse[i]);
+                            }
+                        }
+                        var setts = this.graph.filterManager.filterSettings;
+                        setts.visibleFilters = this.selectedFilterList;
+                        this.graph.filterManager.updateFilterSettings(setts);
+                        localStorage.setItem(
+                            'selectedFilterList',
+                            JSON.stringify(this.selectedFilterList)
+                        );
+                        this.renderFilterList();
                         //localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
 
                         // Check if we want to change the y-selection
@@ -620,7 +626,7 @@ define(['backbone.marionette',
 
                         for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
                             if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
-                                this.renderSettings.yAxis.splice(i, 1);
+                                this.graph.renderSettings.yAxis.splice(i, 1);
                                 this.graph.renderSettings.colorAxis.splice(i, 1);
                             }
                         }
@@ -653,6 +659,11 @@ define(['backbone.marionette',
                             }
                         }
 
+                        localStorage.setItem(
+                            'yAxisSelection', 
+                            JSON.stringify(this.graph.renderSettings.yAxis)
+                        );
+
                         // Check if x selection still available in new parameters
                         if(idKeys.indexOf(this.graph.renderSettings.xAxis) === -1){
                             if(idKeys.indexOf('Latitude') !== -1){
@@ -660,12 +671,41 @@ define(['backbone.marionette',
                             } else if (idKeys.indexOf('latitude') !== -1){
                                 this.graph.renderSettings.xAxis = 'latitude';
                             }
+                            localStorage.setItem(
+                                'xAxisSelection',
+                                JSON.stringify(this.graph.renderSettings.xAxis))
                         }
 
 
                         localStorage.setItem('yAxisSelection', JSON.stringify(this.graph.renderSettings.yAxis));
                         localStorage.setItem('xAxisSelection', JSON.stringify(this.graph.renderSettings.xAxis));
-                    } // End of IF to see if data parameters have changed
+                    } else {// End of IF to see if data parameters have changed
+                        for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                            // Check if there is some issue with the previously loaded params
+                            if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
+                                this.graph.renderSettings.yAxis.splice(i, 1);
+                                this.graph.renderSettings.colorAxis.splice(i, 1);
+                            }
+                        }
+                        localStorage.setItem(
+                            'yAxisSelection', 
+                            JSON.stringify(this.graph.renderSettings.yAxis)
+                        );
+
+                        // Check if current brushes are valid for current data
+                        for (var fKey in this.graph.filterManager.brushes){
+                            if(idKeys.indexOf(fKey) === -1){
+                                delete this.graph.filterManager.brushes[fKey];
+                            }
+                        }
+
+                        for(var filKey in this.graph.filters){
+                            if(idKeys.indexOf(filKey) === -1){
+                                delete this.graph.filters[fKey];
+                            }
+                        }
+
+                    }
 
 
                     this.prevParams = idKeys;
@@ -673,17 +713,18 @@ define(['backbone.marionette',
 
                     this.$('#filterSelectDrop').remove();
                     this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
-                    this.renderFilterList();
+                    
 
 
 
-
+                    
 
 
 
 
                     this.graph.loadData(data);
                     this.filterManager.loadData(data);
+                    this.renderFilterList();
                 }
 
 

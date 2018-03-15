@@ -224,3 +224,10 @@ text.nvd3.nv-noData {
     padding-left: 10px!important;
     margin-top: 3px!important;
 }
+
+.parameterClose.cross.filterClose{
+    position: absolute;
+    top: 14px!important;
+    right: 3px!important;
+    z-index: 20;
+}
