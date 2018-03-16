@@ -447,10 +447,49 @@ define(['backbone.marionette',
             }
         },
 
+        changeFilterDisplayStatus(){
+            var that = this;
+            var height = '100%';
+            var opacity = 0.0;
+            //var className = 'visible';
+            if($('#minimizeFilters').hasClass('minimized')){
+                height = '65%';
+                opacity = 1.0;
+                $('#minimizeFilters').attr('class', 'visible');
+            } else {
+                $('#minimizeFilters').attr('class', 'minimized');
+            }
+            $('#filterSelectDrop').animate({ opacity: opacity  }, 1000);
+                $('#filters').animate({ opacity: opacity  }, 1000);
+                $('#graph').animate({ height: height  }, {
+                    step: function( now, fx ) {
+                        that.graph.resize();
+                    }/*,
+                    done: function(){
+                        $
+                    }*/
+                },1000);
+                that.graph.resize();
+        },
+
         renderFilterList: function() {
 
+            var that = this;
             this.$el.find("#filterSelectDrop").empty();
             var filCon = this.$el.find("#filterSelectDrop");
+
+            $('#resetFilters').off();
+            filCon.append('<button id="resetFilters" type="button" class="btn btn-success darkbutton">Reset filters</button>');
+            $('#resetFilters').click(function(){
+                that.graph.filterManager.resetManager();
+            });
+
+            $('#filterDivContainer').append(
+                '<div id="minimizeFilters" class="visible"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i></div>'
+            );
+
+            $('#minimizeFilters').click(this.changeFilterDisplayStatus.bind(this));
+
             filCon.find('.w2ui-field').remove();
 
             var aUOM = {};
@@ -484,7 +523,7 @@ define(['backbone.marionette',
             if(aUOM.hasOwnProperty('id')){delete aUOM.id;}
 
             $('#filterSelectDrop').append(
-              '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-default dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
+              '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-success darkbutton dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
             );
 
             $( "#downloadAddFilter" ).click(function(){

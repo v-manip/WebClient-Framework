@@ -210,6 +210,8 @@ text.nvd3.nv-noData {
 #filterDivContainer{
     position: absolute;
     margin-top: 20px;
+    width: 100%;
+    padding-right: 10px;
 }
 
 
@@ -230,4 +232,20 @@ text.nvd3.nv-noData {
     top: 14px!important;
     right: 3px!important;
     z-index: 20;
+}
+
+
+#resetFilters{
+    float: left;
+}
+
+#minimizeFilters{
+    position: absolute;
+    //margin-left: 50%;
+    //float: right;
+    right: 60px;
+    font-size: 2em;
+    top: 0px;
+    cursor: pointer;
+    margin-top: -40px;
 }
