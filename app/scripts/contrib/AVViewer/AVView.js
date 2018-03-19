@@ -164,7 +164,8 @@ define(['backbone.marionette',
                 el: '#graph',
                 dataSettings: globals.swarm.get('uom_set'),
                 renderSettings: this.renderSettings,
-                filterManager: this.filterManager
+                filterManager: this.filterManager,
+                enableFit: false
             });
 
             if(localStorage.getItem('filterSelection') !== null){
@@ -451,10 +452,11 @@ define(['backbone.marionette',
             var that = this;
             var height = '100%';
             var opacity = 0.0;
-            //var className = 'visible';
+            var direction = 'up';
             if($('#minimizeFilters').hasClass('minimized')){
                 height = '65%';
                 opacity = 1.0;
+                direction = 'down';
                 $('#minimizeFilters').attr('class', 'visible');
             } else {
                 $('#minimizeFilters').attr('class', 'minimized');
@@ -464,10 +466,12 @@ define(['backbone.marionette',
                 $('#graph').animate({ height: height  }, {
                     step: function( now, fx ) {
                         that.graph.resize();
-                    }/*,
+                    },
                     done: function(){
-                        $
-                    }*/
+                        $('#minimizeFilters i').attr('class', 
+                            'fa fa-chevron-circle-'+direction
+                        );
+                    }
                 },1000);
                 that.graph.resize();
         },
