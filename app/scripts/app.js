@@ -762,6 +762,7 @@ function productSortingFunction(a, b) {
                         filterfunc[f] = compare.bind(ext);
                     }
                     globals.swarm.set('filters', filterfunc);
+                    Communicator.mediator.trigger('analytics:set:filter', filters);
                     //globals.swarm.set('filters', JSON.parse(localStorage.getItem('filterSelection')));
                 }
 

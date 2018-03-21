@@ -51,7 +51,7 @@ define(['backbone.marionette',
                 this.$el.append('<div class="d3canvas"></div>');
                 this.$('.d3canvas').append('<div id="graph"></div>');
                 this.$('.d3canvas').append('<div id="filterDivContainer"></div>');
-                this.$('#filterDivContainer').append('<div id="filters"></div>');
+                this.$('#filterDivContainer').append('<div id="analyticsFilters"></div>');
                 this.$el.append('<div id="nodataavailable"></div>');
                 $('#nodataavailable').text('No data available for current selection');
                 
@@ -133,7 +133,7 @@ define(['backbone.marionette',
 
 
             this.filterManager = new FilterManager({
-                el:'#filters',
+                el:'#analyticsFilters',
                 filterSettings: {
                     visibleFilters: this.selectedFilterList,
                     dataSettings: globals.swarm.get('uom_set'),
@@ -296,7 +296,8 @@ define(['backbone.marionette',
 
             this.filterManager.on('filterChange', function(filters){
                 localStorage.setItem('filterSelection', JSON.stringify(this.brushes));
-                Communicator.mediator.trigger('analytics:set:filter', filters);
+                Communicator.mediator.trigger('analytics:set:filter', this.brushes);
+                globals.swarm.set({filters: filters});
 
             });
 
@@ -434,7 +435,7 @@ define(['backbone.marionette',
         },
 
         handleItemSelected: function handleItemSelected(evt){
-            var selected = $('#addfilter').val();
+            var selected = $('#inputAnalyticsAddfilter').val();
             if(selected !== ''){
                 this.selectedFilterList.push(selected);
                 var setts = this.graph.filterManager.filterSettings;
@@ -462,7 +463,7 @@ define(['backbone.marionette',
                 $('#minimizeFilters').attr('class', 'minimized');
             }
             $('#filterSelectDrop').animate({ opacity: opacity  }, 1000);
-                $('#filters').animate({ opacity: opacity  }, 1000);
+                $('#analyticsFilters').animate({ opacity: opacity  }, 1000);
                 $('#graph').animate({ height: height  }, {
                     step: function( now, fx ) {
                         that.graph.resize();
@@ -488,6 +489,8 @@ define(['backbone.marionette',
                 that.graph.filterManager.resetManager();
             });
 
+            $('#minimizeFilters').off();
+            $('#minimizeFilters').remove();
             $('#filterDivContainer').append(
                 '<div id="minimizeFilters" class="visible"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i></div>'
             );
@@ -527,18 +530,18 @@ define(['backbone.marionette',
             if(aUOM.hasOwnProperty('id')){delete aUOM.id;}
 
             $('#filterSelectDrop').append(
-              '<div class="w2ui-field"> <input type="list" id="addfilter"> <button id="downloadAddFilter" type="button" class="btn btn-success darkbutton dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
+              '<div class="w2ui-field"> <input type="list" id="inputAnalyticsAddfilter"> <button id="analyticsAddFilter" type="button" class="btn btn-success darkbutton dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
             );
 
-            $( "#downloadAddFilter" ).click(function(){
+            $( "#analyticsAddFilter" ).click(function(){
                 $('.w2ui-field-helper input').css('text-indent', '0em');
-                $("#addfilter").focus();
+                $("#inputAnalyticsAddfilter").focus();
             });
 
             var that = this;
-            $('#addfilter').off();
+            $('#inputAnalyticsAddfilter').off();
 
-            $('#addfilter').w2field('list', { 
+            $('#inputAnalyticsAddfilter').w2field('list', { 
               items: _.keys(aUOM).sort(),
               renderDrop: function (item, options) {
                 var html = '<b>'+that.createSubscript(item.id)+'</b>';
@@ -578,7 +581,7 @@ define(['backbone.marionette',
 
             $('.w2ui-field-helper input').attr('placeholder', 'Type to search');
 
-            $('#addfilter').change(this.handleItemSelected.bind(this));
+            $('#inputAnalyticsAddfilter').change(this.handleItemSelected.bind(this));
 
         },
 
@@ -603,7 +606,7 @@ define(['backbone.marionette',
                     };
 
                     //this.graph.renderSettings = this.renderSettings[idKeys[0]];
-                    if(data[idKeys[0]].length < 4000){
+                    if(data[idKeys[0]].length < 6000){
                         this.graph.debounceActive = false;
                     }else{
                         this.graph.debounceActive = true;

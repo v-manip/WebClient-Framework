@@ -209,13 +209,13 @@ text.nvd3.nv-noData {
 
 #filterDivContainer{
     position: absolute;
-    margin-top: 20px;
+    margin-top: 30px;
     width: 100%;
     padding-right: 10px;
 }
 
 
-#filters {
+#analyticsFilters {
     max-height: 255px;
     overflow-y: scroll;
     overflow-x: none;
@@ -249,3 +249,18 @@ text.nvd3.nv-noData {
     cursor: pointer;
     margin-top: -40px;
 }
+
+#analyticsAddFilter {
+     margin-left: -270px;
+}
+
+#inputAnalyticsAddfilter {
+    margin-left: 95px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#ySettings, #y2Settings, #xSettings{
+    box-sizing: content-box!important;
+}
+
