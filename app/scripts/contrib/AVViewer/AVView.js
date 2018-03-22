@@ -4,6 +4,7 @@ define(['backbone.marionette',
     'models/AVModel',
     'globals',
     'd3',
+    'graphly',
     'analytics'
 ], function(Marionette, Communicator, App, AVModel, globals) {
     'use strict';
@@ -16,9 +17,12 @@ define(['backbone.marionette',
             this.plotType = 'scatter';
             this.sp = undefined;
 
-            /*$(window).resize(function() {
-              this.onResize();
-            }.bind(this));*/
+            $(window).resize(function() {
+                if(this.graph){
+                    this.graph.resize();
+                }
+            }.bind(this));
+
             this.connectDataEvents();
         },
 
@@ -35,32 +39,167 @@ define(['backbone.marionette',
             this.overlay = null;
             this.activeWPSproducts = [];
             this.plotType = 'scatter';
-            this.prevParams = [];
-
-            $('#tmp_download_button').unbind( 'click' );
-            $('#tmp_download_button').remove();
-
-            // TODO: Hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
-            d3.select(this.el).append('button')
-                .attr('type', 'button')
-                .attr('id', 'tmp_download_button')
-                .attr('class', 'btn btn-success')
-                .attr('style', 'position: absolute; right: 55px; top: 7px; z-index: 1000;')
-                .text('Download');
+            this.prevParams = null;
+            this.fieldsforfiltering = [];
 
 
-            $('#tmp_download_button').click(function(){
-                Communicator.mediator.trigger('dialog:open:download:filter', true);
+            $('#saveRendering').off();
+            $('#saveRendering').remove();
+            this.$el.append('<div type="button" class="btn btn-success darkbutton" id="saveRendering"><i class="fa fa-floppy-o" aria-hidden="true"></i></div>');
+
+           if (typeof this.graph === 'undefined') {
+                this.$el.append('<div class="d3canvas"></div>');
+                this.$('.d3canvas').append('<div id="graph"></div>');
+                this.$('.d3canvas').append('<div id="filterDivContainer"></div>');
+                this.$('#filterDivContainer').append('<div id="analyticsFilters"></div>');
+                this.$el.append('<div id="nodataavailable"></div>');
+                $('#nodataavailable').text('No data available for current selection');
+                
+            }else if(this.graph){
+                this.graph.resize();
+            }
+
+            $('#saveRendering').click(function(){
+                that.graph.saveImage();
             });
 
-            this.$('.d3canvas').remove();
-            this.$el.append('<div class="d3canvas"></div>');
-            this.$('.d3canvas').append('<div id="scatterdiv" style="height:60%;"></div>');
-            this.$('.d3canvas').append('<div id="parallelsdiv" style="height:39%;"></div>');
+
+            this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
+            //$('#filterSelectDrop').append('<select id="filterSelect" multiple></select>');
+
+            //$('#filterSelect').SumoSelect({ okCancelInMulti: true });
+
+            /*var y_select = d3.select(this.scatterEl)
+                .insert("div")
+                .attr("id", "yselectiondropdown")
+                .attr("style", "position: absolute;"+
+                    "margin-left:"+(this.margin.left)+
+                    "px; margin-top:"+(this.margin.top-40)+"px;")
+                .append("select")
+                    .attr("multiple", "multiple");
+
+        y_select.selectAll("option")
+            .data(this.headerNames)
+            .enter()
+            .append("option")
+            .text(function (d) { 
+                if(self.sel_y.indexOf(d) != -1)
+                    d3.select(this).attr("selected","selected");
+
+                // Renaming of keys introducing subscript
+                var newkey = "";
+                var parts = d.split("_");
+                if (parts.length>1){
+                    newkey = parts[0];
+                    for (var i=1; i<parts.length; i++){
+                        newkey+=(" "+parts[i]).sub();
+                    }
+                }else{
+                    newkey = d;
+                }
+
+                d3.select(this).attr("value", d)
+                return newkey; 
+            });
+
+        $(y_select).SumoSelect({ okCancelInMulti: true });*/
+
+
+        /*$(".SumoSelect").change(function(evt){
+            var objs = [];
+            $('#yselectiondropdown option:selected').each(function(i) {
+                objs.push($(this).val());
+            });
+
+            self.sel_y = objs;
+            self.yAxisSelectionChanged(self.sel_y);
+            self.render();
+            self.parallelsPlot();
+        
+        });*/
+
+            this.reloadUOM();
+
 
             var swarmdata = globals.swarm.get('data');
 
-            var args = {
+            var filterList = localStorage.getItem('selectedFilterList');
+            if(filterList !== null){
+                filterList = JSON.parse(filterList);
+                this.selectedFilterList = filterList;
+            } else {
+                this.selectedFilterList = ['F','B_N', 'B_E', 'B_C', 'Dst', 'QDLat','MLT'];
+            }
+
+
+            this.filterManager = new FilterManager({
+                el:'#analyticsFilters',
+                filterSettings: {
+                    visibleFilters: this.selectedFilterList,
+                    dataSettings: globals.swarm.get('uom_set'),
+                    parameterMatrix:{}
+                },
+                showCloseButtons: true
+            });
+
+
+            var identifiers = [];
+            for (var key in globals.swarm.satellites) {
+                if(globals.swarm.satellites[key]){
+                    identifiers.push(key);
+                }
+            }
+
+            this.renderSettings = {
+                xAxis:  'Latitude',
+                yAxis: ['F'],
+                colorAxis: [null],
+                dataIdentifier: {
+                    parameter: 'id',
+                    identifiers: identifiers
+                }
+            };
+
+            this.graph = new graphly.graphly({
+                el: '#graph',
+                dataSettings: globals.swarm.get('uom_set'),
+                renderSettings: this.renderSettings,
+                filterManager: this.filterManager,
+                enableFit: false
+            });
+
+            if(localStorage.getItem('filterSelection') !== null){
+                var filters = JSON.parse(localStorage.getItem('filterSelection'));
+                this.filterManager.brushes = filters;
+                this.graph.filters = globals.swarm.get('filters');
+                this.filterManager.filters = globals.swarm.get('filters');
+            }
+
+            if(localStorage.getItem('xAxisSelection') !== null){
+                this.graph.renderSettings.xAxis =JSON.parse(localStorage.getItem('xAxisSelection'));
+            }
+            if(localStorage.getItem('yAxisSelection') !== null){
+                this.graph.renderSettings.yAxis = JSON.parse(localStorage.getItem('yAxisSelection'));
+                var nllArray = [];
+                for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                    nllArray.push(null);
+                }
+                this.graph.renderSettings.colorAxis = nllArray;
+            }
+
+            this.graph.on('axisChange', function(){
+                localStorage.setItem(
+                    'xAxisSelection',
+                    JSON.stringify(this.renderSettings.xAxis)
+                );
+                localStorage.setItem(
+                    'yAxisSelection',
+                    JSON.stringify(this.renderSettings.yAxis)
+                );
+            });
+
+
+            /*var args = {
                 scatterEl: '#scatterdiv',
                 histoEl: '#parallelsdiv',
                 selection_x: 'Latitude',
@@ -81,7 +220,7 @@ define(['backbone.marionette',
               localStorage.setItem('xAxisSelection', JSON.stringify(param));
             };
             args.yAxisSelectionChanged = function(param){
-              localStorage.setItem('yAxisSelection', JSON.stringify(param));
+              localStorage.setItem('xAxisSelection', JSON.stringify(param));
             };
             args.filtersViewChanged = function(param){
               localStorage.setItem('filterViewHidden', JSON.stringify(param));
@@ -112,9 +251,9 @@ define(['backbone.marionette',
                 this.prevParams = JSON.parse(
                     localStorage.getItem('prevParams')
                 );
-            }
+            }*/
 
-            if (this.sp === undefined){
+            /*if (this.sp === undefined){
                 this.sp = new scatterPlot(
                     args, function(){},
                     function (values) {
@@ -151,9 +290,33 @@ define(['backbone.marionette',
                     that.sp.sel_y = JSON.parse(localStorage.getItem('yAxisSelection'));
                 }
 
-            }
+            }*/
 
-            $('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
+            //$('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
+
+            this.filterManager.on('filterChange', function(filters){
+                localStorage.setItem('filterSelection', JSON.stringify(this.brushes));
+                Communicator.mediator.trigger('analytics:set:filter', this.brushes);
+                globals.swarm.set({filters: filters});
+
+            });
+
+            this.filterManager.on('removeFilter', function(filter){
+                var index = that.selectedFilterList.indexOf(filter);
+                if(index !== -1){
+                    that.selectedFilterList.splice(index, 1);
+                    // Check if filter was set
+                    if (that.graph.filterManager.filters.hasOwnProperty(filter)){
+                        delete that.graph.filterManager.filters[filter];
+                        delete that.graph.filterManager.brushes[filter];
+                    }
+                    that.graph.filterManager._filtersChanged();
+                    localStorage.setItem(
+                        'selectedFilterList',
+                        JSON.stringify(that.selectedFilterList)
+                    );
+                }
+            });
 
             if(swarmdata && swarmdata.length>0){
                 args.parsedData = swarmdata;
@@ -187,77 +350,431 @@ define(['backbone.marionette',
 
         },
 
-        checkPrevious: function(key, previousIndex, newIndex, replace){
-            replace = defaultFor(replace, false);
-            if( previousIndex === -1 && newIndex !== -1){
-                if(this.sp.sel_y.indexOf(key)===-1){
-                    if(!replace){
-                        this.sp.sel_y.push(key);
-                    }else{
-                        this.sp.sel_y = [key];
+        createSubscript: function createSubscript(string){
+            // Adding subscript elements to string which contain underscores
+            var newkey = "";
+            var parts = string.split("_");
+            if (parts.length>1){
+                newkey = parts[0];
+                for (var i=1; i<parts.length; i++){
+                    newkey+=(" "+parts[i]).sub();
+                }
+            }else{
+                newkey = string;
+            }
+            return newkey;
+        },
+
+        reloadUOM: function(){
+            // Prepare to create list of available parameters
+            var availableParameters = {};
+            var activeParameters = {};
+            this.sp = {
+                uom_set: {}
+            };
+            globals.products.each(function(prod) {
+                if(prod.get('download_parameters')){
+                    var par = prod.get('download_parameters');
+                    var newKeys = _.keys(par);
+                    _.each(newKeys, function(key){
+                        availableParameters[key] = par[key];
+                        if(prod.get('visible')){
+                            activeParameters[key] = par[key];
+                        }
+                    });
+                    
+                }
+            });
+            this.sp.uom_set = availableParameters;
+            this.activeParameters = activeParameters;
+
+            // Remove uom of time
+            if(this.sp.uom_set.hasOwnProperty('Timestamp')){
+                this.sp.uom_set['Timestamp'].uom = null;
+                this.sp.uom_set['Timestamp'].scaleFormat = 'time';
+            }else{
+                this.sp.uom_set['Timestamp'] = {scaleFormat: 'time'};
+            }
+            // Remove uom of time
+            if(this.sp.uom_set.hasOwnProperty('timestamp')){
+                this.sp.uom_set['timestamp'].uom = null;
+                this.sp.uom_set['timestamp'].scaleFormat = 'time';
+            } else {
+                this.sp.uom_set['timestamp'] = {scaleFormat: 'time'};
+            }
+
+            // Special cases for separeted vectors
+            this.separateVector('B_error', 'B_error', ['X', 'Y', 'Z'], ',');
+            this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
+            this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
+            this.separateVector('v_SC', 'v_SC', ['N', 'E', 'C'], '_');
+            this.separateVector('B_VFM', 'B_VFM', ['X', 'Y', 'Z'], ',');
+            this.separateVector('B', 'B_NEC_resAC',
+                ['resAC_N', 'resAC_E', 'resAC_C'], '_'
+            );
+            this.separateVector('B', 'B_NEC_res_SIFM',
+                ['N_res_SIFM', 'E_res_SIFM', 'C_res_SIFM'], '_'
+            );
+            this.separateVector('B', 'B_NEC_res_CHAOS-6-Combined',
+                ['N_res_CHAOS-6-Combined',
+                'E_res_CHAOS-6-Combined',
+                'C_res_CHAOS-6-Combined'], '_'
+            );
+            this.separateVector('B', 'B_NEC_res_Custom_Model',
+                ['N_res_Custom_Model',
+                'E_res_Custom_Model',
+                'C_res_Custom_Model'], '_'
+            );
+            this.sp.uom_set['MLT'] = {uom: null, name:'Magnetic Local Time'};
+            this.sp.uom_set['QDLat'] = {uom: 'deg', name:'Quasi-Dipole Latitude'};
+            this.sp.uom_set['QDLon'] = {uom: 'deg', name:'Quasi-Dipole Longitude'};
+            this.sp.uom_set['Dst'] = {uom: null, name:'Disturbance storm time Index'};
+            this.sp.uom_set['Kp'] = {uom: null, name:'Global geomagnetic storm Index'};
+
+            globals.swarm.set('uom_set', this.sp.uom_set);
+        },
+
+        handleItemSelected: function handleItemSelected(evt){
+            var selected = $('#inputAnalyticsAddfilter').val();
+            if(selected !== ''){
+                this.selectedFilterList.push(selected);
+                var setts = this.graph.filterManager.filterSettings;
+                setts.visibleFilters = this.selectedFilterList;
+                this.graph.filterManager.updateFilterSettings(setts);
+                localStorage.setItem(
+                    'selectedFilterList',
+                    JSON.stringify(this.selectedFilterList)
+                );
+                this.renderFilterList();
+            }
+        },
+
+        changeFilterDisplayStatus: function changeFilterDisplayStatus(){
+            var that = this;
+            var height = '100%';
+            var opacity = 0.0;
+            var direction = 'up';
+            if($('#minimizeFilters').hasClass('minimized')){
+                height = '65%';
+                opacity = 1.0;
+                direction = 'down';
+                $('#minimizeFilters').attr('class', 'visible');
+            } else {
+                $('#minimizeFilters').attr('class', 'minimized');
+            }
+            $('#filterSelectDrop').animate({ opacity: opacity  }, 1000);
+                $('#analyticsFilters').animate({ opacity: opacity  }, 1000);
+                $('#graph').animate({ height: height  }, {
+                    step: function( now, fx ) {
+                        that.graph.resize();
+                    },
+                    done: function(){
+                        $('#minimizeFilters i').attr('class', 
+                            'fa fa-chevron-circle-'+direction
+                        );
+                    }
+                },1000);
+                that.graph.resize();
+        },
+
+        renderFilterList: function renderFilterList() {
+
+            var that = this;
+            this.$el.find("#filterSelectDrop").empty();
+            var filCon = this.$el.find("#filterSelectDrop");
+
+            $('#resetFilters').off();
+            filCon.append('<button id="resetFilters" type="button" class="btn btn-success darkbutton">Reset filters</button>');
+            $('#resetFilters').click(function(){
+                that.graph.filterManager.resetManager();
+            });
+
+            $('#minimizeFilters').off();
+            $('#minimizeFilters').remove();
+            $('#filterDivContainer').append(
+                '<div id="minimizeFilters" class="visible"><i class="fa fa-chevron-circle-down" aria-hidden="true"></i></div>'
+            );
+
+            $('#minimizeFilters').click(this.changeFilterDisplayStatus.bind(this));
+
+            filCon.find('.w2ui-field').remove();
+
+            var aUOM = {};
+            // Clone object
+            _.each(globals.swarm.get('uom_set'), function(obj, key){
+                aUOM[key] = obj;
+            });
+
+            // Remove currently visible filters from list
+            for (var i = 0; i < this.selectedFilterList.length; i++) {
+              if(aUOM.hasOwnProperty(this.selectedFilterList[i])){
+                delete aUOM[this.selectedFilterList[i]];
+              }
+            }
+
+            // Show only filters for currently available data
+            for (var key in aUOM) {
+              if(this.currentKeys.indexOf(key) === -1){
+                delete aUOM[key];
+              }
+            }
+
+
+            // Remove unwanted parameters
+            if(aUOM.hasOwnProperty('Timestamp')){delete aUOM.Timestamp;}
+            if(aUOM.hasOwnProperty('timestamp')){delete aUOM.timestamp;}
+            if(aUOM.hasOwnProperty('q_NEC_CRF')){delete aUOM.q_NEC_CRF;}
+            if(aUOM.hasOwnProperty('GPS_Position')){delete aUOM.GPS_Position;}
+            if(aUOM.hasOwnProperty('LEO_Position')){delete aUOM.LEO_Position;}
+            if(aUOM.hasOwnProperty('Spacecraft')){delete aUOM.Spacecraft;}
+            if(aUOM.hasOwnProperty('id')){delete aUOM.id;}
+
+            $('#filterSelectDrop').append(
+              '<div class="w2ui-field"> <input type="list" id="inputAnalyticsAddfilter"> <button id="analyticsAddFilter" type="button" class="btn btn-success darkbutton dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
+            );
+
+            $( "#analyticsAddFilter" ).click(function(){
+                $('.w2ui-field-helper input').css('text-indent', '0em');
+                $("#inputAnalyticsAddfilter").focus();
+            });
+
+            var that = this;
+            $('#inputAnalyticsAddfilter').off();
+
+            $('#inputAnalyticsAddfilter').w2field('list', { 
+              items: _.keys(aUOM).sort(),
+              renderDrop: function (item, options) {
+                var html = '<b>'+that.createSubscript(item.id)+'</b>';
+                if(aUOM[item.id].uom != null){
+                  html += ' ['+aUOM[item.id].uom+']';
+                }
+                if(aUOM[item.id].name != null){
+                  html+= ': '+aUOM[item.id].name;
+                }
+                return html;
+              },
+              compare: function(item){
+                var userIn = $('.w2ui-field-helper input').val();
+                //console.log(item, $('.w2ui-field-helper input').val());
+                if (userIn.length === 0){
+                    return true;
+                } else {
+                    userIn = userIn.toLowerCase();
+                    var par = aUOM[item.id];
+                    var inputInId = item.id.toLowerCase().replace(/[^a-zA-Z0-9]/g, '')
+                        .includes(userIn.replace(/[^a-zA-Z0-9]/g, ''));
+                    var inputInUOM = par.hasOwnProperty('uom') && 
+                        par.uom !== null && 
+                        par.uom.toLowerCase().includes(userIn);
+                    var inputInName = par.hasOwnProperty('name') && 
+                        par.name !== null && 
+                        par.name.toLowerCase().includes(userIn);
+                    if(inputInId || inputInUOM || inputInName){
+                        return true;
+                    } else {
+                        return false;
                     }
                 }
-            }
+                
+              }
+            });
+
+            $('.w2ui-field-helper input').attr('placeholder', 'Type to search');
+
+            $('#inputAnalyticsAddfilter').change(this.handleItemSelected.bind(this));
+
         },
 
         reloadData: function(model, data) {
             // If element already has plot rendering
             if( $(this.el).html()){
-                // Prepare to create list of available parameters
-                var availableParameters = {};
-                var activeParameters = {};
-                globals.products.each(function(prod) {
-                    if(prod.get('download_parameters')){
-                        var par = prod.get('download_parameters');
-                        var newKeys = _.keys(par);
-                        _.each(newKeys, function(key){
-                            availableParameters[key] = par[key];
-                            if(prod.get('visible')){
-                                activeParameters[key] = par[key];
-                            }
-                        });
-                        
-                    }
-                });
-                this.sp.uom_set = availableParameters;
-                this.activeParameters = activeParameters;
+                var idKeys = Object.keys(data);
+                this.currentKeys = idKeys;
+                if(idKeys.length > 0){
+                    $('#nodataavailable').hide();
 
-                // Remove uom of time
-                if(this.sp.uom_set.hasOwnProperty('Timestamp')){
-                    this.sp.uom_set['Timestamp'].uom = null;
+                    var identifiers = [];
+                    for (var key in globals.swarm.satellites) {
+                        if(globals.swarm.satellites[key]){
+                            identifiers.push(key);
+                        }
+                    }
+
+                    this.graph.renderSettings.dataIdentifier = {
+                        parameter: 'id',
+                        identifiers: identifiers
+                    };
+
+                    //this.graph.renderSettings = this.renderSettings[idKeys[0]];
+                    if(data[idKeys[0]].length < 6000){
+                        this.graph.debounceActive = false;
+                    }else{
+                        this.graph.debounceActive = true;
+                    }
+
+
+
+                    if(this.prevParams === null){
+                        // First time loading data we set previous to current data
+                        this.prevParams = idKeys;
+                    }
+
+
+
+                    // If data parameters have changed
+                    if (!_.isEqual(this.prevParams, idKeys)){
+                        // Define which parameters should be selected defaultwise as filtering
+                        var filterstouse = [
+                            'n', 'T_elec', 'Bubble_Probability',
+                            'Relative_STEC_RMS', 'Relative_STEC', 'Absolute_STEC',
+                            'IRC', 'FAC',
+                            'EEF'
+                        ];
+
+                        filterstouse = filterstouse.concat(['MLT']);
+                        var residuals = _.filter(idKeys, function(item) {
+                            return item.indexOf('_res_') !== -1;
+                        });
+                        // If new datasets contains residuals add those instead of normal components
+                        if(residuals.length > 0){
+                            filterstouse = filterstouse.concat(residuals);
+                        }else{
+                            if(filterstouse.indexOf('F') === -1){
+                              filterstouse.push('F');
+                            }
+                            if(filterstouse.indexOf('F_error') === -1){
+                                filterstouse.push('F_error');
+                            }
+                        }
+
+                        for (var i = filterstouse.length - 1; i >= 0; i--) {
+                            if(this.selectedFilterList.indexOf(filterstouse[i]) === -1){
+                                this.selectedFilterList.push(filterstouse[i]);
+                            }
+                        }
+                        var setts = this.graph.filterManager.filterSettings;
+                        setts.visibleFilters = this.selectedFilterList;
+                        this.graph.filterManager.updateFilterSettings(setts);
+                        localStorage.setItem(
+                            'selectedFilterList',
+                            JSON.stringify(this.selectedFilterList)
+                        );
+                        this.renderFilterList();
+                        //localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
+
+                        // Check if we want to change the y-selection
+                        // If previous does not contain key data and new one
+                        // does we add key parameter to selection in plot
+                        var parasToCheck = [
+                            'n', 'F', 'Bubble_Probability', 'Absolute_STEC', 'FAC', 'EEF'
+                        ];
+
+
+                        for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                            if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
+                                this.graph.renderSettings.yAxis.splice(i, 1);
+                                this.graph.renderSettings.colorAxis.splice(i, 1);
+                            }
+                        }
+
+                        // Check if new data parameter has been added and is not
+                        // part of previous parameters
+                        for (var i = 0; i < parasToCheck.length; i++) {
+                            if(idKeys.indexOf(parasToCheck[i]) !== -1 && 
+                                this.prevParams.indexOf(parasToCheck[i])=== -1 ){
+                                // New parameter is available and is not selected in 
+                                // y Axis yet
+                                if(this.graph.renderSettings.yAxis.indexOf(parasToCheck[i]) === -1){
+                                    // If second y axis is free we can use it to render
+                                    // newly added parameter
+
+                                    /*if(this.graph.renderSettings.y2Axis.length === 0){
+                                        // TODO: For now we add it to yAxis, when y2 axis working correctly
+                                        // we will need to add it to y2 axis
+                                        this.graph.renderSettings.y2Axis.push(parasToCheck[i]);
+                                        this.graph.renderSettings.colorAxis.push(null);
+                                    } else {
+                                        // TODO: Decide based on extent where the parameter
+                                        // fits best
+                                    }*/
+                                    this.graph.renderSettings.yAxis.push(parasToCheck[i]);
+                                    this.graph.renderSettings.colorAxis.push(null);
+                                    
+                                }
+                                
+                            }
+                        }
+
+                        localStorage.setItem(
+                            'yAxisSelection', 
+                            JSON.stringify(this.graph.renderSettings.yAxis)
+                        );
+
+                        // Check if x selection still available in new parameters
+                        if(idKeys.indexOf(this.graph.renderSettings.xAxis) === -1){
+                            if(idKeys.indexOf('Latitude') !== -1){
+                                this.graph.renderSettings.xAxis = 'Latitude';
+                            } else if (idKeys.indexOf('latitude') !== -1){
+                                this.graph.renderSettings.xAxis = 'latitude';
+                            }
+                            localStorage.setItem(
+                                'xAxisSelection',
+                                JSON.stringify(this.graph.renderSettings.xAxis))
+                        }
+
+
+                        localStorage.setItem('yAxisSelection', JSON.stringify(this.graph.renderSettings.yAxis));
+                        localStorage.setItem('xAxisSelection', JSON.stringify(this.graph.renderSettings.xAxis));
+                    } else {// End of IF to see if data parameters have changed
+                        for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
+                            // Check if there is some issue with the previously loaded params
+                            if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
+                                this.graph.renderSettings.yAxis.splice(i, 1);
+                                this.graph.renderSettings.colorAxis.splice(i, 1);
+                            }
+                        }
+                        localStorage.setItem(
+                            'yAxisSelection', 
+                            JSON.stringify(this.graph.renderSettings.yAxis)
+                        );
+
+                        // Check if current brushes are valid for current data
+                        for (var fKey in this.graph.filterManager.brushes){
+                            if(idKeys.indexOf(fKey) === -1){
+                                delete this.graph.filterManager.brushes[fKey];
+                            }
+                        }
+
+                        for(var filKey in this.graph.filters){
+                            if(idKeys.indexOf(filKey) === -1){
+                                delete this.graph.filters[fKey];
+                            }
+                        }
+
+                    }
+
+
+                    this.prevParams = idKeys;
+                    localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
+
+                    this.$('#filterSelectDrop').remove();
+                    this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
+                    
+
+
+
+                    
+
+
+
+
+                    this.graph.loadData(data);
+                    this.filterManager.loadData(data);
+                    this.renderFilterList();
                 }
 
-                // Special cases for separeted vectors
-                this.separateVector('B_error', 'B_error', ['X', 'Y', 'Z'], ',');
-                this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
-                this.separateVector('B', 'B_NEC', ['N', 'E', 'C'], '_');
-                this.separateVector('v_SC', 'v_SC', ['N', 'E', 'C'], '_');
-                this.separateVector('B_VFM', 'B_VFM', ['X', 'Y', 'Z'], ',');
-                this.separateVector('B', 'B_NEC_resAC',
-                    ['resAC_N', 'resAC_E', 'resAC_C'], '_'
-                );
-                this.separateVector('B', 'B_NEC_res_SIFM',
-                    ['N_res_SIFM', 'E_res_SIFM', 'C_res_SIFM'], '_'
-                );
-                this.separateVector('B', 'B_NEC_res_CHAOS-6-Combined',
-                    ['N_res_CHAOS-6-Combined',
-                    'E_res_CHAOS-6-Combined',
-                    'C_res_CHAOS-6-Combined'], '_'
-                );
-                this.separateVector('B', 'B_NEC_res_Custom_Model',
-                    ['N_res_Custom_Model',
-                    'E_res_Custom_Model',
-                    'C_res_Custom_Model'], '_'
-                );
-                this.sp.uom_set['MLT'] = {uom: null, name:'Magnetic Local Time'};
-                this.sp.uom_set['QDLat'] = {uom: 'deg', name:'Quasi-Dipole Latitude'};
-                this.sp.uom_set['QDLon'] = {uom: 'deg', name:'Quasi-Dipole Longitude'};
-                this.sp.uom_set['Dst'] = {uom: null, name:'Disturbance storm time Index'};
-                this.sp.uom_set['Kp'] = {uom: null, name:'Global geomagnetic storm Index'};
 
-                globals.swarm.set('uom_set', this.activeParameters);
-
-                $('#tmp_download_button').unbind( 'click' );
+                /*$('#tmp_download_button').unbind( 'click' );
                 $('#tmp_download_button').remove();
 
                 if(data.length > 0){
@@ -369,7 +886,7 @@ define(['backbone.marionette',
                     $('#scatterdiv').empty();
                     $('#parallelsdiv').empty();
                     $('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
-                }
+                }*/
             }
         },
 

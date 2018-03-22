@@ -18,7 +18,6 @@ text.nvd3.nv-noData {
 .analytics {
     width: 100%;
     height: 100%;
-    padding-top: 50px;
     padding-left: 5px;
     padding-bottom: 8.9em;
     padding-right: 0px;
@@ -26,17 +25,23 @@ text.nvd3.nv-noData {
     background-color: white;
 }
 
+#graph {
+    height: 65%;
+    position: absolute;
+}
+
+.filterContainer{
+    padding-top: 0px!important;
+}
+
+.editButton{
+    box-sizing: content-box!important;
+}
+
 .analytics .gui {
     top:220px;
 }
 
-//nvd3 needs this
-.analytics svg{
-    /* Trying to get SVG to act like a greedy block in all browsers */
-    display: block;
-    width:100%;
-    height:100%;
-}
 
 .analytics .disabled{
     display: inline;
@@ -181,4 +186,89 @@ text.nvd3.nv-noData {
 
 .SumoSelect p{
     width: 160px!important;
+}
+
+.axisOption label{
+    font-weight: normal!important; 
+}
+
+#saveRendering{
+    margin-top: 7px;
+    position: absolute;
+    padding: 2px 7px 1px 7px;
+    font-size: 20px;
+    z-index: 20;
+}
+
+#filterSelectDrop{
+    position: absolute;
+    margin-top: -40px;
+    margin-left: 20px;
+    top: 0px;
+}
+
+#filterDivContainer{
+    position: absolute;
+    margin-top: 30px;
+    width: 100%;
+    padding-right: 10px;
+}
+
+
+#analyticsFilters {
+    max-height: 255px;
+    overflow-y: scroll;
+    overflow-x: none;
+}
+
+
+.w2ui-field-helper input {
+    padding-left: 10px!important;
+    margin-top: 3px!important;
+}
+
+.parameterClose.cross.filterClose{
+    position: absolute;
+    top: 14px!important;
+    right: 3px!important;
+    z-index: 20;
+}
+
+
+#resetFilters{
+    float: left;
+}
+
+#minimizeFilters{
+    position: absolute;
+    //margin-left: 50%;
+    //float: right;
+    right: 60px;
+    font-size: 2em;
+    top: 0px;
+    cursor: pointer;
+    margin-top: -40px;
+}
+
+#analyticsAddFilter {
+     margin-left: -270px;
+}
+
+#inputAnalyticsAddfilter {
+    margin-left: 95px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+#ySettings, #y2Settings, #xSettings{
+    box-sizing: content-box!important;
+}
+
+#nodataavailable{
+    width: 100%;
+    top: 40%;
+    position: absolute;
+    font-size: 1.9em;
+    color: #444;
+    text-align: center;
 }

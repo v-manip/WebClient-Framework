@@ -3204,6 +3204,11 @@
             "template": "LayerControl"
         }, 
         {
+            "name": "Download",
+            "icon": "fa-download",
+            "eventToRaise": "dialog:open:download:filter"
+        }, 
+        {
             "name": "Views",
             "icon": "fa-eye",
             "subitems": [{

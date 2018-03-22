@@ -350,7 +350,7 @@ module.exports = function (grunt) {
                         'bower_components/nvd3/nv.d3.min.js',
                         'bower_components/d3.TimeSlider/d3.timeslider.min.js',
                         'bower_components/libcoverage/libcoverage.min.js',
-                        'bower_components/FileSaver.js/FileSaver.min.js',
+                        'bower_components/FileSaver.js/FileSaver.js',
                         'bower_components/canvas-toBlob.js/canvas-toBlob.js',
                         'bower_components/Blob.js/Blob.js',
                         'bower_components/backbone.marionette/lib/core/amd/backbone.marionette.min.js',
@@ -375,6 +375,8 @@ module.exports = function (grunt) {
                         'bower_components/w2ui/dist/w2ui-fields.min.js',
                         'bower_components/w2ui/src/w2popup.js',
                         'bower_components/w2ui/src/w2utils.js',
+                        'bower_components/msgpack-lite/dist/msgpack.min.js',
+                        'bower_components/graphly/dist/graphly.min.js',
                         'scripts/vendor/**',
                     ]
                 },{
