@@ -449,7 +449,7 @@ define(['backbone.marionette',
             }
         },
 
-        changeFilterDisplayStatus(){
+        changeFilterDisplayStatus: function changeFilterDisplayStatus(){
             var that = this;
             var height = '100%';
             var opacity = 0.0;
@@ -477,7 +477,7 @@ define(['backbone.marionette',
                 that.graph.resize();
         },
 
-        renderFilterList: function() {
+        renderFilterList: function renderFilterList() {
 
             var that = this;
             this.$el.find("#filterSelectDrop").empty();
