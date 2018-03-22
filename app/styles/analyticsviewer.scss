@@ -264,3 +264,11 @@ text.nvd3.nv-noData {
     box-sizing: content-box!important;
 }
 
+#nodataavailable{
+    width: 100%;
+    top: 40%;
+    position: absolute;
+    font-size: 1.9em;
+    color: #444;
+    text-align: center;
+}
