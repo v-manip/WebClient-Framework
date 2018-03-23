@@ -198,101 +198,16 @@ define(['backbone.marionette',
                 );
             });
 
-
-            /*var args = {
-                scatterEl: '#scatterdiv',
-                histoEl: '#parallelsdiv',
-                selection_x: 'Latitude',
-                selection_y: ['F'],
-                margin: {top: 10, right: 67, bottom: 10, left: 60},
-                histoMargin: {top: 55, right: 70, bottom: 25, left: 100},
-                shorten_width: 125,
-                toIgnoreHistogram: ['Latitude', 'Longitude', 'Radius'],
-                fieldsforfiltering: ['F','B_N', 'B_E', 'B_C', 'Dst', 'QDLat','MLT'],
-                single_color: true,
-                file_save_string: 'VirES_Services_plot_rendering'
-            };
-
-            args.filterListChanged = function(param){
-              localStorage.setItem('selectedFilterList', JSON.stringify(param));
-            };
-            args.xAxisSelectionChanged = function(param){
-              localStorage.setItem('xAxisSelection', JSON.stringify(param));
-            };
-            args.yAxisSelectionChanged = function(param){
-              localStorage.setItem('xAxisSelection', JSON.stringify(param));
-            };
-            args.filtersViewChanged = function(param){
-              localStorage.setItem('filterViewHidden', JSON.stringify(param));
-            };
-            args.gridSettingChanged = function(param){
-              localStorage.setItem('gridVisible', JSON.stringify(param));
-            };
-
-            if(localStorage.getItem('filterViewHidden') !== null){
-                args.filters_hidden = JSON.parse(
-                    localStorage.getItem('filterViewHidden')
-                );
-                if(args.filters_hidden){
-                    $('#scatterdiv').css('height', '95%');
-                    $('#parallelsdiv').css('height', '40px');
+            this.graph.on('pointSelect', (values)=>{
+                if (values !== null){
+                    Communicator.mediator.trigger(
+                        'cesium:highlight:point',
+                        [values.Latitude, values.Longitude, values.Radius]
+                    );
+                }else{
+                    Communicator.mediator.trigger('cesium:highlight:removeAll');
                 }
-            }
-            if(localStorage.getItem('gridVisible') !== null){
-                args.grid = JSON.parse(localStorage.getItem('gridVisible'));
-            }
-
-            var filterList = localStorage.getItem('selectedFilterList');
-            if(filterList !== null){
-                filterList = JSON.parse(filterList);
-                args.fieldsforfiltering = filterList;
-            }
-            if(localStorage.getItem('prevParams') !== null){
-                this.prevParams = JSON.parse(
-                    localStorage.getItem('prevParams')
-                );
-            }*/
-
-            /*if (this.sp === undefined){
-                this.sp = new scatterPlot(
-                    args, function(){},
-                    function (values) {
-                        if (values !== null){
-                            Communicator.mediator.trigger(
-                                'cesium:highlight:point',
-                                [values.Latitude, values.Longitude, values.Radius]
-                            );
-                        }else{
-                            Communicator.mediator.trigger('cesium:highlight:removeAll');
-                        }
-                    }, 
-                    function(filter){
-                        Communicator.mediator.trigger('analytics:set:filter', filter);
-                    }
-                );
-
-                 // If filters from previous session load them
-                if(localStorage.getItem('filterSelection') !== null){
-                    var filters = JSON.parse(localStorage.getItem('filterSelection'));
-                    Communicator.mediator.trigger('analytics:set:filter', filters);
-                    _.map(filters, function(value, key){
-                        that.sp.active_brushes.push(key);
-                        that.sp.brush_extents[key] = value;
-                    });
-                }
-
-                // If filters from previous session load them
-                if(localStorage.getItem('xAxisSelection') !== null){
-                    that.sp.sel_x = JSON.parse(localStorage.getItem('xAxisSelection'));
-                }
-                // If filters from previous session load them
-                if(localStorage.getItem('yAxisSelection') !== null){
-                    that.sp.sel_y = JSON.parse(localStorage.getItem('yAxisSelection'));
-                }
-
-            }*/
-
-            //$('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
+            });
 
             this.filterManager.on('filterChange', function(filters){
                 localStorage.setItem('filterSelection', JSON.stringify(this.brushes));
@@ -455,7 +370,7 @@ define(['backbone.marionette',
             var opacity = 0.0;
             var direction = 'up';
             if($('#minimizeFilters').hasClass('minimized')){
-                height = '65%';
+                height = ($('#graph').height() - 270)+'px';
                 opacity = 1.0;
                 direction = 'down';
                 $('#minimizeFilters').attr('class', 'visible');
@@ -750,143 +665,18 @@ define(['backbone.marionette',
                                 delete this.graph.filters[fKey];
                             }
                         }
-
                     }
-
 
                     this.prevParams = idKeys;
                     localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
 
                     this.$('#filterSelectDrop').remove();
                     this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
-                    
-
-
-
-                    
-
-
-
 
                     this.graph.loadData(data);
                     this.filterManager.loadData(data);
                     this.renderFilterList();
                 }
-
-
-                /*$('#tmp_download_button').unbind( 'click' );
-                $('#tmp_download_button').remove();
-
-                if(data.length > 0){
-
-                    // TODO: Hack to handle how analyticsviewer re-renders button, need to update analaytics viewer
-                    d3.select(this.el).append('button')
-                        .attr('type', 'button')
-                        .attr('id', 'tmp_download_button')
-                        .attr('class', 'btn btn-success')
-                        .attr('style', 'position: absolute; right: 55px; top: 7px; z-index: 1000;')
-                        .text('Download');
-
-                    $('#tmp_download_button').click(function(){
-                        Communicator.mediator.trigger('dialog:open:download:filter', true);
-                    });
-
-                    // If data parameters have changed
-                    if (!_.isEqual(this.prevParams, _.keys(data[0]))){
-                        // Define which parameters should be selected defaultwise as filtering
-                        var filterstouse = this.sp.fieldsforfiltering.concat([
-                            'n', 'T_elec', 'Bubble_Probability',
-                            'Relative_STEC_RMS', 'Relative_STEC', 'Absolute_STEC',
-                            'IRC', 'FAC',
-                            'EEF'
-                        ]);
-
-                        filterstouse = filterstouse.concat(['MLT']);
-                        var residuals = _.filter(_.keys(data[0]), function(item) {
-                            return item.indexOf('_res_') !== -1;
-                        });
-                        // If new datasets contains residuals add those instead of normal components
-                        if(residuals.length > 0){
-                            filterstouse = filterstouse.concat(residuals);
-                        }else{
-                            if(filterstouse.indexOf('F') === -1){
-                              filterstouse.push('F');
-                            }
-                            if(filterstouse.indexOf('F_error') === -1){
-                                filterstouse.push('F_error');
-                            }
-                        }
-
-                        this.sp.fieldsforfiltering = filterstouse;
-                        localStorage.setItem('selectedFilterList', JSON.stringify(filterstouse));
-
-                        // Check if we want to change the y-selection
-                        // If previous does not contain key data and new one
-                        // does we add key parameter to selection in plot
-                        var parasToCheck = [
-                            'n', 'F', 'n', 'Absolute_STEC', 'FAC', 'EEF'
-                        ];
-
-                        _.each(parasToCheck, function(p){
-                            this.checkPrevious(
-                                p, this.prevParams.indexOf(p), _.keys(data[0]).indexOf(p)
-                            );
-                        }, this);
-
-                        // If previous does not contain a residual a new one does
-                        // we switch the selection to residual value
-                        var resIndex = residuals.indexOf(
-                            _.find(_.keys(data[0]), function(item) {
-                                return item.indexOf('F_res') !== -1;
-                            })
-                        );
-                        if(resIndex !== -1){
-                            var resPar = residuals[resIndex];
-                            this.checkPrevious(
-                                resPar, this.prevParams.indexOf(resPar),
-                                _.keys(data[0]).indexOf(resPar),
-                                true
-                            );
-                        }
-
-                        localStorage.setItem('yAxisSelection', JSON.stringify(this.sp.sel_y));
-                        localStorage.setItem('xAxisSelection', JSON.stringify(this.sp.sel_x));
-                    } // End of IF to see if data parameters have changed
-
-
-                    this.prevParams = _.keys(data[0]);
-                    localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
-
-                    // Check for special case of only EEF selected
-                    var onlyEEF = true;
-
-                    globals.swarm.filtered_collection.each(function(layer){
-                      if(layer.get('containerproduct')){
-                        if(layer.get('id') !== 'EEF' && layer.get('visible')){
-                          onlyEEF = false;
-                        }
-                      }
-                    });
-
-                    if(this.$('.d3canvas').length === 1){
-                        $('#scatterdiv').empty();
-                        $('#parallelsdiv').empty();
-                        var args = {
-                            selector: this.$('.d3canvas')[0],
-                            parsedData: data
-                        };
-                        if(onlyEEF){
-                            this.sp.toIgnore = ['id','active', 'Radius'];
-                        }else{
-                            this.sp.toIgnore = ['id','active', 'Spacecraft'];
-                        }
-                        this.sp.loadData(args);
-                    }
-                }else{ // Else for if data is greater 0
-                    $('#scatterdiv').empty();
-                    $('#parallelsdiv').empty();
-                    $('#scatterdiv').append('<div id="nodatainfo">No data available for your current selection</div>');
-                }*/
             }
         },
 

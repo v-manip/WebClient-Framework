@@ -26,7 +26,7 @@ text.nvd3.nv-noData {
 }
 
 #graph {
-    height: 65%;
+    height: calc(100% - 255px - 2em);
     position: absolute;
 }
 
