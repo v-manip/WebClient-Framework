@@ -372,12 +372,6 @@
             that.xhr = null;
             Communicator.mediator.trigger("progress:change", false);
 
-            if(e.target.status === 0){
-              // The request was cancelled just stop function here
-              console.log('CANCELLED!!!!!!!');
-              return;
-            }
-
             if(e.target.status !== 200){
               globals.swarm.set({data: {}});
               return;

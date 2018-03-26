@@ -562,6 +562,25 @@ define(['backbone.marionette',
                             }
                         }
 
+                        // Check if configured filters apply to new data
+                        for (var fKey in this.graph.filterManager.brushes){
+                            if(idKeys.indexOf(fKey) === -1){
+                                delete this.graph.filterManager.brushes[fKey];
+                            }
+                        }
+
+                        for(var filKey in this.graph.filterManager.filters){
+                            if(idKeys.indexOf(filKey) === -1){
+                                delete this.graph.filterManager.filters[fKey];
+                            }
+                        }
+
+                        for(var filgraphKey in this.graph.filters){
+                            if(idKeys.indexOf(filgraphKey) === -1){
+                                delete this.graph.filters[fKey];
+                            }
+                        }
+
                         for (var i = filterstouse.length - 1; i >= 0; i--) {
                             if(this.selectedFilterList.indexOf(filterstouse[i]) === -1){
                                 this.selectedFilterList.push(filterstouse[i]);
@@ -569,6 +588,8 @@ define(['backbone.marionette',
                         }
                         var setts = this.graph.filterManager.filterSettings;
                         setts.visibleFilters = this.selectedFilterList;
+
+
                         this.graph.filterManager.updateFilterSettings(setts);
                         localStorage.setItem(
                             'selectedFilterList',
@@ -640,7 +661,9 @@ define(['backbone.marionette',
 
                         localStorage.setItem('yAxisSelection', JSON.stringify(this.graph.renderSettings.yAxis));
                         localStorage.setItem('xAxisSelection', JSON.stringify(this.graph.renderSettings.xAxis));
+
                     } else {// End of IF to see if data parameters have changed
+
                         for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
                             // Check if there is some issue with the previously loaded params
                             if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
@@ -653,6 +676,8 @@ define(['backbone.marionette',
                             JSON.stringify(this.graph.renderSettings.yAxis)
                         );
 
+                        // This should only happen here if there has been 
+                        // some issue with the saved filter configuration
                         // Check if current brushes are valid for current data
                         for (var fKey in this.graph.filterManager.brushes){
                             if(idKeys.indexOf(fKey) === -1){
@@ -665,7 +690,9 @@ define(['backbone.marionette',
                                 delete this.graph.filters[fKey];
                             }
                         }
+                        
                     }
+
 
                     this.prevParams = idKeys;
                     localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
