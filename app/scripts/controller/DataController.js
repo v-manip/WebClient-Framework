@@ -33,6 +33,7 @@
         this.listenTo(Communicator.mediator, 'manual:init', this.onManualInit);
 
         this.listenTo(Communicator.mediator, "analytics:set:filter", this.onAnalyticsFilterChanged);
+        this.xhr = null;
        
       },
 
@@ -350,17 +351,32 @@
 
           var req_data = wps_fetchDataTmpl(options);
 
-          var xhr = new XMLHttpRequest();
-          xhr.open('POST', retrieve_data[0].url, true);
-          xhr.responseType = 'arraybuffer';
+          if(this.xhr !== null){
+            // A request has been sent that is not yet been returned so we need to cancel it
+            Communicator.mediator.trigger("progress:change", false);
+            this.xhr.abort();
+            this.xhr = null;
+          }
+
+          this.xhr = new XMLHttpRequest();
+          this.xhr.open('POST', retrieve_data[0].url, true);
+          this.xhr.responseType = 'arraybuffer';
           var that = this;
 
-          xhr.onerror = function(e) {
+          this.xhr.onerror = function(e) {
+            that.xhr = null;
             Communicator.mediator.trigger("progress:change", false);
           }
 
-          xhr.onload = function(e) {
+          this.xhr.onload = function(e) {
+            that.xhr = null;
             Communicator.mediator.trigger("progress:change", false);
+
+            if(e.target.status === 0){
+              // The request was cancelled just stop function here
+              console.log('CANCELLED!!!!!!!');
+              return;
+            }
 
             if(e.target.status !== 200){
               globals.swarm.set({data: {}});
@@ -430,7 +446,7 @@
             globals.swarm.set({data: dat});
           };
           Communicator.mediator.trigger("progress:change", true);
-          xhr.send(req_data);
+          this.xhr.send(req_data);
         }
       },
 
