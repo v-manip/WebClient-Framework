@@ -173,7 +173,7 @@ define(['backbone.marionette',
                 );
             });
 
-            this.graph.on('pointSelect', (values)=>{
+            this.graph.on('pointSelect', function(values){
                 if (values !== null){
                     Communicator.mediator.trigger(
                         'cesium:highlight:point',
