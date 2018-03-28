@@ -45,7 +45,11 @@ define(['backbone.marionette',
 
             $('#saveRendering').off();
             $('#saveRendering').remove();
-            this.$el.append('<div type="button" class="btn btn-success darkbutton" id="saveRendering"><i class="fa fa-floppy-o" aria-hidden="true"></i></div>');
+            this.$el.append('<div type="button" class="btn btn-success darkbutton" id="saveRendering" title="Save as image"><i class="fa fa-floppy-o" aria-hidden="true"></i></div>');
+
+            $('#resetZoom').off();
+            $('#resetZoom').remove();
+            this.$el.append('<div type="button" class="btn btn-success darkbutton" id="resetZoom" title="Reset graph zoom"><i class="fa fa-refresh" aria-hidden="true"></i></div>');
 
            if (typeof this.graph === 'undefined') {
                 this.$el.append('<div class="d3canvas"></div>');
@@ -63,61 +67,14 @@ define(['backbone.marionette',
                 that.graph.saveImage();
             });
 
+            $('#resetZoom').click(function(){
+                that.graph.initAxis();
+                that.graph.renderData();
+            });
+
 
             this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
-            //$('#filterSelectDrop').append('<select id="filterSelect" multiple></select>');
-
-            //$('#filterSelect').SumoSelect({ okCancelInMulti: true });
-
-            /*var y_select = d3.select(this.scatterEl)
-                .insert("div")
-                .attr("id", "yselectiondropdown")
-                .attr("style", "position: absolute;"+
-                    "margin-left:"+(this.margin.left)+
-                    "px; margin-top:"+(this.margin.top-40)+"px;")
-                .append("select")
-                    .attr("multiple", "multiple");
-
-        y_select.selectAll("option")
-            .data(this.headerNames)
-            .enter()
-            .append("option")
-            .text(function (d) { 
-                if(self.sel_y.indexOf(d) != -1)
-                    d3.select(this).attr("selected","selected");
-
-                // Renaming of keys introducing subscript
-                var newkey = "";
-                var parts = d.split("_");
-                if (parts.length>1){
-                    newkey = parts[0];
-                    for (var i=1; i<parts.length; i++){
-                        newkey+=(" "+parts[i]).sub();
-                    }
-                }else{
-                    newkey = d;
-                }
-
-                d3.select(this).attr("value", d)
-                return newkey; 
-            });
-
-        $(y_select).SumoSelect({ okCancelInMulti: true });*/
-
-
-        /*$(".SumoSelect").change(function(evt){
-            var objs = [];
-            $('#yselectiondropdown option:selected').each(function(i) {
-                objs.push($(this).val());
-            });
-
-            self.sel_y = objs;
-            self.yAxisSelectionChanged(self.sel_y);
-            self.render();
-            self.parallelsPlot();
-        
-        });*/
-
+ 
             this.reloadUOM();
 
 
@@ -150,10 +107,35 @@ define(['backbone.marionette',
                 }
             }
 
+            var xax = 'Latitude';
+            var yax = ['F'];
+            var y2ax = null;
+            var colax = [null];
+
+            if(localStorage.getItem('xAxisSelection') !== null){
+                xax =JSON.parse(localStorage.getItem('xAxisSelection'));
+            }
+
+            if(localStorage.getItem('yAxisSelection') !== null){
+                yax = JSON.parse(localStorage.getItem('yAxisSelection'));
+                colax = [];
+                for (var i = yax.length - 1; i >= 0; i--) {
+                    colax.push(null);
+                }
+            }
+
+            if(localStorage.getItem('y2AxisSelection') !== null){
+                y2ax = JSON.parse(localStorage.getItem('y2AxisSelection'));
+                for (var i = y2ax.length - 1; i >= 0; i--) {
+                    colax.push(null);
+                }
+            }
+
             this.renderSettings = {
-                xAxis:  'Latitude',
-                yAxis: ['F'],
-                colorAxis: [null],
+                xAxis:  xax,
+                yAxis: yax,
+                y2Axis: y2ax,
+                colorAxis: colax,
                 dataIdentifier: {
                     parameter: 'id',
                     identifiers: identifiers
@@ -175,17 +157,6 @@ define(['backbone.marionette',
                 this.filterManager.filters = globals.swarm.get('filters');
             }
 
-            if(localStorage.getItem('xAxisSelection') !== null){
-                this.graph.renderSettings.xAxis =JSON.parse(localStorage.getItem('xAxisSelection'));
-            }
-            if(localStorage.getItem('yAxisSelection') !== null){
-                this.graph.renderSettings.yAxis = JSON.parse(localStorage.getItem('yAxisSelection'));
-                var nllArray = [];
-                for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
-                    nllArray.push(null);
-                }
-                this.graph.renderSettings.colorAxis = nllArray;
-            }
 
             this.graph.on('axisChange', function(){
                 localStorage.setItem(
@@ -195,6 +166,10 @@ define(['backbone.marionette',
                 localStorage.setItem(
                     'yAxisSelection',
                     JSON.stringify(this.renderSettings.yAxis)
+                );
+                localStorage.setItem(
+                    'y2AxisSelection',
+                    JSON.stringify(this.renderSettings.y2Axis)
                 );
             });
 
@@ -404,6 +379,7 @@ define(['backbone.marionette',
                 that.graph.filterManager.resetManager();
             });
 
+
             $('#minimizeFilters').off();
             $('#minimizeFilters').remove();
             $('#filterDivContainer').append(
@@ -534,6 +510,7 @@ define(['backbone.marionette',
                         this.prevParams = idKeys;
                     }
 
+                    var needsResize = false;
 
 
                     // If data parameters have changed
@@ -605,11 +582,22 @@ define(['backbone.marionette',
                             'n', 'F', 'Bubble_Probability', 'Absolute_STEC', 'FAC', 'EEF'
                         ];
 
-
+                        // Check if y axis parameters are still available
                         for (var i = this.graph.renderSettings.yAxis.length - 1; i >= 0; i--) {
                             if(idKeys.indexOf(this.graph.renderSettings.yAxis[i]) === -1){
                                 this.graph.renderSettings.yAxis.splice(i, 1);
                                 this.graph.renderSettings.colorAxis.splice(i, 1);
+                            }
+                        }
+
+                        for (var i = this.graph.renderSettings.y2Axis.length - 1; i >= 0; i--) {
+                            if(idKeys.indexOf(this.graph.renderSettings.y2Axis[i]) === -1){
+                                this.graph.renderSettings.y2Axis.splice(i, 1);
+                                var colIdx = i+this.graph.renderSettings.yAxis.length;
+                                this.graph.renderSettings.colorAxis.splice(colIdx, 1);
+                            }
+                            if(this.graph.renderSettings.y2Axis.length === 0){
+                                needsResize = true;
                             }
                         }
 
@@ -624,27 +612,22 @@ define(['backbone.marionette',
                                     // If second y axis is free we can use it to render
                                     // newly added parameter
 
-                                    /*if(this.graph.renderSettings.y2Axis.length === 0){
+                                    if(this.graph.renderSettings.y2Axis.length === 0){
                                         // TODO: For now we add it to yAxis, when y2 axis working correctly
                                         // we will need to add it to y2 axis
                                         this.graph.renderSettings.y2Axis.push(parasToCheck[i]);
                                         this.graph.renderSettings.colorAxis.push(null);
+                                        needsResize = true;
                                     } else {
                                         // TODO: Decide based on extent where the parameter
-                                        // fits best
-                                    }*/
-                                    this.graph.renderSettings.yAxis.push(parasToCheck[i]);
-                                    this.graph.renderSettings.colorAxis.push(null);
-                                    
+                                        // fits best, right now we just add it to the first y axis
+                                        this.graph.renderSettings.yAxis.push(parasToCheck[i]);
+                                        this.graph.renderSettings.colorAxis.push(null);
+                                    }
                                 }
                                 
                             }
                         }
-
-                        localStorage.setItem(
-                            'yAxisSelection', 
-                            JSON.stringify(this.graph.renderSettings.yAxis)
-                        );
 
                         // Check if x selection still available in new parameters
                         if(idKeys.indexOf(this.graph.renderSettings.xAxis) === -1){
@@ -653,13 +636,11 @@ define(['backbone.marionette',
                             } else if (idKeys.indexOf('latitude') !== -1){
                                 this.graph.renderSettings.xAxis = 'latitude';
                             }
-                            localStorage.setItem(
-                                'xAxisSelection',
-                                JSON.stringify(this.graph.renderSettings.xAxis))
                         }
 
 
                         localStorage.setItem('yAxisSelection', JSON.stringify(this.graph.renderSettings.yAxis));
+                        localStorage.setItem('y2AxisSelection',JSON.stringify(this.graph.renderSettings.y2Axis));
                         localStorage.setItem('xAxisSelection', JSON.stringify(this.graph.renderSettings.xAxis));
 
                     } else {// End of IF to see if data parameters have changed
@@ -671,10 +652,26 @@ define(['backbone.marionette',
                                 this.graph.renderSettings.colorAxis.splice(i, 1);
                             }
                         }
+                        for (var i = this.graph.renderSettings.y2Axis.length - 1; i >= 0; i--) {
+                            if(idKeys.indexOf(this.graph.renderSettings.y2Axis[i]) === -1){
+                                this.graph.renderSettings.y2Axis.splice(i, 1);
+                                var colIdx = i+this.graph.renderSettings.yAxis.length;
+                                this.graph.renderSettings.colorAxis.splice(colIdx, 1);
+                            }
+                            if(this.graph.renderSettings.y2Axis.length === 0){
+                                needsResize = true;
+                            }
+                        }
+                        
+
                         localStorage.setItem(
                             'yAxisSelection', 
                             JSON.stringify(this.graph.renderSettings.yAxis)
-                        ); 
+                        );
+                        localStorage.setItem(
+                            'y2AxisSelection', 
+                            JSON.stringify(this.graph.renderSettings.y2Axis)
+                        );
                     }
 
                     // This should only happen here if there has been 
@@ -693,6 +690,9 @@ define(['backbone.marionette',
                     this.$('#filterDivContainer').append('<div id="filterSelectDrop"></div>');
 
                     this.graph.loadData(data);
+                    if(needsResize){
+                        this.graph.resize();
+                    }
                     this.filterManager.loadData(data);
                     this.renderFilterList();
                 }

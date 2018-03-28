@@ -1,5 +1,5 @@
 @import "defaults";
-@import "nv.d3";
+
 
 .d3canvas {
     background-color: white;
@@ -200,6 +200,15 @@ text.nvd3.nv-noData {
     z-index: 20;
 }
 
+#resetZoom{
+    margin-top: 7px;
+    position: absolute;
+    padding: 2px 7px 1px 7px;
+    font-size: 20px;
+    z-index: 20;
+    margin-left: 38px;
+}
+
 #filterSelectDrop{
     position: absolute;
     margin-top: -40px;
@@ -238,6 +247,7 @@ text.nvd3.nv-noData {
 #resetFilters{
     float: left;
 }
+
 
 #minimizeFilters{
     position: absolute;
