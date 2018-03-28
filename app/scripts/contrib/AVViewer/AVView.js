@@ -134,13 +134,16 @@ define(['backbone.marionette',
             this.renderSettings = {
                 xAxis:  xax,
                 yAxis: yax,
-                y2Axis: y2ax,
                 colorAxis: colax,
                 dataIdentifier: {
                     parameter: 'id',
                     identifiers: identifiers
                 }
             };
+
+            if(y2ax !== null){
+                this.renderSettings.y2Axis = y2ax;
+            }
 
             this.graph = new graphly.graphly({
                 el: '#graph',
