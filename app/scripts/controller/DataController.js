@@ -437,6 +437,28 @@
                 delete dat[key];
               }
             }
+            // This should only happen here if there has been 
+            // some issue with the saved filter configuration
+            // Check if current brushes are valid for current data
+            var idKeys = Object.keys(dat);
+            var filters = globals.swarm.get('filters');
+            var filtersSelec = JSON.parse(localStorage.getItem('filterSelection'));
+            var filtersmodified = false;
+            if(filters){
+              for (var f in filters){
+                if(idKeys.indexOf(f) === -1){
+                    delete filters[f];
+                    delete filtersSelec[f];
+                    filtersmodified = true;
+                }
+              }
+              if(filtersmodified){
+                globals.swarm.set('filters', filters);
+                localStorage.setItem('filterSelection', JSON.stringify(filtersSelec));
+              }
+
+            }
+            
             globals.swarm.set({data: dat});
           };
           Communicator.mediator.trigger("progress:change", true);

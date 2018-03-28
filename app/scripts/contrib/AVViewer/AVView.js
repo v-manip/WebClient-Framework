@@ -674,25 +674,17 @@ define(['backbone.marionette',
                         localStorage.setItem(
                             'yAxisSelection', 
                             JSON.stringify(this.graph.renderSettings.yAxis)
-                        );
-
-                        // This should only happen here if there has been 
-                        // some issue with the saved filter configuration
-                        // Check if current brushes are valid for current data
-                        for (var fKey in this.graph.filterManager.brushes){
-                            if(idKeys.indexOf(fKey) === -1){
-                                delete this.graph.filterManager.brushes[fKey];
-                            }
-                        }
-
-                        for(var filKey in this.graph.filters){
-                            if(idKeys.indexOf(filKey) === -1){
-                                delete this.graph.filters[fKey];
-                            }
-                        }
-                        
+                        ); 
                     }
 
+                    // This should only happen here if there has been 
+                    // some issue with the saved filter configuration
+                    // Check if current brushes are valid for current data
+                    for (var fKey in this.graph.filterManager.brushes){
+                        if(idKeys.indexOf(fKey) === -1){
+                            delete this.graph.filterManager.brushes[fKey];
+                        }
+                    }
 
                     this.prevParams = idKeys;
                     localStorage.setItem('prevParams', JSON.stringify(this.prevParams));
