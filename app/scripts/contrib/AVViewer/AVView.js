@@ -31,7 +31,6 @@ define(['backbone.marionette',
             this.stopListening(Communicator.mediator, 'change:axis:parameters', this.onChangeAxisParameters);
             this.listenTo(Communicator.mediator, 'change:axis:parameters', this.onChangeAxisParameters);
 
-            this.isClosed = false;
             this.selectionList = [];
             this.plotdata = [];
             this.requestUrl = '';
@@ -211,10 +210,20 @@ define(['backbone.marionette',
                 }
             });
 
-            if(swarmdata && swarmdata.length>0){
-                args.parsedData = swarmdata;
-                that.sp.loadData(args);
+            var data = globals.swarm.get('data');
+            if(Object.keys(data).length > 0){
+                this.graph.createHelperObjects();
+                this.graph.loadData(data);
+                this.filterManager.loadData(data);
+                $('#nodataavailable').hide();
+                $('.d3canvas').show();
+                this.renderFilterList();
             }
+
+            this.isClosed = false;
+
+
+
             return this;
         }, //onShow end
 
@@ -361,15 +370,16 @@ define(['backbone.marionette',
                 $('#analyticsFilters').animate({ opacity: opacity  }, 1000);
                 $('#graph').animate({ height: height  }, {
                     step: function( now, fx ) {
-                        that.graph.resize();
+                        //that.graph.resize();
                     },
                     done: function(){
                         $('#minimizeFilters i').attr('class', 
                             'fa fa-chevron-circle-'+direction
                         );
+                        that.graph.resize();
                     }
                 },1000);
-                that.graph.resize();
+                //that.graph.resize();
         },
 
         renderFilterList: function renderFilterList() {
@@ -486,8 +496,9 @@ define(['backbone.marionette',
             if( $(this.el).html()){
                 var idKeys = Object.keys(data);
                 this.currentKeys = idKeys;
-                if(idKeys.length > 0){
+                if(idKeys.length >0 && data[idKeys[0]].length > 0){
                     $('#nodataavailable').hide();
+                    $('.d3canvas').show();
 
                     var identifiers = [];
                     for (var key in globals.swarm.satellites) {
@@ -606,6 +617,19 @@ define(['backbone.marionette',
                             }
                         }
 
+                        // Check if all parameters have been removed from 
+                        // the first y axis
+                        if (this.graph.renderSettings.yAxis.length === 0){
+                            // If this is the case check if we can use one 
+                            // parameter from  second y axis
+                            var y2axLen = this.graph.renderSettings.y2Axis.length;
+                            if( y2axLen > 0){
+                                this.graph.renderSettings.yAxis.push(this.graph.renderSettings.y2Axis[y2axLen-1]);
+                                this.graph.renderSettings.y2Axis.splice(y2axLen-1, 1);
+                                needsResize = true;
+                            }
+                        }
+
                         // Check if new data parameter has been added and is not
                         // part of previous parameters
                         for (var i = 0; i < parasToCheck.length; i++) {
@@ -700,6 +724,9 @@ define(['backbone.marionette',
                     }
                     this.filterManager.loadData(data);
                     this.renderFilterList();
+                } else {
+                    $('#nodataavailable').show();
+                    $('.d3canvas').hide();
                 }
             }
         },
@@ -709,7 +736,17 @@ define(['backbone.marionette',
             this.sp.render();
         },
 
+        onResize: function(){
+            //if(typeof this.graph !== 'undefined' && this.isClosed === false){
+                this.graph.resize();
+            //}
+        },
+
         close: function() {
+            if(this.graph){
+                this.graph.destroy();
+            }
+            delete this.graph;
             this.isClosed = true;
             this.$el.empty();
             this.triggerMethod('view:disconnect');
