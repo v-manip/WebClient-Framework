@@ -635,9 +635,14 @@ define(['backbone.marionette',
                         for (var i = 0; i < parasToCheck.length; i++) {
                             if(idKeys.indexOf(parasToCheck[i]) !== -1 && 
                                 this.prevParams.indexOf(parasToCheck[i])=== -1 ){
+                                // New parameter is available and left y axis is empty we add it there
+                                if(this.graph.renderSettings.yAxis.length === 0){
+                                    this.graph.renderSettings.yAxis.push(parasToCheck[i]);
+                                    this.graph.renderSettings.colorAxis.push(null);
+
                                 // New parameter is available and is not selected in 
                                 // y Axis yet
-                                if(this.graph.renderSettings.yAxis.indexOf(parasToCheck[i]) === -1){
+                                } else if(this.graph.renderSettings.yAxis.indexOf(parasToCheck[i]) === -1){
                                     // If second y axis is free we can use it to render
                                     // newly added parameter
 
@@ -654,7 +659,13 @@ define(['backbone.marionette',
                                         this.graph.renderSettings.colorAxis.push(null);
                                     }
                                 }
-                                
+                            }
+                            // If both y axis are empty we add the first item we encounter
+                            if(idKeys.indexOf(parasToCheck[i]) !== -1 && 
+                               this.graph.renderSettings.yAxis.length === 0 &&
+                               this.graph.renderSettings.y2Axis.length === 0){
+                                this.graph.renderSettings.yAxis.push(parasToCheck[i]);
+                                    this.graph.renderSettings.colorAxis.push(null);
                             }
                         }
 
@@ -665,6 +676,27 @@ define(['backbone.marionette',
                             } else if (idKeys.indexOf('latitude') !== -1){
                                 this.graph.renderSettings.xAxis = 'latitude';
                             }
+                        }
+
+                        // Check if residuals was newly added and user is looking at magnetic data
+                        // If he is, we swap total intensity for residual value
+                        if (residuals.length > 0){
+                            // Find total intensity residual key
+                            var totkey = _.filter(idKeys, function(item) {
+                                return item.indexOf('F_res_') !== -1;
+                            });
+                            if(totkey.length === 1){
+                                var index = this.renderSettings.yAxis.indexOf('F');
+                                if(index !== -1){
+                                    this.renderSettings.yAxis[index] = totkey[0];
+                                }
+                                index = this.renderSettings.y2Axis.indexOf('F');
+                                if(index !== -1){
+                                    this.renderSettings.y2Axis[index] = totkey[0];
+                                }
+                                
+                            }
+                            
                         }
 
 
