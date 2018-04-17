@@ -1063,6 +1063,7 @@ define([
                     var linecnt = 0;
 
                     //_.each(results, function(row){
+                    var lastTS = null;
                     for (var r = 0; r < results[refKey].length; r++) {
                         var row = {};
                         for(var k in results){
@@ -1142,6 +1143,17 @@ define([
                                     if(tovisualize[i] === 'Absolute_STEC' ||
                                        tovisualize[i] === 'Relative_STEC' ||
                                        tovisualize[i] === 'Relative_STEC_RMS'){
+                                        if(lastTS === null){
+                                            lastTS = row.Timestamp;
+                                        }
+                                        var diff = row.Timestamp.getTime()-lastTS.getTime();
+                                        if(diff <= 40000 && diff > 0){
+                                            //lastTS = row.Timestamp;
+                                            continue;
+                                        }
+
+                                        lastTS = row.Timestamp;
+
 
                                         color = this.plot.getColor(row[set.band]);
                                         var addLen = 10;
