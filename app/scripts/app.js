@@ -24,7 +24,18 @@ var VECTOR_BREAKDOWN = {
     'B_NEC_res_SIFM': ['B_N_res_SIFM','B_E_res_SIFM','B_C_res_SIFM'],
     'B_NEC_res_IGRF12': ['B_N_res_IGRF12','B_E_res_IGRF12','B_C_res_IGRF12'],
     'B_NEC_res_CHAOS-6-Combined': ['B_N_res_CHAOS-6-Combined','B_E_res_CHAOS-6-Combined','B_C_res_CHAOS-6-Combined'],
-    'B_NEC_res_Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model']
+    'B_NEC_res_Custom_Model': ['B_N_res_Custom_Model','B_E_res_Custom_Model','B_C_res_Custom_Model'],
+    'B_NEC_res_MCO_SHA_2C': ['B_N_res_MCO_SHA_2C','B_E_res_MCO_SHA_2C','B_C_res_MCO_SHA_2C'],
+    'B_NEC_res_MCO_SHA_2D': ['B_N_res_MCO_SHA_2D','B_E_res_MCO_SHA_2D','B_C_res_MCO_SHA_2D'],
+    'B_NEC_res_MCO_SHA_2F': ['B_N_res_MCO_SHA_2F','B_E_res_MCO_SHA_2F','B_C_res_MCO_SHA_2F'],
+    'B_NEC_res_MLI_SHA_2C': ['B_N_res_MLI_SHA_2C','B_E_res_MLI_SHA_2C','B_C_res_MLI_SHA_2C'],
+    'B_NEC_res_MLI_SHA_2D': ['B_N_res_MLI_SHA_2D','B_E_res_MLI_SHA_2D','B_C_res_MLI_SHA_2D'],
+    'B_NEC_res_MMA_SHA_2C-Primary': ['B_N_res_MMA_SHA_2C-Primary','B_E_res_MMA_SHA_2C-Primary','B_C_res_MMA_SHA_2C-Primary'],
+    'B_NEC_res_MMA_SHA_2C-Secondary': ['B_N_res_MMA_SHA_2C-Secondary','B_E_res_MMA_SHA_2C-Secondary','B_C_res_MMA_SHA_2C-Secondary'],
+    'B_NEC_res_MIO_SHA_2C-Primary': ['B_N_res_MIO_SHA_2C-Primary','B_E_res_MIO_SHA_2C-Primary','B_C_res_MIO_SHA_2C-Primary'],
+    'B_NEC_res_MIO_SHA_2C-Secondary': ['B_N_res_MIO_SHA_2C-Secondary','B_E_res_MIO_SHA_2C-Secondary','B_C_res_MIO_SHA_2C-Secondary'],
+    'B_NEC_res_MIO_SHA_2D-Primary': ['B_N_res_MIO_SHA_2D-Primary','B_E_res_MIO_SHA_2D-Primary','B_C_res_MIO_SHA_2D-Primary'],
+    'B_NEC_res_MIO_SHA_2D-Secondary': ['B_N_res_MIO_SHA_2D-Secondary','B_E_res_MIO_SHA_2D-Secondary','B_C_res_MIO_SHA_2D-Secondary'],
 };
 
 // Ordered from highest resolution to lowest with the exception of FAC that 
