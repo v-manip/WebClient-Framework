@@ -2612,6 +2612,418 @@
             "outlines": false,
             "satellite": "Swarm"
         },{
+            "name": "MCO_SHA_2C",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "opacity": 0.7,
+            "tileSize":1024,
+            "validity":{
+                "start": "1900-01-01T00:00:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
+            "views": [{
+                "id": "MCO_SHA_2C_view",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MCO_SHA_2C",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [15000, 55000],
+                    "uom":"nT",
+                    "name": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "diverging_1"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "name": "Down component",
+                    "colorscale": "diverging_1"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "diverging_1"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "diverging_1"
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_res_MCO_SHA_2C": {
+                    "uom":"nT",
+                    "name": "Residuals to MCO_SHA_2C model of Magnetic field vector, NEC frame"
+                },
+                "F_res_MCO_SHA_2C": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to MCO_SHA_2C model"
+                }
+            },
+            "height": 450,
+            "model": true,
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
+
+        },{
+            "name": "MCO_SHA_2D",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "opacity": 0.7,
+            "tileSize":1024,
+            "validity":{
+                "start": "1900-01-01T00:00:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
+            "views": [{
+                "id": "MCO_SHA_2D_view",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MCO_SHA_2D",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [15000, 55000],
+                    "uom":"nT",
+                    "name": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "diverging_1"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "name": "Down component",
+                    "colorscale": "diverging_1"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "diverging_1"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "diverging_1"
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_res_MCO_SHA_2D": {
+                    "uom":"nT",
+                    "name": "Residuals to MCO_SHA_2D model of Magnetic field vector, NEC frame"
+                },
+                "F_res_MCO_SHA_2D": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to MCO_SHA_2D model"
+                }
+            },
+            "height": 450,
+            "model": true,
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
+
+        },{
+            "name": "MIO_SHA_2C-Primary",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "opacity": 0.7,
+            "tileSize":1024,
+            "validity":{
+                "start": "1900-01-01T00:00:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
+            "views": [{
+                "id": "MIO_SHA_2C-Primary_view",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MIO_SHA_2C-Primary",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [15000, 55000],
+                    "uom":"nT",
+                    "name": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "diverging_1"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "name": "Down component",
+                    "colorscale": "diverging_1"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "diverging_1"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "diverging_1"
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_res_MIO_SHA_2C-Primary": {
+                    "uom":"nT",
+                    "name": "Residuals to MIO_SHA_2C-Primary model of Magnetic field vector, NEC frame"
+                },
+                "F_res_MIO_SHA_2C-Primary": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to MIO_SHA_2C-Primary model"
+                }
+            },
+            "height": 450,
+            "model": true,
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
+
+        },{
+            "name": "MIO_SHA_2C-Secondary",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "opacity": 0.7,
+            "tileSize":1024,
+            "validity":{
+                "start": "1900-01-01T00:00:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
+            "views": [{
+                "id": "MIO_SHA_2C-Secondary_view",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MIO_SHA_2C-Secondary",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [15000, 55000],
+                    "uom":"nT",
+                    "name": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [10000, 23000],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "jet"
+                },
+                "Y": {
+                    "range": [-7000, 7000],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "diverging_1"
+                },
+                "Z": {
+                    "range": [-45000, 45000],
+                    "uom":"nT",
+                    "name": "Down component",
+                    "colorscale": "diverging_1"
+                },
+                "I": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "diverging_1"
+                },
+                "D": {
+                    "range": [-80, 80],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "diverging_1"
+                },
+                "X_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Y_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Z_EW": {
+                    "range": [-5, 5],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_res_MIO_SHA_2C-Secondary": {
+                    "uom":"nT",
+                    "name": "Residuals to MIO_SHA_2C-Secondary model of Magnetic field vector, NEC frame"
+                },
+                "F_res_MIO_SHA_2C-Secondary": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to MIO_SHA_2C-Secondary model"
+                }
+            },
+            "height": 450,
+            "model": true,
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
+
+        },{
             "name": "SIFM",
             "visible": false,
             "timeSlider": true,
