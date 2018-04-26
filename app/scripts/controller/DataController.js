@@ -283,7 +283,19 @@
             "IRC", "IRC_Error", "FAC", "FAC_Error",
             "EEF", "RelErr", "OrbitNumber",
             "SunDeclination","SunRightAscension","SunHourAngle","SunAzimuthAngle","SunZenithAngle",
-            "F10_INDEX"
+            "F10_INDEX",
+            // New models
+            "F_res_MCO_SHA_2C", "B_NEC_res_MCO_SHA_2C",
+            "F_res_MCO_SHA_2D", "B_NEC_res_MCO_SHA_2D",
+            "F_res_MCO_SHA_2F", "B_NEC_res_MCO_SHA_2F",
+            "F_res_MLI_SHA_2C", "B_NEC_res_MLI_SHA_2C",
+            "F_res_MLI_SHA_2D", "B_NEC_res_MLI_SHA_2D",
+            "F_res_MMA_SHA_2C-Primary", "B_NEC_res_MMA_SHA_2C-Primary",
+            "F_res_MMA_SHA_2C-Secondary", "B_NEC_res_MMA_SHA_2C-Secondary",
+            "F_res_MIO_SHA_2C-Primary", "B_NEC_res_MIO_SHA_2C-Primary",
+            "F_res_MIO_SHA_2C-Secondary", "B_NEC_res_MIO_SHA_2C-Secondary",
+            "F_res_MIO_SHA_2D-Primary", "B_NEC_res_MIO_SHA_2D-Primary",
+            "F_res_MIO_SHA_2D-Secondary", "B_NEC_res_MIO_SHA_2D-Secondary"
           ];
 
           // See if magnetic data actually selected if not remove residuals
