@@ -359,7 +359,7 @@ define(['backbone.marionette',
             var opacity = 0.0;
             var direction = 'up';
             if($('#minimizeFilters').hasClass('minimized')){
-                height = ($('#graph').height() - 270)+'px';
+                height = ($('#graph').height() - 280)+'px';
                 opacity = 1.0;
                 direction = 'down';
                 $('#minimizeFilters').attr('class', 'visible');
