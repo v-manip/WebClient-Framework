@@ -355,7 +355,7 @@ define(['backbone.marionette',
 
         changeFilterDisplayStatus: function changeFilterDisplayStatus(){
             var that = this;
-            var height = '100%';
+            var height = '99%';
             var opacity = 0.0;
             var direction = 'up';
             if($('#minimizeFilters').hasClass('minimized')){
@@ -420,7 +420,7 @@ define(['backbone.marionette',
 
             // Show only filters for currently available data
             for (var key in aUOM) {
-              if(this.currentKeys.indexOf(key) === -1){
+              if(this.currentKeys && this.currentKeys.indexOf(key) === -1){
                 delete aUOM[key];
               }
             }
