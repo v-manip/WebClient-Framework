@@ -2645,55 +2645,55 @@
                     "selected": true
                 },
                 "H": {
-                    "range": [10000, 23000],
+                    "range": [0, 35000],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [10000, 23000],
+                    "range": [-15000, 35000],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
-                    "range": [-7000, 7000],
+                    "range": [-14000, 14000],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-45000, 45000],
+                    "range": [-60000, 50000],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
                 },
                 "I": {
-                    "range": [-80, 80],
+                    "range": [-100, 100],
                     "uom":"degree",
                     "name": "Inclination",
                     "colorscale": "diverging_1"
                 },
                 "D": {
-                    "range": [-80, 80],
+                    "range": [-200, 200],
                     "uom":"degree",
                     "name": "Declination",
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-5, 5],
+                    "range": [-30, 30],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-5, 5],
+                    "range": [-30, 30],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-5, 5],
+                    "range": [-7, 6],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -2748,55 +2748,55 @@
                     "selected": true
                 },
                 "H": {
-                    "range": [10000, 23000],
+                    "range": [0, 35000],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [10000, 23000],
+                    "range": [-15000, 35000],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
-                    "range": [-7000, 7000],
+                    "range": [-14000, 14000],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-45000, 45000],
+                    "range": [-60000, 50000],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
                 },
                 "I": {
-                    "range": [-80, 80],
+                    "range": [-100, 100],
                     "uom":"degree",
                     "name": "Inclination",
                     "colorscale": "diverging_1"
                 },
                 "D": {
-                    "range": [-80, 80],
+                    "range": [-200, 200],
                     "uom":"degree",
                     "name": "Declination",
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-5, 5],
+                    "range": [-30, 30],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-5, 5],
+                    "range": [-30, 30],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-5, 5],
+                    "range": [-7, 6],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -2851,55 +2851,55 @@
                     "selected": true
                 },
                 "H": {
-                    "range": [10000, 23000],
+                    "range": [0, 35000],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [10000, 23000],
+                    "range": [-15000, 35000],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
-                    "range": [-7000, 7000],
+                    "range": [-14000, 14000],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-45000, 45000],
+                    "range": [-60000, 50000],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
                 },
                 "I": {
-                    "range": [-80, 80],
+                    "range": [-100, 100],
                     "uom":"degree",
                     "name": "Inclination",
                     "colorscale": "diverging_1"
                 },
                 "D": {
-                    "range": [-80, 80],
+                    "range": [-200, 200],
                     "uom":"degree",
                     "name": "Declination",
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-5, 5],
+                    "range": [-30, 30],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-5, 5],
+                    "range": [-30, 30],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-5, 5],
+                    "range": [-7, 6],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -2947,62 +2947,62 @@
             },
             "parameters": {
                 "F": {
-                    "range": [15000, 55000],
+                    "range": [0, 14],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
-                    "range": [10000, 23000],
+                    "range": [0, 11],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [10000, 23000],
+                    "range": [-8, 8],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
-                    "range": [-7000, 7000],
+                    "range": [-8, 10],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-45000, 45000],
+                    "range": [-10, 12],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
                 },
                 "I": {
-                    "range": [-80, 80],
+                    "range": [-100, 100],
                     "uom":"degree",
                     "name": "Inclination",
                     "colorscale": "diverging_1"
                 },
                 "D": {
-                    "range": [-80, 80],
+                    "range": [-200, 200],
                     "uom":"degree",
                     "name": "Declination",
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-5, 5],
+                    "range": [-0.025, 0.015],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-5, 5],
+                    "range": [-0.03, 0.025],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-5, 5],
+                    "range": [-0.04, 0.04],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -3050,62 +3050,62 @@
             },
             "parameters": {
                 "F": {
-                    "range": [15000, 55000],
+                    "range": [0, 14],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
-                    "range": [10000, 23000],
+                    "range": [0, 11],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [10000, 23000],
+                    "range": [-8, 8],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "jet"
                 },
                 "Y": {
-                    "range": [-7000, 7000],
+                    "range": [-8, 10],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-45000, 45000],
+                    "range": [-10, 12],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
                 },
                 "I": {
-                    "range": [-80, 80],
+                    "range": [-100, 100],
                     "uom":"degree",
                     "name": "Inclination",
                     "colorscale": "diverging_1"
                 },
                 "D": {
-                    "range": [-80, 80],
+                    "range": [-200, 200],
                     "uom":"degree",
                     "name": "Declination",
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-5, 5],
+                    "range": [-0.025, 0.015],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-5, 5],
+                    "range": [-0.03, 0.025],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-5, 5],
+                    "range": [-0.04, 0.04],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -3153,32 +3153,32 @@
             },
             "parameters": {
                 "F": {
-                    "range": [0, 80],
+                    "range": [0, 28],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
-                    "range": [0, 60],
+                    "range": [0, 22],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [-50, 30],
+                    "range": [-25, 25],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "diverging_1"
                 },
                 "Y": {
-                    "range": [-30, 50],
+                    "range": [-20, 15],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-80, 50],
+                    "range": [-30, 20],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
@@ -3196,19 +3196,19 @@
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-0.1, 0.1],
+                    "range": [-0.04, 0.05],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-0.1, 0.1],
+                    "range": [-0.03, 0.06],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-0.1, 0.1],
+                    "range": [-0.04, 0.02],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -3256,32 +3256,32 @@
             },
             "parameters": {
                 "F": {
-                    "range": [0, 7],
+                    "range": [0, 12],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
-                    "range": [0, 4.5],
+                    "range": [0, 7],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [-4, 5],
+                    "range": [-6, 7],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "diverging_1"
                 },
                 "Y": {
-                    "range": [-3, 3],
+                    "range": [-5, 6],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-7, 6],
+                    "range": [-10, 12],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
@@ -3299,19 +3299,19 @@
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-0.004, 0.004],
+                    "range": [-0.01, 0.012],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-0.005, 0.003],
+                    "range": [-0.014, 0.01],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-0.0025, 0.002],
+                    "range": [-0.008, 0.005],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -3359,32 +3359,32 @@
             },
             "parameters": {
                 "F": {
-                    "range": [0, 80],
+                    "range": [0, 28],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
-                    "range": [0, 60],
+                    "range": [0, 22],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [-50, 30],
+                    "range": [-25, 25],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "diverging_1"
                 },
                 "Y": {
-                    "range": [-30, 50],
+                    "range": [-20, 15],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-80, 50],
+                    "range": [-30, 20],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
@@ -3402,19 +3402,19 @@
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-0.1, 0.1],
+                    "range": [-0.04, 0.05],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-0.1, 0.1],
+                    "range": [-0.03, 0.06],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-0.1, 0.1],
+                    "range": [-0.04, 0.02],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
@@ -3462,32 +3462,32 @@
             },
             "parameters": {
                 "F": {
-                    "range": [0, 7],
+                    "range": [0, 16],
                     "uom":"nT",
                     "name": "Total field intensity",
                     "colorscale": "jet",
                     "selected": true
                 },
                 "H": {
-                    "range": [0, 4.5],
+                    "range": [0, 9],
                     "uom":"nT",
                     "name": "Horizontal intensity",
                     "colorscale": "jet"
                 },
                 "X": {
-                    "range": [-4, 5],
+                    "range": [-6, 8],
                     "uom":"nT",
                     "name": "North component",
                     "colorscale": "diverging_1"
                 },
                 "Y": {
-                    "range": [-3, 3],
+                    "range": [-5, 6],
                     "uom":"nT",
                     "name": "East component",
                     "colorscale": "diverging_1"
                 },
                 "Z": {
-                    "range": [-7, 6],
+                    "range": [-10, 12],
                     "uom":"nT",
                     "name": "Down component",
                     "colorscale": "diverging_1"
@@ -3505,19 +3505,19 @@
                     "colorscale": "diverging_1"
                 },
                 "X_EW": {
-                    "range": [-0.004, 0.004],
+                    "range": [-0.01, 0.012],
                     "uom":"nT/km",
                     "name": "North component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Y_EW": {
-                    "range": [-0.005, 0.003],
+                    "range": [-0.014, 0.01],
                     "uom":"nT/km",
                     "name": "East component (East-West Gradient)",
                     "colorscale": "diverging_1"
                 },
                 "Z_EW": {
-                    "range": [-0.0025, 0.002],
+                    "range": [-0.008, 0.005],
                     "uom":"nT/km",
                     "name": "Down component (East-West Gradient)",
                     "colorscale": "diverging_1"
