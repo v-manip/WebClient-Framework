@@ -149,7 +149,10 @@ define(['backbone.marionette',
                 dataSettings: globals.swarm.get('uom_set'),
                 renderSettings: this.renderSettings,
                 filterManager: this.filterManager,
-                enableFit: false
+                enableFit: false,
+                displayColorscaleOptions: false,
+                displayAlphaOptions: false
+
             });
 
             if(localStorage.getItem('filterSelection') !== null){
