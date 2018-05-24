@@ -262,16 +262,16 @@ text.nvd3.nv-noData {
     margin-top: -40px;
 }
 
-#analyticsAddFilter {
-     float: left;
-}
 
-#filterSelectDrop .w2ui-field{
-    float: right;
-}
+
+
 
 #filterSelectDrop .w2ui-field-helper{
     margin-right: 35px;
+}
+
+#filterSelectDrop > .w2ui-field{
+    display: inline;
 }
 
 #inputAnalyticsAddfilter {

@@ -438,7 +438,7 @@ define(['backbone.marionette',
             if(aUOM.hasOwnProperty('id')){delete aUOM.id;}
 
             $('#filterSelectDrop').prepend(
-              '<div class="w2ui-field"> <input type="list" id="inputAnalyticsAddfilter"> <button id="analyticsAddFilter" type="button" class="btn btn-success darkbutton dropdown-toggle">Add filter <span class="caret"></span></button> </div>'
+              '<div class="w2ui-field"> <button id="analyticsAddFilter" type="button" class="btn btn-success darkbutton dropdown-toggle">Add filter <span class="caret"></span></button> <input type="list" id="inputAnalyticsAddfilter"></div>'
             );
 
             $( "#analyticsAddFilter" ).click(function(){
