@@ -216,7 +216,6 @@ define(['backbone.marionette',
             var data = globals.swarm.get('data');
             if(Object.keys(data).length > 0){
                 this.graph.loadData(data);
-                this.graph.createHelperObjects();
                 this.filterManager.loadData(data);
                 $('#nodataavailable').hide();
                 $('.d3canvas').show();
