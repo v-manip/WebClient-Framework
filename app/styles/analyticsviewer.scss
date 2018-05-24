@@ -130,8 +130,12 @@ text.nvd3.nv-noData {
 }
 
 .w2ui-overlay {
-//position: relative!important;
     min-width: 565px!important;
+    margin-left: -81px!important;
+}
+
+#filterSelectDrop .w2ui-field{
+    margin-left: 5px;
 }
 
 .parallels .tick text{
@@ -251,8 +255,6 @@ text.nvd3.nv-noData {
 
 #minimizeFilters{
     position: absolute;
-    //margin-left: 50%;
-    //float: right;
     right: 60px;
     font-size: 2em;
     top: 0px;
@@ -261,11 +263,19 @@ text.nvd3.nv-noData {
 }
 
 #analyticsAddFilter {
-     margin-left: -270px;
+     float: left;
+}
+
+#filterSelectDrop .w2ui-field{
+    float: right;
+}
+
+#filterSelectDrop .w2ui-field-helper{
+    margin-right: 35px;
 }
 
 #inputAnalyticsAddfilter {
-    margin-left: 95px;
+    margin-left: 5px;
     opacity: 0;
     pointer-events: none;
 }

@@ -886,6 +886,8 @@ function productSortingFunction(a, b) {
                     showMessage('danger', ('Problem retrieving data: ' + error_text), 35);
           });
 
+          $('.tab-header:contains(Download)').css( "font-weight", "bold" );
+
           // The tooltip is called twice at beginning and end, it seems to show the style of the
           // tooltips more consistently, there is some problem where sometimes no style is shown for tooltips
           $("body").tooltip({ 
@@ -911,8 +913,6 @@ function productSortingFunction(a, b) {
 
 
             }
-
-
 
         });
 
