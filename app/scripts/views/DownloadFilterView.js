@@ -614,7 +614,7 @@
         // Create possible filter options based on possible download parameters
         var filteroptions = {};
         globals.products.each(function(model) {
-          let dpars = model.get('download_parameters');
+          var dpars = model.get('download_parameters');
           if(model.get('visible')){
             for (var key in dpars){
               filteroptions[key] = dpars[key];
