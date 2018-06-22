@@ -375,105 +375,124 @@
           this.xhr.open('POST', retrieve_data[0].url, true);
           this.xhr.responseType = 'arraybuffer';
           var that = this;
+          var request = this.xhr;
 
-          this.xhr.onerror = function(e) {
-            that.xhr = null;
-            Communicator.mediator.trigger("progress:change", false);
-          }
 
-          this.xhr.onload = function(e) {
-            that.xhr = null;
-            Communicator.mediator.trigger("progress:change", false);
+          this.xhr.onreadystatechange = function() {
+            if(request.readyState == 4) {
+                if(request.status == 200) {
+                  var tmp = new Uint8Array(request.response);
+                  var dat = msgpack.decode(tmp);
 
-            if(e.target.status !== 200){
-              globals.swarm.set({data: {}});
-              return;
-            }
+                  var ids = {
+                    'A': 'Alpha',
+                    'B': 'Bravo',
+                    'C': 'Charlie',
+                    '-': 'NSC'
+                  };
 
-            var tmp = new Uint8Array(this.response);
-            var dat = msgpack.decode(tmp);
+                  if(dat.hasOwnProperty('Spacecraft')) {
+                    dat['id'] = [];
+                    for (var i = 0; i < dat.Timestamp.length; i++) {
+                      dat.id.push(ids[dat.Spacecraft[i]]);
+                    }
+                  }
 
-            var ids = {
-              'A': 'Alpha',
-              'B': 'Bravo',
-              'C': 'Charlie',
-              'NSC': 'NSC'
-            };
+                  if(dat.hasOwnProperty('Timestamp')) {
+                    for (var i = 0; i < dat.Timestamp.length; i++) {
+                      dat.Timestamp[i] = new Date(dat.Timestamp[i]*1000);
+                    }
+                  }
+                  if(dat.hasOwnProperty('timestamp')) {
+                    for (var i = 0; i < dat.Timestamp.length; i++) {
+                      dat.Timestamp[i] = new Date(dat.timestamp[i]*1000);
+                    }
+                  }
+                  if(dat.hasOwnProperty('latitude')) {
+                    dat['Latitude'] = dat['latitude'];
+                    delete dat.latitude;
+                  }
+                  if(dat.hasOwnProperty('longitude')) {
+                    dat['Longitude'] = dat['longitude'];
+                    delete dat.longitude;
+                  }
+                  if(!dat.hasOwnProperty('Radius')) {
+                    dat['Radius'] = [];
+                    var refKey = 'Timestamp';
+                    if(!dat.hasOwnProperty(refKey)){
+                      refKey = 'timestamp';
+                    }
+                    for (var i = 0; i < dat[refKey].length; i++) {
+                      dat['Radius'].push(6832000)
+                    }
+                  }
 
-            if(dat.hasOwnProperty('Spacecraft')) {
-              dat['id'] = [];
-              for (var i = 0; i < dat.Timestamp.length; i++) {
-                dat.id.push(ids[dat.Spacecraft[i]]);
-              }
-            }
+                  for(var key in dat){
+                    if(VECTOR_BREAKDOWN.hasOwnProperty(key)){
+                      dat[VECTOR_BREAKDOWN[key][0]] = [];
+                      dat[VECTOR_BREAKDOWN[key][1]] = [];
+                      dat[VECTOR_BREAKDOWN[key][2]] = [];
+                      for (var i = 0; i < dat[key].length; i++) {
+                        dat[key][i]
+                        dat[VECTOR_BREAKDOWN[key][0]].push(dat[key][i][0]);
+                        dat[VECTOR_BREAKDOWN[key][1]].push(dat[key][i][1]);
+                        dat[VECTOR_BREAKDOWN[key][2]].push(dat[key][i][2]);
+                      }
+                      delete dat[key];
+                    }
+                  }
+                  // This should only happen here if there has been 
+                  // some issue with the saved filter configuration
+                  // Check if current brushes are valid for current data
+                  var idKeys = Object.keys(dat);
+                  var filters = globals.swarm.get('filters');
+                  var filtersSelec = JSON.parse(localStorage.getItem('filterSelection'));
+                  var filtersmodified = false;
+                  if(filters){
+                    for (var f in filters){
+                      if(idKeys.indexOf(f) === -1){
+                          delete filters[f];
+                          delete filtersSelec[f];
+                          filtersmodified = true;
+                      }
+                    }
+                    if(filtersmodified){
+                      globals.swarm.set('filters', filters);
+                      localStorage.setItem('filterSelection', JSON.stringify(filtersSelec));
+                    }
 
-            if(dat.hasOwnProperty('Timestamp')) {
-              for (var i = 0; i < dat.Timestamp.length; i++) {
-                dat.Timestamp[i] = new Date(dat.Timestamp[i]*1000);
-              }
-            }
-            if(dat.hasOwnProperty('timestamp')) {
-              for (var i = 0; i < dat.Timestamp.length; i++) {
-                dat.Timestamp[i] = new Date(dat.timestamp[i]*1000);
-              }
-            }
-            if(dat.hasOwnProperty('latitude')) {
-              dat['Latitude'] = dat['latitude'];
-              delete dat.latitude;
-            }
-            if(dat.hasOwnProperty('longitude')) {
-              dat['Longitude'] = dat['longitude'];
-              delete dat.longitude;
-            }
-            if(!dat.hasOwnProperty('Radius')) {
-              dat['Radius'] = [];
-              var refKey = 'Timestamp';
-              if(!dat.hasOwnProperty(refKey)){
-                refKey = 'timestamp';
-              }
-              for (var i = 0; i < dat[refKey].length; i++) {
-                dat['Radius'].push(6832000)
-              }
-            }
+                  }
+                  
+                  globals.swarm.set({data: dat});
 
-            for(var key in dat){
-              if(VECTOR_BREAKDOWN.hasOwnProperty(key)){
-                dat[VECTOR_BREAKDOWN[key][0]] = [];
-                dat[VECTOR_BREAKDOWN[key][1]] = [];
-                dat[VECTOR_BREAKDOWN[key][2]] = [];
-                for (var i = 0; i < dat[key].length; i++) {
-                  dat[key][i]
-                  dat[VECTOR_BREAKDOWN[key][0]].push(dat[key][i][0]);
-                  dat[VECTOR_BREAKDOWN[key][1]].push(dat[key][i][1]);
-                  dat[VECTOR_BREAKDOWN[key][2]].push(dat[key][i][2]);
+                } else if(request.status!== 0 && request.responseText != "") {
+                  globals.swarm.set({data: {}});
+                  var error_text = request.responseText.match("<ows:ExceptionText>(.*)</ows:ExceptionText>");
+                  if (error_text && error_text.length > 1) {
+                      error_text = error_text[1];
+                  } else {
+                      error_text = 'Please contact feedback@vires.services if issue persists.'
+                  }
+
+                  showMessage('danger', ('Problem retrieving data: ' + error_text), 35);
+                  return;
                 }
-                delete dat[key];
-              }
-            }
-            // This should only happen here if there has been 
-            // some issue with the saved filter configuration
-            // Check if current brushes are valid for current data
-            var idKeys = Object.keys(dat);
-            var filters = globals.swarm.get('filters');
-            var filtersSelec = JSON.parse(localStorage.getItem('filterSelection'));
-            var filtersmodified = false;
-            if(filters){
-              for (var f in filters){
-                if(idKeys.indexOf(f) === -1){
-                    delete filters[f];
-                    delete filtersSelec[f];
-                    filtersmodified = true;
-                }
-              }
-              if(filtersmodified){
-                globals.swarm.set('filters', filters);
-                localStorage.setItem('filterSelection', JSON.stringify(filtersSelec));
-              }
 
+            } else if(request.readyState == 2) {
+                if(request.status == 200) {
+                    request.responseType = 'arraybuffer';
+                } else {
+                    request.responseType = 'text';
+                }
             }
-            
-            globals.swarm.set({data: dat});
+
+            //that.xhr = null;
+            Communicator.mediator.trigger("progress:change", false);
+
+           
           };
+
+
           Communicator.mediator.trigger("progress:change", true);
           this.xhr.send(req_data);
         }
