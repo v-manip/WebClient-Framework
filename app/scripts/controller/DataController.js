@@ -291,6 +291,8 @@
             "F_res_MLI_SHA_2D", "B_NEC_res_MLI_SHA_2D",
             "F_res_MMA_SHA_2C-Primary", "B_NEC_res_MMA_SHA_2C-Primary",
             "F_res_MMA_SHA_2C-Secondary", "B_NEC_res_MMA_SHA_2C-Secondary",
+            "F_res_MMA_SHA_2F-Primary", "B_NEC_res_MMA_SHA_2F-Primary",
+            "F_res_MMA_SHA_2F-Secondary", "B_NEC_res_MMA_SHA_2F-Secondary",
             "F_res_MIO_SHA_2C-Primary", "B_NEC_res_MIO_SHA_2C-Primary",
             "F_res_MIO_SHA_2C-Secondary", "B_NEC_res_MIO_SHA_2C-Secondary",
             "F_res_MIO_SHA_2D-Primary", "B_NEC_res_MIO_SHA_2D-Primary",
