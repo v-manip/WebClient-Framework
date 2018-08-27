@@ -2619,8 +2619,8 @@
             "opacity": 0.7,
             "tileSize":1024,
             "validity":{
-                "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "start": "2013-12-01T00:16:34Z",
+                "end": "2017-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MCO_SHA_2C_view",
@@ -2722,8 +2722,8 @@
             "opacity": 0.7,
             "tileSize":1024,
             "validity":{
-                "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "start": "2013-11-25T12:00:00Z",
+                "end": "2016-12-28T08:09:36Z"
             },
             "views": [{
                 "id": "MCO_SHA_2D_view",
@@ -2825,8 +2825,8 @@
             "opacity": 0.7,
             "tileSize":1024,
             "validity":{
-                "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "start": "2013-11-25T12:00:00Z",
+                "end": "2016-05-26T09:36:00Z"
             },
             "views": [{
                 "id": "MCO_SHA_2F_view",
@@ -2929,7 +2929,7 @@
             "tileSize":1024,
             "validity":{
                 "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "end": "2100-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MLI_SHA_2C_view",
@@ -3032,7 +3032,7 @@
             "tileSize":1024,
             "validity":{
                 "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "end": "2100-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MLI_SHA_2D_view",
@@ -3135,7 +3135,7 @@
             "tileSize":1024,
             "validity":{
                 "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "end": "2100-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MIO_SHA_2C-Primary_view",
@@ -3238,7 +3238,7 @@
             "tileSize":1024,
             "validity":{
                 "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "end": "2100-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MIO_SHA_2C-Secondary_view",
@@ -3341,7 +3341,7 @@
             "tileSize":1024,
             "validity":{
                 "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "end": "2100-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MIO_SHA_2D-Primary_view",
@@ -3444,7 +3444,7 @@
             "tileSize":1024,
             "validity":{
                 "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "end": "2100-01-01T00:00:00Z"
             },
             "views": [{
                 "id": "MIO_SHA_2D-Secondary_view",
@@ -3546,8 +3546,8 @@
             "opacity": 0.7,
             "tileSize":1024,
             "validity":{
-                "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "start": "2013-12-01T03:00:00Z",
+                "end": "2016-12-31T21:00:00Z"
             },
             "views": [{
                 "id": "MMA_SHA_2C-Primary_view",
@@ -3649,8 +3649,8 @@
             "opacity": 0.7,
             "tileSize":1024,
             "validity":{
-                "start": "1900-01-01T00:00:00Z",
-                "end": "2020-01-01T00:00:00Z"
+                "start": "2013-12-01T03:00:00Z",
+                "end": "2016-12-31T21:00:00Z"
             },
             "views": [{
                 "id": "MMA_SHA_2C-Secondary_view",
@@ -3737,6 +3737,212 @@
                 "F_res_MMA_SHA_2C-Secondary": {
                     "uom":"nT",
                     "name": "Residuals of Magnetic field intensity to MMA_SHA_2C-Secondary model"
+                }
+            },
+            "height": 450,
+            "model": true,
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
+
+        },{
+            "name": "MMA_SHA_2F-Primary",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "opacity": 0.7,
+            "tileSize":1024,
+            "validity":{
+                "start": "2013-11-26T00:45:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
+            "views": [{
+                "id": "MMA_SHA_2F-Primary_view",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MMA_SHA_2F-Primary",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [0, 80],
+                    "uom":"nT",
+                    "name": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [0, 60],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [-50, 30],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "diverging_1"
+                },
+                "Y": {
+                    "range": [-30, 50],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "diverging_1"
+                },
+                "Z": {
+                    "range": [-80, 50],
+                    "uom":"nT",
+                    "name": "Down component",
+                    "colorscale": "diverging_1"
+                },
+                "I": {
+                    "range": [-100, 100],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "diverging_1"
+                },
+                "D": {
+                    "range": [-200, 200],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "diverging_1"
+                },
+                "X_EW": {
+                    "range": [-0.1, 0.1],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Y_EW": {
+                    "range": [-0.1, 0.1],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Z_EW": {
+                    "range": [-0.1, 0.1],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_res_MMA_SHA_2F-Primary": {
+                    "uom":"nT",
+                    "name": "Residuals to MMA_SHA_2F-Primary model of Magnetic field vector, NEC frame"
+                },
+                "F_res_MMA_SHA_2F-Primary": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to MMA_SHA_2F-Primary model"
+                }
+            },
+            "height": 450,
+            "model": true,
+            "coefficients_range": [-1,-1],
+            "differenceTo": null
+
+        },{
+            "name": "MMA_SHA_2F-Secondary",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "WPS",
+            "opacity": 0.7,
+            "tileSize":1024,
+            "validity":{
+                "start": "2013-11-26T00:45:00Z",
+                "end": "2020-01-01T00:00:00Z"
+            },
+            "views": [{
+                "id": "MMA_SHA_2F-Secondary_view",
+                "protocol": "WMS",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ],
+                "style": "default",
+                "format": "image/png"
+            }],
+            "download": {
+                "id": "MMA_SHA_2F-Secondary",
+                "protocol": "EOWCS",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "parameters": {
+                "F": {
+                    "range": [0, 7],
+                    "uom":"nT",
+                    "name": "Total field intensity",
+                    "colorscale": "jet",
+                    "selected": true
+                },
+                "H": {
+                    "range": [0, 4.5],
+                    "uom":"nT",
+                    "name": "Horizontal intensity",
+                    "colorscale": "jet"
+                },
+                "X": {
+                    "range": [-4, 5],
+                    "uom":"nT",
+                    "name": "North component",
+                    "colorscale": "diverging_1"
+                },
+                "Y": {
+                    "range": [-3, 3],
+                    "uom":"nT",
+                    "name": "East component",
+                    "colorscale": "diverging_1"
+                },
+                "Z": {
+                    "range": [-7, 6],
+                    "uom":"nT",
+                    "name": "Down component",
+                    "colorscale": "diverging_1"
+                },
+                "I": {
+                    "range": [-100, 100],
+                    "uom":"degree",
+                    "name": "Inclination",
+                    "colorscale": "diverging_1"
+                },
+                "D": {
+                    "range": [-200, 200],
+                    "uom":"degree",
+                    "name": "Declination",
+                    "colorscale": "diverging_1"
+                },
+                "X_EW": {
+                    "range": [-0.004, 0.004],
+                    "uom":"nT/km",
+                    "name": "North component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Y_EW": {
+                    "range": [-0.005, 0.003],
+                    "uom":"nT/km",
+                    "name": "East component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                },
+                "Z_EW": {
+                    "range": [-0.0025, 0.002],
+                    "uom":"nT/km",
+                    "name": "Down component (East-West Gradient)",
+                    "colorscale": "diverging_1"
+                }
+            },
+            "download_parameters": {
+                "B_NEC_res_MMA_SHA_2F-Secondary": {
+                    "uom":"nT",
+                    "name": "Residuals to MMA_SHA_2F-Secondary model of Magnetic field vector, NEC frame"
+                },
+                "F_res_MMA_SHA_2F-Secondary": {
+                    "uom":"nT",
+                    "name": "Residuals of Magnetic field intensity to MMA_SHA_2F-Secondary model"
                 }
             },
             "height": 450,
@@ -3973,9 +4179,9 @@
             "timeSliderProtocol": "WPS",
             "opacity": 0.7,
             "tileSize":1024,
-            "validity":{
+            "validity": {
                 "start": "1997-02-07T05:31:12Z",
-                "end": "2017-08-08T14:07:00Z"
+                "end": "2018-08-08T08:45:36Z"
             },
             "views": [{
                 "id": "CHAOS-6-Combined_view",
@@ -4199,6 +4405,30 @@
                 "kp": {
                     "uom": null,
                     "name": "Planetary index of geomagnetic activity"
+                }
+            },
+            "index": true
+        },{
+            "name": "F10.7 Index",
+            "visible": false,
+            "timeSlider": true,
+            "timeSliderProtocol": "INDEX",
+            "views": [{
+                "id": "f107",
+                "protocol": "INDEX",
+                "urls": [
+                    "http://localhost:9000/vires00/ows"
+                ]
+            }],
+            "download": {
+                "id": "f107",
+                "protocol": "INDEX",
+                "url": "http://localhost:9000/vires00/ows"
+            },
+            "download_parameters": {
+                "F107": {
+                    "uom": "1e-22 J/s/m^2/Hz",
+                    "name": "Observed 10.7cm Solar Radio Flux"
                 }
             },
             "index": true
